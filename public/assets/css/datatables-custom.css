@@ -1,0 +1,186 @@
+/* =========================================================
+   ARUNIKA - DATATABLES CUSTOM STYLE
+   Compatible with Hope UI
+   ========================================================= */
+
+.dataTables_wrapper {
+    width: 100%;
+}
+
+/* =========================
+   TOP AREA
+   ========================= */
+
+.dt-layout-row {
+    margin-bottom: 15px;
+}
+
+.dt-length select,
+.dt-search input {
+    border: 1px solid #e5e7eb !important;
+    border-radius: 8px !important;
+    padding: 7px 12px !important;
+    background: #fff !important;
+    outline: none !important;
+}
+
+.dt-search input:focus,
+.dt-length select:focus {
+    border-color: #198754 !important;
+    box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.10) !important;
+}
+
+/* =========================
+   TABLE
+   ========================= */
+
+table.dataTable {
+    width: 100% !important;
+    border-collapse: separate !important;
+    border-spacing: 0;
+    border: 1px solid #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+/* Header */
+
+table.dataTable thead th {
+    background: #ffffff !important;
+    color: #495057 !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    padding: 14px 12px !important;
+    border-bottom: 2px solid #198754 !important;
+    white-space: nowrap;
+}
+
+/* Body */
+
+table.dataTable tbody td {
+    padding: 13px 12px !important;
+    vertical-align: middle !important;
+    font-size: 14px;
+    border-bottom: 1px solid #f0f1f2 !important;
+}
+
+/* Zebra */
+
+table.dataTable tbody tr:nth-child(even) {
+    background-color: #fbfffc;
+}
+
+/* Hover */
+
+table.dataTable tbody tr:hover {
+    background-color: #f0fff5 !important;
+}
+
+/* Last row */
+
+table.dataTable tbody tr:last-child td {
+    border-bottom: none !important;
+}
+
+/* =========================
+   STATUS
+   ========================= */
+
+.badge.bg-label-success {
+    background-color: #e8f7ef !important;
+    color: #198754 !important;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+.badge.bg-label-danger {
+    background-color: #fdecec !important;
+    color: #dc3545 !important;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+/* =========================
+   ACTION BUTTON
+   ========================= */
+
+.dataTables_wrapper .dropdown-toggle::after {
+    display: none;
+}
+
+table.dataTable .btn {
+    border-radius: 6px;
+}
+
+/* =========================
+   PAGINATION
+   ========================= */
+
+.dt-paging {
+    margin-top: 10px;
+}
+
+.dt-paging-button {
+    border: 1px solid #e5e7eb !important;
+    background: #ffffff !important;
+    color: #495057 !important;
+    border-radius: 6px !important;
+    margin: 0 2px !important;
+    min-width: 34px;
+    height: 34px;
+}
+
+.dt-paging-button:hover {
+    background: #e8f7ef !important;
+    color: #198754 !important;
+    border-color: #198754 !important;
+}
+
+.dt-paging-button.current {
+    background: #198754 !important;
+    color: #ffffff !important;
+    border-color: #198754 !important;
+}
+
+/* =========================
+   INFO
+   ========================= */
+
+.dt-info {
+    color: #6c757d;
+    font-size: 13px;
+}
+
+/* =========================
+   EMPTY DATA
+   ========================= */
+
+table.dataTable tbody td.dataTables_empty {
+    padding: 45px 15px !important;
+    color: #8b949e;
+    text-align: center;
+}
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+
+@media (max-width: 768px) {
+
+    .dt-layout-row {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .dt-search {
+        width: 100%;
+    }
+
+    .dt-search input {
+        width: 100%;
+    }
+
+}
