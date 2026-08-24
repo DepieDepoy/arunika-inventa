@@ -173,18 +173,15 @@ class CategoryController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Cek Duplicate Code
+        | Cek Duplicate Name
         |--------------------------------------------------------------------------
         */
-
+        $categoryName = strtoupper(preg_replace('/\s+/', ' ',trim($request->category_name)));
         $exists = Category::where(
             'company_id',
             Auth::user()->company_id
         )
-        ->where(
-            'category_code',
-            $request->category_code
-        )
+        ->where('category_name',$categoryName)
         ->exists();
 
         if ($exists) {
@@ -192,7 +189,7 @@ class CategoryController extends Controller
                 'success' => false,
                 'errors' => [
                     'category_code' => [
-                        'Kode kategori sudah digunakan'
+                        'Nama kategori sudah digunakan'
                     ]
                 ]
             ], 422);
@@ -288,18 +285,15 @@ class CategoryController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Check Duplicate Code
+        | Check Duplicate Name
         |--------------------------------------------------------------------------
         */
-
+        $categoryName = strtoupper(preg_replace('/\s+/', ' ',trim($request->category_name)));
         $exists = Category::where(
             'company_id',
             Auth::user()->company_id
         )
-        ->where(
-            'category_code',
-            $request->category_code
-        )
+        ->where('category_name',$categoryName)
         ->where(
             'id',
             '!=',

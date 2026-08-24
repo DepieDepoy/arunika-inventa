@@ -131,21 +131,22 @@ class SubCategoryController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Cek Duplicate Code
+        | Cek Duplicate Name
         |--------------------------------------------------------------------------
         |
         | Termasuk data yang sudah Soft Delete.
         |
         */
-
+        $subcategoryName = strtoupper(preg_replace('/\s+/', ' ',trim($request->sub_category_name)));
         $exists = SubCategory::withTrashed()
             ->where(
                 'company_id',
                 $companyId
             )
+            ->where('category_id', $request->category_id)
             ->where(
-                'sub_category_code',
-                $code
+                'sub_category_name',
+                $subcategoryName
             )
             ->exists();
 
@@ -156,7 +157,7 @@ class SubCategoryController extends Controller
                 'success' => false,
                 'errors' => [
                     'sub_category_name' => [
-                        'Kode Sub Category ' . $code . ' sudah pernah digunakan.'
+                        'Nama Sub Category pada Category ini sudah digunakan.'
                     ]
                 ]
             ], 422);
@@ -428,21 +429,21 @@ class SubCategoryController extends Controller
             ], 422);
         }
 
-
         /*
         |--------------------------------------------------------------------------
-        | Check Duplicate Sub Category Code
+        | Check Duplicate Sub Category Name
         |--------------------------------------------------------------------------
         */
-
+        $subcategoryName = strtoupper(preg_replace('/\s+/', ' ',trim($request->sub_category_name)));
         if (
             SubCategory::where(
                 'company_id',
                 Auth::user()->company_id
             )
+            ->where('category_id', $request->category_id)
             ->where(
-                'sub_category_code',
-                $request->sub_category_code
+                'sub_category_name',
+                $subcategoryName
             )
             ->where(
                 'id',
@@ -456,7 +457,7 @@ class SubCategoryController extends Controller
                 'success' => false,
                 'errors' => [
                     'sub_category_code' => [
-                        'Kode Sub Category sudah digunakan'
+                        'Name Sub Category pada Category ini sudah digunakan'
                     ]
                 ]
             ], 422);

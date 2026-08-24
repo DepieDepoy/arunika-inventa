@@ -18,15 +18,15 @@
     <div class="card-header d-flex justify-content-between align-items-center">
 
         <div>
-            <h5 class="mb-0">Users</h5>
+            <h5 class="mb-0">Vendor</h5>
             <small class="text-muted">
-                Manage application users
+                Manage application vendor
             </small>
         </div>
 
         <div class="d-flex gap-2">
 
-            <a href="{{ route('users.export') }}"
+            <a href="{{ route('vendor.export') }}"
             class="btn btn-success">
                 <i class="fa-solid fa-file-excel"></i>
                 Export Excel
@@ -35,25 +35,26 @@
             <button
                 class="btn btn-primary"
                 data-bs-toggle="modal"
-                data-bs-target="#modalAddUser">
+                data-bs-target="#modalAddVendor">
                 <i class="fa-solid fa-plus"></i>
-                Add Users
+                Add Vendor
             </button>
         </div>
     </div>
     <div class="card-body">
-        <div class="table-responsive user-table-wrapper">
+        <div class="table-responsive vendor-table-wrapper">
             <table class="table table-hover align-middle"
-                   id="table-users"
+                   id="table-vendor"
                    width="100%">
                 <thead>
                     <tr>
                         <th width="5%">No</th>
-                        <th>Name</th>
-                        <th>Email</th>
+                        <th>Vendor Name</th>
+                        <th>Vendor Code</th>
+                        <th>Address</th>
                         <th>Phone</th>
-                        <th>Companies</th>
-                        <th>Role</th>
+                        <th>PIC</th>
+                        <th>Email</th>
                         <th>Status</th>
                         <th width="10%">Action</th>
                     </tr>
@@ -66,40 +67,54 @@
 </div>
 </div>
 <!--modal -->
-<div class="modal fade" id="modalAddUser" tabindex="-1">
+<div class="modal fade" id="modalAddVendor" tabindex="-1">
     <div class="modal-dialog modal-lg">
-        <form id="formAddUser">
+        <form id="formAddVendor">
             @csrf
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">
-                        Add User
+                        Add Vendor
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"> </button>
                 </div>
                 <div class="modal-body">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label>Name</label>
-                            <input type="text" name="name" class="form-control" id="name" required>
+                            <label>Vendor Name</label>
+                            <input type="text" name="vendor_name" class="form-control" id="name" required>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label>Email</label>
-                            <input type="email" name="email" id="email" class="form-control" required>
+                            <label>Address</label>
+                             <textarea
+                                name="address"
+                                id="address"
+                                class="form-control"
+                                rows="3" required
+                                placeholder="Enter address"
+                            ></textarea>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label>Phone</label>
                             <input type="number" name="phone" id="phone" class="form-control" required>
                         </div>
-                        <div class="col-md-6 mb-6">
-                            <label>Roles</label>
-                            <select name="role_id" id="edit_role" class="form-select" required>
-                                @foreach($roles as $role)
-                                    <option value="{{ $role->id }}">
-                                        {{ $role->role_name }}
-                                    </option>
-                                @endforeach
-                            </select>
+                        <div class="col-md-6 mb-3">
+                            <label>PIC</label>
+                            <input type="text" name="pic_name" id="pic" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label>Email</label>
+                            <input type="text" name="email" id="email" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label>Description</label>
+                             <textarea
+                                name="description"
+                                id="description"
+                                class="form-control"
+                                rows="3" 
+                                placeholder="Enter description"
+                            ></textarea>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label>Status</label>
@@ -115,7 +130,7 @@
                         Close
                     </button>
                     <button type="submit" class="btn btn-primary">
-                        Save User
+                        Save Vendor
                     </button>
                 </div>
             </div>
@@ -124,41 +139,55 @@
 </div>
 
 <!--modal edit-->
-<div class="modal fade" id="modalEditUser" tabindex="-1">
+<div class="modal fade" id="modalEditVendor" tabindex="-1">
     <div class="modal-dialog modal-lg">
-        <form id="formEditUser">
+        <form id="formEditVendor">
             @csrf
             <input type="hidden" name="id" id="edit_id">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">
-                        Edit User
+                        Edit Vendor
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"> </button>
                 </div>
                 <div class="modal-body">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label>Name</label>
-                            <input type="text" name="name" id="edit_name" class="form-control">
+                            <label>Vendor Name</label>
+                            <input type="text" name="vendor_name" id="edit_vendor_name" class="form-control">
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label>Email</label>
-                            <input type="text" name="email" id="edit_email" class="form-control" readonly>
+                            <label>Address</label>
+                            <textarea
+                                name="address"
+                                id="edit_address"
+                                class="form-control"
+                                rows="3" required
+                                placeholder="Enter address"
+                            ></textarea>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label>Phone</label>
                             <input type="number" name="phone" id="edit_phone" class="form-control">
                         </div>
                         <div class="col-md-6 mb-6">
-                            <label>Roles</label>
-                            <select name="role_id" id="edit_role" class="form-select" required>
-                                @foreach($roles as $role)
-                                    <option value="{{ $role->id }}">
-                                        {{ $role->role_name }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <label>PIC</label>
+                            <input type="text" name="pic_name" id="edit_pic_name" class="form-control">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label>Email</label>
+                            <input type="email" name="email" id="edit_email" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label>Description</label>
+                            <textarea
+                                name="description"
+                                id="edit_description"
+                                class="form-control"
+                                rows="3" 
+                                placeholder="Enter description"
+                            ></textarea>
                         </div>
 
                         <div class="col-md-6 mb-3">
@@ -175,7 +204,7 @@
                         Close
                     </button>
                     <button type="submit" class="btn btn-primary">
-                        Save User
+                        Save Vendor
                     </button>
                 </div>
             </div>
@@ -188,12 +217,12 @@
 <script>
 
 $(function() {
-    $('#table-users').DataTable({
+    $('#table-vendor').DataTable({
         processing: true,
         serverSide: true,
         responsive: true,
         autoWidth: false,
-        ajax: "{{ route('users.data') }}",
+        ajax: "{{ route('vendor.data') }}",
         columns: [
             {
                 data: 'DT_RowIndex',
@@ -202,12 +231,16 @@ $(function() {
                 searchable: false
             },
             {
-                data: 'name',
-                name: 'name'
+                data: 'vendor_name',
+                name: 'vendor_name'
             },
             {
-                data: 'email',
-                name: 'email'
+                data: 'vendor_code',
+                name: 'vendor_code'
+            },
+            {
+                data: 'address',
+                name: 'address'
             },
             {
                 data: 'phone',
@@ -215,12 +248,12 @@ $(function() {
                 className: 'text-start'
             },
             {
-                data: 'company_name',
-                name: 'company_name'
+                data: 'pic',
+                name: 'pic'
             },
             {
-                data: 'role_name',
-                name: 'role_name'
+                data: 'email',
+                name: 'email'
             },
             {
                 data: 'status',
@@ -257,7 +290,7 @@ $(document).on('shown.bs.dropdown', '.dropdown', function () {
     });
 });
 //submit
-$('#formAddUser').submit(function(e){
+$('#formAddVendor').submit(function(e){
 
     if (!this.checkValidity()) {
         this.reportValidity();
@@ -269,7 +302,7 @@ $('#formAddUser').submit(function(e){
     let formData = new FormData(this);
 
     $.ajax({
-        url: "{{ route('users.store') }}",
+        url: "{{ route('vendor.store') }}",
         type: "POST",
         data: formData,
         processData: false,
@@ -282,43 +315,18 @@ $('#formAddUser').submit(function(e){
                 Swal.fire({
                     icon: 'success',
                     title: 'Berhasil',
-                    html: `
-                        <div class="text-start">
-                            <p class="mb-2">
-                                User berhasil ditambahkan.
-                            </p>
-                            <label class="fw-bold">
-                                Password sementara
-                            </label>
-                            <div class="input-group mb-3">
-                                <input
-                                    type="text"
-                                    id="tempPassword"
-                                    class="form-control"
-                                    value="${response.password}"
-                                    readonly>
-                                <button
-                                    class="btn btn-primary"
-                                    type="button"
-                                    onclick="copyPassword()">
-                                    <i class="fa-solid fa-copy"></i>
-                                </button>
-                            </div>
-                            <small class="text-danger">
-                                Simpan password ini sebelum menutup pesan.
-                            </small>
-                        </div>
-                    `,
-                    confirmButtonText: 'OK'
+                    text: 'User berhasil diupdate',
+                    timer: 1500,
+                    showConfirmButton: false
                 });
                 let modal = bootstrap.Modal.getInstance(
-                    document.getElementById('modalAddUser')
+                    document.getElementById('modalAddVendor')
                 );
                 if(modal){
                     modal.hide();
                 }
-                $('#formAddUser')[0].reset();
-                $('#table-users').DataTable().ajax.reload();
+                $('#formAddVendor')[0].reset();
+                $('#table-vendor').DataTable().ajax.reload();
             }
         },
         error: function(xhr){
@@ -344,33 +352,33 @@ $('#formAddUser').submit(function(e){
 //edit
 $(document).on('click', '.btn-edit', function() {
     let id = $(this).data('id');
-    let url = "{{ route('users.edit', ['id' => ':id']) }}";
+    let url = "{{ route('vendor.edit', ['id' => ':id']) }}";
     url = url.replace(':id', id);
     $.get(url, function(response){
-        //console.log(response);
-        //console.log('EMAIL:', response.email);
-        //console.log('PHONE:', response.phone);
-
+        console.log(response);
         $('#edit_id').val(response.id);
-        $('#edit_name').val(response.name);
-        $('#edit_email').val(response.email);
+        $('#edit_vendor_name').val(response.vendor_name);
+        $('#edit_address').val(response.address);
         $('#edit_phone').val(response.phone);
+        $('#edit_pic_name').val(response.pic_name);
+        $('#edit_email').val(response.email);
+        $('#edit_description').val(response.description);
         $('#edit_status').val(response.status);
         
         let modal = new bootstrap.Modal(
-            document.getElementById('modalEditUser')
+            document.getElementById('modalEditVendor')
         );
         modal.show();
     });
 });
-$('#formEditUser').submit(function(e){
+$('#formEditVendor').submit(function(e){
 
     e.preventDefault();
 
     let formData = new FormData(this);
 
     $.ajax({
-        url: "{{ route('users.update') }}",
+        url: "{{ route('vendor.update') }}",
         type: "POST",
         data: formData,
         processData: false,
@@ -383,17 +391,17 @@ $('#formEditUser').submit(function(e){
                 Swal.fire({
                     icon: 'success',
                     title: 'Berhasil',
-                    text: 'User berhasil diupdate',
+                    text: 'Vendor berhasil diupdate',
                     timer: 1500,
                     showConfirmButton: false
                 });
                 let modal = bootstrap.Modal.getInstance(
-                    document.getElementById('modalEditUser')
+                    document.getElementById('modalEditVendor')
                 );
                 if(modal){
                     modal.hide();
                 }
-                $('#table-users').DataTable().ajax.reload();
+                $('#table-vendor').DataTable().ajax.reload();
             }
         },
 
@@ -423,7 +431,7 @@ $(document).on('click', '.btn-delete', function () {
 
     let id = $(this).data('id');
 
-    let url = "{{ route('users.destroy', ['id' => ':id']) }}";
+    let url = "{{ route('vendor.destroy', ['id' => ':id']) }}";
     url = url.replace(':id', id);
 
     Swal.fire({
@@ -451,7 +459,7 @@ $(document).on('click', '.btn-delete', function () {
                         text: response.message
                     });
 
-                    $('#table-users').DataTable().ajax.reload();
+                    $('#table-vendor').DataTable().ajax.reload();
                 },
                 error: function(xhr) {
 
@@ -472,13 +480,13 @@ $(document).on('click', '.btn-delete', function () {
 
 });
 //focus
-$('#modalAddUser').on('shown.bs.modal', function () {
+$('#modalAddVendor').on('shown.bs.modal', function () {
 
     $('#name').trigger('focus');
 
 });
 
-$('#modalEditUser').on('shown.bs.modal', function () {
+$('#modalEditVendor').on('shown.bs.modal', function () {
 
     $('#edit_name')
         .trigger('focus')

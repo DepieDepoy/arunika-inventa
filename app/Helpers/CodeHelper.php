@@ -62,4 +62,32 @@ class CodeHelper
 
         return $code;
     }
+
+    public static function generateNumber(
+        string $prefix,
+        string $modelClass,
+        string $codeColumn,
+        int $companyId
+    ): string {
+        $counter = 0;
+
+        do {
+            $code = $prefix . str_pad(
+                $counter,
+                2,
+                '0',
+                STR_PAD_LEFT
+            );
+
+            $exists = $modelClass::withTrashed()
+                ->where('company_id', $companyId)
+                ->where($codeColumn, $code)
+                ->exists();
+
+            $counter++;
+
+        } while ($exists);
+
+        return $code;
+    }
 }

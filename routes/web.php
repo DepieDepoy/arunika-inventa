@@ -19,3 +19,5 @@ require __DIR__.'/dashboard/role.php';
 require __DIR__.'/dashboard/user.php';
 require __DIR__.'/dashboard/category.php';
 require __DIR__.'/dashboard/subcategory.php';
+require __DIR__.'/dashboard/vendor.php';
+require __DIR__.'/dashboard/asset.php';
