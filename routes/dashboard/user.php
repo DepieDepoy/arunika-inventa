@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Dashboard\UserController;
 
-Route::prefix('cms')
+Route::prefix('dashboard')
     ->middleware('auth')
     ->group(function () {
 
@@ -35,4 +35,17 @@ Route::prefix('cms')
 
         Route::post('/users/permission/{role}', [UserController::class, 'savePermission'])
             ->name('users.permission.save');
+
+        
+        Route::get('/users/import', [UserController::class, 'import'])
+            ->name('users.import');
+
+        Route::post('/users/import/preview', [UserController::class, 'previewImport'])
+            ->name('users.import.preview');
+
+        Route::post('/users/import/store', [UserController::class, 'importStore'])
+            ->name('users.import.store');
+
+        Route::get('/users/import/template', [UserController::class, 'downloadImportTemplate']
+        )->name('users.import.template');
     });

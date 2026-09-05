@@ -39,6 +39,7 @@ class RegisteredUserController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'nik' => ['required', 'string', 'max:255'],
             'company_name' => ['required', 'string', 'max:255'],
             'phone' => ['required', 'digits_between:10,15','unique:users,phone',],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
@@ -47,6 +48,7 @@ class RegisteredUserController extends Controller
         ],
         [
             'name.required' => 'Full name is required.',
+            'nik.required' => 'ID Person is required.',
             'company_name.required' => 'Company name is required.',
             'phone.required' => 'WhatsApp number is required.',
             'phone.unique' => 'This WhatsApp number is already in use.',
@@ -123,6 +125,7 @@ class RegisteredUserController extends Controller
                 'role_id'    => $adminRole->id,
 
                 'name'       => $request->name,
+                'nik'       => $request->nik,
                 'phone'      => $request->phone,
                 'email'      => $request->email,
                 'password'   => Hash::make($request->password),

@@ -38,7 +38,7 @@ return new class extends Migration
             $table->string('pic_name')
                 ->nullable();
             
-            $table->string('email')->unique();
+            $table->string('email')->nullable(); //unique();
             
             // Description
             $table->text('description')

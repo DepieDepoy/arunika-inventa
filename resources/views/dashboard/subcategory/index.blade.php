@@ -86,7 +86,7 @@
                         </div>
                         <div class="col-md-6 mb-6">
                             <label>Category</label>
-                            <select name="category_id" id="edit_category_id" class="form-select" required>
+                            <select name="category_id" id="add_category_id" class="form-select" required>
                                 <option value="">-- Pilih --</option>
                                 @foreach($category as $row)
                                     <option value="{{ $row->id }}">
@@ -340,7 +340,7 @@ $(document).on('click', '.btn-edit', function() {
         console.log(response);
         $('#edit_id').val(response.id);
         $('#edit_sub_category_name').val(response.sub_category_name);
-        $('#edit_category_id').val(response.edit_category_id);
+        $('#edit_category_id').val(response.category_id);
         $('#edit_description').val(response.description);
         $('#edit_status').val(response.status);
         

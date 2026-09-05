@@ -41,10 +41,12 @@ class User extends Authenticatable
     protected $fillable = [
         'company_id',
         'name',
+        'nik',
         'phone',
         'email',
         'photo',
         'password',
+        'must_change_password',
         'status',
         'last_login_at',
         'last_login_ip',
@@ -59,6 +61,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'must_change_password' => 'boolean',    
         ];
     }
 

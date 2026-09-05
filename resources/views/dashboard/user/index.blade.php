@@ -50,6 +50,7 @@
                     <tr>
                         <th width="5%">No</th>
                         <th>Name</th>
+                        <th>ID Person</th>
                         <th>Email</th>
                         <th>Phone</th>
                         <th>Companies</th>
@@ -82,6 +83,10 @@
                         <div class="col-md-6 mb-3">
                             <label>Name</label>
                             <input type="text" name="name" class="form-control" id="name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label>ID Person</label>
+                            <input type="text" name="nik" class="form-control" id="nik" required>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label>Email</label>
@@ -141,6 +146,10 @@
                         <div class="col-md-6 mb-3">
                             <label>Name</label>
                             <input type="text" name="name" id="edit_name" class="form-control">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label>ID Person</label>
+                            <input type="text" name="nik" id="edit_nik" class="form-control">
                         </div>
                         <div class="col-md-6 mb-3">
                             <label>Email</label>
@@ -204,6 +213,10 @@ $(function() {
             {
                 data: 'name',
                 name: 'name'
+            },
+            {
+                data: 'nik',
+                name: 'nik'
             },
             {
                 data: 'email',
@@ -353,6 +366,7 @@ $(document).on('click', '.btn-edit', function() {
 
         $('#edit_id').val(response.id);
         $('#edit_name').val(response.name);
+        $('#edit_nik').val(response.nik);
         $('#edit_email').val(response.email);
         $('#edit_phone').val(response.phone);
         $('#edit_status').val(response.status);

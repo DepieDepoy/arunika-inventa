@@ -121,8 +121,9 @@ class SubCategoryController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $code = CodeHelper::generate(
-            $request->sub_category_name,
+        $code = CodeHelper::generateNumber(
+            //$request->sub_category_name,
+            'SUBCAT-',
             SubCategory::class,
             'sub_category_code',
             $companyId

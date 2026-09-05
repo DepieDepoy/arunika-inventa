@@ -4,6 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\AssetPhoto;
+use App\Models\AssetDocument;
+
 
 class Asset extends Model
 {
@@ -22,6 +26,7 @@ class Asset extends Model
         'model',
         'serial_number',
         'description',
+        'asset_condition',
 
         'purchase_date',
         'purchase_price',
@@ -36,8 +41,14 @@ class Asset extends Model
         'warranty_end',
         'warranty_note',
 
-        'images',
-        'invoice_documents',
+        'maintenance_required',
+        'maintenance_type',
+        'maintenance_trigger',
+        'maintenance_interval',
+        'maintenance_interval_unit',
+        'maintenance_start_date',
+        'last_maintenance_date',
+        'next_maintenance_date',
 
         'location',
         'status',
@@ -54,8 +65,6 @@ class Asset extends Model
         'warranty_start' => 'date',
         'warranty_end' => 'date',
         'qr_generated_at' => 'datetime',
-        'images' => 'array',
-        'invoice_documents' => 'array',
     ];
 
     /**
@@ -97,4 +106,20 @@ class Asset extends Model
     {
         return $this->belongsTo(User::class, 'responsible_user_id');
     }
+    public function photos(): HasMany
+    {
+        return $this->hasMany(AssetPhoto::class)
+            ->orderBy('sort_order');
+    }
+
+    public function documents(): HasMany
+    {
+        return $this->hasMany(AssetDocument::class);
+    }
+
+    public function maintenances(): HasMany
+    {
+        return $this->hasMany(AssetMaintenance::class);
+    }
+
 }

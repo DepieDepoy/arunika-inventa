@@ -15,6 +15,16 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Str;
 
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+
+use App\Imports\UserImport;
+use App\Imports\UserPreviewImport;
+use App\Exports\UserImportTemplateExport;
+use App\Services\ExcelPreviewService;
+
+
 class UserController extends Controller
 {
     /**
@@ -51,6 +61,7 @@ class UserController extends Controller
             $request->all(),
             [
                 'name'     => 'required',
+                'nik'     => 'required',
                 'email'    => 'required|email',
                 'phone'   => 'required',
                 'role_id'  => 'required',
@@ -59,6 +70,7 @@ class UserController extends Controller
             ],
             [
                 'name.required'     => 'Nama wajib diisi',
+                'nik.required'     => 'NIK wajib diisi',
                 'email.required'    => 'Email wajib diisi',
                 'email.email'       => 'Format email tidak valid',
                 'phone.required'   => 'No. Telepon wajib diisi',
@@ -152,6 +164,7 @@ class UserController extends Controller
             'company_id' => Auth::user()->company_id,
             'role_id'      => $request->role_id,
             'name'         => $request->name,
+            'nik'         => $request->nik,
             'phone'       => $request->phone,
             'email'        => $request->email,
             'password'     => Hash::make($passwordPlain),
@@ -203,6 +216,15 @@ class UserController extends Controller
                     <div>
                         <div class="fw-bold text-dark">
                             ' . e($row->name) . '
+                        </div>
+                    </div>
+                ';
+            })
+            ->editColumn('nik', function ($row) {
+                return '
+                    <div>
+                        <div class="fw-bold text-dark">
+                            ' . e($row->nik) . '
                         </div>
                     </div>
                 ';
@@ -275,6 +297,7 @@ class UserController extends Controller
 
             ->rawColumns([
                 'name',
+                'nik',
                 'email',
                 'phone',
                 'companies',
@@ -312,6 +335,7 @@ class UserController extends Controller
             [
                 'id'      => 'required',
                 'name'    => 'required',
+                'nik'    => 'required',
                 'email'   => 'required|email',
                 'phone'  => 'required',
                 'role_id' => 'required',
@@ -319,6 +343,7 @@ class UserController extends Controller
             ],
             [
                 'name.required'    => 'Nama wajib diisi',
+                'nik.required'    => 'NIK wajib diisi',
                 'email.required'   => 'Email wajib diisi',
                 'email.email'      => 'Format email tidak valid',
                 'phone.required'  => 'No. Telepon wajib diisi',
@@ -407,6 +432,7 @@ class UserController extends Controller
         */
 
         $user->name    = $request->name;
+        $user->nik    = $request->nik;
         $user->email   = $request->email;
         $user->phone  = $request->phone;
         $user->role_id = $request->role_id;
@@ -540,11 +566,12 @@ class UserController extends Controller
 
         $sheet->setCellValue('A1', 'Company Name');
         $sheet->setCellValue('B1', 'Name');
-        $sheet->setCellValue('C1', 'Email');
-        $sheet->setCellValue('D1', 'No. Telepon');
-        $sheet->setCellValue('E1', 'Role');
-        $sheet->setCellValue('F1', 'Role Code');
-        $sheet->setCellValue('G1', 'Status');
+        $sheet->setCellValue('C1', 'NIK');
+        $sheet->setCellValue('D1', 'Email');
+        $sheet->setCellValue('E1', 'No. Telepon');
+        $sheet->setCellValue('F1', 'Role');
+        $sheet->setCellValue('G1', 'Role Code');
+        $sheet->setCellValue('H1', 'Status');
 
 
         /*
@@ -553,7 +580,7 @@ class UserController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $sheet->getStyle('A1:G1')
+        $sheet->getStyle('A1:H1')
             ->getFont()
             ->setBold(true);
 
@@ -564,7 +591,7 @@ class UserController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        foreach (range('A', 'G') as $column) {
+        foreach (range('A', 'H') as $column) {
 
             $sheet->getColumnDimension($column)
                 ->setAutoSize(true);
@@ -599,26 +626,31 @@ class UserController extends Controller
 
             $sheet->setCellValue(
                 'C' . $row,
-                $item->email
+                $item->nik
             );
 
             $sheet->setCellValue(
                 'D' . $row,
-                $item->phone
+                $item->email
             );
 
             $sheet->setCellValue(
                 'E' . $row,
-                $item->role_name
+                $item->phone
             );
 
             $sheet->setCellValue(
                 'F' . $row,
-                $item->role_code
+                $item->role_name
             );
 
             $sheet->setCellValue(
                 'G' . $row,
+                $item->role_code
+            );
+
+            $sheet->setCellValue(
+                'H' . $row,
                 $status
             );
 
@@ -653,4 +685,248 @@ class UserController extends Controller
             $filename
         )->deleteFileAfterSend(true);
     }
+
+    
+    /**
+     * Halaman Import User
+     */
+    public function import()
+    {
+        return view('dashboard.user.import');
+    }
+
+
+    /**
+     * Download Template Import User
+     */
+    public function downloadImportTemplate()
+    {
+        return Excel::download(
+            new UserImportTemplateExport,
+            'user_import_template.xlsx'
+        );
+    }
+
+
+    /**
+     * Preview Import User
+     */
+    public function previewImport(Request $request)
+    {
+        $request->validate([
+            'excel_file' => [
+                'required',
+                'file',
+                'mimes:xlsx,xls',
+                'max:10240',
+            ],
+        ]);
+
+        try {
+
+            /*
+            |--------------------------------------------------------------------------
+            | Simpan file sementara
+            |--------------------------------------------------------------------------
+            */
+
+            $file = $request->file('excel_file');
+
+            $fileName = uniqid('user_import_') . '.' .
+                $file->getClientOriginalExtension();
+
+            $filePath = $file->storeAs(
+                'temp/user-import',
+                $fileName
+            );
+
+            /*
+            |--------------------------------------------------------------------------
+            | Full path file
+            |--------------------------------------------------------------------------
+            */
+
+            $fullPath = Storage::path($filePath);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Preview Excel
+            |--------------------------------------------------------------------------
+            |
+            | Tidak menggunakan Excel::toArray()
+            |
+            | Hanya membaca maksimal 100 data pertama.
+            |--------------------------------------------------------------------------
+            */
+
+            $previewService = new ExcelPreviewService();
+
+            $preview = $previewService->preview(
+                $fullPath,
+                100
+            );
+
+            /*
+            |--------------------------------------------------------------------------
+            | Simpan file ke session
+            |--------------------------------------------------------------------------
+            */
+
+            session([
+                'user_import_file' => $filePath,
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Return Preview
+            |--------------------------------------------------------------------------
+            */
+
+            return view(
+                'dashboard.user.import-preview',
+                [
+                    'data' => $preview['data'],
+
+                    'totalRows' => $preview['totalRows'],
+
+                    'previewRows' => $preview['previewRows'],
+                ]
+            );
+
+        } catch (\Throwable $e) {
+
+            Log::error(
+                'User import preview gagal',
+                [
+                    'error' => $e->getMessage(),
+
+                    'trace' => $e->getTraceAsString(),
+                ]
+            );
+
+            /*
+            |--------------------------------------------------------------------------
+            | Hapus temporary file jika preview gagal
+            |--------------------------------------------------------------------------
+            */
+
+            if (!empty($filePath ?? null)) {
+                Storage::delete($filePath);
+            }
+
+            return back()->with(
+                'error',
+                'File Excel gagal dibaca: ' .
+                $e->getMessage()
+            );
+        }
+    }
+
+
+    /**
+     * Simpan Import User ke Database
+     */
+    public function importStore(Request $request)
+    {
+        $filePath = session('user_import_file');
+
+        if (!$filePath) {
+            return redirect()
+                ->route('users.import')
+                ->with(
+                    'error',
+                    'File import tidak ditemukan atau session telah berakhir.'
+                );
+        }
+
+        try {
+
+            if (!Storage::exists($filePath)) {
+
+                session()->forget('user_import_file');
+
+                return redirect()
+                    ->route('users.import')
+                    ->with(
+                        'error',
+                        'File import sudah tidak tersedia. Silakan upload kembali.'
+                    );
+            }
+
+            /*
+            * Ambil company dari user yang sedang login.
+            */
+            $companyId = Auth::user()->company_id;
+
+            /*
+            * Cari Staff role sekali saja.
+            */
+            $staffRole = Role::where('company_id', $companyId)
+                ->where('role_name', 'Staff')
+                ->first();
+
+            if (!$staffRole) {
+
+                return redirect()
+                    ->route('users.import')
+                    ->with(
+                        'error',
+                        'Role Staff untuk perusahaan ini belum tersedia.'
+                    );
+            }
+
+            /*
+            * Path file Excel.
+            */
+            $fullPath = Storage::path($filePath);
+
+            /*
+            * Dispatch import ke Queue.
+            *
+            * Karena UserImport implements ShouldQueue,
+            * proses import tidak akan menunggu sampai
+            * 40.000 / 100.000 / 200.000 data selesai.
+            */
+            Excel::import(
+                new UserImport(
+                    $companyId,
+                    $staffRole->id
+                ),
+                $fullPath
+            );
+
+            /*
+            * JANGAN hapus file di sini.
+            *
+            * Queue masih membutuhkan file Excel tersebut.
+            */
+
+            session()->forget('user_import_file');
+
+            return redirect()
+                ->route('users.index')
+                ->with(
+                    'success',
+                    'Import user sedang diproses di background. Data akan masuk secara bertahap.'
+                );
+
+        } catch (\Throwable $e) {
+
+            Log::error(
+                'User import gagal',
+                [
+                    'error' => $e->getMessage(),
+                    'file' => $filePath,
+                ]
+            );
+
+            return redirect()
+                ->route('users.import')
+                ->with(
+                    'error',
+                    'Import gagal: ' . $e->getMessage()
+                );
+        }
+    }
+
 }

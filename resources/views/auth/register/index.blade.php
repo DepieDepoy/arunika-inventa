@@ -67,7 +67,7 @@
                         @csrf
                         <div class="row">
                             {{-- Nama --}}
-                            <div class="col-lg-12">
+                            <div class="col-lg-6">
                                 <div class="form-group">
                                     <label class="form-label">Full Name</label>
                                     <input
@@ -77,6 +77,22 @@
                                         value="{{ old('name') }}"
                                         placeholder="Enter your full name" autofocus>
                                     @error('name')
+                                        <div class="invalid-feedback">
+                                            {{ $message }}
+                                        </div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="form-group">
+                                    <label class="form-label">ID Person</label>
+                                    <input
+                                        type="text"
+                                        name="nik"
+                                        class="form-control @error('nik') is-invalid @enderror"
+                                        value="{{ old('nik') }}"
+                                        placeholder="ID Person" >
+                                    @error('nik')
                                         <div class="invalid-feedback">
                                             {{ $message }}
                                         </div>

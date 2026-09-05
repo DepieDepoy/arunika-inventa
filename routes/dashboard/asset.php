@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Dashboard\AssetController;
 
 
-Route::prefix('cms')
+Route::prefix('dashboard')
     ->middleware('auth')
     ->group(function () {
 
@@ -33,7 +33,25 @@ Route::prefix('cms')
         Route::get('/assets/data', [AssetController::class, 'data'])
             ->name('assets.data');
 
+        Route::get('/assets/qr/{id}', [AssetController::class, 'qr'])
+            ->name('assets.qr');
+            
+        Route::post('/assets/print-qr', [AssetController::class, 'printQr'])
+            ->name('assets.print-qr');
+
         Route::get('/assets/export', [AssetController::class, 'export'])
             ->name('assets.export');
+
+        Route::get('/assets/import', [AssetController::class, 'import'])
+            ->name('assets.import');
+
+        Route::post('/assets/import/preview', [AssetController::class, 'previewImport'])
+            ->name('assets.import.preview');
+
+        Route::post('/assets/import/store', [AssetController::class, 'importStore'])
+            ->name('assets.import.store');
+
+        Route::get('/assets/import/template', [AssetController::class, 'downloadImportTemplate']
+        )->name('assets.import.template');
 
     });

@@ -21,3 +21,13 @@ require __DIR__.'/dashboard/category.php';
 require __DIR__.'/dashboard/subcategory.php';
 require __DIR__.'/dashboard/vendor.php';
 require __DIR__.'/dashboard/asset.php';
+
+Route::get('/php-check', function () {
+    return [
+        'php_version' => PHP_VERSION,
+        'sapi' => PHP_SAPI,
+        'mbstring' => extension_loaded('mbstring'),
+        'mb_strcut' => function_exists('mb_strcut'),
+        'php_ini' => php_ini_loaded_file(),
+    ];
+});

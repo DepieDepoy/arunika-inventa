@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Dashboard\SubcategoryController;
 
-Route::prefix('cms')
+Route::prefix('dashboard')
     ->middleware('auth')
     ->group(function () {
 

@@ -584,3 +584,14 @@ input.form-control:focus {
 .auth-card{
     padding:40px 0;
 }
+
+.form-control,
+.form-select {
+    color: #000 !important;
+    font-weight: 400 !important;
+}
+
+.form-control::placeholder {
+    color: #adb5bd !important;
+    font-weight: 400 !important;
+}

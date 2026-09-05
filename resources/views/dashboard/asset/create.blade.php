@@ -1,9 +1,6 @@
 @extends('dashboard.layouts.wrapper')
-
 @section('title', 'Add Asset')
-
 @section('content')
-
 <style>
     .asset-page-header {
         margin-bottom: 1.5rem;
@@ -97,6 +94,24 @@
         font-size: 20px;
         color: #696cff;
     }
+    .preview-remove {
+        border: none;
+        background: transparent;
+        color: #ff3e1d;
+        font-size: 16px;
+        cursor: pointer;
+        padding: 5px 8px;
+        border-radius: 5px;
+    }
+
+    .preview-remove:hover {
+        background: #fff0ed;
+    }
+
+    .preview-item-left {
+        flex: 1;
+        min-width: 0;
+    }
 
     .preview-file-name {
         white-space: nowrap;
@@ -116,6 +131,15 @@
     .form-control,
     .form-select {
         min-height: 42px;
+        border: 1px solid #d9dee3 !important;
+        border-radius: 6px;
+        background-color: #fff;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #696cff !important;
+        box-shadow: 0 0 0 0.15rem rgba(105, 108, 255, 0.15);
     }
 
     .sticky-footer {
@@ -169,33 +193,22 @@
     }
 </style>
 
-
 <div class="content-wrapper">
-
     <div class="container-xxl flex-grow-1 container-p-y">
-
         <!-- ===================================================== -->
         <!-- PAGE HEADER -->
         <!-- ===================================================== -->
-
         <div class="asset-page-header">
-
             <div class="d-flex justify-content-between align-items-center">
-
                 <div>
-
                     <h4 class="fw-bold mb-1">
                         Add Asset
                     </h4>
-
                     <p class="text-muted mb-0">
                         Add new company asset information
                     </p>
-
                 </div>
-
                 <div>
-
                     <a
                         href="{{ route('assets.index') }}"
                         class="btn btn-label-secondary"
@@ -203,66 +216,39 @@
                         <i class="fa-solid fa-arrow-left me-1"></i>
                         Back to Assets
                     </a>
-
                 </div>
-
             </div>
-
         </div>
-
-
         <!-- ===================================================== -->
         <!-- FORM -->
         <!-- ===================================================== -->
-
-        <form
-            id="formAddAsset"
-            enctype="multipart/form-data"
-        >
-
+        <form id="formAddAsset" enctype="multipart/form-data">
             @csrf
-
-
             <!-- ================================================= -->
             <!-- 1. ASSET INFORMATION -->
             <!-- ================================================= -->
-
             <div class="card asset-section">
-
                 <div class="card-body">
-
                     <div class="asset-section-header">
-
                         <div class="asset-section-number">
                             1
                         </div>
-
                         <div>
-
                             <h6 class="asset-section-title">
                                 Asset Information
                             </h6>
-
                             <p class="asset-section-description">
                                 Basic information about the asset
                             </p>
-
                         </div>
-
                     </div>
-
-
                     <div class="row">
-
                         <!-- Asset Name -->
-
                         <div class="col-md-6 mb-3">
-
                             <label class="form-label">
                                 Asset Name
                                 <span class="required">*</span>
                             </label>
-
                             <input
                                 type="text"
                                 name="asset_name"
@@ -271,406 +257,287 @@
                                 placeholder="Enter asset name"
                                 required
                             >
-
                         </div>
-
-
                         <!-- Category -->
-
                         <div class="col-md-6 mb-3">
-
                             <label class="form-label">
                                 Category
                                 <span class="required">*</span>
                             </label>
-
                             <select
                                 name="category_id"
                                 id="category_id"
                                 class="form-select"
                                 required
                             >
-
                                 <option value="">
                                     Select or type category
                                 </option>
-
                                 @foreach($categories as $category)
-
                                     <option
                                         value="{{ $category->id }}"
                                         data-name="{{ $category->category_name }}"
                                     >
                                         {{ $category->category_name }}
                                     </option>
-
                                 @endforeach
-
                             </select>
-
                             <small class="text-muted">
                                 Type a new category if it is not registered yet.
                             </small>
-
                         </div>
-
-
                         <!-- Sub Category -->
-
                         <div class="col-md-6 mb-3">
-
                             <label class="form-label">
                                 Sub Category
                             </label>
-
                             <select
                                 name="sub_category_id"
                                 id="sub_category_id"
                                 class="form-select"
                             >
-
                                 <option value="">
                                     Select or type sub category
                                 </option>
-
                             </select>
-
                             <small class="text-muted">
                                 Sub category will follow the selected category.
                             </small>
-
                         </div>
-
-
                         <!-- Vendor -->
-
                         <div class="col-md-6 mb-3">
-
                             <label class="form-label">
                                 Vendor
                                 <span class="required">*</span>
                             </label>
-
                             <select
                                 name="vendor_id"
                                 id="vendor_id"
                                 class="form-select"
                                 required
                             >
-
                                 <option value="">
                                     Select vendor
                                 </option>
-
                                 @foreach($vendors as $vendor)
-
                                     <option value="{{ $vendor->id }}">
                                         {{ $vendor->vendor_name }}
                                     </option>
-
                                 @endforeach
-
                             </select>
-
                             <small class="text-muted">
                                 Vendor must be registered first.
                             </small>
-
                         </div>
-
-
-                        <!-- Brand -->
-
                         <div class="col-md-6 mb-3">
+                            <label for="asset_condition" class="form-label">
+                                Asset Condition <span class="required">*</span>
+                            </label>
 
+                            <select
+                                name="asset_condition"
+                                id="asset_condition"
+                                class="form-select"
+                                required
+                            >
+                                <option value="">Select Condition</option>
+                                <option value="new" selected>New</option>
+                                <option value="used">Used</option>
+                            </select>
+
+                            <small class="text-muted">
+                                Select whether the asset is new or previously used.
+                            </small>
+                        </div>
+                        <!-- Brand -->
+                        <div class="col-md-6 mb-3">
                             <label class="form-label">
                                 Brand
                             </label>
-
                             <input
                                 type="text"
                                 name="brand"
                                 class="form-control"
                                 placeholder="Example: Dell, HP, Lenovo"
                             >
-
                         </div>
-
-
                         <!-- Model -->
-
                         <div class="col-md-6 mb-3">
-
                             <label class="form-label">
                                 Model
                             </label>
-
                             <input
                                 type="text"
                                 name="model"
                                 class="form-control"
                                 placeholder="Enter asset model"
                             >
-
                         </div>
-
-
                         <!-- Serial Number -->
-
                         <div class="col-md-6 mb-3">
-
                             <label class="form-label">
                                 Serial Number
                             </label>
-
                             <input
                                 type="text"
                                 name="serial_number"
                                 class="form-control"
                                 placeholder="Enter serial number"
                             >
-
                         </div>
-
-
                         <!-- Status -->
-
                         <div class="col-md-6 mb-3">
-
                             <label class="form-label">
                                 Status
                                 <span class="required">*</span>
                             </label>
-
                             <select
                                 name="status"
                                 class="form-select"
                                 required
                             >
-
                                 <option value="1" selected>
                                     Active
                                 </option>
-
                                 <option value="0">
                                     Inactive
                                 </option>
-
                             </select>
-
                         </div>
-
-
                         <!-- Description -->
-
                         <div class="col-md-12 mb-3">
-
                             <label class="form-label">
                                 Description
                             </label>
-
                             <textarea
                                 name="description"
                                 class="form-control"
                                 rows="4"
                                 placeholder="Enter asset description"
                             ></textarea>
-
                         </div>
-
                     </div>
-
                 </div>
-
             </div>
-
-
             <!-- ================================================= -->
             <!-- 2. PURCHASE INFORMATION -->
             <!-- ================================================= -->
-
             <div class="card asset-section">
-
                 <div class="card-body">
-
                     <div class="asset-section-header">
-
                         <div class="asset-section-number">
                             2
                         </div>
-
                         <div>
-
                             <h6 class="asset-section-title">
                                 Purchase Information
                             </h6>
-
                             <p class="asset-section-description">
                                 Purchase and invoice information
                             </p>
-
                         </div>
-
                     </div>
-
-
                     <div class="row">
-
                         <!-- Purchase Date -->
-
                         <div class="col-md-4 mb-3">
-
                             <label class="form-label">
                                 Purchase Date
+                                <span class="required">*</span>
                             </label>
-
                             <input
                                 type="date"
                                 name="purchase_date"
-                                class="form-control"
+                                class="form-control"required
                             >
-
                         </div>
-
-
                         <!-- Purchase Price -->
-
                         <div class="col-md-4 mb-3">
-
                             <label class="form-label">
                                 Purchase Price
+                                <span class="required">*</span>
                             </label>
-
                             <div class="input-group">
-
                                 <span class="input-group-text">
                                     Rp
                                 </span>
-
                                 <input
                                     type="number"
                                     name="purchase_price"
                                     class="form-control"
                                     min="0"
-                                    placeholder="0"
+                                    placeholder="0" required
                                 >
-
                             </div>
-
                         </div>
-
-
                         <!-- Invoice Number -->
-
                         <div class="col-md-4 mb-3">
-
                             <label class="form-label">
                                 Purchase Number
+                                <span class="required">*</span>
                             </label>
-
                             <input
                                 type="text"
                                 name="purchase_invoice"
                                 class="form-control"
-                                placeholder="Enter invoice number"
+                                placeholder="Enter invoice number" required
                             >
-
                         </div>
-
                     </div>
-
                 </div>
-
             </div>
-
-
             <!-- ================================================= -->
             <!-- 3. DEPRECIATION -->
             <!-- ================================================= -->
-
             <div class="card asset-section">
-
                 <div class="card-body">
-
                     <div class="asset-section-header">
-
                         <div class="asset-section-number">
                             3
                         </div>
-
                         <div>
-
                             <h6 class="asset-section-title">
                                 Depreciation
                             </h6>
-
                             <p class="asset-section-description">
                                 Asset depreciation configuration
                             </p>
-
                         </div>
-
                     </div>
-
-
                     <div class="alert alert-info">
-
                         <div class="d-flex">
-
                             <i class="fa-solid fa-circle-info me-2 mt-1"></i>
-
                             <div>
-
                                 Depreciation will be calculated based on
                                 purchase price, useful life and depreciation
                                 method.
-
                             </div>
-
                         </div>
-
                     </div>
-
-
                     <div class="row">
-
                         <!-- Depreciation Method -->
-
                         <div class="col-md-4 mb-3">
-
                             <label class="form-label">
                                 Depreciation Method
                             </label>
-
                             <select
                                 name="depreciation_method"
                                 id="depreciation_method"
                                 class="form-select"
                             >
-
                                 <option value="">
                                     Select Method
                                 </option>
-
                                 <option value="straight_line">
                                     Straight Line
                                 </option>
-
                             </select>
-
                         </div>
-
-
                         <!-- Useful Life -->
-
                         <div class="col-md-4 mb-3">
-
                             <label class="form-label">
                                 Useful Life
                             </label>
-
                             <div class="input-group">
-
                                 <input
                                     type="number"
                                     name="useful_life"
@@ -678,30 +545,20 @@
                                     min="1"
                                     placeholder="5"
                                 >
-
                                 <span class="input-group-text">
                                     Years
                                 </span>
-
                             </div>
-
                         </div>
-
-
                         <!-- Residual Value -->
-
                         <div class="col-md-4 mb-3">
-
                             <label class="form-label">
                                 Residual Value
                             </label>
-
                             <div class="input-group">
-
                                 <span class="input-group-text">
                                     Rp
                                 </span>
-
                                 <input
                                     type="number"
                                     name="residual_value"
@@ -709,173 +566,326 @@
                                     min="0"
                                     placeholder="0"
                                 >
-
                             </div>
-
                         </div>
-
-
                         <!-- Depreciation Start -->
-
                         <div class="col-md-4 mb-3">
-
                             <label class="form-label">
                                 Depreciation Start Date
                             </label>
-
                             <input
                                 type="date"
                                 name="depreciation_start_date"
                                 class="form-control"
                             >
+                        </div>
+                    </div>
+                </div>
+            </div>
+                        <!-- ================================================= -->
+            <!-- 4. MAINTENANCE -->
+            <!-- ================================================= -->
+            <div class="card asset-section">
+                <div class="card-body">
+
+                    <div class="asset-section-header">
+                        <div class="asset-section-number">
+                            4
+                        </div>
+
+                        <div>
+                            <h6 class="asset-section-title">
+                                Maintenance
+                            </h6>
+
+                            <p class="asset-section-description">
+                                Maintenance schedule and configuration
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row">
+
+                        <!-- Maintenance Required -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                Maintenance Required
+                            </label>
+
+                            <div class="form-check form-switch mt-2">
+                                <input
+                                    class="form-check-input"
+                                    type="checkbox"
+                                    name="maintenance_required"
+                                    id="maintenance_required"
+                                    value="1"
+                                >
+
+                                <label
+                                    class="form-check-label"
+                                    for="maintenance_required"
+                                    id="maintenance_required_label"
+                                >
+                                    No
+                                </label>
+                            </div>
+
+                            <small class="text-muted">
+                                Enable maintenance scheduling for this asset.
+                            </small>
+                        </div>
+
+                    </div>
+
+                    <!-- MAINTENANCE CONFIGURATION -->
+                    <div id="maintenance_config" style="display: none;">
+
+                        <div class="row">
+
+                            <!-- Maintenance Type -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    Maintenance Type
+                                </label>
+
+                                <select
+                                    name="maintenance_type"
+                                    id="maintenance_type"
+                                    class="form-select"
+                                >
+                                    <option value="">
+                                        Select Maintenance Type
+                                    </option>
+
+                                    <option value="preventive">
+                                        Preventive Maintenance
+                                    </option>
+
+                                    <option value="corrective">
+                                        Corrective Maintenance
+                                    </option>
+                                </select>
+                            </div>
+
+                            <!-- Maintenance Trigger -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    Maintenance Trigger
+                                </label>
+
+                                <select
+                                    name="maintenance_trigger"
+                                    id="maintenance_trigger"
+                                    class="form-select"
+                                >
+                                    <option value="">
+                                        Select Trigger
+                                    </option>
+
+                                    <option value="calendar" selected>
+                                        Calendar
+                                    </option>
+
+                                    <option value="usage">
+                                        Usage / Meter
+                                    </option>
+                                </select>
+                            </div>
+
+                            <!-- Maintenance Interval -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    Maintenance Interval
+                                </label>
+
+                                <div class="input-group">
+
+                                    <input
+                                        type="number"
+                                        name="maintenance_interval"
+                                        id="maintenance_interval"
+                                        class="form-control"
+                                        min="1"
+                                        placeholder="3"
+                                    >
+
+                                    <select
+                                        name="maintenance_interval_unit"
+                                        id="maintenance_interval_unit"
+                                        class="form-select"
+                                        style="max-width: 140px;"
+                                    >
+                                        <option value="day">
+                                            Days
+                                        </option>
+
+                                        <option value="week">
+                                            Weeks
+                                        </option>
+
+                                        <option value="month" selected>
+                                            Months
+                                        </option>
+
+                                        <option value="year">
+                                            Years
+                                        </option>
+                                    </select>
+
+                                </div>
+
+                                <small class="text-muted">
+                                    Example: every 3 months.
+                                </small>
+                            </div>
+
+                            <!-- Maintenance Start Date -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    Maintenance Start Date
+                                </label>
+
+                                <input
+                                    type="date"
+                                    name="maintenance_start_date"
+                                    id="maintenance_start_date"
+                                    class="form-control"
+                                >
+
+                                <small class="text-muted">
+                                    Starting date for the maintenance schedule.
+                                </small>
+                            </div>
+
+                            <!-- Last Maintenance -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    Last Maintenance
+                                </label>
+
+                                <input
+                                    type="date"
+                                    name="last_maintenance_date"
+                                    id="last_maintenance_date"
+                                    class="form-control"
+                                >
+
+                                <small class="text-muted">
+                                    Leave empty if this asset has never been maintained.
+                                </small>
+                            </div>
+
+                            <!-- Next Maintenance -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    Next Maintenance
+                                </label>
+
+                                <input
+                                    type="date"
+                                    id="next_maintenance_date_display"
+                                    class="form-control"
+                                    readonly
+                                >
+
+                                <small class="text-muted">
+                                    Automatically calculated from the maintenance schedule.
+                                </small>
+                            </div>
 
                         </div>
 
                     </div>
 
                 </div>
-
             </div>
 
-
             <!-- ================================================= -->
-            <!-- 4. ASSIGNMENT -->
+            <!-- 5. ASSIGNMENT -->
             <!-- ================================================= -->
-
             <div class="card asset-section">
-
                 <div class="card-body">
-
                     <div class="asset-section-header">
-
                         <div class="asset-section-number">
-                            4
+                            5
                         </div>
-
                         <div>
-
                             <h6 class="asset-section-title">
                                 Asset Assignment
                             </h6>
-
                             <p class="asset-section-description">
                                 Person responsible for this asset
                             </p>
-
                         </div>
-
                     </div>
-
-
                     <div class="row">
-
                         <!-- Responsible -->
-
                         <div class="col-md-6 mb-3">
-
                             <label class="form-label">
                                 Responsible
                             </label>
-
                             <select
                                 name="responsible_user_id"
                                 class="form-select"
                             >
-
                                 <option value="">
                                     Select Responsible Person
                                 </option>
-
                                 @foreach($users as $user)
-
                                     <option value="{{ $user->id }}">
                                         {{ $user->name }}
                                     </option>
-
                                 @endforeach
-
                             </select>
-
                         </div>
-
-
                         <!-- Location -->
-
                         <div class="col-md-6 mb-3">
-
                             <label class="form-label">
                                 Location
                             </label>
-
                             <input
                                 type="text"
                                 name="location"
                                 class="form-control"
                                 placeholder="Example: Warehouse, Office, Room 01"
                             >
-
                         </div>
-
                     </div>
-
                 </div>
-
             </div>
-
-
             <!-- ================================================= -->
-            <!-- 5. ASSET PHOTOS -->
+            <!-- 6. ASSET PHOTOS -->
             <!-- ================================================= -->
-
             <div class="card asset-section">
-
                 <div class="card-body">
-
                     <div class="asset-section-header">
-
                         <div class="asset-section-number">
-                            5
+                            6
                         </div>
-
                         <div>
-
                             <h6 class="asset-section-title">
                                 Asset Photos
+                                <span class="required">*</span>
                             </h6>
-
                             <p class="asset-section-description">
                                 Upload maximum 3 photos of the asset
                             </p>
-
                         </div>
-
                     </div>
-
-
                     <label
                         for="asset_photos"
                         class="upload-box w-100"
                     >
-
                         <i class="fa-solid fa-cloud-arrow-up d-block"></i>
-
                         <strong>
                             Click to upload asset photos
                         </strong>
-
                         <div class="text-muted small mt-1">
-
                             Maximum 3 files
-
                             <br>
-
                             JPG, JPEG, PNG
-
                         </div>
-
                     </label>
-
-
                     <input
                         type="file"
                         name="asset_photos[]"
@@ -883,72 +893,47 @@
                         class="d-none"
                         accept="image/jpeg,image/png"
                         multiple
+                        required
                     >
-
-
                     <div
                         id="photo_preview"
                         class="upload-preview"
                     ></div>
-
                 </div>
-
             </div>
-
-
             <!-- ================================================= -->
-            <!-- 6. INVOICE DOCUMENT -->
+            <!-- 7. INVOICE DOCUMENT -->
             <!-- ================================================= -->
-
             <div class="card asset-section">
-
                 <div class="card-body">
-
                     <div class="asset-section-header">
-
                         <div class="asset-section-number">
-                            6
+                            7
                         </div>
-
                         <div>
-
                             <h6 class="asset-section-title">
                                 Invoice / Documents
+                                <span class="required">*</span>
                             </h6>
-
                             <p class="asset-section-description">
                                 Upload maximum 5 invoice or supporting documents
                             </p>
-
                         </div>
-
                     </div>
-
-
                     <label
                         for="invoice_documents"
                         class="upload-box w-100"
                     >
-
                         <i class="fa-solid fa-file-invoice d-block"></i>
-
                         <strong>
                             Click to upload invoice documents
                         </strong>
-
                         <div class="text-muted small mt-1">
-
                             Maximum 5 files
-
                             <br>
-
                             PDF, JPG, JPEG, PNG
-
                         </div>
-
                     </label>
-
-
                     <input
                         type="file"
                         name="invoice_documents[]"
@@ -956,9 +941,8 @@
                         class="d-none"
                         accept=".pdf,image/jpeg,image/png"
                         multiple
+                        required
                     >
-
-
                     <div
                         id="invoice_preview"
                         class="upload-preview"
@@ -1306,182 +1290,390 @@ $(document).ready(function () {
     );
 
 
+    
+   /*
+|--------------------------------------------------------------------------
+| PHOTO UPLOAD
+|--------------------------------------------------------------------------
+*/
+
+let photoDataTransfer = new DataTransfer();
+
+$('#asset_photos').on('change', function () {
+
+    const input = this;
+    const preview = $('#photo_preview');
+
+    const MAX_PHOTOS = 3;
+    const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
+
+    const newFiles = Array.from(input.files);
+
     /*
     |--------------------------------------------------------------------------
-    | PHOTO UPLOAD
+    | Add new files
     |--------------------------------------------------------------------------
     */
 
-    $('#asset_photos').on('change', function () {
+    for (let file of newFiles) {
 
-        let files = this.files;
+        /*
+        | Check duplicate file
+        */
 
-        let preview =
-            $('#photo_preview');
+        let duplicate = Array.from(photoDataTransfer.files).some(
+            existingFile =>
+                existingFile.name === file.name &&
+                existingFile.size === file.size
+        );
 
-
-        preview.empty();
-
+        if (duplicate) {
+            continue;
+        }
 
         /*
         | Maximum 3 photos
         */
 
-        if (files.length > 3) {
+        if (photoDataTransfer.files.length >= MAX_PHOTOS) {
 
             Swal.fire({
-
                 icon: 'warning',
-
                 title: 'Maximum 3 Photos',
-
-                text:
-                    'Asset hanya dapat memiliki maksimal 3 foto.'
-
+                text: 'Asset hanya dapat memiliki maksimal 3 foto.'
             });
 
-
-            this.value = '';
-
-            return;
-
+            break;
         }
 
+        /*
+        | Validate MIME
+        */
 
-        $.each(files, function (index, file) {
+        if (!/^image\/(jpeg|png)$/.test(file.type)) {
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Format Tidak Valid',
+                text: 'Foto harus JPG, JPEG atau PNG.'
+            });
+
+            continue;
+        }
+
+        /*
+        | Validate size
+        */
+
+        if (file.size > MAX_PHOTO_SIZE) {
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Ukuran Foto Terlalu Besar',
+                text:
+                    `"${file.name}" memiliki ukuran ` +
+                    `${(file.size / 1024 / 1024).toFixed(5)} MB. ` +
+                    `Maksimal ukuran setiap foto adalah 5 MB.`
+            });
+
+            continue;
+        }
+
+        photoDataTransfer.items.add(file);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Update input files
+    |--------------------------------------------------------------------------
+    */
+
+    input.files = photoDataTransfer.files;
+
+    /*
+    |--------------------------------------------------------------------------
+    | Render preview
+    |--------------------------------------------------------------------------
+    */
+
+    renderPhotoPreview();
+
+});
 
 
-            /*
-            | Validate MIME type
-            */
+function renderPhotoPreview() {
 
-            if (
-                !/^image\/(jpeg|png)$/.test(
-                    file.type
-                )
-            ) {
+    const preview = $('#photo_preview');
 
-                Swal.fire({
+    preview.empty();
 
-                    icon: 'error',
+    Array.from(photoDataTransfer.files).forEach(
+        function (file, index) {
 
-                    title: 'Format Tidak Valid',
+            const reader = new FileReader();
 
-                    text:
-                        'Foto harus JPG, JPEG atau PNG.'
+            reader.onload = function (e) {
 
-                });
+                preview.append(`
+                    <div class="preview-item">
 
+                        <div class="preview-item-left">
 
-                $('#asset_photos').val('');
+                            <img
+                                src="${e.target.result}"
+                                class="asset-photo-preview"
+                            >
 
-                preview.empty();
+                            <div class="min-width-0">
 
-                return false;
-
-            }
-
-
-            let reader =
-                new FileReader();
-
-
-            reader.onload =
-                function (e) {
-
-                    preview.append(`
-
-                        <div class="preview-item">
-
-                            <div class="preview-item-left">
-
-                                <img
-                                    src="${e.target.result}"
-                                    class="asset-photo-preview"
-                                >
-
-                                <div>
-
-                                    <div class="fw-semibold">
-                                        ${file.name}
-                                    </div>
-
-                                    <small class="text-muted">
-
-                                        ${
-                                            (
-                                                file.size /
-                                                1024 /
-                                                1024
-                                            ).toFixed(2)
-                                        }
-
-                                        MB
-
-                                    </small>
-
+                                <div class="fw-semibold preview-file-name">
+                                    ${file.name}
                                 </div>
+
+                                <small class="text-muted">
+                                    ${(file.size / 1024 / 1024).toFixed(5)} MB
+                                </small>
 
                             </div>
 
                         </div>
 
-                    `);
+                        <button
+                            type="button"
+                            class="preview-remove btn-remove-photo"
+                            data-index="${index}"
+                            title="Remove photo"
+                        >
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
 
-                };
+                    </div>
+                `);
 
+            };
 
             reader.readAsDataURL(file);
 
-        });
-
-    });
-
+        }
+    );
 
     /*
     |--------------------------------------------------------------------------
-    | INVOICE DOCUMENT UPLOAD
+    | Required validation
     |--------------------------------------------------------------------------
     */
 
-    $('#invoice_documents').on('change', function () {
+    $('#asset_photos').prop(
+        'required',
+        photoDataTransfer.files.length === 0
+    );
 
-        let files = this.files;
-
-        let preview =
-            $('#invoice_preview');
+}
 
 
-        preview.empty();
+/*
+|--------------------------------------------------------------------------
+| REMOVE PHOTO
+|--------------------------------------------------------------------------
+*/
 
+$(document).on(
+    'click',
+    '.btn-remove-photo',
+    function () {
+
+        const index = parseInt(
+            $(this).data('index')
+        );
 
         /*
-        | Maximum 5 documents
+        | Create new DataTransfer
         */
 
-        if (files.length > 5) {
+        const newDataTransfer = new DataTransfer();
 
-            Swal.fire({
+        /*
+        | Copy all files except selected file
+        */
 
-                icon: 'warning',
+        Array.from(photoDataTransfer.files).forEach(
+            function (file, fileIndex) {
 
-                title: 'Maximum 5 Documents',
+                if (fileIndex !== index) {
 
-                text:
-                    'Invoice/document hanya dapat maksimal 5 file.'
+                    newDataTransfer.items.add(file);
 
-            });
+                }
+
+            }
+        );
+
+        /*
+        | Replace DataTransfer
+        */
+
+        photoDataTransfer = newDataTransfer;
+
+        /*
+        | Update input
+        */
+
+        $('#asset_photos')[0].files =
+            photoDataTransfer.files;
+
+        /*
+        | Re-render preview
+        */
+
+        renderPhotoPreview();
+
+    }
+);
 
 
-            this.value = '';
+/*
+|--------------------------------------------------------------------------
+| INVOICE DOCUMENT UPLOAD
+|--------------------------------------------------------------------------
+*/
 
-            return;
+let documentDataTransfer = new DataTransfer();
 
+$('#invoice_documents').on('change', function () {
+
+    const input = this;
+
+    const MAX_DOCUMENTS = 5;
+    const MAX_DOCUMENT_SIZE = 5 * 1024 * 1024;
+
+    const allowedExtensions = [
+        'pdf',
+        'jpg',
+        'jpeg',
+        'png'
+    ];
+
+    const newFiles = Array.from(input.files);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Add new files
+    |--------------------------------------------------------------------------
+    */
+
+    for (let file of newFiles) {
+
+        /*
+        | Check duplicate
+        */
+
+        let duplicate =
+            Array.from(
+                documentDataTransfer.files
+            ).some(
+                existingFile =>
+                    existingFile.name === file.name &&
+                    existingFile.size === file.size
+            );
+
+        if (duplicate) {
+            continue;
         }
 
+        /*
+        | Maximum documents
+        */
 
-        $.each(files, function (index, file) {
+        if (
+            documentDataTransfer.files.length >=
+            MAX_DOCUMENTS
+        ) {
 
+            Swal.fire({
+                icon: 'warning',
+                title: 'Maximum 5 Documents',
+                text:
+                    'Invoice/document hanya dapat maksimal 5 file.'
+            });
+
+            break;
+        }
+
+        /*
+        | Extension
+        */
+
+        let extension =
+            file.name
+                .split('.')
+                .pop()
+                .toLowerCase();
+
+        if (!allowedExtensions.includes(extension)) {
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Format Tidak Valid',
+                text:
+                    'Document hanya PDF, JPG, JPEG atau PNG.'
+            });
+
+            continue;
+        }
+
+        /*
+        | File size
+        */
+
+        if (file.size > MAX_DOCUMENT_SIZE) {
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Ukuran Dokumen Terlalu Besar',
+                text:
+                    `"${file.name}" memiliki ukuran ` +
+                    `${(file.size / 1024 / 1024).toFixed(5)} MB. ` +
+                    `Maksimal ukuran setiap dokumen adalah 5 MB.`
+            });
+
+            continue;
+        }
+
+        documentDataTransfer.items.add(file);
+
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Update input
+    |--------------------------------------------------------------------------
+    */
+
+    input.files =
+        documentDataTransfer.files;
+
+    /*
+    |--------------------------------------------------------------------------
+    | Render
+    |--------------------------------------------------------------------------
+    */
+
+    renderDocumentPreview();
+
+});
+
+
+function renderDocumentPreview() {
+
+    const preview =
+        $('#invoice_preview');
+
+    preview.empty();
+
+    Array.from(
+        documentDataTransfer.files
+    ).forEach(
+        function (file, index) {
 
             let extension =
                 file.name
@@ -1489,47 +1681,10 @@ $(document).ready(function () {
                     .pop()
                     .toLowerCase();
 
-
-            let allowed = [
-
-                'pdf',
-                'jpg',
-                'jpeg',
-                'png'
-
-            ];
-
-
-            if (
-                !allowed.includes(extension)
-            ) {
-
-                Swal.fire({
-
-                    icon: 'error',
-
-                    title: 'Format Tidak Valid',
-
-                    text:
-                        'Document hanya PDF, JPG, JPEG atau PNG.'
-
-                });
-
-
-                $('#invoice_documents').val('');
-
-                preview.empty();
-
-                return false;
-
-            }
-
-
             let icon =
                 extension === 'pdf'
                     ? 'fa-file-pdf'
                     : 'fa-file-image';
-
 
             preview.append(`
 
@@ -1541,7 +1696,7 @@ $(document).ready(function () {
                             class="fa-solid ${icon}"
                         ></i>
 
-                        <div>
+                        <div class="min-width-0">
 
                             <div
                                 class="preview-file-name fw-semibold"
@@ -1551,15 +1706,11 @@ $(document).ready(function () {
 
                             <small class="text-muted">
 
-                                ${
-                                    (
-                                        file.size /
-                                        1024 /
-                                        1024
-                                    ).toFixed(2)
-                                }
-
-                                MB
+                                ${(
+                                    file.size /
+                                    1024 /
+                                    1024
+                                ).toFixed(5)} MB
 
                             </small>
 
@@ -1567,14 +1718,254 @@ $(document).ready(function () {
 
                     </div>
 
+                    <button
+                        type="button"
+                        class="preview-remove btn-remove-document"
+                        data-index="${index}"
+                        title="Remove document"
+                    >
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+
                 </div>
 
             `);
 
-        });
+        }
+    );
 
-    });
+    /*
+    |--------------------------------------------------------------------------
+    | Required validation
+    |--------------------------------------------------------------------------
+    */
 
+    $('#invoice_documents').prop(
+        'required',
+        documentDataTransfer.files.length === 0
+    );
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| REMOVE DOCUMENT
+|--------------------------------------------------------------------------
+*/
+
+$(document).on(
+    'click',
+    '.btn-remove-document',
+    function () {
+
+        const index =
+            parseInt(
+                $(this).data('index')
+            );
+
+        const newDataTransfer =
+            new DataTransfer();
+
+        Array.from(
+            documentDataTransfer.files
+        ).forEach(
+            function (file, fileIndex) {
+
+                if (fileIndex !== index) {
+
+                    newDataTransfer.items.add(file);
+
+                }
+
+            }
+        );
+
+        documentDataTransfer =
+            newDataTransfer;
+
+        $('#invoice_documents')[0].files =
+            documentDataTransfer.files;
+
+        renderDocumentPreview();
+
+    }
+);
+    /*
+|--------------------------------------------------------------------------
+| MAINTENANCE
+|--------------------------------------------------------------------------
+*/
+
+function updateMaintenanceUI() {
+
+    const required = $('#maintenance_required').is(':checked');
+
+    $('#maintenance_config').toggle(required);
+
+    $('#maintenance_required_label').text(
+        required ? 'Yes' : 'No'
+    );
+
+    if (!required) {
+
+        $('#maintenance_type').val('');
+        $('#maintenance_trigger').val('calendar');
+        $('#maintenance_interval').val('');
+        $('#maintenance_interval_unit').val('month');
+        $('#maintenance_start_date').val('');
+        $('#last_maintenance_date').val('');
+        $('#next_maintenance_date_display').val('');
+    }
+
+    calculateNextMaintenanceDate();
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| MAINTENANCE TOGGLE
+|--------------------------------------------------------------------------
+*/
+
+$('#maintenance_required').on('change', function () {
+
+    updateMaintenanceUI();
+
+});
+
+
+/*
+|--------------------------------------------------------------------------
+| CALCULATE NEXT MAINTENANCE
+|--------------------------------------------------------------------------
+*/
+
+function calculateNextMaintenanceDate() {
+
+    if (!$('#maintenance_required').is(':checked')) {
+
+        $('#next_maintenance_date_display').val('');
+
+        return;
+    }
+
+    const interval = parseInt(
+        $('#maintenance_interval').val()
+    );
+
+    const unit = $('#maintenance_interval_unit').val();
+
+    const lastMaintenance =
+        $('#last_maintenance_date').val();
+
+    const startDate =
+        $('#maintenance_start_date').val();
+
+    /*
+    |--------------------------------------------------------------------------
+    | Base date
+    |--------------------------------------------------------------------------
+    | Jika sudah pernah maintenance:
+    | gunakan Last Maintenance.
+    |
+    | Jika belum pernah:
+    | gunakan Maintenance Start Date.
+    |--------------------------------------------------------------------------
+    */
+
+    const baseDate = lastMaintenance || startDate;
+
+    if (
+        !baseDate ||
+        !interval ||
+        interval < 1 ||
+        !unit
+    ) {
+
+        $('#next_maintenance_date_display').val('');
+
+        return;
+    }
+
+    const date = new Date(baseDate + 'T00:00:00');
+
+    if (isNaN(date.getTime())) {
+
+        $('#next_maintenance_date_display').val('');
+
+        return;
+    }
+
+    switch (unit) {
+
+        case 'day':
+            date.setDate(
+                date.getDate() + interval
+            );
+            break;
+
+        case 'week':
+            date.setDate(
+                date.getDate() + (interval * 7)
+            );
+            break;
+
+        case 'month':
+            date.setMonth(
+                date.getMonth() + interval
+            );
+            break;
+
+        case 'year':
+            date.setFullYear(
+                date.getFullYear() + interval
+            );
+            break;
+    }
+
+    const year =
+        date.getFullYear();
+
+    const month =
+        String(date.getMonth() + 1)
+            .padStart(2, '0');
+
+    const day =
+        String(date.getDate())
+            .padStart(2, '0');
+
+    $('#next_maintenance_date_display').val(
+        `${year}-${month}-${day}`
+    );
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| MAINTENANCE FIELD CHANGE
+|--------------------------------------------------------------------------
+*/
+
+$(
+    '#maintenance_interval, ' +
+    '#maintenance_interval_unit, ' +
+    '#maintenance_start_date, ' +
+    '#last_maintenance_date'
+).on('change input', function () {
+
+    calculateNextMaintenanceDate();
+
+});
+
+
+/*
+|--------------------------------------------------------------------------
+| INITIAL STATE
+|--------------------------------------------------------------------------
+*/
+
+updateMaintenanceUI();
 
     /*
     |--------------------------------------------------------------------------

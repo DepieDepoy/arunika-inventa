@@ -78,10 +78,8 @@ return new class extends Migration
             $table->string('brand', 100)->nullable();
             $table->string('model', 150)->nullable();
             $table->string('serial_number', 150)->nullable();
-
             $table->text('description')->nullable();
-
-
+            $table->string('asset_condition', 20)->default('new');
             /*
             |--------------------------------------------------------------------------
             | Purchase Information
@@ -132,21 +130,50 @@ return new class extends Migration
 
 
             /*
-            /*
             |--------------------------------------------------------------------------
-            | Attachments
+            | Maintenance Configuration
             |--------------------------------------------------------------------------
+            |
+            | Pengaturan dasar maintenance asset.
+            |
+            | maintenance_required:
+            | 1 = Asset membutuhkan maintenance
+            | 0 = Tidak membutuhkan maintenance
+            |
+            | maintenance_type:
+            | preventive / corrective
+            |
+            | maintenance_trigger:
+            | calendar / usage / both
+            |
+            | maintenance_interval_unit:
+            | day / week / month / year
+            |
             */
+            $table->boolean('maintenance_required')
+                ->default(false);
 
-            // Maksimal 3 gambar
-            $table->json('images')
+            $table->string('maintenance_type', 50)
                 ->nullable();
 
-            // Maksimal 5 dokumen invoice
-            $table->json('invoice_documents')
+            $table->string('maintenance_trigger', 20)
                 ->nullable();
 
-                /*
+            $table->unsignedInteger('maintenance_interval')
+                ->nullable();
+
+            $table->string('maintenance_interval_unit', 20)
+                ->nullable();
+
+            $table->date('maintenance_start_date')
+                ->nullable();
+
+            $table->date('last_maintenance_date')
+                ->nullable();
+
+            $table->date('next_maintenance_date')
+                ->nullable();
+            /*
             |--------------------------------------------------------------------------
             | Location
             |--------------------------------------------------------------------------
@@ -190,6 +217,7 @@ return new class extends Migration
             |--------------------------------------------------------------------------
             */
             $table->timestamps();
+
             $table->softDeletes();
 
 

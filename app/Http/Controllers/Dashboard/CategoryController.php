@@ -202,8 +202,9 @@ class CategoryController extends Controller
         */
         $companyId = Auth::user()->company_id;
 
-        $code = CodeHelper::generate(
-            $request->category_name,
+        $code = CodeHelper::generateNumber(
+            //$request->category_name,
+            'CAT-',
             Category::class,
             'category_code',
             $companyId
@@ -445,8 +446,9 @@ class CategoryController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $code = CodeHelper::generate(
-            $request->sub_category_name,
+        $code = CodeHelper::generateNumber(
+            //$request->sub_category_name,
+            'SUBCAT-',
             SubCategory::class,
             'sub_category_code',
             $companyId

@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\Asset;
+use App\Models\AssetPhoto;
+use App\Models\AssetDocument;
 use App\Models\Category;
 use App\Models\SubCategory;
 use App\Models\Vendor;
@@ -13,12 +15,19 @@ use App\Helpers\CodeHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 use Yajra\DataTables\Facades\DataTables;
 use Carbon\Carbon;
 
+use App\Exports\AssetImportTemplateExport;
+use App\Imports\AssetImport;
+use App\Imports\AssetPreviewImport;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Services\ExcelPreviewService;
 Carbon::setLocale('id');
 
 class AssetController extends Controller
@@ -57,6 +66,11 @@ class AssetController extends Controller
             'users'
         ));
     }
+
+
+    /**
+     * Create Asset
+     */
     public function create()
     {
         $companyId = Auth::user()->company_id;
@@ -97,36 +111,170 @@ class AssetController extends Controller
     {
         $companyId = Auth::user()->company_id;
 
-        $query = Asset::where('company_id', $companyId)
+        $query = Asset::query()
+            ->where('company_id', $companyId)
             ->with([
                 'category',
                 'subCategory',
                 'vendor',
-                'responsibleUser'
-            ])
-            ->latest();
+                'responsibleUser',
+            ]);
 
-        return DataTables::of($query)
+        /*
+        |--------------------------------------------------------------------------
+        | SEARCH
+        |--------------------------------------------------------------------------
+        |
+        | Search Asset Code / Asset Name
+        |
+        */
 
-            ->addIndexColumn()
+        if ($request->filled('search_asset')) {
+
+            $search = $request->search_asset;
+
+            $query->where(function ($q) use ($search) {
+
+                $q->where('asset_code', 'like', "%{$search}%")
+                ->orWhere('asset_name', 'like', "%{$search}%");
+
+            });
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CATEGORY
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->filled('category_id')) {
+
+            $query->where(
+                'category_id',
+                $request->category_id
+            );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | SUB CATEGORY
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->filled('sub_category_id')) {
+
+            $query->where(
+                'sub_category_id',
+                $request->sub_category_id
+            );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | VENDOR
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->filled('vendor_id')) {
+
+            $query->where(
+                'vendor_id',
+                $request->vendor_id
+            );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | STATUS
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $request->filled('status') &&
+            $request->status !== ''
+        ) {
+
+            $query->where(
+                'status',
+                $request->status
+            );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CREATED DATE FROM
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->filled('created_from')) {
+
+            $query->whereDate(
+                'created_at',
+                '>=',
+                $request->created_from
+            );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CREATED DATE TO
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->filled('created_to')) {
+
+            $query->whereDate(
+                'created_at',
+                '<=',
+                $request->created_to
+            );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | DATATABLE
+        |--------------------------------------------------------------------------
+        */
+
+        return DataTables::eloquent($query)
 
             /*
             |--------------------------------------------------------------------------
-            | PHOTO
+            | NO
             |--------------------------------------------------------------------------
             */
 
-            ->addColumn('photo', function ($asset) {
+            ->addIndexColumn()
 
-                // Sementara placeholder
-                // Nanti akan kita ganti dengan foto pertama aset
+
+            /*
+            |--------------------------------------------------------------------------
+            | CHECKBOX
+            |--------------------------------------------------------------------------
+            */
+
+            ->addColumn('checkbox', function ($asset) {
 
                 return '
-                    <div class="asset-photo-placeholder">
-                        <i class="fa-solid fa-box"></i>
+                    <div class="text-center">
+
+                        <input
+                            type="checkbox"
+                            class="form-check-input asset-checkbox"
+                            value="' . $asset->id . '"
+                        >
+
                     </div>
                 ';
             })
+
 
             /*
             |--------------------------------------------------------------------------
@@ -141,6 +289,7 @@ class AssetController extends Controller
                     : '-';
             })
 
+
             /*
             |--------------------------------------------------------------------------
             | SUB CATEGORY
@@ -153,6 +302,7 @@ class AssetController extends Controller
                     ? $asset->subCategory->sub_category_name
                     : '-';
             })
+
 
             /*
             |--------------------------------------------------------------------------
@@ -167,9 +317,10 @@ class AssetController extends Controller
                     : '-';
             })
 
+
             /*
             |--------------------------------------------------------------------------
-            | RESPONSIBLE USER
+            | RESPONSIBLE
             |--------------------------------------------------------------------------
             */
 
@@ -180,9 +331,10 @@ class AssetController extends Controller
                     : '-';
             })
 
+
             /*
             |--------------------------------------------------------------------------
-            | PURCHASE PRICE
+            | PURCHASE DATE
             |--------------------------------------------------------------------------
             */
 
@@ -192,9 +344,17 @@ class AssetController extends Controller
                     return '-';
                 }
 
-                return Carbon::parse($asset->purchase_date)
-                    ->translatedFormat('d F Y');
+                return Carbon::parse(
+                    $asset->purchase_date
+                )->translatedFormat('d F Y');
             })
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | PURCHASE PRICE
+            |--------------------------------------------------------------------------
+            */
 
             ->editColumn('purchase_price', function ($asset) {
 
@@ -235,6 +395,7 @@ class AssetController extends Controller
                 ';
             })
 
+
             /*
             |--------------------------------------------------------------------------
             | ACTION
@@ -245,25 +406,53 @@ class AssetController extends Controller
 
                 return '
                     <div class="d-flex gap-1">
+
                         <a
-                            href="' . route('assets.edit', $asset->id) . '"
+                            href="' . route(
+                                'assets.show',
+                                $asset->id
+                            ) . '"
+                            class="btn btn-sm btn-info"
+                            title="View"
+                        >
+                            <i class="fa fa-eye"></i>
+                        </a>
+
+
+                        <a
+                            href="' . route(
+                                'assets.edit',
+                                $asset->id
+                            ) . '"
                             class="btn btn-sm btn-warning"
-                            title="Edit">
+                            title="Edit"
+                        >
                             <i class="fa fa-edit"></i>
                         </a>
+
+
                         <button
                             type="button"
                             class="btn btn-sm btn-danger btn-delete"
                             data-id="' . $asset->id . '"
-                            title="Delete">
+                            title="Delete"
+                        >
                             <i class="fa fa-trash"></i>
                         </button>
+
                     </div>
                 ';
             })
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | RAW HTML
+            |--------------------------------------------------------------------------
+            */
+
             ->rawColumns([
-                'photo',
+                'checkbox',
                 'status',
                 'action'
             ])
@@ -271,204 +460,252 @@ class AssetController extends Controller
             ->make(true);
     }
 
+
     /**
      * Store Asset
      */
     public function store(Request $request)
     {
         $companyId = Auth::user()->company_id;
-
         $validator = Validator::make(
             $request->all(),
             [
-                'asset_name' => 'required|string|max:255',
-
-                /*
-                |--------------------------------------------------------------------------
-                | CATEGORY
-                |--------------------------------------------------------------------------
-                | Bisa:
-                | 1. ID category existing
-                | 2. new:Nama Category
-                |--------------------------------------------------------------------------
-                */
-                'category_id' => [
+                'asset_name' => [
                     'required',
+                    'string',
+                    'max:255'
                 ],
-
-                /*
-                |--------------------------------------------------------------------------
-                | SUB CATEGORY
-                |--------------------------------------------------------------------------
-                */
+                'category_id' => [
+                    'required'
+                ],
                 'sub_category_id' => [
-                    'nullable',
+                    'nullable'
                 ],
-
                 'vendor_id' => [
                     'required',
                     'exists:vendors,id'
                 ],
-
                 'responsible_user_id' => [
                     'nullable',
                     'exists:users,id'
                 ],
-
-                'brand' => 'nullable|string|max:100',
-                'model' => 'nullable|string|max:150',
-                'serial_number' => 'nullable|string|max:150',
-
-                'description' => 'nullable|string',
-
-                'purchase_date' => 'nullable|date',
-
+                'brand' => [
+                    'nullable',
+                    'string',
+                    'max:100'
+                ],
+                'model' => [
+                    'nullable',
+                    'string',
+                    'max:150'
+                ],
+                'serial_number' => [
+                    'nullable',
+                    'string',
+                    'max:150'
+                ],
+                'description' => [
+                    'nullable',
+                    'string'
+                ],
+                'asset_condition' => [
+                    'nullable',
+                    'string'
+                ],
+                'purchase_date' => [
+                    'nullable',
+                    'date'
+                ],
                 'purchase_price' => [
                     'nullable',
                     'numeric',
                     'min:0'
                 ],
-
-                'invoice_number' => 'nullable|string|max:100',
-
-                'depreciation_method' => 'nullable|string|max:50',
-
+                'purchase_invoice' => [
+                    'nullable',
+                    'string',
+                    'max:100'
+                ],
+                'depreciation_method' => [
+                    'nullable',
+                    'string',
+                    'max:50'
+                ],
                 'useful_life' => [
                     'nullable',
                     'integer',
                     'min:1'
                 ],
-
                 'residual_value' => [
                     'nullable',
                     'numeric',
                     'min:0'
                 ],
-
-                'depreciation_start_date' => 'nullable|date',
-
-                'warranty_start' => 'nullable|date',
-
+                'depreciation_start_date' => [
+                    'nullable',
+                    'date'
+                ],
+                'warranty_start' => [
+                    'nullable',
+                    'date'
+                ],
                 'warranty_end' => [
                     'nullable',
                     'date',
                     'after_or_equal:warranty_start'
                 ],
+                'warranty_note' => [
+                    'nullable',
+                    'string'
+                ],
+                'maintenance_required' => [
+                    'required',
+                    'boolean'
+                ],
 
-                'warranty_note' => 'nullable|string',
+                'maintenance_type' => [
+                    'nullable',
+                    'string',
+                    'max:50'
+                ],
 
-                'location' => 'nullable|string|max:255',
+                'maintenance_trigger' => [
+                    'nullable',
+                    'string',
+                    'max:50'
+                ],
 
-                'status' => 'required|integer|in:0,1',
+                'maintenance_interval' => [
+                    'nullable',
+                    'integer',
+                    'min:1'
+                ],
 
-                /*
-                |--------------------------------------------------------------------------
-                | IMAGES
-                |--------------------------------------------------------------------------
-                */
+                'maintenance_interval_unit' => [
+                    'nullable',
+                    'in:day,week,month,year'
+                ],
+
+                'maintenance_start_date' => [
+                    'nullable',
+                    'date'
+                ],
+
+                'last_maintenance_date' => [
+                    'nullable',
+                    'date'
+                ],
+
+                'next_maintenance_date' => [
+                    'nullable',
+                    'date'
+                ],
+                'location' => [
+                    'nullable',
+                    'string',
+                    'max:255'
+                ],
+                'status' => [
+                    'required',
+                    'integer',
+                    'in:0,1'
+                ],
                 'asset_photos' => [
                     'nullable',
                     'array',
                     'max:3'
                 ],
-
                 'asset_photos.*' => [
-                    'image',
-                    'mimes:jpg,jpeg,png',
-                    'max:5120'
+                    'file',
+                    'max:5120',
+                    'mimes:jpg,jpeg,png'
                 ],
-
-                /*
-                |--------------------------------------------------------------------------
-                | DOCUMENTS
-                |--------------------------------------------------------------------------
-                */
                 'invoice_documents' => [
                     'nullable',
                     'array',
                     'max:5'
                 ],
-
                 'invoice_documents.*' => [
                     'file',
-                    'mimes:pdf,jpg,jpeg,png',
-                    'max:10240'
+                    'max:10240',
+                    'mimes:pdf,jpg,jpeg,png'
                 ],
             ],
             [
                 'asset_name.required' =>
-                    'Nama asset wajib diisi',
+                    'Nama asset wajib diisi.',
+                'asset_condition.required' =>
+                    'Kondisi asset wajib diisi.',
 
                 'category_id.required' =>
-                    'Kategori wajib dipilih atau diisi',
+                    'Kategori wajib dipilih atau diisi.',
 
                 'vendor_id.required' =>
-                    'Vendor wajib dipilih',
+                    'Vendor wajib dipilih.',
 
                 'vendor_id.exists' =>
-                    'Vendor tidak valid',
+                    'Vendor tidak valid.',
 
                 'responsible_user_id.exists' =>
-                    'Responsible user tidak valid',
+                    'Responsible user tidak valid.',
 
                 'purchase_price.numeric' =>
-                    'Harga pembelian harus berupa angka',
+                    'Harga pembelian harus berupa angka.',
 
                 'purchase_price.min' =>
-                    'Harga pembelian tidak boleh kurang dari 0',
+                    'Harga pembelian tidak boleh kurang dari 0.',
 
                 'useful_life.integer' =>
-                    'Umur manfaat harus berupa angka',
+                    'Umur manfaat harus berupa angka.',
 
                 'useful_life.min' =>
-                    'Umur manfaat minimal 1 tahun',
+                    'Umur manfaat minimal 1 tahun.',
 
                 'warranty_end.after_or_equal' =>
-                    'Tanggal akhir warranty tidak boleh sebelum tanggal mulai',
+                    'Tanggal akhir warranty tidak boleh sebelum tanggal mulai.',
 
                 'status.required' =>
-                    'Status wajib dipilih',
+                    'Status wajib dipilih.',
 
                 'asset_photos.max' =>
-                    'Foto asset maksimal 3 file',
+                    'Foto asset maksimal 3 file.',
 
-                'asset_photos.*.image' =>
-                    'File foto harus berupa gambar',
-
-                'asset_photos.*.mimes' =>
-                    'Foto hanya boleh JPG, JPEG atau PNG',
+                'asset_photos.*.file' =>
+                    'File foto tidak valid.',
 
                 'asset_photos.*.max' =>
-                    'Ukuran setiap foto maksimal 5 MB',
+                    'Ukuran setiap foto maksimal 5 MB.',
+
+                'asset_photos.*.mimes' =>
+                    'Foto hanya boleh JPG, JPEG atau PNG.',
 
                 'invoice_documents.max' =>
-                    'Dokumen maksimal 5 file',
+                    'Dokumen maksimal 5 file.',
 
-                'invoice_documents.*.mimes' =>
-                    'Dokumen hanya boleh PDF, JPG, JPEG atau PNG',
+                'invoice_documents.*.file' =>
+                    'File dokumen tidak valid.',
 
                 'invoice_documents.*.max' =>
-                    'Ukuran setiap dokumen maksimal 10 MB',
+                    'Ukuran setiap dokumen maksimal 10 MB.',
+
+                'invoice_documents.*.mimes' =>
+                    'Dokumen hanya boleh PDF, JPG, JPEG atau PNG.',
             ]
         );
-
 
         if ($validator->fails()) {
 
             return response()->json([
                 'success' => false,
+                'message' => 'Validasi gagal.',
                 'errors' => $validator->errors()
             ], 422);
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | DATABASE TRANSACTION
-        |--------------------------------------------------------------------------
-        */
-
         DB::beginTransaction();
+
+        $uploadedImagePaths = [];
+        $uploadedInvoicePaths = [];
 
         try {
 
@@ -480,18 +717,16 @@ class AssetController extends Controller
 
             $categoryValue = $request->category_id;
 
-            /*
-            |--------------------------------------------------------------------------
-            | EXISTING CATEGORY
-            |--------------------------------------------------------------------------
-            */
+            if (is_numeric($categoryValue)) {
 
-            if (
-                is_numeric($categoryValue)
-            ) {
-
-                $category = Category::where('company_id', $companyId)
-                    ->where('id', $categoryValue)
+                $category = Category::where(
+                    'company_id',
+                    $companyId
+                )
+                    ->where(
+                        'id',
+                        $categoryValue
+                    )
                     ->first();
 
                 if (!$category) {
@@ -504,15 +739,7 @@ class AssetController extends Controller
                     ], 422);
                 }
 
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | NEW CATEGORY
-            |--------------------------------------------------------------------------
-            */
-
-            else {
+            } else {
 
                 if (
                     !is_string($categoryValue) ||
@@ -531,23 +758,16 @@ class AssetController extends Controller
                     substr($categoryValue, 4)
                 );
 
-
                 if ($categoryName === '') {
 
                     DB::rollBack();
 
                     return response()->json([
                         'success' => false,
-                        'message' => 'Nama kategori wajib diisi.'
+                        'message' =>
+                            'Nama kategori wajib diisi.'
                     ], 422);
                 }
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | CHECK DUPLICATE CATEGORY
-                |--------------------------------------------------------------------------
-                */
 
                 $category = Category::where(
                     'company_id',
@@ -555,26 +775,21 @@ class AssetController extends Controller
                 )
                     ->whereRaw(
                         'LOWER(category_name) = ?',
-                        [strtolower($categoryName)]
+                        [
+                            strtolower($categoryName)
+                        ]
                     )
                     ->first();
 
-
-                /*
-                |--------------------------------------------------------------------------
-                | CREATE CATEGORY
-                |--------------------------------------------------------------------------
-                */
-
                 if (!$category) {
 
-                    $categoryCode = CodeHelper::generateNumber(
-                        'CAT-',
-                        Category::class,
-                        'category_code',
-                        $companyId
-                    );
-
+                    $categoryCode =
+                        CodeHelper::generateNumber(
+                            'CAT-',
+                            Category::class,
+                            'category_code',
+                            $companyId
+                        );
 
                     $category = Category::create([
 
@@ -592,7 +807,6 @@ class AssetController extends Controller
 
                         'status' =>
                             1,
-
                     ]);
                 }
             }
@@ -611,31 +825,22 @@ class AssetController extends Controller
                 $subCategoryValue =
                     $request->sub_category_id;
 
+                if (is_numeric($subCategoryValue)) {
 
-                /*
-                |--------------------------------------------------------------------------
-                | EXISTING SUB CATEGORY
-                |--------------------------------------------------------------------------
-                */
-
-                if (
-                    is_numeric($subCategoryValue)
-                ) {
-
-                    $subCategory = SubCategory::where(
-                        'company_id',
-                        $companyId
-                    )
-                        ->where(
-                            'category_id',
-                            $category->id
+                    $subCategory =
+                        SubCategory::where(
+                            'company_id',
+                            $companyId
                         )
-                        ->where(
-                            'id',
-                            $subCategoryValue
-                        )
-                        ->first();
-
+                            ->where(
+                                'category_id',
+                                $category->id
+                            )
+                            ->where(
+                                'id',
+                                $subCategoryValue
+                            )
+                            ->first();
 
                     if (!$subCategory) {
 
@@ -648,19 +853,10 @@ class AssetController extends Controller
                         ], 422);
                     }
 
-
                     $subCategoryId =
                         $subCategory->id;
-                }
 
-
-                /*
-                |--------------------------------------------------------------------------
-                | NEW SUB CATEGORY
-                |--------------------------------------------------------------------------
-                */
-
-                else {
+                } else {
 
                     if (
                         !is_string($subCategoryValue) ||
@@ -679,14 +875,13 @@ class AssetController extends Controller
                         ], 422);
                     }
 
-
-                    $subCategoryName = trim(
-                        substr(
-                            $subCategoryValue,
-                            4
-                        )
-                    );
-
+                    $subCategoryName =
+                        trim(
+                            substr(
+                                $subCategoryValue,
+                                4
+                            )
+                        );
 
                     if ($subCategoryName === '') {
 
@@ -699,38 +894,24 @@ class AssetController extends Controller
                         ], 422);
                     }
 
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | CHECK DUPLICATE SUB CATEGORY
-                    |--------------------------------------------------------------------------
-                    */
-
                     $subCategory =
                         SubCategory::where(
                             'company_id',
                             $companyId
                         )
-                        ->where(
-                            'category_id',
-                            $category->id
-                        )
-                        ->whereRaw(
-                            'LOWER(sub_category_name) = ?',
-                            [
-                                strtolower(
-                                    $subCategoryName
-                                )
-                            ]
-                        )
-                        ->first();
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | CREATE SUB CATEGORY
-                    |--------------------------------------------------------------------------
-                    */
+                            ->where(
+                                'category_id',
+                                $category->id
+                            )
+                            ->whereRaw(
+                                'LOWER(sub_category_name) = ?',
+                                [
+                                    strtolower(
+                                        $subCategoryName
+                                    )
+                                ]
+                            )
+                            ->first();
 
                     if (!$subCategory) {
 
@@ -741,7 +922,6 @@ class AssetController extends Controller
                                 'sub_category_code',
                                 $companyId
                             );
-
 
                         $subCategory =
                             SubCategory::create([
@@ -765,10 +945,8 @@ class AssetController extends Controller
 
                                 'status' =>
                                     1,
-
                             ]);
                     }
-
 
                     $subCategoryId =
                         $subCategory->id;
@@ -778,12 +956,12 @@ class AssetController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | VENDOR - PASTIKAN MILIK COMPANY
+            | VENDOR
             |--------------------------------------------------------------------------
             */
 
-            if (
-                !Vendor::where(
+            $vendorExists =
+                Vendor::where(
                     'company_id',
                     $companyId
                 )
@@ -791,33 +969,29 @@ class AssetController extends Controller
                         'id',
                         $request->vendor_id
                     )
-                    ->exists()
-            ) {
+                    ->exists();
+
+            if (!$vendorExists) {
 
                 DB::rollBack();
 
                 return response()->json([
                     'success' => false,
-                    'message' =>
-                        'Vendor tidak valid.'
+                    'message' => 'Vendor tidak valid.'
                 ], 422);
             }
 
 
             /*
             |--------------------------------------------------------------------------
-            | RESPONSIBLE USER - PASTIKAN MILIK COMPANY
+            | RESPONSIBLE USER
             |--------------------------------------------------------------------------
             */
 
-            if (
-                $request->filled(
-                    'responsible_user_id'
-                )
-            ) {
+            if ($request->filled('responsible_user_id')) {
 
-                if (
-                    !User::where(
+                $userExists =
+                    User::where(
                         'company_id',
                         $companyId
                     )
@@ -825,8 +999,9 @@ class AssetController extends Controller
                             'id',
                             $request->responsible_user_id
                         )
-                        ->exists()
-                ) {
+                        ->exists();
+
+                if (!$userExists) {
 
                     DB::rollBack();
 
@@ -841,7 +1016,7 @@ class AssetController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | GENERATE ASSET CODE
+            | ASSET CODE
             |--------------------------------------------------------------------------
             */
 
@@ -856,7 +1031,7 @@ class AssetController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | GENERATE QR TOKEN
+            | QR TOKEN
             |--------------------------------------------------------------------------
             */
 
@@ -866,85 +1041,39 @@ class AssetController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | UPLOAD IMAGES
-            |--------------------------------------------------------------------------
-            */
-
-            $images = [];
-
-            if ($request->hasFile('asset_photos')) {
-
-                foreach (
-                    $request->file('asset_photos')
-                    as $file
-                ) {
-
-                    $filename =
-                        $assetCode . '-' .
-                        Str::uuid() . '.' .
-                        $file->getClientOriginalExtension();
-
-
-                    $path =
-                        $file->storeAs(
-                            'assets/images',
-                            $filename,
-                            'public'
-                        );
-
-
-                    $images[] = $path;
-                }
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | UPLOAD INVOICE DOCUMENTS
-            |--------------------------------------------------------------------------
-            */
-
-            $invoiceDocuments = [];
-
-            if (
-                $request->hasFile(
-                    'invoice_documents'
-                )
-            ) {
-
-                foreach (
-                    $request->file(
-                        'invoice_documents'
-                    )
-                    as $file
-                ) {
-
-                    $filename =
-                        $assetCode . '-' .
-                        Str::uuid() . '.' .
-                        $file->getClientOriginalExtension();
-
-
-                    $path =
-                        $file->storeAs(
-                            'assets/documents',
-                            $filename,
-                            'public'
-                        );
-
-
-                    $invoiceDocuments[] =
-                        $path;
-                }
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
             | CREATE ASSET
             |--------------------------------------------------------------------------
             */
-
+            $nextMaintenanceDate = null;
+            if ($request->boolean('maintenance_required')) {
+                if (
+                    $request->maintenance_start_date &&
+                    $request->maintenance_interval
+                ) {
+                    $startDate = Carbon::parse(
+                        $request->maintenance_start_date
+                    );
+                    $interval = (int) $request->maintenance_interval;
+                    switch ($request->maintenance_interval_unit) {
+                        case 'day':
+                            $nextMaintenanceDate =
+                                $startDate->copy()->addDays($interval);
+                            break;
+                        case 'week':
+                            $nextMaintenanceDate =
+                                $startDate->copy()->addWeeks($interval);
+                            break;
+                        case 'month':
+                            $nextMaintenanceDate =
+                                $startDate->copy()->addMonths($interval);
+                            break;
+                        case 'year':
+                            $nextMaintenanceDate =
+                                $startDate->copy()->addYears($interval);
+                            break;
+                    }
+                }
+            }
             $asset = Asset::create([
 
                 'company_id' =>
@@ -972,265 +1101,8 @@ class AssetController extends Controller
                         )
                     ),
 
-                'brand' =>
-                    $request->brand,
-
-                'model' =>
-                    $request->model,
-
-                'serial_number' =>
-                    $request->serial_number,
-
-                'description' =>
-                    $request->description,
-
-                'purchase_date' =>
-                    $request->purchase_date,
-
-                'purchase_price' =>
-                    $request->purchase_price,
-
-                'purchase_invoice' =>
-                    $request->invoice_number,
-
-                'depreciation_method' =>
-                    $request->depreciation_method,
-
-                'useful_life' =>
-                    $request->useful_life,
-
-                'residual_value' =>
-                    $request->residual_value ?? 0,
-
-                'depreciation_start_date' =>
-                    $request->depreciation_start_date,
-
-                'warranty_start' =>
-                    $request->warranty_start,
-
-                'warranty_end' =>
-                    $request->warranty_end,
-
-                'warranty_note' =>
-                    $request->warranty_note,
-
-                'images' =>
-                    !empty($images)
-                        ? $images
-                        : null,
-
-                'invoice_documents' =>
-                    !empty($invoiceDocuments)
-                        ? $invoiceDocuments
-                        : null,
-
-                'location' =>
-                    $request->location,
-
-                'status' =>
-                    $request->status,
-
-                'qr_token' =>
-                    $qrToken,
-
-                'qr_generated_at' =>
-                    now(),
-            ]);
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | COMMIT
-            |--------------------------------------------------------------------------
-            */
-
-            DB::commit();
-
-
-            return response()->json([
-                'success' => true,
-                'message' =>
-                    'Asset berhasil ditambahkan.',
-                'data' => $asset
-            ]);
-
-
-        } catch (\Exception $e) {
-
-            DB::rollBack();
-
-
-            return response()->json([
-                'success' => false,
-                'message' =>
-                    'Gagal menambahkan asset.',
-                'error' =>
-                    $e->getMessage()
-            ], 500);
-        }
-    }
-
-
-    /**
-     * Edit Asset
-     */
-    public function edit($id)
-    {
-        $companyId = Auth::user()->company_id;
-
-        $asset = Asset::where('company_id', $companyId)
-            ->with([
-                'category',
-                'subCategory',
-                'vendor',
-                'responsibleUser'
-            ])
-            ->where('id', $id)
-            ->first();
-
-        if (!$asset) {
-            abort(404, 'Asset tidak ditemukan.');
-        }
-
-        $categories = Category::where('company_id', $companyId)
-            ->where('status', 1)
-            ->get();
-
-        $subCategories = SubCategory::where('company_id', $companyId)
-            ->where('status', 1)
-            ->get();
-
-        $vendors = Vendor::where('company_id', $companyId)
-            ->where('status', 1)
-            ->get();
-
-        $users = User::where('company_id', $companyId)
-            ->where('status', 1)
-            ->get();
-
-        return view('dashboard.asset.edit', compact(
-            'asset',
-            'categories',
-            'subCategories',
-            'vendors',
-            'users'
-        ));
-    }
-
-
-    /**
-     * Update Asset
-     */
-    public function update(Request $request)
-    {
-        $companyId = Auth::user()->company_id;
-
-        $validator = Validator::make(
-            $request->all(),
-            [
-                'id' => 'required',
-
-                'asset_name' => 'required|string|max:255',
-
-                'category_id' => 'required|exists:categories,id',
-
-                'sub_category_id' =>
-                    'nullable|exists:sub_categories,id',
-
-                'vendor_id' =>
-                    'nullable|exists:vendors,id',
-
-                'responsible_user_id' =>
-                    'nullable|exists:users,id',
-
-                'brand' => 'nullable|string|max:100',
-
-                'model' => 'nullable|string|max:150',
-
-                'serial_number' =>
-                    'nullable|string|max:150',
-
-                'description' => 'nullable|string',
-
-                'purchase_date' => 'nullable|date',
-
-                'purchase_price' =>
-                    'nullable|numeric|min:0',
-
-                'purchase_invoice' =>
-                    'nullable|string|max:100',
-
-                'depreciation_method' =>
-                    'nullable|string|max:50',
-
-                'useful_life' =>
-                    'nullable|integer|min:1',
-
-                'residual_value' =>
-                    'nullable|numeric|min:0',
-
-                'depreciation_start_date' =>
-                    'nullable|date',
-
-                'warranty_start' =>
-                    'nullable|date',
-
-                'warranty_end' =>
-                    'nullable|date|after_or_equal:warranty_start',
-
-                'warranty_note' =>
-                    'nullable|string',
-
-                'location' =>
-                    'nullable|string|max:255',
-
-                'status' =>
-                    'required|integer|in:0,1',
-            ]
-        );
-
-
-        if ($validator->fails()) {
-
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-
-        $asset = Asset::where('company_id', $companyId)
-            ->where('id', $request->id)
-            ->first();
-
-
-        if (!$asset) {
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Asset tidak ditemukan.'
-            ], 404);
-        }
-
-
-        try {
-
-            $asset->update([
-
-                'asset_name' =>
-                    strtoupper(trim($request->asset_name)),
-
-                'category_id' =>
-                    $request->category_id,
-
-                'sub_category_id' =>
-                    $request->sub_category_id,
-
-                'vendor_id' =>
-                    $request->vendor_id,
-
-                'responsible_user_id' =>
-                    $request->responsible_user_id,
+                'asset_condition'=>
+                    $request->asset_condition,
 
                 'brand' =>
                     $request->brand,
@@ -1273,27 +1145,1574 @@ class AssetController extends Controller
 
                 'warranty_note' =>
                     $request->warranty_note,
+                
+                'maintenance_required' =>
+                    $request->boolean('maintenance_required'),
 
+                'maintenance_type' =>
+                    $request->maintenance_required
+                        ? $request->maintenance_type
+                        : null,
+
+                'maintenance_trigger' =>
+                    $request->maintenance_required
+                        ? $request->maintenance_trigger
+                        : null,
+
+                'maintenance_interval' =>
+                    $request->maintenance_required
+                        ? $request->maintenance_interval
+                        : null,
+
+                'maintenance_interval_unit' =>
+                    $request->maintenance_required
+                        ? $request->maintenance_interval_unit
+                        : null,
+
+                'maintenance_start_date' =>
+                    $request->maintenance_required
+                        ? $request->maintenance_start_date
+                        : null,
+
+                'last_maintenance_date' =>
+                    $request->maintenance_required
+                        ? $request->last_maintenance_date
+                        : null,
+
+                'next_maintenance_date' =>
+                    $request->maintenance_required
+                        ? $nextMaintenanceDate
+                        : null,
+                        
                 'location' =>
                     $request->location,
 
                 'status' =>
                     $request->status,
+
+                'qr_token' =>
+                    $qrToken,
+
+                'qr_generated_at' =>
+                    now(),
             ]);
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | UPLOAD PHOTOS
+            |--------------------------------------------------------------------------
+            */
+
+            if ($request->hasFile('asset_photos')) {
+
+                $companyCode = $asset->company->company_code;
+                $datePath = now()->format('Y/m/d');
+
+                foreach (
+                    $request->file('asset_photos')
+                    as $index => $file
+                ) {
+
+                    if (!$file->isValid()) {
+
+                        DB::rollBack();
+
+                        return response()->json([
+                            'success' => false,
+                            'message' =>
+                                'Salah satu foto gagal diupload: ' .
+                                $file->getErrorMessage()
+                        ], 422);
+                    }
+
+                    $extension =
+                        strtolower(
+                            $file->getClientOriginalExtension()
+                        );
+
+                    $filename =
+                        $assetCode . '-' .
+                        Str::uuid() .
+                        '.' .
+                        $extension;
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | STORAGE PATH
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $destinationPath =
+                        storage_path(
+                            'app/public/documents/' .
+                            $companyCode .
+                            '/assets/img/' .
+                            $datePath
+                        );
+
+                    if (!is_dir($destinationPath)) {
+
+                        mkdir(
+                            $destinationPath,
+                            0755,
+                            true
+                        );
+                    }
+
+                    $file->move(
+                        $destinationPath,
+                        $filename
+                    );
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | DATABASE PATH
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $path =
+                        'documents/' .
+                        $companyCode .
+                        '/assets/img/' .
+                        $datePath . '/' .
+                        $filename;
+
+                    $uploadedImagePaths[] =
+                        $path;
+
+                    AssetPhoto::create([
+
+                        'asset_id' =>
+                            $asset->id,
+
+                        'file_path' =>
+                            $path,
+
+                        'original_name' =>
+                            $file->getClientOriginalName(),
+
+                        'sort_order' =>
+                            $index,
+                    ]);
+                }
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | UPLOAD INVOICE DOCUMENTS
+            |--------------------------------------------------------------------------
+            */
+
+            if ($request->hasFile('invoice_documents')) {
+
+                $companyCode = $asset->company->company_code;
+                $datePath = now()->format('Y/m/d');
+
+                foreach (
+                    $request->file('invoice_documents')
+                    as $file
+                ) {
+
+                    if (!$file->isValid()) {
+
+                        DB::rollBack();
+
+                        return response()->json([
+                            'success' => false,
+                            'message' =>
+                                'Salah satu dokumen gagal diupload: ' .
+                                $file->getErrorMessage()
+                        ], 422);
+                    }
+
+                    $extension =
+                        strtolower(
+                            $file->getClientOriginalExtension()
+                        );
+
+                    $filename =
+                        $assetCode . '-' .
+                        Str::uuid() .
+                        '.' .
+                        $extension;
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | STORAGE PATH
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $destinationPath =
+                        storage_path(
+                            'app/public/documents/' .
+                            $companyCode .
+                            '/assets/inv/' .
+                            $datePath
+                        );
+
+                    if (!is_dir($destinationPath)) {
+
+                        mkdir(
+                            $destinationPath,
+                            0755,
+                            true
+                        );
+                    }
+
+                    $file->move(
+                        $destinationPath,
+                        $filename
+                    );
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | DATABASE PATH
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $path =
+                        'documents/' .
+                        $companyCode .
+                        '/assets/inv/' .
+                        $datePath . '/' .
+                        $filename;
+
+                    $uploadedInvoicePaths[] =
+                        $path;
+
+                    AssetDocument::create([
+
+                        'asset_id' =>
+                            $asset->id,
+
+                        'document_type' =>
+                            'invoice',
+
+                        'file_path' =>
+                            $path,
+
+                        'original_name' =>
+                            $file->getClientOriginalName(),
+                    ]);
+                }
+            }
+
+
+            DB::commit();
+
+            $asset->load([
+                'photos',
+                'documents'
+            ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Asset berhasil diperbarui.',
-                'data' => $asset
+                'message' =>
+                    'Asset berhasil ditambahkan.',
+                'data' =>
+                    $asset
             ]);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+
+            DB::rollBack();
+
+            foreach ($uploadedImagePaths as $path) {
+
+                $fullPath =
+                    //public_path($path);
+                    storage_path(
+                        'app/public/' . $path
+                    );
+
+                if (file_exists($fullPath)) {
+                    unlink($fullPath);
+                }
+            }
+
+            foreach ($uploadedInvoicePaths as $path) {
+
+                $fullPath =
+                    //public_path($path);
+                    storage_path(
+                        'app/public/' . $path
+                    );
+                if (file_exists($fullPath)) {
+                    unlink($fullPath);
+                }
+            }
+
+            Log::error(
+                'Gagal menambahkan asset',
+                [
+                    'message' =>
+                        $e->getMessage(),
+
+                    'file' =>
+                        $e->getFile(),
+
+                    'line' =>
+                        $e->getLine(),
+
+                    'trace' =>
+                        $e->getTraceAsString(),
+                ]
+            );
 
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal memperbarui asset.',
-                'error' => $e->getMessage()
+                'message' =>
+                    'Gagal menambahkan asset.',
+                'error' =>
+                    $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+    /**
+     * Edit Asset
+     */
+    public function edit($id)
+    {
+        $companyId = Auth::user()->company_id;
+
+        $asset = Asset::where(
+            'company_id',
+            $companyId
+        )
+            ->with([
+                'photos',
+                'documents',
+            ])
+            ->findOrFail($id);
+
+        $categories = Category::where(
+            'company_id',
+            $companyId
+        )
+            ->where('status', 1)
+            ->orderBy('category_name')
+            ->get();
+
+        $subCategories = SubCategory::where(
+            'company_id',
+            $companyId
+        )
+            ->where('status', 1)
+            ->orderBy('sub_category_name')
+            ->get();
+
+        $vendors = Vendor::where(
+            'company_id',
+            $companyId
+        )
+            ->where('status', 1)
+            ->orderBy('vendor_name')
+            ->get();
+
+        $users = User::where(
+            'company_id',
+            $companyId
+        )
+            ->where('status', 1)
+            ->orderBy('name')
+            ->get();
+
+        return view(
+            'dashboard.asset.edit',
+            compact(
+                'asset',
+                'categories',
+                'subCategories',
+                'vendors',
+                'users'
+            )
+        );
+    }
+
+
+    /**
+     * Update Asset
+     */
+    public function update(Request $request)
+    {
+        $companyId = Auth::user()->company_id;
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDATION
+        |--------------------------------------------------------------------------
+        */
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'id' => [
+                    'required',
+                    'integer'
+                ],
+                'asset_name' => [
+                    'required',
+                    'string',
+                    'max:255'
+                ],
+                'category_id' => [
+                    'required'
+                ],
+                'sub_category_id' => [
+                    'nullable'
+                ],
+                'vendor_id' => [
+                    'required',
+                    'exists:vendors,id'
+                ],
+                'responsible_user_id' => [
+                    'nullable',
+                    'exists:users,id'
+                ],
+                'brand' => [
+                    'nullable',
+                    'string',
+                    'max:100'
+                ],
+                'model' => [
+                    'nullable',
+                    'string',
+                    'max:150'
+                ],
+                'serial_number' => [
+                    'nullable',
+                    'string',
+                    'max:150'
+                ],
+                'description' => [
+                    'nullable',
+                    'string'
+                ],
+                'purchase_date' => [
+                    'nullable',
+                    'date'
+                ],
+                'purchase_price' => [
+                    'nullable',
+                    'numeric',
+                    'min:0'
+                ],
+                'purchase_invoice' => [
+                    'nullable',
+                    'string',
+                    'max:100'
+                ],
+                'depreciation_method' => [
+                    'nullable',
+                    'string',
+                    'max:50'
+                ],
+                'useful_life' => [
+                    'nullable',
+                    'integer',
+                    'min:1'
+                ],
+                'residual_value' => [
+                    'nullable',
+                    'numeric',
+                    'min:0'
+                ],
+                'depreciation_start_date' => [
+                    'nullable',
+                    'date'
+                ],
+                'warranty_start' => [
+                    'nullable',
+                    'date'
+                ],
+                'warranty_end' => [
+                    'nullable',
+                    'date',
+                    'after_or_equal:warranty_start'
+                ],
+                'warranty_note' => [
+                    'nullable',
+                    'string'
+                ],
+                'maintenance_required' => [
+                    'required',
+                    'boolean',
+                ],
+
+                'maintenance_type' => [
+                    'nullable',
+                    'string',
+                    'in:preventive,corrective',
+                ],
+
+                'maintenance_trigger' => [
+                    'nullable',
+                    'string',
+                    'in:calendar',
+                ],
+
+                'maintenance_interval' => [
+                    'nullable',
+                    'integer',
+                    'min:1',
+                ],
+
+                'maintenance_interval_unit' => [
+                    'nullable',
+                    'string',
+                    'in:day,week,month,year',
+                ],
+
+                'maintenance_start_date' => [
+                    'nullable',
+                    'date',
+                ],
+
+                'last_maintenance_date' => [
+                    'nullable',
+                    'date',
+                ],
+
+                'next_maintenance_date' => [
+                    'nullable',
+                    'date',
+                ],
+                'location' => [
+                    'nullable',
+                    'string',
+                    'max:255'
+                ],
+                'status' => [
+                    'required',
+                    'integer',
+                    'in:0,1'
+                ],
+
+                /*
+                |--------------------------------------------------------------------------
+                | DELETE PHOTOS
+                |--------------------------------------------------------------------------
+                */
+                'delete_images' => [
+                    'nullable',
+                    'array'
+                ],
+                'delete_images.*' => [
+                    'integer'
+                ],
+                /*
+                |--------------------------------------------------------------------------
+                | NEW PHOTOS
+                |--------------------------------------------------------------------------
+                */
+                'asset_photos' => [
+                    'nullable',
+                    'array'
+                ],
+                'asset_photos.*' => [
+                    'file',
+                    'max:5120',
+                    'mimes:jpg,jpeg,png'
+                ],
+                /*
+                |--------------------------------------------------------------------------
+                | DELETE DOCUMENTS
+                |--------------------------------------------------------------------------
+                */
+                'delete_invoice_documents' => [
+                    'nullable',
+                    'array'
+                ],
+                'delete_invoice_documents.*' => [
+                    'integer'
+                ],
+                /*
+                |--------------------------------------------------------------------------
+                | NEW DOCUMENTS
+                |--------------------------------------------------------------------------
+                */
+                'invoice_documents' => [
+                    'nullable',
+                    'array'
+                ],
+                'invoice_documents.*' => [
+                    'file',
+                    'max:10240',
+                    'mimes:pdf,jpg,jpeg,png'
+                ],
+            ],
+            [
+                'id.required' =>
+                    'ID asset wajib dikirim.',
+                'id.integer' =>
+                    'ID asset tidak valid.',
+                'asset_name.required' =>
+                    'Nama asset wajib diisi.',
+                'category_id.required' =>
+                    'Kategori wajib dipilih atau diisi.',
+                'vendor_id.required' =>
+                    'Vendor wajib dipilih.',
+                'vendor_id.exists' =>
+                    'Vendor tidak valid.',
+                'responsible_user_id.exists' =>
+                    'Responsible user tidak valid.',
+                'purchase_price.numeric' =>
+                    'Harga pembelian harus berupa angka.',
+                'purchase_price.min' =>
+                    'Harga pembelian tidak boleh kurang dari 0.',
+                'useful_life.integer' =>
+                    'Umur manfaat harus berupa angka.',
+                'useful_life.min' =>
+                    'Umur manfaat minimal 1 tahun.',
+                'warranty_end.after_or_equal' =>
+                    'Tanggal akhir warranty tidak boleh sebelum tanggal mulai.',
+                'status.required' =>
+                    'Status wajib dipilih.',
+                'delete_images.*.integer' =>
+                    'ID foto tidak valid.',
+                'asset_photos.*.file' =>
+                    'File foto tidak valid.',
+                'asset_photos.*.max' =>
+                    'Ukuran setiap foto maksimal 5 MB.',
+                'asset_photos.*.mimes' =>
+                    'Foto hanya boleh JPG, JPEG atau PNG.',
+                'delete_invoice_documents.*.integer' =>
+                    'ID dokumen tidak valid.',
+                'invoice_documents.*.file' =>
+                    'File invoice tidak valid.',
+                'invoice_documents.*.max' =>
+                    'Ukuran setiap invoice maksimal 10 MB.',
+                'invoice_documents.*.mimes' =>
+                    'Invoice hanya boleh PDF, JPG, JPEG atau PNG.',
+            ]
+        );
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal.',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        /*
+        |--------------------------------------------------------------------------
+        | FIND ASSET
+        |--------------------------------------------------------------------------
+        */
+        $asset = Asset::where(
+            'company_id',
+            $companyId
+        )
+            ->where(
+                'id',
+                $request->id
+            )
+            ->first();
+
+        if (!$asset) {
+            return response()->json([
+                'success' => false,
+                'message' =>
+                    'Asset tidak ditemukan.'
+            ], 404);
+        }
+        DB::beginTransaction();
+        $uploadedImagePaths = [];
+        $uploadedInvoicePaths = [];
+        try {
+            /*
+            |--------------------------------------------------------------------------
+            | CATEGORY
+            |--------------------------------------------------------------------------
+            */
+            $categoryValue =
+                $request->category_id;
+            if (is_numeric($categoryValue)) {
+                $category =
+                    Category::where(
+                        'company_id',
+                        $companyId
+                    )
+                        ->where(
+                            'id',
+                            $categoryValue
+                        )
+                        ->first();
+                if (!$category) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' =>
+                            'Kategori tidak valid.'
+                    ], 422);
+                }
+            } else {
+                if (
+                    !is_string($categoryValue) ||
+                    !str_starts_with(
+                        $categoryValue,
+                        'new:'
+                    )
+                ) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' =>
+                            'Kategori tidak valid.'
+                    ], 422);
+                }
+                $categoryName =
+                    trim(
+                        substr(
+                            $categoryValue,
+                            4
+                        )
+                    );
+                if ($categoryName === '') {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' =>
+                            'Nama kategori wajib diisi.'
+                    ], 422);
+                }
+                $category =
+                    Category::where(
+                        'company_id',
+                        $companyId
+                    )
+                        ->whereRaw(
+                            'LOWER(category_name) = ?',
+                            [
+                                strtolower(
+                                    $categoryName
+                                )
+                            ]
+                        )
+                        ->first();
+                if (!$category) {
+                    $categoryCode =
+                        CodeHelper::generateNumber(
+                            'CAT-',
+                            Category::class,
+                            'category_code',
+                            $companyId
+                        );
+                    $category =
+                        Category::create([
+                            'company_id' =>
+                                $companyId,
+                            'category_code' =>
+                                $categoryCode,
+                            'category_name' =>
+                                strtoupper(
+                                    $categoryName
+                                ),
+                            'description' =>
+                                null,
+                            'status' =>
+                                1,
+                        ]);
+                }
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | SUB CATEGORY
+            |--------------------------------------------------------------------------
+            */
+            $subCategoryId = null;
+            if ($request->filled('sub_category_id')) {
+                $subCategoryValue =
+                    $request->sub_category_id;
+                if (is_numeric($subCategoryValue)) {
+                    $subCategory =
+                        SubCategory::where(
+                            'company_id',
+                            $companyId
+                        )
+                            ->where(
+                                'category_id',
+                                $category->id
+                            )
+                            ->where(
+                                'id',
+                                $subCategoryValue
+                            )
+                            ->first();
+                    if (!$subCategory) {
+                        DB::rollBack();
+                        return response()->json([
+                            'success' => false,
+                            'message' =>
+                                'Sub kategori tidak valid.'
+                        ], 422);
+                    }
+                    $subCategoryId =
+                        $subCategory->id;
+                } else {
+                    if (
+                        !is_string($subCategoryValue) ||
+                        !str_starts_with(
+                            $subCategoryValue,
+                            'new:'
+                        )
+                    ) {
+                        DB::rollBack();
+                        return response()->json([
+                            'success' => false,
+                            'message' =>
+                                'Sub kategori tidak valid.'
+                        ], 422);
+                    }
+                    $subCategoryName =
+                        trim(
+                            substr(
+                                $subCategoryValue,
+                                4
+                            )
+                        );
+                    if ($subCategoryName === '') {
+                        DB::rollBack();
+                        return response()->json([
+                            'success' => false,
+                            'message' =>
+                                'Nama sub kategori wajib diisi.'
+                        ], 422);
+                    }
+                    $subCategory =
+                        SubCategory::where(
+                            'company_id',
+                            $companyId
+                        )
+                            ->where(
+                                'category_id',
+                                $category->id
+                            )
+                            ->whereRaw(
+                                'LOWER(sub_category_name) = ?',
+                                [
+                                    strtolower(
+                                        $subCategoryName
+                                    )
+                                ]
+                            )
+                            ->first();
+                    if (!$subCategory) {
+                        $subCategoryCode =
+                            CodeHelper::generateNumber(
+                                'SUBCAT-',
+                                SubCategory::class,
+                                'sub_category_code',
+                                $companyId
+                            );
+                        $subCategory =
+                            SubCategory::create([
+                                'company_id' =>
+                                    $companyId,
+                                'category_id' =>
+                                    $category->id,
+                                'sub_category_code' =>
+                                    $subCategoryCode,
+                                'sub_category_name' =>
+                                    strtoupper(
+                                        $subCategoryName
+                                    ),
+                                'description' =>
+                                    null,
+                                'status' =>
+                                    1,
+                            ]);
+                    }
+                    $subCategoryId =
+                        $subCategory->id;
+                }
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | VENDOR
+            |--------------------------------------------------------------------------
+            */
+            $vendorExists =
+                Vendor::where(
+                    'company_id',
+                    $companyId
+                )
+                    ->where(
+                        'id',
+                        $request->vendor_id
+                    )
+                    ->exists();
+            if (!$vendorExists) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' =>
+                        'Vendor tidak valid.'
+                ], 422);
+            }
+            /*
+            |--------------------------------------------------------------------------
+            | RESPONSIBLE USER
+            |--------------------------------------------------------------------------
+            */
+            if ($request->filled('responsible_user_id')) {
+                $userExists =
+                    User::where(
+                        'company_id',
+                        $companyId
+                    )
+                        ->where(
+                            'id',
+                            $request->responsible_user_id
+                        )
+                        ->exists();
+                if (!$userExists) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' =>
+                            'Responsible user tidak valid.'
+                    ], 422);
+                }
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | DELETE EXISTING PHOTOS
+            |--------------------------------------------------------------------------
+            |
+            | IMPORTANT:
+            | Sekarang delete berdasarkan ID AssetPhoto.
+            |
+            */
+            $deleteImages =
+                $request->input(
+                    'delete_images',
+                    []
+                );
+            if (!is_array($deleteImages)) {
+                $deleteImages = [];
+            }
+            $deleteImages =
+                array_values(
+                    array_unique(
+                        array_filter(
+                            $deleteImages,
+                            function ($id) {
+                                return is_numeric($id);
+                            }
+                        )
+                    )
+                );
+            if (count($deleteImages) > 0) {
+                $photosToDelete =
+                    AssetPhoto::where(
+                        'asset_id',
+                        $asset->id
+                    )
+                        ->whereIn(
+                            'id',
+                            $deleteImages
+                        )
+                        ->get();
+                foreach (
+                    $photosToDelete
+                    as $photo
+                ) {
+                    $fullPath =
+                        /*public_path(
+                            $photo->file_path
+                        );*/
+                        storage_path(
+                            'app/public/' . $photo->file_path
+                        );
+                    if (
+                        file_exists(
+                            $fullPath
+                        )
+                    ) {
+                        unlink($fullPath);
+                    }
+                    $photo->delete();
+                }
+            }
+            /*
+            |--------------------------------------------------------------------------
+            | CHECK PHOTO COUNT
+            |--------------------------------------------------------------------------
+            */
+            $remainingPhotoCount =
+                AssetPhoto::where(
+                    'asset_id',
+                    $asset->id
+                )
+                    ->count();
+            $newPhotoFiles =
+                $request->file(
+                    'asset_photos',
+                    []
+                );
+            if (!is_array($newPhotoFiles)) {
+
+                $newPhotoFiles =
+                    $newPhotoFiles
+                        ? [$newPhotoFiles]
+                        : [];
+            }
+            $newPhotoFiles =
+                array_values(
+                    array_filter(
+                        $newPhotoFiles
+                    )
+                );
+            $newPhotoCount =
+                count(
+                    $newPhotoFiles
+                );
+            if (
+                $remainingPhotoCount +
+                $newPhotoCount > 3
+            ) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' =>
+                        'Total foto asset maksimal 3 file.'
+                ], 422);
+            }
+            /*
+            |--------------------------------------------------------------------------
+            | UPLOAD NEW PHOTOS
+            |--------------------------------------------------------------------------
+            */
+            if ($newPhotoCount > 0) {
+
+                $lastSortOrder =
+                    AssetPhoto::where(
+                        'asset_id',
+                        $asset->id
+                    )
+                        ->max(
+                            'sort_order'
+                        );
+
+                $lastSortOrder =
+                    $lastSortOrder ?? -1;
+
+                $companyCode =
+                    $asset->company->company_code;
+
+                $datePath =
+                    now()->format('Y/m/d');
+
+                foreach (
+                    $newPhotoFiles
+                    as $file
+                ) {
+
+                    if (!$file->isValid()) {
+
+                        DB::rollBack();
+
+                        return response()->json([
+                            'success' => false,
+                            'message' =>
+                                'Salah satu foto gagal diupload: ' .
+                                $file->getErrorMessage()
+                        ], 422);
+                    }
+
+                    $extension =
+                        strtolower(
+                            $file->getClientOriginalExtension()
+                        );
+
+                    $filename =
+                        $asset->asset_code .
+                        '-' .
+                        Str::uuid() .
+                        '.' .
+                        $extension;
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | STORAGE PATH
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $destinationPath =
+                        storage_path(
+                            'app/public/documents/' .
+                            $companyCode .
+                            '/assets/img/' .
+                            $datePath
+                        );
+
+                    if (!is_dir($destinationPath)) {
+
+                        mkdir(
+                            $destinationPath,
+                            0755,
+                            true
+                        );
+                    }
+
+                    $file->move(
+                        $destinationPath,
+                        $filename
+                    );
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | DATABASE PATH
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $path =
+                        'documents/' .
+                        $companyCode .
+                        '/assets/img/' .
+                        $datePath .
+                        '/' .
+                        $filename;
+
+                    $uploadedImagePaths[] =
+                        $path;
+
+                    $lastSortOrder++;
+
+                    AssetPhoto::create([
+
+                        'asset_id' =>
+                            $asset->id,
+
+                        'file_path' =>
+                            $path,
+
+                        'original_name' =>
+                            $file->getClientOriginalName(),
+
+                        'sort_order' =>
+                            $lastSortOrder,
+                    ]);
+                }
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | DELETE EXISTING INVOICE DOCUMENTS
+            |--------------------------------------------------------------------------
+            */
+            $deleteInvoices =
+                $request->input(
+                    'delete_invoice_documents',
+                    []
+                );
+            if (!is_array($deleteInvoices)) {
+                $deleteInvoices = [];
+            }
+            $deleteInvoices =
+                array_values(
+                    array_unique(
+                        array_filter(
+                            $deleteInvoices,
+                            function ($id) {
+                                return is_numeric($id);
+                            }
+                        )
+                    )
+                );
+            if (count($deleteInvoices) > 0) {
+                $documentsToDelete =
+                    AssetDocument::where(
+                        'asset_id',
+                        $asset->id
+                    )
+                        ->where(
+                            'document_type',
+                            'invoice'
+                        )
+                        ->whereIn(
+                            'id',
+                            $deleteInvoices
+                        )
+                        ->get();
+                foreach (
+                    $documentsToDelete
+                    as $document
+                ) {
+                    $fullPath =
+                        /*public_path(
+                            $document->file_path
+                        );*/
+                        storage_path(
+                            'app/public/' . $document->file_path
+                        );
+
+                    if (
+                        file_exists(
+                            $fullPath
+                        )
+                    ) {
+                        unlink($fullPath);
+                    }
+                    $document->delete();
+                }
+            }
+            /*
+            |--------------------------------------------------------------------------
+            | CHECK DOCUMENT COUNT
+            |--------------------------------------------------------------------------
+            */
+            $remainingDocumentCount =
+                AssetDocument::where(
+                    'asset_id',
+                    $asset->id
+                )
+                    ->where(
+                        'document_type',
+                        'invoice'
+                    )
+                    ->count();
+            $newInvoiceFiles =
+                $request->file(
+                    'invoice_documents',
+                    []
+                );
+            if (!is_array($newInvoiceFiles)) {
+
+                $newInvoiceFiles =
+                    $newInvoiceFiles
+                        ? [$newInvoiceFiles]
+                        : [];
+            }
+            $newInvoiceFiles =
+                array_values(
+                    array_filter(
+                        $newInvoiceFiles
+                    )
+                );
+            $newInvoiceCount =
+                count(
+                    $newInvoiceFiles
+                );
+            if (
+                $remainingDocumentCount +
+                $newInvoiceCount > 5
+            ) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' =>
+                        'Total dokumen invoice maksimal 5 file.'
+                ], 422);
+            }
+            /*
+            |--------------------------------------------------------------------------
+            | UPLOAD NEW DOCUMENTS
+            |--------------------------------------------------------------------------
+            */
+            if ($newInvoiceCount > 0) {
+
+                $companyCode =
+                    $asset->company->company_code;
+
+                $datePath =
+                    now()->format('Y/m/d');
+
+                foreach (
+                    $newInvoiceFiles
+                    as $file
+                ) {
+
+                    if (!$file->isValid()) {
+
+                        DB::rollBack();
+
+                        return response()->json([
+                            'success' => false,
+                            'message' =>
+                                'Salah satu invoice gagal diupload: ' .
+                                $file->getErrorMessage()
+                        ], 422);
+                    }
+
+                    $extension =
+                        strtolower(
+                            $file->getClientOriginalExtension()
+                        );
+
+                    $filename =
+                        $asset->asset_code .
+                        '-' .
+                        Str::uuid() .
+                        '.' .
+                        $extension;
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | STORAGE PATH
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $destinationPath =
+                        storage_path(
+                            'app/public/documents/' .
+                            $companyCode .
+                            '/assets/inv/' .
+                            $datePath
+                        );
+
+                    if (!is_dir($destinationPath)) {
+
+                        mkdir(
+                            $destinationPath,
+                            0755,
+                            true
+                        );
+                    }
+
+                    $file->move(
+                        $destinationPath,
+                        $filename
+                    );
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | DATABASE PATH
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $path =
+                        'documents/' .
+                        $companyCode .
+                        '/assets/inv/' .
+                        $datePath .
+                        '/' .
+                        $filename;
+
+                    $uploadedInvoicePaths[] =
+                        $path;
+
+                    AssetDocument::create([
+
+                        'asset_id' =>
+                            $asset->id,
+
+                        'document_type' =>
+                            'invoice',
+
+                        'file_path' =>
+                            $path,
+
+                        'original_name' =>
+                            $file->getClientOriginalName(),
+                    ]);
+                }
+            }
+            /*
+            |--------------------------------------------------------------------------
+            | UPDATE ASSET
+            |--------------------------------------------------------------------------
+            */
+            $asset->update([
+                'category_id' =>
+                    $category->id,
+                'sub_category_id' =>
+                    $subCategoryId,
+                'asset_name' =>
+                    strtoupper(
+                        trim(
+                            $request->asset_name
+                        )
+                    ),
+                'vendor_id' =>
+                    $request->vendor_id,
+                'responsible_user_id' =>
+                    $request->responsible_user_id,
+                'brand' =>
+                    $request->brand,
+                'model' =>
+                    $request->model,
+                'serial_number' =>
+                    $request->serial_number,
+                'description' =>
+                    $request->description,
+                'purchase_date' =>
+                    $request->purchase_date,
+                'purchase_price' =>
+                    $request->purchase_price,
+                'purchase_invoice' =>
+                    $request->purchase_invoice,
+                'depreciation_method' =>
+                    $request->depreciation_method,
+                'useful_life' =>
+                    $request->useful_life,
+                'residual_value' =>
+                    $request->residual_value ?? 0,
+                'depreciation_start_date' =>
+                    $request->depreciation_start_date,
+                'warranty_start' =>
+                    $request->warranty_start,
+                'warranty_end' =>
+                    $request->warranty_end,
+                'warranty_note' =>
+                    $request->warranty_note,
+                'location' =>
+                    $request->location,
+                'status' =>
+                    $request->status,
+                'maintenance_required' =>
+                    $request->maintenance_required,
+
+                'maintenance_type' =>
+                    $request->maintenance_type,
+
+                'maintenance_trigger' =>
+                    $request->maintenance_trigger,
+
+                'maintenance_interval' =>
+                    $request->maintenance_interval,
+
+                'maintenance_interval_unit' =>
+                    $request->maintenance_interval_unit,
+
+                'maintenance_start_date' =>
+                    $request->maintenance_start_date,
+
+                'last_maintenance_date' =>
+                    $request->last_maintenance_date,
+
+                'next_maintenance_date' =>
+                    $request->next_maintenance_date,
+            ]);
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | COMMIT
+            |--------------------------------------------------------------------------
+            */
+            DB::commit();
+            /*
+            |--------------------------------------------------------------------------
+            | REFRESH DATA
+            |--------------------------------------------------------------------------
+            */
+            $asset->refresh();
+            $asset->load([
+                'photos',
+                'documents'
+            ]);
+            return response()->json([
+                'success' =>
+                    true,
+                'message' =>
+                    'Asset berhasil diperbarui.',
+                'data' =>
+                    $asset
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            /*
+            |--------------------------------------------------------------------------
+            | CLEANUP NEW PHOTOS
+            |--------------------------------------------------------------------------
+            */
+
+            foreach (
+                $uploadedImagePaths
+                as $path
+            ) {
+                $fullPath =
+                    public_path($path);
+                if (
+                    file_exists(
+                        $fullPath
+                    )
+                ) {
+
+                    unlink($fullPath);
+                }
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | CLEANUP NEW DOCUMENTS
+            |--------------------------------------------------------------------------
+            */
+
+            foreach (
+                $uploadedInvoicePaths
+                as $path
+            ) {
+
+                $fullPath =
+                    public_path($path);
+
+                if (
+                    file_exists(
+                        $fullPath
+                    )
+                ) {
+
+                    unlink($fullPath);
+                }
+            }
+
+
+            Log::error(
+                'Gagal memperbarui asset',
+                [
+
+                    'message' =>
+                        $e->getMessage(),
+
+                    'file' =>
+                        $e->getFile(),
+
+                    'line' =>
+                        $e->getLine(),
+
+                    'trace' =>
+                        $e->getTraceAsString(),
+
+                    'asset_id' =>
+                        $request->id ?? null,
+
+                    'company_id' =>
+                        $companyId,
+
+                    'delete_images' =>
+                        $request->input(
+                            'delete_images',
+                            []
+                        ),
+
+                    'delete_invoice_documents' =>
+                        $request->input(
+                            'delete_invoice_documents',
+                            []
+                        ),
+                ]
+            );
+
+
+            return response()->json([
+
+                'success' =>
+                    false,
+
+                'message' =>
+                    'Gagal memperbarui asset.',
+
+                'error' =>
+                    $e->getMessage()
+
             ], 500);
         }
     }
@@ -1304,37 +2723,404 @@ class AssetController extends Controller
      */
     public function destroy(Request $request)
     {
-        $companyId = Auth::user()->company_id;
+        $companyId =
+            Auth::user()->company_id;
 
-        $asset = Asset::where('company_id', $companyId)
-            ->where('id', $request->id)
-            ->first();
+
+        $asset =
+            Asset::where(
+                'company_id',
+                $companyId
+            )
+                ->with([
+                    'photos',
+                    'documents'
+                ])
+                ->where(
+                    'id',
+                    $request->id
+                )
+                ->first();
+
 
         if (!$asset) {
 
             return response()->json([
                 'success' => false,
-                'message' => 'Asset tidak ditemukan.'
+                'message' =>
+                    'Asset tidak ditemukan.'
             ], 404);
         }
 
 
+        DB::beginTransaction();
+
+
         try {
+
+            /*
+            |--------------------------------------------------------------------------
+            | DELETE PHYSICAL PHOTOS
+            |--------------------------------------------------------------------------
+            */
+
+            foreach (
+                $asset->photos
+                as $photo
+            ) {
+
+                $fullPath =
+                    /*public_path(
+                        $photo->file_path
+                    );*/
+                    storage_path(
+                        'app/public/' . $photo->file_path
+                    );
+
+                if (
+                    file_exists(
+                        $fullPath
+                    )
+                ) {
+
+                    unlink($fullPath);
+                }
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | DELETE PHYSICAL DOCUMENTS
+            |--------------------------------------------------------------------------
+            */
+
+            foreach (
+                $asset->documents
+                as $document
+            ) {
+
+                $fullPath =
+                    /*public_path(
+                        $document->file_path
+                    );*/
+                    storage_path(
+                        'app/public/' . $document->file_path
+                    );
+
+                if (
+                    file_exists(
+                        $fullPath
+                    )
+                ) {
+
+                    unlink($fullPath);
+                }
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | DELETE ASSET
+            |--------------------------------------------------------------------------
+            */
 
             $asset->delete();
 
+
+            DB::commit();
+
+
             return response()->json([
                 'success' => true,
-                'message' => 'Asset berhasil dihapus.'
+                'message' =>
+                    'Asset berhasil dihapus.'
             ]);
 
-        } catch (\Exception $e) {
+
+        } catch (\Throwable $e) {
+
+            DB::rollBack();
+
+
+            Log::error(
+                'Gagal menghapus asset',
+                [
+
+                    'message' =>
+                        $e->getMessage(),
+
+                    'asset_id' =>
+                        $request->id ?? null,
+
+                    'company_id' =>
+                        $companyId,
+                ]
+            );
+
 
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal menghapus asset.',
-                'error' => $e->getMessage()
+                'message' =>
+                    'Gagal menghapus asset.',
+                'error' =>
+                    $e->getMessage()
             ], 500);
         }
     }
+
+    public function show($id)
+    {
+        $companyId = Auth::user()->company_id;
+
+        $asset = Asset::with([
+            'category',
+            'subCategory',
+            'vendor',
+            'responsibleUser',
+            'photos',
+            'documents',
+        ])
+        ->where('company_id', $companyId)
+        ->findOrFail($id);
+
+        return view(
+            'dashboard.asset.show',
+            compact('asset')
+        );
+    }
+    public function qr($id)
+    {
+        $companyId = Auth::user()->company_id;
+
+        $asset = Asset::where('company_id', $companyId)
+            ->where('id', $id)
+            ->firstOrFail();
+
+        return view('dashboard.asset.qr', compact('asset'));
+    }
+
+    public function printQr(Request $request)
+    {
+        $companyId = Auth::user()->company_id;
+
+        $ids = $request->input('ids', []);
+
+        if (!is_array($ids)) {
+            $ids = [$ids];
+        }
+
+        $ids = array_filter($ids);
+
+        if (empty($ids)) {
+            return redirect()
+                ->route('assets.index')
+                ->with('error', 'Silakan pilih asset yang ingin dicetak.');
+        }
+
+        $assets = Asset::where('company_id', $companyId)
+            ->whereIn('id', $ids)
+            ->with([
+                'company'
+            ])
+            ->orderBy('asset_code')
+            ->get();
+
+        if ($assets->isEmpty()) {
+            return redirect()
+                ->route('assets.index')
+                ->with('error', 'Asset tidak ditemukan.');
+        }
+
+        return view(
+            'dashboard.asset.print-qr',
+            compact('assets')
+        );
+    }
+
+    public function import()
+    {
+        return view('dashboard.asset.import');
+    }
+    public function downloadImportTemplate()
+    {
+        return Excel::download(
+            new AssetImportTemplateExport,
+            'asset_import_template.xlsx'
+        );
+    }
+    
+    public function previewImport(Request $request)
+{
+    $request->validate([
+        'excel_file' => [
+            'required',
+            'file',
+            'mimes:xlsx,xls',
+            'max:10240',
+        ],
+    ]);
+
+    try {
+
+        /*
+        |--------------------------------------------------------------------------
+        | Simpan file sementara
+        |--------------------------------------------------------------------------
+        */
+
+        $file = $request->file('excel_file');
+
+        $fileName = uniqid('asset_import_') . '.' .
+            $file->getClientOriginalExtension();
+
+        $filePath = $file->storeAs(
+            'temp/asset-import',
+            $fileName
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Full path
+        |--------------------------------------------------------------------------
+        */
+
+        $fullPath = Storage::path($filePath);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Preview Excel
+        |--------------------------------------------------------------------------
+        */
+
+        $previewService = new ExcelPreviewService();
+
+        $preview = $previewService->preview(
+            $fullPath,
+            100
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Simpan file ke session
+        |--------------------------------------------------------------------------
+        */
+
+        session([
+            'asset_import_file' => $filePath,
+        ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Return Preview
+        |--------------------------------------------------------------------------
+        */
+
+        return view(
+            'dashboard.asset.import-preview',
+            [
+                'data' => $preview['data'],
+
+                'totalRows' => $preview['totalRows'],
+
+                'previewRows' => $preview['previewRows'],
+            ]
+        );
+
+    } catch (\Throwable $e) {
+
+        Log::error(
+            'Asset import preview gagal',
+            [
+                'error' => $e->getMessage(),
+
+                'trace' => $e->getTraceAsString(),
+            ]
+        );
+
+        if (!empty($filePath ?? null)) {
+            Storage::delete($filePath);
+        }
+
+        return back()->with(
+            'error',
+            'File Excel gagal dibaca: ' .
+            $e->getMessage()
+        );
+    }
+}
+
+    public function importStore(Request $request)
+    {
+        $filePath = session('asset_import_file');
+
+        if (!$filePath) {
+
+            return redirect()
+                ->route('assets.import')
+                ->with('error', 'File import tidak ditemukan atau session telah berakhir.');
+        }
+
+        try {
+
+            /*
+            |--------------------------------------------------------------------------
+            | Pastikan file masih ada
+            |--------------------------------------------------------------------------
+            */
+
+            if (!Storage::exists($filePath)) {
+
+                session()->forget('asset_import_file');
+
+                return redirect()
+                    ->route('assets.import')
+                    ->with('error', 'File import sudah tidak tersedia. Silakan upload kembali.');
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Proses Import
+            |--------------------------------------------------------------------------
+            */
+
+            $fullPath = Storage::path($filePath);
+
+            Excel::import(
+                new AssetImport,
+                $fullPath
+            );
+
+            /*
+            |--------------------------------------------------------------------------
+            | Hapus file temporary
+            |--------------------------------------------------------------------------
+            */
+
+            Storage::delete($filePath);
+
+            session()->forget('asset_import_file');
+
+            return redirect()
+                ->route('assets.index')
+                ->with(
+                    'success',
+                    'Data asset berhasil diimport.'
+                );
+
+        } catch (\Throwable $e) {
+
+            Log::error('Asset import gagal', [
+                'error' => $e->getMessage(),
+                'file' => $filePath,
+            ]);
+
+            return redirect()
+                ->route('assets.import')
+                ->with(
+                    'error',
+                    'Import gagal: ' . $e->getMessage()
+                );
+        }
+    }
+
 }
