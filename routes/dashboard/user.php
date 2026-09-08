@@ -46,6 +46,19 @@ Route::prefix('dashboard')
         Route::post('/users/import/store', [UserController::class, 'importStore'])
             ->name('users.import.store');
 
-        Route::get('/users/import/template', [UserController::class, 'downloadImportTemplate']
-        )->name('users.import.template');
+        Route::get('/users/import/template', [UserController::class, 'downloadImportTemplate'])
+            ->name('users.import.template');
+
+        Route::get('/users/import/history', [UserController::class, 'importHistory'])
+            ->name('users.import.history');
+
+        Route::get('/users/import/history/progress', [UserController::class, 'importHistoryProgress'])
+            ->name('users.import.history.progress');
+
+        Route::get('/users/import/history/{id}/errors', [UserController::class, 'importHistoryErrors'])
+            ->name('users.import.history.errors');
+            
+        Route::get('/users/import/history/{id}', [UserController::class, 'importHistoryDetail'])
+            ->name('users.import.history.detail');
+
     });

@@ -25,6 +25,7 @@
       <link rel="stylesheet" href="{{ asset('assets/css/arunika-admin.css') }}">
       <link rel="stylesheet" href="{{ asset('assets/css/vendor/boxicons.css') }}">
       <link rel="stylesheet" href="{{ asset('assets/css/vendor/css/all.min.css') }}">
+      
   <body class="  ">
     <!-- loader Start -->
     <div id="loading">

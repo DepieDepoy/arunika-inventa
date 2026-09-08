@@ -28,6 +28,8 @@ use App\Imports\AssetImport;
 use App\Imports\AssetPreviewImport;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Services\ExcelPreviewService;
+use App\Jobs\ProcessAssetImport;
+use App\Models\ImportHistory;
 Carbon::setLocale('id');
 
 class AssetController extends Controller
@@ -2950,177 +2952,418 @@ class AssetController extends Controller
     }
     
     public function previewImport(Request $request)
-{
-    $request->validate([
-        'excel_file' => [
-            'required',
-            'file',
-            'mimes:xlsx,xls',
-            'max:10240',
-        ],
-    ]);
-
-    try {
-
-        /*
-        |--------------------------------------------------------------------------
-        | Simpan file sementara
-        |--------------------------------------------------------------------------
-        */
-
-        $file = $request->file('excel_file');
-
-        $fileName = uniqid('asset_import_') . '.' .
-            $file->getClientOriginalExtension();
-
-        $filePath = $file->storeAs(
-            'temp/asset-import',
-            $fileName
-        );
-
-        /*
-        |--------------------------------------------------------------------------
-        | Full path
-        |--------------------------------------------------------------------------
-        */
-
-        $fullPath = Storage::path($filePath);
-
-        /*
-        |--------------------------------------------------------------------------
-        | Preview Excel
-        |--------------------------------------------------------------------------
-        */
-
-        $previewService = new ExcelPreviewService();
-
-        $preview = $previewService->preview(
-            $fullPath,
-            100
-        );
-
-        /*
-        |--------------------------------------------------------------------------
-        | Simpan file ke session
-        |--------------------------------------------------------------------------
-        */
-
-        session([
-            'asset_import_file' => $filePath,
+    {
+        $request->validate([
+            'excel_file' => [
+                'required',
+                'file',
+                'mimes:xlsx,xls',
+                'max:10240',
+            ],
         ]);
 
-        /*
-        |--------------------------------------------------------------------------
-        | Return Preview
-        |--------------------------------------------------------------------------
-        */
+        try {
 
-        return view(
-            'dashboard.asset.import-preview',
-            [
-                'data' => $preview['data'],
+            /*
+            |--------------------------------------------------------------------------
+            | Simpan file sementara
+            |--------------------------------------------------------------------------
+            */
 
-                'totalRows' => $preview['totalRows'],
+            $file = $request->file('excel_file');
 
-                'previewRows' => $preview['previewRows'],
-            ]
-        );
+            $fileName = uniqid('asset_import_') . '.' .
+                $file->getClientOriginalExtension();
 
-    } catch (\Throwable $e) {
+            $filePath = $file->storeAs(
+                'temp/asset-import',
+                $fileName
+            );
 
-        Log::error(
-            'Asset import preview gagal',
-            [
-                'error' => $e->getMessage(),
+            /*
+            |--------------------------------------------------------------------------
+            | Full path
+            |--------------------------------------------------------------------------
+            */
 
-                'trace' => $e->getTraceAsString(),
-            ]
-        );
+            $fullPath = Storage::path($filePath);
 
-        if (!empty($filePath ?? null)) {
-            Storage::delete($filePath);
-        }
+            /*
+            |--------------------------------------------------------------------------
+            | Preview Excel
+            |--------------------------------------------------------------------------
+            */
 
-        return back()->with(
-            'error',
-            'File Excel gagal dibaca: ' .
-            $e->getMessage()
-        );
-    }
+            $previewService = new ExcelPreviewService();
+
+            $preview = $previewService->preview(
+                $fullPath,
+                100
+            );
+
+            $totalRows = (int) $preview['totalRows'];
+            if ($totalRows > 10000) {
+
+    Storage::delete($filePath);
+
+    return back()
+        ->withInput()
+        ->withErrors([
+            'excel_file' =>
+                'Import ditolak. Maksimal 10.000 data per file. ' .
+                'File Anda memiliki ' .
+                number_format($totalRows) .
+                ' data.',
+        ]);
 }
+            /*
+            |--------------------------------------------------------------------------
+            | Simpan file + total rows ke session
+            |--------------------------------------------------------------------------
+            */
+
+            session([
+                'asset_import_file' => $filePath,
+                'asset_import_total_rows' => $preview['totalRows'],
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Return Preview
+            |--------------------------------------------------------------------------
+            */
+
+            return view(
+                'dashboard.asset.import-preview',
+                [
+                    'data' => $preview['data'],
+
+                    'totalRows' => $preview['totalRows'],
+
+                    'previewRows' => $preview['previewRows'],
+                ]
+            );
+
+        } catch (\Throwable $e) {
+
+            Log::error(
+                'Asset import preview gagal',
+                [
+                    'error' => $e->getMessage(),
+
+                    'trace' => $e->getTraceAsString(),
+                ]
+            );
+
+            if (!empty($filePath ?? null)) {
+                Storage::delete($filePath);
+            }
+
+            return back()->with(
+                'error',
+                'File Excel gagal dibaca: ' .
+                $e->getMessage()
+            );
+        }
+    }
 
     public function importStore(Request $request)
     {
         $filePath = session('asset_import_file');
 
-        if (!$filePath) {
+        $totalRows = (int) session(
+            'asset_import_total_rows',
+            0
+        );
 
+        if (!$filePath) {
             return redirect()
                 ->route('assets.import')
-                ->with('error', 'File import tidak ditemukan atau session telah berakhir.');
+                ->with(
+                    'error',
+                    'File import tidak ditemukan atau session telah berakhir.'
+                );
         }
 
         try {
 
             /*
             |--------------------------------------------------------------------------
-            | Pastikan file masih ada
+            | Check File
             |--------------------------------------------------------------------------
             */
 
             if (!Storage::exists($filePath)) {
 
-                session()->forget('asset_import_file');
+                session()->forget([
+                    'asset_import_file',
+                    'asset_import_total_rows',
+                ]);
 
                 return redirect()
                     ->route('assets.import')
-                    ->with('error', 'File import sudah tidak tersedia. Silakan upload kembali.');
+                    ->with(
+                        'error',
+                        'File import sudah tidak tersedia. Silakan upload kembali.'
+                    );
             }
 
             /*
             |--------------------------------------------------------------------------
-            | Proses Import
+            | Current User
             |--------------------------------------------------------------------------
             */
 
-            $fullPath = Storage::path($filePath);
+            $user = Auth::user();
 
-            Excel::import(
-                new AssetImport,
-                $fullPath
+            /*
+            |--------------------------------------------------------------------------
+            | Create Import History
+            |--------------------------------------------------------------------------
+            */
+
+            $history = ImportHistory::create([
+                'company_id' => $user->company_id,
+                'user_id' => $user->id,
+
+                'module' => 'asset',
+
+                'file_name' => basename($filePath),
+
+                'total_rows' => $totalRows,
+
+                'success_rows' => 0,
+                'failed_rows' => 0,
+
+                'status' => 'processing',
+
+                'started_at' => null,
+                'finished_at' => null,
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Dispatch Job
+            |--------------------------------------------------------------------------
+            |
+            | Sama seperti User Import.
+            | Tidak menggunakan ->onQueue('imports').
+            |
+            */
+
+            ProcessAssetImport::dispatch(
+                $history->id,
+                $filePath
             );
 
             /*
             |--------------------------------------------------------------------------
-            | Hapus file temporary
+            | Clear Session
             |--------------------------------------------------------------------------
             */
 
-            Storage::delete($filePath);
+            session()->forget([
+                'asset_import_file',
+                'asset_import_total_rows',
+            ]);
 
-            session()->forget('asset_import_file');
+            /*
+            |--------------------------------------------------------------------------
+            | Redirect
+            |--------------------------------------------------------------------------
+            */
 
             return redirect()
-                ->route('assets.index')
+                ->route('import.history')
                 ->with(
                     'success',
-                    'Data asset berhasil diimport.'
+                    'Import asset berhasil dimasukkan ke antrian. Proses akan berjalan di background.'
                 );
 
         } catch (\Throwable $e) {
 
-            Log::error('Asset import gagal', [
-                'error' => $e->getMessage(),
-                'file' => $filePath,
-            ]);
+            /*
+            |--------------------------------------------------------------------------
+            | Log Error
+            |--------------------------------------------------------------------------
+            */
+
+            Log::error(
+                'Asset import queue gagal',
+                [
+                    'error' => $e->getMessage(),
+                    'file' => $filePath,
+                ]
+            );
+
+            /*
+            |--------------------------------------------------------------------------
+            | Redirect
+            |--------------------------------------------------------------------------
+            */
 
             return redirect()
                 ->route('assets.import')
                 ->with(
                     'error',
-                    'Import gagal: ' . $e->getMessage()
+                    'Import gagal dimasukkan ke antrian: ' .
+                    $e->getMessage()
                 );
         }
+    }
+
+    /**
+     * =========================================================================
+     * IMPORT HISTORY
+     * =========================================================================
+     */
+
+    public function importHistory()
+    {
+        return view('dashboard.asset.import-history');
+    }
+
+    public function importHistoryProgress()
+    {
+        $histories = ImportHistory::where(
+            'company_id',
+            Auth::user()->company_id
+        )
+            ->where('module', 'asset')
+            ->latest()
+            ->get();
+
+        $data = $histories->map(function ($history) {
+
+            $total = (int) $history->total_rows;
+            $success = (int) $history->success_rows;
+            $failed = (int) $history->failed_rows;
+
+            $processed = $success + $failed;
+
+            $progress = $total > 0
+                ? min(
+                    round(($processed / $total) * 100),
+                    100
+                )
+                : 0;
+
+            /*
+            |--------------------------------------------------------------------------
+            | Duration
+            |--------------------------------------------------------------------------
+            */
+
+            $duration = null;
+
+            if ($history->started_at) {
+
+                $endTime =
+                    $history->finished_at ?? now();
+
+                $seconds =
+                    $history->started_at
+                        ->diffInSeconds($endTime);
+
+                $hours =
+                    intdiv($seconds, 3600);
+
+                $minutes =
+                    intdiv(
+                        $seconds % 3600,
+                        60
+                    );
+
+                $remainingSeconds =
+                    $seconds % 60;
+
+                if ($hours > 0) {
+
+                    $duration =
+                        $hours . ' jam';
+
+                    if ($minutes > 0) {
+                        $duration .=
+                            ' ' . $minutes . ' menit';
+                    }
+
+                    if ($remainingSeconds > 0) {
+                        $duration .=
+                            ' ' .
+                            $remainingSeconds .
+                            ' detik';
+                    }
+
+                } elseif ($minutes > 0) {
+
+                    $duration =
+                        $minutes . ' menit';
+
+                    if ($remainingSeconds > 0) {
+                        $duration .=
+                            ' ' .
+                            $remainingSeconds .
+                            ' detik';
+                    }
+
+                } else {
+
+                    $duration =
+                        $remainingSeconds .
+                        ' detik';
+                }
+
+                if (
+                    $history->status === 'processing'
+                ) {
+                    $duration .=
+                        ' (berjalan)';
+                }
+            }
+
+            return [
+                'id' =>
+                    $history->id,
+
+                'file_name' =>
+                    $history->file_name,
+
+                'total_rows' =>
+                    $total,
+
+                'success_rows' =>
+                    $success,
+
+                'failed_rows' =>
+                    $failed,
+
+                'processed_rows' =>
+                    $processed,
+
+                'progress' =>
+                    $progress,
+
+                'status' =>
+                    $history->status,
+
+                'started_at' =>
+                    $history->started_at
+                        ? $history->started_at
+                            ->format('d M Y H:i:s')
+                        : null,
+
+                'finished_at' =>
+                    $history->finished_at
+                        ? $history->finished_at
+                            ->format('d M Y H:i:s')
+                        : null,
+
+                'duration' =>
+                    $duration,
+            ];
+        });
+
+        return response()->json($data);
     }
 
 }

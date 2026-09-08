@@ -23,7 +23,8 @@ use App\Imports\UserImport;
 use App\Imports\UserPreviewImport;
 use App\Exports\UserImportTemplateExport;
 use App\Services\ExcelPreviewService;
-
+use App\Jobs\ProcessUserImport;
+use App\Models\ImportHistory;
 
 class UserController extends Controller
 {
@@ -314,13 +315,14 @@ class UserController extends Controller
     /**
      * Edit User
      */
-    public function edit($id)
+    public function edit(int $id)
     {
         $user = User::where(
-            'id',
-            Auth::user()->id
+            'company_id',
+            Auth::user()->company_id
         )
         ->findOrFail($id);
+
         return response()->json($user);
     }
 
@@ -713,6 +715,7 @@ class UserController extends Controller
      */
     public function previewImport(Request $request)
     {
+        $filePath = null;
         $request->validate([
             'excel_file' => [
                 'required',
@@ -773,7 +776,11 @@ class UserController extends Controller
             */
 
             session([
-                'user_import_file' => $filePath,
+                'user_import_file' =>
+                    $filePath,
+
+                'user_import_total_rows' =>
+                    $preview['totalRows'],
             ]);
 
             /*
@@ -828,105 +835,362 @@ class UserController extends Controller
      */
     public function importStore(Request $request)
     {
-        $filePath = session('user_import_file');
+        $filePath =
+            session('user_import_file');
+
+        $totalRows =
+            session(
+                'user_import_total_rows',
+                0
+            );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Check Session
+        |--------------------------------------------------------------------------
+        */
 
         if (!$filePath) {
+
             return redirect()
                 ->route('users.import')
                 ->with(
                     'error',
-                    'File import tidak ditemukan atau session telah berakhir.'
+                    'Session file import sudah tidak tersedia.'
                 );
         }
 
         try {
 
+            /*
+            |--------------------------------------------------------------------------
+            | Check File
+            |--------------------------------------------------------------------------
+            */
+
             if (!Storage::exists($filePath)) {
 
-                session()->forget('user_import_file');
-
                 return redirect()
                     ->route('users.import')
                     ->with(
                         'error',
-                        'File import sudah tidak tersedia. Silakan upload kembali.'
+                        'File Excel tidak ditemukan.'
                     );
             }
 
             /*
-            * Ambil company dari user yang sedang login.
+            |--------------------------------------------------------------------------
+            | Current User
+            |--------------------------------------------------------------------------
             */
-            $companyId = Auth::user()->company_id;
+
+            $user =
+                Auth::user();
 
             /*
-            * Cari Staff role sekali saja.
+            |--------------------------------------------------------------------------
+            | Create Import History
+            |--------------------------------------------------------------------------
             */
-            $staffRole = Role::where('company_id', $companyId)
-                ->where('role_name', 'Staff')
-                ->first();
 
-            if (!$staffRole) {
+            $history =
+                ImportHistory::create([
+                    'company_id' =>
+                        $user->company_id,
 
-                return redirect()
-                    ->route('users.import')
-                    ->with(
-                        'error',
-                        'Role Staff untuk perusahaan ini belum tersedia.'
-                    );
-            }
+                    'user_id' =>
+                        $user->id,
+
+                    'module' =>
+                        'user',
+
+                    'file_name' =>
+                        basename($filePath),
+
+                    'total_rows' =>
+                        $totalRows,
+
+                    'success_rows' =>
+                        0,
+
+                    'failed_rows' =>
+                        0,
+
+                    'status' =>
+                        'processing',
+
+                    'started_at' =>
+                        null,
+
+                    'finished_at' =>
+                        null,
+                ]);
 
             /*
-            * Path file Excel.
+            |--------------------------------------------------------------------------
+            | Dispatch Queue
+            |--------------------------------------------------------------------------
             */
-            $fullPath = Storage::path($filePath);
 
-            /*
-            * Dispatch import ke Queue.
-            *
-            * Karena UserImport implements ShouldQueue,
-            * proses import tidak akan menunggu sampai
-            * 40.000 / 100.000 / 200.000 data selesai.
-            */
-            Excel::import(
-                new UserImport(
-                    $companyId,
-                    $staffRole->id
-                ),
-                $fullPath
+            ProcessUserImport::dispatch(
+                $history->id,
+                $filePath
             );
 
             /*
-            * JANGAN hapus file di sini.
-            *
-            * Queue masih membutuhkan file Excel tersebut.
+            |--------------------------------------------------------------------------
+            | Clear Session
+            |--------------------------------------------------------------------------
             */
 
-            session()->forget('user_import_file');
+            session()->forget([
+                'user_import_file',
+                'user_import_total_rows',
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Redirect
+            |--------------------------------------------------------------------------
+            */
 
             return redirect()
-                ->route('users.index')
+                ->route(
+                    'import.history'
+                )
                 ->with(
                     'success',
-                    'Import user sedang diproses di background. Data akan masuk secara bertahap.'
+                    'Import berhasil dimasukkan ke antrian. Proses akan berjalan di background.'
                 );
 
         } catch (\Throwable $e) {
 
             Log::error(
-                'User import gagal',
+                'Gagal membuat User Import Job',
                 [
-                    'error' => $e->getMessage(),
-                    'file' => $filePath,
+                    'error' =>
+                        $e->getMessage(),
+
+                    'trace' =>
+                        $e->getTraceAsString(),
                 ]
             );
 
-            return redirect()
-                ->route('users.import')
+            return back()
                 ->with(
                     'error',
-                    'Import gagal: ' . $e->getMessage()
+                    'Import gagal diproses: ' .
+                    $e->getMessage()
                 );
         }
     }
 
+    public function importHistory()
+    {
+        $histories =
+            ImportHistory::where(
+                'company_id',
+                Auth::user()->company_id
+            )
+            ->where(
+                'module',
+                'user'
+            )
+            ->latest()
+            ->paginate(20);
+
+        return view(
+            'dashboard.user.import-history',
+            compact('histories')
+        );
+    }
+
+    public function importHistoryProgress()
+    {
+        $histories = ImportHistory::where(
+            'company_id',
+            Auth::user()->company_id
+        )
+            ->where('module', 'user')
+            ->latest()
+            ->get();
+
+        $data = $histories->map(function ($history) {
+
+            $total = (int) $history->total_rows;
+            $success = (int) $history->success_rows;
+            $failed = (int) $history->failed_rows;
+
+            $processed = $success + $failed;
+
+            $progress = $total > 0
+                ? min(round(($processed / $total) * 100), 100)
+                : 0;
+
+            /*
+            |--------------------------------------------------------------------------
+            | DURASI IMPORT
+            |--------------------------------------------------------------------------
+            */
+            $duration = null;
+
+            if ($history->started_at) {
+
+                // Jika masih processing, hitung sampai sekarang
+                $endTime = $history->finished_at ?? now();
+
+                $seconds = $history->started_at->diffInSeconds($endTime);
+
+                $hours = intdiv($seconds, 3600);
+                $minutes = intdiv($seconds % 3600, 60);
+                $remainingSeconds = $seconds % 60;
+
+                if ($hours > 0) {
+
+                    $duration = $hours . ' jam';
+
+                    if ($minutes > 0) {
+                        $duration .= ' ' . $minutes . ' menit';
+                    }
+
+                    if ($remainingSeconds > 0) {
+                        $duration .= ' ' . $remainingSeconds . ' detik';
+                    }
+
+                } elseif ($minutes > 0) {
+
+                    $duration = $minutes . ' menit';
+
+                    if ($remainingSeconds > 0) {
+                        $duration .= ' ' . $remainingSeconds . ' detik';
+                    }
+
+                } else {
+
+                    $duration = $remainingSeconds . ' detik';
+                }
+
+                // Kalau masih berjalan
+                if ($history->status === 'processing') {
+                    $duration .= ' (berjalan)';
+                }
+            }
+
+            return [
+                'id' => $history->id,
+
+                'total_rows' => $total,
+
+                'success_rows' => $success,
+
+                'failed_rows' => $failed,
+
+                'processed_rows' => $processed,
+
+                'progress' => $progress,
+
+                'status' => $history->status,
+
+                'started_at' => $history->started_at
+                    ? $history->started_at->format('d M Y H:i:s')
+                    : null,
+
+                'finished_at' => $history->finished_at
+                    ? $history->finished_at->format('d M Y H:i:s')
+                    : null,
+
+                // TAMBAHAN INI
+                'duration' => $duration,
+            ];
+        });
+
+        return response()->json($data);
+    }
+
+    public function importHistoryDetail(int $id)
+    {
+        $history = ImportHistory::where(
+            'company_id',
+            Auth::user()->company_id
+        )
+            ->where('module', 'user')
+            ->findOrFail($id);
+
+        return view(
+            'dashboard.user.import-history-detail',
+            compact('history')
+        );
+    }
+
+    public function importHistoryErrors(Request $request, int $id)
+    {
+        $history = ImportHistory::where(
+            'company_id',
+            Auth::user()->company_id
+        )
+            ->where('module', 'user')
+            ->findOrFail($id);
+
+        $query = $history->errors()
+            ->select([
+                'id',
+                'row_number',
+                'data',
+                'error_message',
+                'created_at',
+            ]);
+
+        return DataTables::of($query)
+
+            ->addColumn('row_display', function ($error) {
+                return $error->row_number ?: '-';
+            })
+
+            ->addColumn('data_display', function ($error) {
+
+                if (empty($error->data)) {
+                    return '<span class="text-muted">-</span>';
+                }
+
+                $data = is_array($error->data)
+                    ? $error->data
+                    : json_decode($error->data, true);
+
+                if (!is_array($data)) {
+                    return e($error->data);
+                }
+
+                return '<pre class="mb-0 small" style="
+                    max-width: 500px;
+                    max-height: 120px;
+                    overflow: auto;
+                    white-space: pre-wrap;
+                ">' .
+                    e(json_encode(
+                        $data,
+                        JSON_PRETTY_PRINT |
+                        JSON_UNESCAPED_UNICODE |
+                        JSON_UNESCAPED_SLASHES
+                    )) .
+                '</pre>';
+            })
+
+            ->addColumn('error_display', function ($error) {
+                return '<span class="text-danger">'
+                    . e($error->error_message)
+                    . '</span>';
+            })
+
+            ->rawColumns([
+                'data_display',
+                'error_display',
+            ])
+
+            ->orderColumn(
+                'row_display',
+                'row_number $1'
+            )
+
+            ->make(true);
+    }
 }

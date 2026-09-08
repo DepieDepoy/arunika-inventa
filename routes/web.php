@@ -3,6 +3,8 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\ImportHistoryController;
+use App\Http\Controllers\SubscriptionController;
 Route::get('/', function () {
     return view('welcome');
 });
@@ -22,12 +24,16 @@ require __DIR__.'/dashboard/subcategory.php';
 require __DIR__.'/dashboard/vendor.php';
 require __DIR__.'/dashboard/asset.php';
 
-Route::get('/php-check', function () {
-    return [
-        'php_version' => PHP_VERSION,
-        'sapi' => PHP_SAPI,
-        'mbstring' => extension_loaded('mbstring'),
-        'mb_strcut' => function_exists('mb_strcut'),
-        'php_ini' => php_ini_loaded_file(),
-    ];
+
+Route::get('/dashboard/import-history',[ImportHistoryController::class, 'index'])->name('import.history');
+
+Route::get('/dashboard/import-history/progress', [ImportHistoryController::class, 'progress'])->name('import.history.progress');
+
+Route::get('/dashboard/import-history-detail/{id}/errors',[ImportHistoryController::class, 'detailErrors'])->name('import.history.detail.errors');
+
+Route::get('/dashboard/import-history-detail/{id}',[ImportHistoryController::class, 'detail'])->name('import.history.detail');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/subscription/expired', [SubscriptionController::class, 'expired'])
+        ->name('subscription.expired');
 });

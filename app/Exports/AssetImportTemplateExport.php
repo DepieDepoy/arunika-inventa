@@ -29,7 +29,7 @@ class AssetImportTemplateExport implements
             'Sub Category',
             'Vendor',
             'Vendor Address',
-            'Responsible User',
+            'ID Person (NIK)',
             'Brand',
             'Model',
             'Serial Number',
@@ -68,7 +68,7 @@ class AssetImportTemplateExport implements
                 'Laptop',
                 'PT Contoh Vendor',
                 'Jl. Contoh No. 123, Jakarta',
-                'Budi Santoso',
+                'CGKxxx',
                 'Dell',
                 'Latitude 5440',
                 'SN123456789',
@@ -100,7 +100,7 @@ class AssetImportTemplateExport implements
                 'Air Conditioner',
                 'PT Contoh Vendor',
                 'Jl. Contoh No. 123, Jakarta',
-                'Andi Pratama',
+                '',
                 'Daikin',
                 'FTKC15',
                 'AC123456789',
@@ -132,7 +132,12 @@ class AssetImportTemplateExport implements
      */
     public function styles(Worksheet $sheet): array
     {
-        // Header
+        /*
+        |--------------------------------------------------------------------------
+        | Header
+        |--------------------------------------------------------------------------
+        */
+
         $sheet->getStyle('A1:AC1')->applyFromArray([
             'font' => [
                 'bold' => true,
@@ -152,17 +157,48 @@ class AssetImportTemplateExport implements
             ],
         ]);
 
-        // Contoh data
+        /*
+        |--------------------------------------------------------------------------
+        | Contoh Data
+        |--------------------------------------------------------------------------
+        */
+
         $sheet->getStyle('A2:AC3')->applyFromArray([
             'alignment' => [
                 'vertical' => Alignment::VERTICAL_TOP,
             ],
         ]);
 
-        // Tinggi header
+        /*
+        |--------------------------------------------------------------------------
+        | NIK / ID Person
+        |--------------------------------------------------------------------------
+        |
+        | Kolom G dibuat Text agar:
+        |
+        | 001234
+        |
+        | tidak berubah menjadi:
+        |
+        | 1234
+        |
+        */
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Tinggi Header
+        |--------------------------------------------------------------------------
+        */
+
         $sheet->getRowDimension(1)->setRowHeight(25);
 
-        // Freeze header
+        /*
+        |--------------------------------------------------------------------------
+        | Freeze Header
+        |--------------------------------------------------------------------------
+        */
+
         $sheet->freezePane('A2');
 
         /*
@@ -171,45 +207,45 @@ class AssetImportTemplateExport implements
         |--------------------------------------------------------------------------
         */
 
-        // Condition - kolom K
+        // Condition - kolom L
         $this->addDropdown(
             $sheet,
-            'K2:K1000',
+            'L2:L1000',
             '"new,used"'
         );
 
-        // Depreciation Method - kolom O
+        // Depreciation Method - kolom P
         $this->addDropdown(
             $sheet,
-            'O2:O1000',
+            'P2:P1000',
             '"straight_line"'
         );
 
-        // Maintenance Required - kolom V
-        $this->addDropdown(
-            $sheet,
-            'V2:V1000',
-            '"yes,no"'
-        );
-
-        // Maintenance Type - kolom W
+        // Maintenance Required - kolom W
         $this->addDropdown(
             $sheet,
             'W2:W1000',
-            '"preventive,corrective"'
+            '"yes,no"'
         );
 
-        // Maintenance Trigger - kolom X
+        // Maintenance Type - kolom X
         $this->addDropdown(
             $sheet,
             'X2:X1000',
+            '"preventive,corrective"'
+        );
+
+        // Maintenance Trigger - kolom Y
+        $this->addDropdown(
+            $sheet,
+            'Y2:Y1000',
             '"calendar,usage"'
         );
 
-        // Maintenance Interval Unit - kolom Z
+        // Maintenance Interval Unit - kolom AA
         $this->addDropdown(
             $sheet,
-            'Z2:Z1000',
+            'AA2:AA1000',
             '"day,month,year"'
         );
 
@@ -226,28 +262,44 @@ class AssetImportTemplateExport implements
     ): void {
         $validation = new DataValidation();
 
-        $validation->setType(DataValidation::TYPE_LIST);
+        $validation->setType(
+            DataValidation::TYPE_LIST
+        );
+
         $validation->setErrorStyle(
             DataValidation::STYLE_STOP
         );
+
         $validation->setAllowBlank(true);
+
         $validation->setShowInputMessage(true);
+
         $validation->setShowErrorMessage(true);
+
         $validation->setShowDropDown(true);
 
-        $validation->setErrorTitle('Input tidak valid');
+        $validation->setErrorTitle(
+            'Input tidak valid'
+        );
+
         $validation->setError(
             'Silakan pilih nilai dari dropdown yang tersedia.'
         );
 
-        $validation->setPromptTitle('Pilih nilai');
+        $validation->setPromptTitle(
+            'Pilih nilai'
+        );
+
         $validation->setPrompt(
             'Silakan pilih salah satu pilihan dari dropdown.'
         );
 
         $validation->setFormula1($formula);
 
-        $sheet->setDataValidation($range, $validation);
+        $sheet->setDataValidation(
+            $range,
+            $validation
+        );
     }
 
     /**
@@ -262,28 +314,28 @@ class AssetImportTemplateExport implements
             'D' => 20,
             'E' => 25,
             'F' => 55,
-            'G' => 15,
+            'G' => 18,
             'H' => 20,
             'I' => 22,
             'J' => 35,
-            'K' => 15,
+            'K' => 35,
             'L' => 15,
             'M' => 18,
             'N' => 20,
             'O' => 22,
-            'P' => 15,
+            'P' => 20,
             'Q' => 18,
             'R' => 20,
-            'S' => 18,
+            'S' => 22,
             'T' => 18,
-            'U' => 30,
-            'V' => 20,
-            'W' => 20,
+            'U' => 18,
+            'V' => 30,
+            'W' => 22,
             'X' => 20,
             'Y' => 20,
-            'Z' => 25,
-            'AA' => 20,
-            'AB' => 25,
+            'Z' => 22,
+            'AA' => 25,
+            'AB' => 22,
             'AC' => 25,
         ];
     }

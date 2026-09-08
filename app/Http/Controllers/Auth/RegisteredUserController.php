@@ -8,6 +8,9 @@ use App\Helpers\CompanyHelper;
 use App\Models\User;
 use App\Models\Company;
 use App\Models\Role;
+use App\Models\Permission;
+use App\Models\Plan;
+use App\Models\Subscription;
 use Illuminate\Support\Str;
 
 use Illuminate\Auth\Events\Registered;
@@ -41,7 +44,7 @@ class RegisteredUserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'nik' => ['required', 'string', 'max:255'],
             'company_name' => ['required', 'string', 'max:255'],
-            'phone' => ['required', 'digits_between:10,15','unique:users,phone',],
+            'phone' => ['required', 'digits_between:10,15', 'unique:users,phone'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'password_confirmation' => ['required'],
@@ -60,14 +63,9 @@ class RegisteredUserController extends Controller
             'password.min' => 'Password must be at least 8 characters.',
             'password.confirmed' => 'Password confirmation does not match.',
             'password_confirmation.required' => 'Please confirm your password.',
-        ]
-        );
+        ]);
 
-        // Format nama perusahaan menjadi kode
-        /*$companyCode = Str::of($request->company_name)
-            ->trim()
-            ->lower()
-            ->replaceMatches('/\s+/', '_');*/
+        // Generate company code
         $companyCode = CompanyHelper::generateCode($request->company_name);
 
         // Cek apakah perusahaan sudah ada
@@ -83,19 +81,61 @@ class RegisteredUserController extends Controller
         DB::beginTransaction();
 
         try {
-            // Simpan perusahaan
+
+            /*
+            |--------------------------------------------------------------------------
+            | Ambil Plan FREE
+            |--------------------------------------------------------------------------
+            */
+
+            $freePlan = Plan::where('plan_code', 'FREE')
+                ->where('status', 1)
+                ->first();
+
+            if (!$freePlan) {
+                throw new \Exception(
+                    'Plan FREE belum tersedia. Silakan hubungi administrator.'
+                );
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Simpan perusahaan
+            |--------------------------------------------------------------------------
+            */
+
             $company = Company::create([
                 'company_name' => trim($request->company_name),
                 'company_code' => $companyCode,
                 'status'       => 1,
-                // Subscription
-                'subscription_plan'   => 'free',
+
+                // Tetap isi data lama untuk sementara
+                'subscription_plan'   => $freePlan->plan_code,
                 'subscription_status' => 'active',
                 'started_at'          => now(),
-                'expired_at'          => now()->addMonth(),
+                'expired_at'          => now()->addDays($freePlan->duration_days),
             ]);
 
-            // Generate default role
+            /*
+            |--------------------------------------------------------------------------
+            | Buat Subscription FREE Trial
+            |--------------------------------------------------------------------------
+            */
+
+            Subscription::create([
+                'company_id' => $company->id,
+                'plan_id'    => $freePlan->id,
+                'start_date' => today(),
+                'end_date'   => today()->addDays($freePlan->duration_days),
+                'status'     => 'active',
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Generate default role
+            |--------------------------------------------------------------------------
+            */
+
             $defaultRoles = [
                 'Administrator',
                 'Manager',
@@ -114,23 +154,43 @@ class RegisteredUserController extends Controller
 
             }
 
-            // Ambil role Administrator
+            /*
+            |--------------------------------------------------------------------------
+            | Ambil role Administrator
+            |--------------------------------------------------------------------------
+            */
+
             $adminRole = Role::where('company_id', $company->id)
                 ->where('role_code', 'administrator')
                 ->first();
 
-            // Simpan user Administrator
+            /*
+            |--------------------------------------------------------------------------
+            | Simpan user Administrator
+            |--------------------------------------------------------------------------
+            */
+
             $user = User::create([
                 'company_id' => $company->id,
                 'role_id'    => $adminRole->id,
 
                 'name'       => $request->name,
-                'nik'       => $request->nik,
+                'nik'        => $request->nik,
                 'phone'      => $request->phone,
                 'email'      => $request->email,
                 'password'   => Hash::make($request->password),
                 'status'     => 1,
             ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Administrator mendapatkan semua permission
+            |--------------------------------------------------------------------------
+            */
+
+            $adminRole->permissions()->sync(
+                Permission::pluck('id')
+            );
 
             DB::commit();
 

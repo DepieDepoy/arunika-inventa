@@ -54,4 +54,10 @@ Route::prefix('dashboard')
         Route::get('/assets/import/template', [AssetController::class, 'downloadImportTemplate']
         )->name('assets.import.template');
 
+        Route::get('/assets/import/history',[AssetController::class, 'importHistory'])
+            ->name('assets.import.history');
+
+        Route::get('/assets/import/history/progress',[AssetController::class, 'importHistoryProgress'])
+            ->name('assets.import.history.progress');
+
     });

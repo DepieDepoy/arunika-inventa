@@ -102,14 +102,6 @@ class UserImportTemplateExport implements
         |
         */
 
-        $sheet->getStyle('C2:C1000')
-            ->getNumberFormat()
-            ->setFormatCode('@');
-
-        $sheet->getStyle('E2:E1000')
-            ->getNumberFormat()
-            ->setFormatCode('@');
-
         return [];
     }
 

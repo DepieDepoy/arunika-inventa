@@ -5,23 +5,22 @@ namespace App\Imports;
 use App\Helpers\CodeHelper;
 use App\Models\Asset;
 use App\Models\Category;
+use App\Models\ImportHistory;
 use App\Models\SubCategory;
 use App\Models\User;
 use App\Models\Vendor;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Maatwebsite\Excel\Concerns\ToModel;
-use Maatwebsite\Excel\Concerns\WithBatchInserts;
+use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class AssetImport implements
-    ToModel,
+    ToCollection,
     WithHeadingRow,
-    WithChunkReading,
-    WithBatchInserts
+    WithChunkReading
 {
     /*
     |--------------------------------------------------------------------------
@@ -33,12 +32,16 @@ class AssetImport implements
 
     /*
     |--------------------------------------------------------------------------
+    | IMPORT HISTORY
+    |--------------------------------------------------------------------------
+    */
+
+    protected ImportHistory $history;
+
+    /*
+    |--------------------------------------------------------------------------
     | CACHE
     |--------------------------------------------------------------------------
-    |
-    | Cache digunakan supaya data yang sama tidak terus-menerus
-    | melakukan query ke database.
-    |
     */
 
     protected array $categoryCache = [];
@@ -49,14 +52,20 @@ class AssetImport implements
 
     protected array $userCache = [];
 
+    protected bool $userCacheInitialized = false;
+
     /*
     |--------------------------------------------------------------------------
-    | ASSET CODE GENERATOR
+    | SERIAL NUMBER
     |--------------------------------------------------------------------------
-    |
-    | Counter hanya mengambil nomor terakhir dari database sekali.
-    | Setelah itu nomor dinaikkan di memory.
-    |
+    */
+
+    protected array $importSerialNumbers = [];
+
+    /*
+    |--------------------------------------------------------------------------
+    | ASSET CODE
+    |--------------------------------------------------------------------------
     */
 
     protected int $assetCodeCounter = 0;
@@ -65,377 +74,474 @@ class AssetImport implements
 
     /*
     |--------------------------------------------------------------------------
+    | IMPORT ROW NUMBER
+    |--------------------------------------------------------------------------
+    |
+    | Nomor logical row data import.
+    |
+    | Data pertama = 1
+    | Data kedua   = 2
+    | dst.
+    |
+    | Ini sengaja tidak menggunakan nomor fisik Excel
+    | karena WithHeadingRow membuat header berada di row Excel pertama.
+    |
+    */
+
+    protected int $importRowNumber = 1;
+
+    /*
+    |--------------------------------------------------------------------------
     | CONSTRUCTOR
     |--------------------------------------------------------------------------
     */
 
-    public function __construct()
-    {
-        $user = Auth::user();
+    public function __construct(
+        ImportHistory $history
+    ) {
+        $this->history = $history;
 
-        if (!$user || !$user->company_id) {
-            throw new \Exception(
-                'Company user tidak ditemukan.'
-            );
-        }
+        $this->companyId = (int) $history->company_id;
 
-        $this->companyId = (int) $user->company_id;
+        $this->initializeUserCache();
     }
 
     /*
     |--------------------------------------------------------------------------
-    | MODEL
+    | COLLECTION
     |--------------------------------------------------------------------------
     */
 
-    public function model(array $row): Model|array|null
+    public function collection(Collection $rows): void
     {
-        /*
-        |--------------------------------------------------------------------------
-        | NORMALISASI ROW
-        |--------------------------------------------------------------------------
-        |
-        | Heading Excel dari WithHeadingRow biasanya sudah menjadi lowercase
-        | dan underscore. Kita tetap trim value penting supaya lebih bersih.
-        |
-        */
-
-        $assetName = trim(
-            (string) ($row['asset_name'] ?? '')
-        );
-
-        $categoryName = trim(
-            (string) ($row['category'] ?? '')
-        );
-
-        /*
-        |--------------------------------------------------------------------------
-        | SKIP BARIS KOSONG
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            $assetName === '' &&
-            $categoryName === ''
-        ) {
-            return null;
+        if ($rows->isEmpty()) {
+            return;
         }
 
         /*
         |--------------------------------------------------------------------------
-        | ASSET NAME
+        | PREPARE
         |--------------------------------------------------------------------------
         */
 
-        if ($assetName === '') {
-            throw new \Exception(
-                'Asset Name wajib diisi.'
+        $preparedRows = [];
+
+        foreach ($rows as $row) {
+
+            $rowArray = $row->toArray();
+
+            $assetName = trim(
+                (string) (
+                    $row['asset_name'] ?? ''
+                )
             );
-        }
 
-        /*
-        |--------------------------------------------------------------------------
-        | CATEGORY
-        |--------------------------------------------------------------------------
-        */
+            $categoryName = trim(
+                (string) (
+                    $row['category'] ?? ''
+                )
+            );
 
-        $category = $this->resolveCategory(
-            $categoryName
-        );
+            /*
+            |--------------------------------------------------------------------------
+            | DETEKSI BARIS KOSONG
+            |--------------------------------------------------------------------------
+            */
 
-        /*
-        |--------------------------------------------------------------------------
-        | SUB CATEGORY
-        |--------------------------------------------------------------------------
-        */
+            $isEmpty = true;
 
-        $subCategory = $this->resolveSubCategory(
-            $category,
-            $row['sub_category'] ?? null
-        );
+            foreach ($rowArray as $value) {
 
-        /*
-        |--------------------------------------------------------------------------
-        | VENDOR
-        |--------------------------------------------------------------------------
-        */
-
-        $vendor = $this->resolveVendor(
-            $row['vendor'] ?? null,
-            $row['vendor_address'] ?? null
-        );
-
-        /*
-        |--------------------------------------------------------------------------
-        | RESPONSIBLE USER
-        |--------------------------------------------------------------------------
-        */
-
-        $responsibleUser = $this->resolveResponsibleUser(
-            $row['responsible_user'] ?? null
-        );
-
-        /*
-        |--------------------------------------------------------------------------
-        | DATE HELPER
-        |--------------------------------------------------------------------------
-        */
-
-        $parseDate = function ($value) use ($assetName) {
-
-            if (
-                $value === null ||
-                trim((string) $value) === ''
-            ) {
-                return null;
+                if (
+                    $value !== null &&
+                    trim((string) $value) !== ''
+                ) {
+                    $isEmpty = false;
+                    break;
+                }
             }
 
-            try {
+            if ($isEmpty) {
+                continue;
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | SIMPAN NOMOR ROW LOGICAL
+            |--------------------------------------------------------------------------
+            */
+
+            $preparedRows[] = [
+                'row_number' => $this->importRowNumber,
+                'data' => $rowArray,
+                'asset_name' => $assetName,
+                'category_name' => $categoryName,
+            ];
+
+            $this->importRowNumber++;
+        }
+
+        if (empty($preparedRows)) {
+            return;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | LOAD EXISTING SERIAL NUMBERS
+        |--------------------------------------------------------------------------
+        |
+        | Kita ambil semua serial number dari chunk ini sekaligus.
+        |
+        */
+
+        $serialNumbersToCheck = [];
+
+        foreach ($preparedRows as $prepared) {
+
+            $serialNumber = $this->cleanString(
+                $prepared['data']['serial_number'] ?? null
+            );
+
+            if ($serialNumber !== null) {
+
+                $serialNumbersToCheck[] =
+                    $serialNumber;
+            }
+        }
+
+        $existingSerialNumbers = [];
+
+        if (!empty($serialNumbersToCheck)) {
+
+            $existingAssets =
+                Asset::where(
+                    'company_id',
+                    $this->companyId
+                )
+                ->whereIn(
+                    'serial_number',
+                    array_values(
+                        array_unique(
+                            $serialNumbersToCheck
+                        )
+                    )
+                )
+                ->whereNotNull(
+                    'serial_number'
+                )
+                ->pluck(
+                    'serial_number'
+                );
+
+            foreach ($existingAssets as $serialNumber) {
+
+                $key = $this->normalizeSerialNumber(
+                    $serialNumber
+                );
+
+                if ($key !== '') {
+
+                    $existingSerialNumbers[$key] = true;
+                }
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | INSERT DATA
+        |--------------------------------------------------------------------------
+        */
+
+        $insertRows = [];
+
+        $errorRows = [];
+
+        foreach ($preparedRows as $prepared) {
+
+            $row = $prepared['data'];
+
+            $rowNumber = $prepared['row_number'];
+
+            $assetName = $prepared['asset_name'];
+
+            $errors = [];
+
+            /*
+            |--------------------------------------------------------------------------
+            | BASIC VALIDATION
+            |--------------------------------------------------------------------------
+            */
+
+            if ($assetName === '') {
+
+                $errors[] =
+                    'Asset Name wajib diisi.';
+            }
+
+            if ($prepared['category_name'] === '') {
+
+                $errors[] =
+                    'Category wajib diisi.';
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | SERIAL NUMBER
+            |--------------------------------------------------------------------------
+            */
+
+            $serialNumber =
+                $this->cleanString(
+                    $row['serial_number'] ?? null
+                );
+
+            /*
+            |--------------------------------------------------------------------------
+            | VALIDASI DUPLICATE SERIAL
+            |--------------------------------------------------------------------------
+            |
+            | Serial kosong = boleh.
+            |
+            */
+
+            if ($serialNumber !== null) {
+
+                $serialKey =
+                    $this->normalizeSerialNumber(
+                        $serialNumber
+                    );
 
                 /*
                 |--------------------------------------------------------------------------
-                | Excel Serial Date
+                | DUPLICATE DI DATABASE
                 |--------------------------------------------------------------------------
                 */
 
-                if (is_numeric($value)) {
+                if (
+                    isset(
+                        $existingSerialNumbers[$serialKey]
+                    )
+                ) {
 
-                    return Carbon::createFromTimestamp(
-                        \PhpOffice\PhpSpreadsheet\Shared\Date::excelToTimestamp(
-                            $value
-                        )
-                    )->format('Y-m-d');
+                    $errors[] =
+                        'Serial Number "' .
+                        $serialNumber .
+                        '" sudah terdaftar.';
                 }
 
                 /*
                 |--------------------------------------------------------------------------
-                | Normal Date
+                | DUPLICATE DALAM FILE IMPORT
                 |--------------------------------------------------------------------------
                 */
 
-                return Carbon::parse($value)
-                    ->format('Y-m-d');
+                if (
+                    isset(
+                        $this->importSerialNumbers[$serialKey]
+                    )
+                ) {
+
+                    $errors[] =
+                        'Serial Number "' .
+                        $serialNumber .
+                        '" duplicate pada file import.';
+                }
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | RESOLVE CATEGORY
+            |--------------------------------------------------------------------------
+            */
+
+            $category = null;
+
+            if (
+                $prepared['category_name'] !== ''
+            ) {
+
+                try {
+
+                    $category =
+                        $this->resolveCategory(
+                            $prepared['category_name']
+                        );
+
+                } catch (\Throwable $e) {
+
+                    $errors[] =
+                        'Category gagal diproses: ' .
+                        $e->getMessage();
+                }
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | SUB CATEGORY
+            |--------------------------------------------------------------------------
+            */
+
+            $subCategory = null;
+
+            if ($category) {
+
+                try {
+
+                    $subCategory =
+                        $this->resolveSubCategory(
+                            $category,
+                            $row['sub_category'] ?? null
+                        );
+
+                } catch (\Throwable $e) {
+
+                    $errors[] =
+                        'Sub Category gagal diproses: ' .
+                        $e->getMessage();
+                }
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | VENDOR
+            |--------------------------------------------------------------------------
+            */
+
+            $vendor = null;
+
+            try {
+
+                $vendor =
+                    $this->resolveVendor(
+                        $row['vendor'] ?? null,
+                        $row['vendor_address'] ?? null
+                    );
 
             } catch (\Throwable $e) {
 
-                throw new \Exception(
-                    'Format tanggal tidak valid: ' .
-                    $value .
-                    ' pada asset "' .
-                    $assetName .
-                    '".'
-                );
+                $errors[] =
+                    'Vendor gagal diproses: ' .
+                    $e->getMessage();
             }
-        };
-
-        /*
-        |--------------------------------------------------------------------------
-        | MAINTENANCE
-        |--------------------------------------------------------------------------
-        */
-
-        $maintenanceRequired = strtolower(
-            trim(
-                (string) (
-                    $row['maintenance_required'] ?? 'no'
-                )
-            )
-        ) === 'yes';
-
-        $maintenanceType = null;
-
-        $maintenanceTrigger = null;
-
-        $maintenanceInterval = null;
-
-        $maintenanceIntervalUnit = null;
-
-        $maintenanceStartDate = null;
-
-        if ($maintenanceRequired) {
-
-            $maintenanceType = $this->cleanString(
-                $row['maintenance_type'] ?? null
-            );
-
-            $maintenanceTrigger = $this->cleanString(
-                $row['maintenance_trigger'] ?? null
-            );
-
-            $maintenanceInterval = $this->cleanNumber(
-                $row['maintenance_interval'] ?? null
-            );
-
-            $maintenanceIntervalUnit = $this->cleanString(
-                $row['maintenance_interval_unit'] ?? null
-            );
-
-            $maintenanceStartDate = $parseDate(
-                $row['maintenance_start_date'] ?? null
-            );
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | NEXT MAINTENANCE DATE
-        |--------------------------------------------------------------------------
-        */
-
-        $nextMaintenanceDate = $this->calculateNextMaintenanceDate(
-            $maintenanceRequired,
-            $maintenanceStartDate,
-            $maintenanceInterval,
-            $maintenanceIntervalUnit
-        );
-
-        /*
-        |--------------------------------------------------------------------------
-        | ASSET CODE
-        |--------------------------------------------------------------------------
-        |
-        | Asset Code dari Excel sengaja tidak digunakan.
-        | Sistem selalu generate otomatis.
-        |
-        */
-
-        $assetCode = $this->generateAssetCode();
-
-        /*
-        |--------------------------------------------------------------------------
-        | RETURN ASSET
-        |--------------------------------------------------------------------------
-        */
-
-        return new Asset([
 
             /*
             |--------------------------------------------------------------------------
-            | BASIC
+            | RESPONSIBLE USER
             |--------------------------------------------------------------------------
             */
 
-            'company_id' => $this->companyId,
+            $responsibleUserId = null;
 
-            'category_id' => $category->id,
+            try {
 
-            'sub_category_id' =>
-                $subCategory?->id,
+                $responsibleUserId =
+                    $this->resolveResponsibleUserId(
+                        $row['id_person_nik'] ?? null
+                    );
 
-            'vendor_id' =>
-                $vendor?->id,
+            } catch (\Throwable $e) {
 
-            'responsible_user_id' =>
-                $responsibleUser?->id,
-
-            'asset_code' =>
-                $assetCode,
-
-            'asset_name' =>
-                $assetName,
-
-            'description' =>
-                $this->cleanString(
-                    $row['description'] ?? null
-                ),
+                $errors[] =
+                    $e->getMessage();
+            }
 
             /*
             |--------------------------------------------------------------------------
-            | ASSET DETAIL
+            | DATE HELPER
             |--------------------------------------------------------------------------
             */
 
-            'asset_condition' =>
-                strtolower(
-                    trim(
-                        (string) (
-                            $row['condition'] ?? 'new'
-                        )
-                    )
-                ),
+            $parseDate = function ($value) use (
+                $assetName
+            ) {
 
-            'brand' =>
-                $this->cleanString(
-                    $row['brand'] ?? null
-                ),
+                if (
+                    $value === null ||
+                    trim((string) $value) === ''
+                ) {
+                    return null;
+                }
 
-            'model' =>
-                $this->cleanString(
-                    $row['model'] ?? null
-                ),
+                try {
 
-            'serial_number' =>
-                $this->cleanString(
-                    $row['serial_number'] ?? null
-                ),
+                    /*
+                    |--------------------------------------------------------------------------
+                    | EXCEL SERIAL DATE
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (is_numeric($value)) {
+
+                        return Carbon::createFromTimestamp(
+                            \PhpOffice\PhpSpreadsheet\Shared\Date::excelToTimestamp(
+                                $value
+                            )
+                        )->format('Y-m-d');
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | NORMAL DATE
+                    |--------------------------------------------------------------------------
+                    */
+
+                    return Carbon::parse(
+                        $value
+                    )->format('Y-m-d');
+
+                } catch (\Throwable $e) {
+
+                    throw new \Exception(
+                        'Format tanggal tidak valid: ' .
+                        $value .
+                        ' pada asset "' .
+                        $assetName .
+                        '".'
+                    );
+                }
+            };
 
             /*
             |--------------------------------------------------------------------------
-            | PURCHASE
+            | DATE
             |--------------------------------------------------------------------------
             */
 
-            'purchase_date' =>
-                $parseDate(
-                    $row['purchase_date'] ?? null
-                ),
+            $purchaseDate = null;
 
-            'purchase_price' =>
-                $this->cleanNumber(
-                    $row['purchase_price'] ?? null
-                ),
+            $depreciationStartDate = null;
 
-            'purchase_invoice' =>
-                $this->cleanString(
-                    $row['purchase_invoice'] ?? null
-                ),
+            $warrantyStart = null;
 
-            /*
-            |--------------------------------------------------------------------------
-            | DEPRECIATION
-            |--------------------------------------------------------------------------
-            */
+            $warrantyEnd = null;
 
-            'depreciation_method' =>
-                $this->cleanString(
-                    $row['depreciation_method']
-                    ?? 'straight_line'
-                ),
+            try {
 
-            'useful_life' =>
-                $this->cleanNumber(
-                    $row['useful_life'] ?? null
-                ),
+                $purchaseDate =
+                    $parseDate(
+                        $row['purchase_date'] ?? null
+                    );
 
-            'residual_value' =>
-                $this->cleanNumber(
-                    $row['residual_value'] ?? null
-                ),
+                $depreciationStartDate =
+                    $parseDate(
+                        $row['depreciation_start_date'] ?? null
+                    );
 
-            'depreciation_start_date' =>
-                $parseDate(
-                    $row['depreciation_start_date'] ?? null
-                ),
+                $warrantyStart =
+                    $parseDate(
+                        $row['warranty_start'] ?? null
+                    );
 
-            /*
-            |--------------------------------------------------------------------------
-            | WARRANTY
-            |--------------------------------------------------------------------------
-            */
+                $warrantyEnd =
+                    $parseDate(
+                        $row['warranty_end'] ?? null
+                    );
 
-            'warranty_start' =>
-                $parseDate(
-                    $row['warranty_start'] ?? null
-                ),
+            } catch (\Throwable $e) {
 
-            'warranty_end' =>
-                $parseDate(
-                    $row['warranty_end'] ?? null
-                ),
-
-            'warranty_note' =>
-                $this->cleanString(
-                    $row['warranty_note'] ?? null
-                ),
+                $errors[] =
+                    $e->getMessage();
+            }
 
             /*
             |--------------------------------------------------------------------------
@@ -443,55 +549,495 @@ class AssetImport implements
             |--------------------------------------------------------------------------
             */
 
-            'maintenance_required' =>
-                $maintenanceRequired ? 1 : 0,
+            $maintenanceRequired =
+                strtolower(
+                    trim(
+                        (string) (
+                            $row['maintenance_required']
+                            ?? 'no'
+                        )
+                    )
+                ) === 'yes';
 
-            'maintenance_type' =>
-                $maintenanceType,
+            $maintenanceType = null;
 
-            'maintenance_trigger' =>
-                $maintenanceTrigger,
+            $maintenanceTrigger = null;
 
-            'maintenance_interval' =>
-                $maintenanceInterval,
+            $maintenanceInterval = null;
 
-            'maintenance_interval_unit' =>
-                $maintenanceIntervalUnit,
+            $maintenanceIntervalUnit = null;
 
-            'maintenance_start_date' =>
-                $maintenanceStartDate,
-
-            'last_maintenance_date' =>
-                null,
-
-            'next_maintenance_date' =>
-                $nextMaintenanceDate,
+            $maintenanceStartDate = null;
 
             /*
             |--------------------------------------------------------------------------
-            | LOCATION
+            | MAINTENANCE DATA
             |--------------------------------------------------------------------------
             */
 
-            'location' =>
+            if ($maintenanceRequired) {
+
+                $maintenanceType =
+                    $this->cleanString(
+                        $row['maintenance_type'] ?? null
+                    );
+
+                $maintenanceTrigger =
+                    $this->cleanString(
+                        $row['maintenance_trigger'] ?? null
+                    );
+
+                $maintenanceInterval =
+                    $this->cleanNumber(
+                        $row['maintenance_interval'] ?? null
+                    );
+
+                $maintenanceIntervalUnit =
+                    $this->cleanString(
+                        $row['maintenance_interval_unit']
+                        ?? null
+                    );
+
+                try {
+
+                    $maintenanceStartDate =
+                        $parseDate(
+                            $row['maintenance_start_date']
+                            ?? null
+                        );
+
+                } catch (\Throwable $e) {
+
+                    $errors[] =
+                        $e->getMessage();
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | VALIDASI MAINTENANCE
+                |--------------------------------------------------------------------------
+                */
+
+                if (!$maintenanceType) {
+
+                    $errors[] =
+                        'Maintenance Type wajib diisi jika Maintenance Required = yes.';
+                }
+
+                if (!$maintenanceTrigger) {
+
+                    $errors[] =
+                        'Maintenance Trigger wajib diisi jika Maintenance Required = yes.';
+                }
+
+                if (
+                    $maintenanceInterval === null ||
+                    (int) $maintenanceInterval <= 0
+                ) {
+
+                    $errors[] =
+                        'Maintenance Interval wajib diisi dan harus lebih dari 0 jika Maintenance Required = yes.';
+                }
+
+                if (!$maintenanceIntervalUnit) {
+
+                    $errors[] =
+                        'Maintenance Interval Unit wajib diisi jika Maintenance Required = yes.';
+                }
+
+                if (!$maintenanceStartDate) {
+
+                    $errors[] =
+                        'Maintenance Start Date wajib diisi jika Maintenance Required = yes.';
+                }
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | NEXT MAINTENANCE
+            |--------------------------------------------------------------------------
+            */
+
+            $nextMaintenanceDate =
+                $this->calculateNextMaintenanceDate(
+                    $maintenanceRequired,
+                    $maintenanceStartDate,
+                    $maintenanceInterval,
+                    $maintenanceIntervalUnit
+                );
+
+            /*
+            |--------------------------------------------------------------------------
+            | CONDITION
+            |--------------------------------------------------------------------------
+            */
+
+            $condition =
+                strtolower(
+                    trim(
+                        (string) (
+                            $row['condition']
+                            ?? 'new'
+                        )
+                    )
+                );
+
+            if (
+                !in_array(
+                    $condition,
+                    [
+                        'new',
+                        'used',
+                    ],
+                    true
+                )
+            ) {
+
+                $errors[] =
+                    'Condition harus new atau used.';
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | DEPRECIATION METHOD
+            |--------------------------------------------------------------------------
+            */
+
+            $depreciationMethod =
                 $this->cleanString(
-                    $row['location'] ?? null
-                ),
+                    $row['depreciation_method']
+                    ?? 'straight_line'
+                );
+
+            if (
+                $depreciationMethod !== null &&
+                $depreciationMethod !== 'straight_line'
+            ) {
+
+                $errors[] =
+                    'Depreciation Method tidak valid.';
+            }
 
             /*
             |--------------------------------------------------------------------------
-            | SYSTEM
+            | JIKA ADA ERROR
             |--------------------------------------------------------------------------
             */
 
-            'status' => 1,
+            if (!empty($errors)) {
 
-            'qr_token' =>
-                Str::uuid()->toString(),
+                $errorRows[] = [
 
-            'qr_generated_at' =>
-                now(),
-        ]);
+                    'import_history_id' =>
+                        $this->history->id,
+
+                    'row_number' =>
+                        $rowNumber,
+
+                    'data' =>
+                        json_encode(
+                            $row,
+                            JSON_UNESCAPED_UNICODE |
+                            JSON_UNESCAPED_SLASHES
+                        ),
+
+                    'error_message' =>
+                        implode(
+                            ' ',
+                            $errors
+                        ),
+
+                    'created_at' =>
+                        now(),
+
+                    'updated_at' =>
+                        now(),
+                ];
+
+                continue;
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | MARK SERIAL NUMBER AS PROCESSED
+            |--------------------------------------------------------------------------
+            */
+
+            if ($serialNumber !== null) {
+
+                $serialKey =
+                    $this->normalizeSerialNumber(
+                        $serialNumber
+                    );
+
+                $this->importSerialNumbers[
+                    $serialKey
+                ] = true;
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | ASSET CODE
+            |--------------------------------------------------------------------------
+            */
+
+            $assetCode =
+                $this->generateAssetCode();
+
+            /*
+            |--------------------------------------------------------------------------
+            | INSERT ARRAY
+            |--------------------------------------------------------------------------
+            */
+
+            $insertRows[] = [
+
+                /*
+                |--------------------------------------------------------------------------
+                | BASIC
+                |--------------------------------------------------------------------------
+                */
+
+                'company_id' =>
+                    $this->companyId,
+
+                'category_id' =>
+                    $category->id,
+
+                'sub_category_id' =>
+                    $subCategory?->id,
+
+                'vendor_id' =>
+                    $vendor?->id,
+
+                'responsible_user_id' =>
+                    $responsibleUserId,
+
+                'asset_code' =>
+                    $assetCode,
+
+                'asset_name' =>
+                    $assetName,
+
+                /*
+                |--------------------------------------------------------------------------
+                | DETAIL
+                |--------------------------------------------------------------------------
+                */
+
+                'description' =>
+                    $this->cleanString(
+                        $row['description'] ?? null
+                    ),
+
+                'asset_condition' =>
+                    $condition,
+
+                'brand' =>
+                    $this->cleanString(
+                        $row['brand'] ?? null
+                    ),
+
+                'model' =>
+                    $this->cleanString(
+                        $row['model'] ?? null
+                    ),
+
+                'serial_number' =>
+                    $serialNumber,
+
+                /*
+                |--------------------------------------------------------------------------
+                | PURCHASE
+                |--------------------------------------------------------------------------
+                */
+
+                'purchase_date' =>
+                    $purchaseDate,
+
+                'purchase_price' =>
+                    $this->cleanNumber(
+                        $row['purchase_price'] ?? null
+                    ),
+
+                'purchase_invoice' =>
+                    $this->cleanString(
+                        $row['purchase_invoice'] ?? null
+                    ),
+
+                /*
+                |--------------------------------------------------------------------------
+                | DEPRECIATION
+                |--------------------------------------------------------------------------
+                */
+
+                'depreciation_method' =>
+                    $depreciationMethod,
+
+                'useful_life' =>
+                    $this->cleanNumber(
+                        $row['useful_life'] ?? null
+                    ),
+
+                'residual_value' =>
+                    $this->cleanNumber(
+                        $row['residual_value'] ?? null
+                    ),
+
+                'depreciation_start_date' =>
+                    $depreciationStartDate,
+
+                /*
+                |--------------------------------------------------------------------------
+                | WARRANTY
+                |--------------------------------------------------------------------------
+                */
+
+                'warranty_start' =>
+                    $warrantyStart,
+
+                'warranty_end' =>
+                    $warrantyEnd,
+
+                'warranty_note' =>
+                    $this->cleanString(
+                        $row['warranty_note'] ?? null
+                    ),
+
+                /*
+                |--------------------------------------------------------------------------
+                | MAINTENANCE
+                |--------------------------------------------------------------------------
+                */
+
+                'maintenance_required' =>
+                    $maintenanceRequired ? 1 : 0,
+
+                'maintenance_type' =>
+                    $maintenanceType,
+
+                'maintenance_trigger' =>
+                    $maintenanceTrigger,
+
+                'maintenance_interval' =>
+                    $maintenanceInterval,
+
+                'maintenance_interval_unit' =>
+                    $maintenanceIntervalUnit,
+
+                'maintenance_start_date' =>
+                    $maintenanceStartDate,
+
+                'last_maintenance_date' =>
+                    null,
+
+                'next_maintenance_date' =>
+                    $nextMaintenanceDate,
+
+                /*
+                |--------------------------------------------------------------------------
+                | LOCATION
+                |--------------------------------------------------------------------------
+                */
+
+                'location' =>
+                    $this->cleanString(
+                        $row['location'] ?? null
+                    ),
+
+                /*
+                |--------------------------------------------------------------------------
+                | SYSTEM
+                |--------------------------------------------------------------------------
+                */
+
+                'status' =>
+                    1,
+
+                'qr_token' =>
+                    Str::uuid()->toString(),
+
+                'qr_generated_at' =>
+                    now(),
+
+                'created_at' =>
+                    now(),
+
+                'updated_at' =>
+                    now(),
+            ];
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | BULK INSERT
+        |--------------------------------------------------------------------------
+        */
+
+        if (!empty($insertRows)) {
+
+            DB::table('assets')->insert(
+                $insertRows
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | INSERT ERRORS
+        |--------------------------------------------------------------------------
+        */
+
+        if (!empty($errorRows)) {
+
+            DB::table('import_errors')->insert(
+                $errorRows
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | UPDATE HISTORY
+        |--------------------------------------------------------------------------
+        */
+
+        $successCount =
+            count($insertRows);
+
+        $failedCount =
+            count($errorRows);
+
+        if ($successCount > 0) {
+
+            $this->history->increment(
+                'success_rows',
+                $successCount
+            );
+        }
+
+        if ($failedCount > 0) {
+
+            $this->history->increment(
+                'failed_rows',
+                $failedCount
+            );
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | NORMALIZE SERIAL NUMBER
+    |--------------------------------------------------------------------------
+    */
+
+    protected function normalizeSerialNumber(
+        $value
+    ): string {
+
+        return strtolower(
+            trim(
+                (string) $value
+            )
+        );
     }
 
     /*
@@ -504,41 +1050,32 @@ class AssetImport implements
         string $categoryName
     ): Category {
 
-        $categoryName = trim($categoryName);
+        $categoryName =
+            trim($categoryName);
 
         if ($categoryName === '') {
+
             throw new \Exception(
                 'Category wajib diisi.'
             );
         }
 
-        $categoryKey = strtolower(
-            $categoryName
-        );
-
-        /*
-        |--------------------------------------------------------------------------
-        | CACHE
-        |--------------------------------------------------------------------------
-        */
+        $categoryKey =
+            strtolower($categoryName);
 
         if (
             isset(
                 $this->categoryCache[$categoryKey]
             )
         ) {
+
             return $this->categoryCache[
                 $categoryKey
             ];
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | FIND EXISTING
-        |--------------------------------------------------------------------------
-        */
-
-        $category = Category::where(
+        $category =
+            Category::where(
                 'company_id',
                 $this->companyId
             )
@@ -548,43 +1085,34 @@ class AssetImport implements
             )
             ->first();
 
-        /*
-        |--------------------------------------------------------------------------
-        | CREATE IF NOT FOUND
-        |--------------------------------------------------------------------------
-        */
-
         if (!$category) {
 
-            $category = Category::create([
+            $category =
+                Category::create([
 
-                'company_id' =>
-                    $this->companyId,
+                    'company_id' =>
+                        $this->companyId,
 
-                'category_code' =>
-                    CodeHelper::generateNumber(
-                        'CAT-',
-                        Category::class,
-                        'category_code',
-                        $this->companyId
-                    ),
+                    'category_code' =>
+                        CodeHelper::generateNumber(
+                            'CAT-',
+                            Category::class,
+                            'category_code',
+                            $this->companyId
+                        ),
 
-                'category_name' =>
-                    strtoupper($categoryName),
+                    'category_name' =>
+                        strtoupper(
+                            $categoryName
+                        ),
 
-                'description' =>
-                    null,
+                    'description' =>
+                        null,
 
-                'status' =>
-                    1,
-            ]);
+                    'status' =>
+                        1,
+                ]);
         }
-
-        /*
-        |--------------------------------------------------------------------------
-        | CACHE
-        |--------------------------------------------------------------------------
-        */
 
         $this->categoryCache[
             $categoryKey
@@ -604,30 +1132,22 @@ class AssetImport implements
         $subCategoryName
     ): ?SubCategory {
 
-        $subCategoryName = trim(
-            (string) $subCategoryName
-        );
-
-        /*
-        |--------------------------------------------------------------------------
-        | OPTIONAL
-        |--------------------------------------------------------------------------
-        */
+        $subCategoryName =
+            trim(
+                (string) $subCategoryName
+            );
 
         if ($subCategoryName === '') {
+
             return null;
         }
 
         $subCategoryKey =
             $category->id .
             '|' .
-            strtolower($subCategoryName);
-
-        /*
-        |--------------------------------------------------------------------------
-        | CACHE
-        |--------------------------------------------------------------------------
-        */
+            strtolower(
+                $subCategoryName
+            );
 
         if (
             isset(
@@ -636,18 +1156,14 @@ class AssetImport implements
                 ]
             )
         ) {
+
             return $this->subCategoryCache[
                 $subCategoryKey
             ];
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | FIND EXISTING
-        |--------------------------------------------------------------------------
-        */
-
-        $subCategory = SubCategory::where(
+        $subCategory =
+            SubCategory::where(
                 'company_id',
                 $this->companyId
             )
@@ -657,50 +1173,45 @@ class AssetImport implements
             )
             ->whereRaw(
                 'LOWER(TRIM(sub_category_name)) = ?',
-                [strtolower($subCategoryName)]
+                [
+                    strtolower(
+                        $subCategoryName
+                    ),
+                ]
             )
             ->first();
 
-        /*
-        |--------------------------------------------------------------------------
-        | CREATE IF NOT FOUND
-        |--------------------------------------------------------------------------
-        */
-
         if (!$subCategory) {
 
-            $subCategory = SubCategory::create([
+            $subCategory =
+                SubCategory::create([
 
-                'company_id' =>
-                    $this->companyId,
+                    'company_id' =>
+                        $this->companyId,
 
-                'category_id' =>
-                    $category->id,
+                    'category_id' =>
+                        $category->id,
 
-                'sub_category_code' =>
-                    CodeHelper::generateNumber(
-                        'SUBCAT-',
-                        SubCategory::class,
-                        'sub_category_code',
-                        $this->companyId
-                    ),
+                    'sub_category_code' =>
+                        CodeHelper::generateNumber(
+                            'SUBCAT-',
+                            SubCategory::class,
+                            'sub_category_code',
+                            $this->companyId
+                        ),
 
-                'sub_category_name' =>
-                    strtoupper($subCategoryName),
+                    'sub_category_name' =>
+                        strtoupper(
+                            $subCategoryName
+                        ),
 
-                'description' =>
-                    null,
+                    'description' =>
+                        null,
 
-                'status' =>
-                    1,
-            ]);
+                    'status' =>
+                        1,
+                ]);
         }
-
-        /*
-        |--------------------------------------------------------------------------
-        | CACHE
-        |--------------------------------------------------------------------------
-        */
 
         $this->subCategoryCache[
             $subCategoryKey
@@ -713,15 +1224,6 @@ class AssetImport implements
     |--------------------------------------------------------------------------
     | RESOLVE VENDOR
     |--------------------------------------------------------------------------
-    |
-    | Vendor dianggap sama apabila:
-    |
-    | company_id
-    | + vendor_name
-    | + address
-    |
-    | sama.
-    |
     */
 
     protected function resolveVendor(
@@ -729,143 +1231,115 @@ class AssetImport implements
         $vendorAddress
     ): ?Vendor {
 
-        $vendorName = trim(
-            (string) $vendorName
-        );
+        $vendorName =
+            trim(
+                (string) $vendorName
+            );
 
-        $vendorAddress = trim(
-            (string) $vendorAddress
-        );
-
-        /*
-        |--------------------------------------------------------------------------
-        | OPTIONAL
-        |--------------------------------------------------------------------------
-        */
+        $vendorAddress =
+            trim(
+                (string) $vendorAddress
+            );
 
         if ($vendorName === '') {
+
             return null;
         }
-
-        /*
-        |--------------------------------------------------------------------------
-        | CACHE KEY
-        |--------------------------------------------------------------------------
-        */
 
         $vendorKey =
             strtolower($vendorName) .
             '|' .
             strtolower($vendorAddress);
 
-        /*
-        |--------------------------------------------------------------------------
-        | CACHE
-        |--------------------------------------------------------------------------
-        */
-
         if (
             isset(
-                $this->vendorCache[$vendorKey]
+                $this->vendorCache[
+                    $vendorKey
+                ]
             )
         ) {
+
             return $this->vendorCache[
                 $vendorKey
             ];
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | FIND EXISTING VENDOR
-        |--------------------------------------------------------------------------
-        */
-
-        $vendorQuery = Vendor::where(
+        $vendorQuery =
+            Vendor::where(
                 'company_id',
                 $this->companyId
             )
             ->whereRaw(
                 'LOWER(TRIM(vendor_name)) = ?',
-                [strtolower($vendorName)]
+                [
+                    strtolower(
+                        $vendorName
+                    ),
+                ]
             );
-
-        /*
-        |--------------------------------------------------------------------------
-        | ADDRESS MATCHING
-        |--------------------------------------------------------------------------
-        */
 
         if ($vendorAddress !== '') {
 
             $vendorQuery->whereRaw(
                 'LOWER(TRIM(COALESCE(address, ""))) = ?',
-                [strtolower($vendorAddress)]
+                [
+                    strtolower(
+                        $vendorAddress
+                    ),
+                ]
             );
 
         } else {
 
-            $vendorQuery->where(function ($query) {
+            $vendorQuery->where(
+                function ($query) {
 
-                $query
-                    ->whereNull('address')
-                    ->orWhereRaw(
-                        'TRIM(address) = ?',
-                        ['']
-                    );
-
-            });
+                    $query
+                        ->whereNull(
+                            'address'
+                        )
+                        ->orWhereRaw(
+                            'TRIM(address) = ?',
+                            ['']
+                        );
+                }
+            );
         }
 
-        $vendor = $vendorQuery->first();
-
-        /*
-        |--------------------------------------------------------------------------
-        | CREATE VENDOR
-        |--------------------------------------------------------------------------
-        */
+        $vendor =
+            $vendorQuery->first();
 
         if (!$vendor) {
 
-            $vendor = Vendor::create([
+            $vendor =
+                Vendor::create([
 
-                'company_id' =>
-                    $this->companyId,
+                    'company_id' =>
+                        $this->companyId,
 
-                'vendor_code' =>
-                    CodeHelper::generateNumber(
-                        'VD-',
-                        Vendor::class,
-                        'vendor_code',
-                        $this->companyId
-                    ),
+                    'vendor_code' =>
+                        CodeHelper::generateNumber(
+                            'VD-',
+                            Vendor::class,
+                            'vendor_code',
+                            $this->companyId
+                        ),
 
-                'vendor_name' =>
-                    $vendorName,
+                    'vendor_name' =>
+                        $vendorName,
 
-                'address' =>
-                    $vendorAddress !== ''
-                        ? $vendorAddress
-                        : null,
+                    'address' =>
+                        $vendorAddress !== ''
+                            ? $vendorAddress
+                            : null,
 
-                /*
-                |--------------------------------------------------------------------------
-                | Email belum tersedia dari template Excel.
-                |--------------------------------------------------------------------------
-                */
+                    'email' =>
+                        null,
 
-                'email' =>
-                    null,
-
-                'status' =>
-                    1,
-            ]);
+                    'status' =>
+                        1,
+                ]);
         }
-
-        /*
-        |--------------------------------------------------------------------------
-        | CACHE
-        |--------------------------------------------------------------------------
-        */
 
         $this->vendorCache[
             $vendorKey
@@ -876,101 +1350,88 @@ class AssetImport implements
 
     /*
     |--------------------------------------------------------------------------
-    | RESOLVE RESPONSIBLE USER
+    | USER CACHE
     |--------------------------------------------------------------------------
-    |
-    | Responsible User boleh kosong.
-    |
-    | Jika diisi tetapi user tidak ditemukan,
-    | import akan dihentikan dengan error.
-    |
     */
 
-    protected function resolveResponsibleUser(
-        $responsibleName
-    ): ?User {
+    protected function initializeUserCache(): void
+    {
+        if ($this->userCacheInitialized) {
 
-        $responsibleName = trim(
-            (string) $responsibleName
-        );
-
-        /*
-        |--------------------------------------------------------------------------
-        | OPTIONAL
-        |--------------------------------------------------------------------------
-        */
-
-        if ($responsibleName === '') {
-            return null;
+            return;
         }
 
-        $userKey = strtolower(
-            $responsibleName
-        );
-
-        /*
-        |--------------------------------------------------------------------------
-        | CACHE
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            isset(
-                $this->userCache[$userKey]
-            )
-        ) {
-            return $this->userCache[
-                $userKey
-            ];
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | FIND USER
-        |--------------------------------------------------------------------------
-        */
-
-        $user = User::where(
+        $users =
+            User::where(
                 'company_id',
                 $this->companyId
             )
-            ->whereRaw(
-                'LOWER(TRIM(name)) = ?',
-                [strtolower($responsibleName)]
-            )
-            ->first();
+            ->whereNotNull('nik')
+            ->get([
+                'id',
+                'nik',
+            ]);
 
-        /*
-        |--------------------------------------------------------------------------
-        | NOT FOUND
-        |--------------------------------------------------------------------------
-        */
+        foreach ($users as $user) {
 
-        if (!$user) {
+            $nik =
+                trim(
+                    (string) $user->nik
+                );
 
-            throw new \Exception(
-                'Responsible User "' .
-                $responsibleName .
-                '" tidak ditemukan.'
-            );
+            if ($nik === '') {
+                continue;
+            }
+
+            $this->userCache[
+                $nik
+            ] = (int) $user->id;
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | CACHE
-        |--------------------------------------------------------------------------
-        */
-
-        $this->userCache[
-            $userKey
-        ] = $user;
-
-        return $user;
+        $this->userCacheInitialized = true;
     }
 
     /*
     |--------------------------------------------------------------------------
-    | CALCULATE NEXT MAINTENANCE
+    | RESOLVE RESPONSIBLE USER
+    |--------------------------------------------------------------------------
+    */
+
+    protected function resolveResponsibleUserId(
+        $nik
+    ): ?int {
+
+        $nik =
+            trim(
+                (string) $nik
+            );
+
+        if ($nik === '') {
+
+            return null;
+        }
+
+        if (
+            !isset(
+                $this->userCache[$nik]
+            )
+        ) {
+
+            throw new \Exception(
+                'User dengan ID Person (NIK) "' .
+                $nik .
+                '" tidak ditemukan.'
+            );
+        }
+
+        return (int) $this->userCache[
+            $nik
+        ];
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | NEXT MAINTENANCE DATE
     |--------------------------------------------------------------------------
     */
 
@@ -987,22 +1448,29 @@ class AssetImport implements
             !$interval ||
             !$intervalUnit
         ) {
+
             return null;
         }
 
-        $interval = (int) $interval;
+        $interval =
+            (int) $interval;
 
         if ($interval <= 0) {
+
             return null;
         }
 
-        $unit = strtolower(
-            trim((string) $intervalUnit)
-        );
+        $unit =
+            strtolower(
+                trim(
+                    (string) $intervalUnit
+                )
+            );
 
-        $date = Carbon::parse(
-            $startDate
-        );
+        $date =
+            Carbon::parse(
+                $startDate
+            );
 
         switch ($unit) {
 
@@ -1038,81 +1506,68 @@ class AssetImport implements
                 return null;
         }
 
-        return $date->format('Y-m-d');
+        return $date->format(
+            'Y-m-d'
+        );
     }
 
     /*
     |--------------------------------------------------------------------------
     | GENERATE ASSET CODE
     |--------------------------------------------------------------------------
-    |
-    | Sebelumnya setiap asset melakukan query EXISTS.
-    |
-    | Sekarang:
-    |
-    | 1. Ambil nomor terbesar sekali.
-    | 2. Counter berjalan di memory.
-    |
-    | Contoh:
-    |
-    | DB terakhir AST-15
-    | Import berikutnya:
-    | AST-16
-    | AST-17
-    | AST-18
-    |
     */
 
     protected function generateAssetCode(): string
     {
-        /*
-        |--------------------------------------------------------------------------
-        | INITIALIZE ONCE
-        |--------------------------------------------------------------------------
-        */
+        if (
+            !$this->assetCodeInitialized
+        ) {
 
-        if (!$this->assetCodeInitialized) {
-
-            $lastNumber = Asset::withTrashed()
-                ->where(
-                    'company_id',
-                    $this->companyId
-                )
-                ->where(
-                    'asset_code',
-                    'LIKE',
-                    'AST-%'
-                )
-                ->selectRaw("
-                    MAX(
-                        CAST(
-                            SUBSTRING(asset_code, 5)
-                            AS UNSIGNED
-                        )
-                    ) AS max_number
-                ")
-                ->value('max_number');
+            $lastNumber =
+                Asset::withTrashed()
+                    ->where(
+                        'company_id',
+                        $this->companyId
+                    )
+                    ->where(
+                        'asset_code',
+                        'LIKE',
+                        'AST-%'
+                    )
+                    ->selectRaw("
+                        MAX(
+                            CAST(
+                                SUBSTRING(
+                                    asset_code,
+                                    5
+                                )
+                                AS UNSIGNED
+                            )
+                        ) AS max_number
+                    ")
+                    ->value(
+                        'max_number'
+                    );
 
             $this->assetCodeCounter =
                 $lastNumber !== null
-                    ? ((int) $lastNumber + 1)
+                    ? (
+                        (int) $lastNumber + 1
+                    )
                     : 0;
 
-            $this->assetCodeInitialized = true;
+            $this->assetCodeInitialized =
+                true;
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | GENERATE
-        |--------------------------------------------------------------------------
-        */
-
-        $code = 'AST-' . str_pad(
-            $this->assetCodeCounter,
-            2,
-            '0',
-            STR_PAD_LEFT
-        );
+        $code =
+            'AST-' .
+            str_pad(
+                $this->assetCodeCounter,
+                2,
+                '0',
+                STR_PAD_LEFT
+            );
 
         $this->assetCodeCounter++;
 
@@ -1125,15 +1580,19 @@ class AssetImport implements
     |--------------------------------------------------------------------------
     */
 
-    protected function cleanString($value): ?string
-    {
+    protected function cleanString(
+        $value
+    ): ?string {
+
         if ($value === null) {
+
             return null;
         }
 
-        $value = trim(
-            (string) $value
-        );
+        $value =
+            trim(
+                (string) $value
+            );
 
         return $value === ''
             ? null
@@ -1144,124 +1603,124 @@ class AssetImport implements
     |--------------------------------------------------------------------------
     | CLEAN NUMBER
     |--------------------------------------------------------------------------
-    |
-    | Mendukung:
-    |
-    | 12500000
-    | 12.500.000
-    | 12,500,000
-    | Rp 12.500.000
-    |
     */
 
-    protected function cleanNumber($value)
-    {
+    protected function cleanNumber(
+        $value
+    ) {
+
         if (
             $value === null ||
             trim((string) $value) === ''
         ) {
+
             return null;
         }
-
-        /*
-        |--------------------------------------------------------------------------
-        | Numeric dari Excel
-        |--------------------------------------------------------------------------
-        */
 
         if (
             is_int($value) ||
             is_float($value) ||
             is_numeric($value)
         ) {
+
             return $value;
         }
 
-        $value = trim(
-            (string) $value
-        );
+        $value =
+            trim(
+                (string) $value
+            );
 
-        /*
-        |--------------------------------------------------------------------------
-        | Remove currency / spaces
-        |--------------------------------------------------------------------------
-        */
-
-        $value = preg_replace(
-            '/[^\d,.\-]/',
-            '',
-            $value
-        );
+        $value =
+            preg_replace(
+                '/[^\d,.\-]/',
+                '',
+                $value
+            );
 
         if ($value === '') {
+
             return null;
         }
 
         /*
         |--------------------------------------------------------------------------
-        | Format Indonesia
+        | INDONESIAN FORMAT
         |
         | 12.500.000
         |--------------------------------------------------------------------------
         */
 
         if (
-            substr_count($value, '.') > 1 &&
-            strpos($value, ',') === false
+            substr_count(
+                $value,
+                '.'
+            ) > 1 &&
+            strpos(
+                $value,
+                ','
+            ) === false
         ) {
-            $value = str_replace(
-                '.',
-                '',
-                $value
-            );
+
+            $value =
+                str_replace(
+                    '.',
+                    '',
+                    $value
+                );
         }
 
         /*
         |--------------------------------------------------------------------------
-        | Format:
-        |
         | 12.500,50
         |--------------------------------------------------------------------------
         */
 
         elseif (
-            strpos($value, '.') !== false &&
-            strpos($value, ',') !== false
+            strpos(
+                $value,
+                '.'
+            ) !== false &&
+            strpos(
+                $value,
+                ','
+            ) !== false
         ) {
-            $value = str_replace(
-                '.',
-                '',
-                $value
-            );
 
-            $value = str_replace(
-                ',',
-                '.',
-                $value
-            );
+            $value =
+                str_replace(
+                    '.',
+                    '',
+                    $value
+                );
+
+            $value =
+                str_replace(
+                    ',',
+                    '.',
+                    $value
+                );
         }
 
         /*
         |--------------------------------------------------------------------------
-        | Format:
-        |
         | 12,500
         |--------------------------------------------------------------------------
-        |
-        | Karena field asset biasanya menggunakan angka rupiah,
-        | koma dianggap sebagai pemisah ribuan apabila tidak ada
-        | titik desimal.
-        |
         */
 
         elseif (
-            strpos($value, ',') !== false
+            strpos(
+                $value,
+                ','
+            ) !== false
         ) {
-            $value = str_replace(
-                ',',
-                '',
-                $value
-            );
+
+            $value =
+                str_replace(
+                    ',',
+                    '',
+                    $value
+                );
         }
 
         return is_numeric($value)
@@ -1273,27 +1732,10 @@ class AssetImport implements
     |--------------------------------------------------------------------------
     | CHUNK SIZE
     |--------------------------------------------------------------------------
-    |
-    | Cocok untuk file besar.
-    |
     */
 
     public function chunkSize(): int
     {
-        return 1000;
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | BATCH SIZE
-    |--------------------------------------------------------------------------
-    |
-    | Insert dilakukan per 1000 record.
-    |
-    */
-
-    public function batchSize(): int
-    {
-        return 1000;
+        return 500;
     }
 }

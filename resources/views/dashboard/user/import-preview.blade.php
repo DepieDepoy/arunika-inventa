@@ -58,35 +58,81 @@
         font-weight: 700;
     }
 
+    /* =========================================================
+    PREVIEW TABLE
+    ========================================================= */
+
     .preview-table-wrapper {
+        width: 100%;
+        max-height: 600px;
+
+        overflow-x: auto;
+        overflow-y: auto;
+
         border: 1px solid #e9ecef;
         border-radius: 10px;
-        overflow: hidden;
     }
 
+    /* TABLE */
     .preview-table {
+        width: max-content;
+        min-width: 100%;
         margin-bottom: 0;
+
         white-space: nowrap;
+        border-collapse: separate;
+        border-spacing: 0;
     }
 
+    /* HEADER */
     .preview-table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+
         background: #4472C4;
         color: #fff;
+
         font-weight: 600;
         font-size: 13px;
+
         padding: 12px 14px;
+
         vertical-align: middle;
+        white-space: nowrap;
+
         border: none;
+        border-bottom: 1px solid #3b64ad;
     }
 
+    /* BODY */
     .preview-table tbody td {
         padding: 11px 14px;
+
         vertical-align: middle;
+
         font-size: 13px;
+        color: #374151;
+
+        white-space: nowrap;
+
+        border-bottom: 1px solid #e9ecef;
     }
 
-    .preview-table tbody tr:hover {
+    /* HOVER */
+    .preview-table tbody tr:hover td {
         background-color: #f8f9fa;
+    }
+
+    /* NOMOR */
+    .preview-table .row-number {
+        width: 55px;
+        min-width: 55px;
+
+        text-align: center;
+
+        color: #6c757d;
+        font-weight: 600;
     }
 
     .import-note {

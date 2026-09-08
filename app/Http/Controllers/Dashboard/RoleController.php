@@ -111,19 +111,28 @@ class RoleController extends Controller
 
             ->addColumn('action', function ($row) {
                 return '
-                <div class="d-flex justify-content-center align-items-center gap-1">
+                    <div class="d-flex justify-content-center align-items-center gap-1">
+
+                        <a href="' . route('roles.permission', $row->id) . '"
+                        class="btn-action"
+                        title="Permission">
+                            <i class="fa-solid fa-key"></i>
+                        </a>
+
                         <a href="javascript:void(0)"
                         class="btn-action btn-edit"
                         data-id="' . $row->id . '"
                         title="Edit">
                             <i class="fa-solid fa-pen-to-square"></i>
                         </a>
+
                         <a href="javascript:void(0)"
                         class="btn-action btn-delete"
                         data-id="' . $row->id . '"
                         title="Delete">
                             <i class="fa-solid fa-trash"></i>
                         </a>
+
                     </div>
                 ';
             })
@@ -175,13 +184,23 @@ class RoleController extends Controller
 
     public function destroy($id)
     {
-        $role = Role::findOrFail($id);
+        $role = Role::where('company_id', Auth::user()->company_id)
+            ->where('id', $id)
+            ->firstOrFail();
+
+        // Cek apakah role masih digunakan oleh user
+        if ($role->users()->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Role tidak dapat dihapus karena masih digunakan oleh user.'
+            ], 422);
+        }
 
         $role->delete();
 
         return response()->json([
             'success' => true,
-            'message' => 'Data berhasil dihapus'
+            'message' => 'Role berhasil dihapus.'
         ]);
     }
     

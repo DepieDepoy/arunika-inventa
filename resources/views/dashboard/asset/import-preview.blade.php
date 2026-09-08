@@ -39,7 +39,10 @@
         padding: 22px;
     }
 
-    /* SUMMARY */
+    /* =========================================================
+       SUMMARY
+    ========================================================= */
+
     .summary-card {
         border: 1px solid #eef0f3;
         border-radius: 12px;
@@ -58,6 +61,7 @@
         background: #f3f4f6;
         color: #374151;
         font-size: 18px;
+        flex-shrink: 0;
     }
 
     .summary-label {
@@ -72,60 +76,100 @@
         color: #1f2937;
     }
 
-    /* TABLE */
+    /* =========================================================
+       TABLE
+    ========================================================= */
+
     .import-table-wrapper {
+        width: 100%;
+        max-height: 600px;
+
+        overflow-x: auto;
+        overflow-y: auto;
+
         border: 1px solid #e5e7eb;
         border-radius: 10px;
-        overflow: auto;
-        max-height: 600px;
     }
 
     .import-table {
+        width: max-content;
+        min-width: 100%;
+
         margin-bottom: 0;
+
         white-space: nowrap;
+        border-collapse: separate;
+        border-spacing: 0;
     }
 
     .import-table thead th {
         position: sticky;
         top: 0;
         z-index: 2;
-        background: #f8f9fa;
-        color: #374151;
+
+        background: #3f6ad8;
+        color: #fff;
+
         font-size: 12px;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: .3px;
+
         padding: 12px 10px;
-        border-bottom: 2px solid #dee2e6;
+
+        white-space: nowrap;
+
+        border: none;
+        border-bottom: 1px solid #315ac4;
     }
 
     .import-table tbody td {
         font-size: 13px;
         vertical-align: middle;
+
         padding: 10px;
+
         color: #374151;
+
+        white-space: nowrap;
+
+        border-bottom: 1px solid #eef0f3;
     }
 
-    .import-table tbody tr:hover {
+    .import-table tbody tr:hover td {
         background: #f8fafc;
     }
 
+    /* =========================================================
+       ROW NUMBER
+    ========================================================= */
+
     .row-number {
-        width: 50px;
+        width: 55px;
+        min-width: 55px;
+
         text-align: center;
+
         color: #6b7280;
         font-weight: 600;
     }
 
-    /* INFO */
+    /* =========================================================
+       INFO
+    ========================================================= */
+
     .import-info {
         display: flex;
         align-items: flex-start;
         gap: 12px;
+
         padding: 14px 16px;
+
         border-radius: 10px;
+
         background: #f8f9fa;
         border: 1px solid #e9ecef;
+
         margin-top: 20px;
     }
 
@@ -144,14 +188,39 @@
         color: #374151;
     }
 
-    /* ACTION */
+    /* =========================================================
+       PREVIEW LIMIT NOTE
+    ========================================================= */
+
+    .preview-limit {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        margin-top: 12px;
+
+        font-size: 13px;
+        color: #6b7280;
+    }
+
+    .preview-limit i {
+        color: #3f6ad8;
+    }
+
+    /* =========================================================
+       ACTION
+    ========================================================= */
+
     .import-action {
         margin-top: 22px;
         padding-top: 20px;
+
         border-top: 1px solid #eef0f3;
+
         display: flex;
         justify-content: space-between;
         align-items: center;
+
         gap: 15px;
     }
 
@@ -165,7 +234,10 @@
         border-radius: 8px;
     }
 
-    /* EMPTY */
+    /* =========================================================
+       EMPTY
+    ========================================================= */
+
     .empty-import {
         text-align: center;
         padding: 60px 20px;
@@ -174,13 +246,18 @@
     .empty-import-icon {
         width: 80px;
         height: 80px;
+
         margin: 0 auto 20px;
+
         border-radius: 20px;
+
         display: flex;
         align-items: center;
         justify-content: center;
+
         background: #f3f4f6;
         color: #9ca3af;
+
         font-size: 34px;
     }
 
@@ -188,372 +265,612 @@
         font-weight: 700;
         color: #374151;
     }
+
+    /* =========================================================
+       STATUS
+    ========================================================= */
+
+    .status-ready {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+
+        font-size: 15px;
+        font-weight: 700;
+
+        color: #15803d;
+    }
+
+    .status-ready i {
+        font-size: 16px;
+    }
+
+    /* =========================================================
+       RESPONSIVE
+    ========================================================= */
+
+    @media (max-width: 768px) {
+
+        .import-action {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .import-action > div {
+            width: 100%;
+        }
+
+        .import-action .d-flex {
+            width: 100%;
+        }
+
+        .import-action .btn {
+            flex: 1;
+        }
+
+    }
 </style>
 
 <div class="container-fluid import-page">
 
-    {{-- =========================================================
-         HEADER
-    ========================================================== --}}
-    <div class="d-flex justify-content-between align-items-center import-header">
+```
+{{-- =========================================================
+     HEADER
+========================================================== --}}
 
-        <div>
-            <h4 class="mb-1">
-                <i class="fas fa-file-import me-2"></i>
-                Preview Import Assets
-            </h4>
+<div class="d-flex justify-content-between align-items-center import-header">
 
-            <p class="text-muted mb-0">
-                Periksa kembali data Excel sebelum disimpan ke database.
-            </p>
-        </div>
+    <div>
 
-        <a href="{{ route('assets.import') }}"
-           class="btn btn-light btn-back">
+        <h4 class="mb-1">
 
-            <i class="fas fa-arrow-left me-1"></i>
-            Kembali
-        </a>
+            <i class="fas fa-file-import me-2"></i>
+
+            Preview Import Assets
+
+        </h4>
+
+        <p class="text-muted mb-0">
+
+            Periksa kembali data Excel sebelum disimpan ke database.
+
+        </p>
 
     </div>
 
 
-    @if(count($data) > 0)
+    <a href="{{ route('assets.import') }}"
+       class="btn btn-light btn-back">
 
-        @php
-            $totalRows = max(count($data) - 1, 0);
-            $totalColumns = count($data[0] ?? []);
-        @endphp
+        <i class="fas fa-arrow-left me-1"></i>
+
+        Kembali
+
+    </a>
+
+</div>
 
 
-        {{-- =====================================================
-             SUMMARY
-        ====================================================== --}}
-        <div class="row g-3 mb-4">
+@if(count($data) > 0)
 
-            <div class="col-md-4">
-                <div class="summary-card">
+    @php
 
-                    <div class="d-flex align-items-center gap-3">
+        /*
+        |----------------------------------------------------------------------
+        | Total data berasal dari ExcelPreviewService
+        |----------------------------------------------------------------------
+        */
 
-                        <div class="summary-icon">
-                            <i class="fas fa-list"></i>
+        $previewLimit = 100;
+
+        /*
+        |----------------------------------------------------------------------
+        | $data hanya berisi header + maksimal 100 row preview
+        |----------------------------------------------------------------------
+        */
+
+        $previewData = array_slice(
+            $data,
+            1,
+            $previewLimit
+        );
+
+        $previewRows = count($previewData);
+
+    @endphp
+
+
+    {{-- =====================================================
+         SUMMARY
+    ====================================================== --}}
+
+    <div class="row g-3 mb-4">
+
+        {{-- TOTAL DATA --}}
+
+        <div class="col-md-4">
+
+            <div class="summary-card">
+
+                <div class="d-flex align-items-center gap-3">
+
+                    <div class="summary-icon">
+
+                        <i class="fas fa-database"></i>
+
+                    </div>
+
+
+                    <div>
+
+                        <div class="summary-label">
+
+                            Total Data
+
                         </div>
 
-                        <div>
-                            <div class="summary-label">
-                                Total Data
-                            </div>
+                        <div class="summary-value">
 
-                            <div class="summary-value">
-                                {{ $totalRows }}
-                            </div>
+                            {{ number_format($totalRows) }}
+
                         </div>
 
                     </div>
 
                 </div>
-            </div>
 
-
-            <div class="col-md-4">
-                <div class="summary-card">
-
-                    <div class="d-flex align-items-center gap-3">
-
-                        <div class="summary-icon">
-                            <i class="fas fa-columns"></i>
-                        </div>
-
-                        <div>
-                            <div class="summary-label">
-                                Kolom Excel
-                            </div>
-
-                            <div class="summary-value">
-                                {{ $totalColumns }}
-                            </div>
-                        </div>
-
-                    </div>
-
-                </div>
-            </div>
-
-
-            <div class="col-md-4">
-                <div class="summary-card">
-
-                    <div class="d-flex align-items-center gap-3">
-
-                        <div class="summary-icon">
-                            <i class="fas fa-check-circle"></i>
-                        </div>
-
-                        <div>
-                            <div class="summary-label">
-                                Status Preview
-                            </div>
-
-                            <div class="summary-value"
-                                 style="font-size: 16px;">
-                                Siap Diimport
-                            </div>
-                        </div>
-
-                    </div>
-
-                </div>
             </div>
 
         </div>
 
 
-        {{-- =====================================================
-             MAIN CARD
-        ====================================================== --}}
-        <div class="card import-card">
+        {{-- BARIS DITAMPILKAN --}}
 
-            <div class="card-header">
+        <div class="col-md-4">
 
-                <div class="d-flex justify-content-between align-items-center">
+            <div class="summary-card">
 
-                    <div>
-                        <strong>
-                            <i class="fas fa-table me-2"></i>
-                            Data Excel
-                        </strong>
+                <div class="d-flex align-items-center gap-3">
 
-                        <div class="text-muted mt-1"
-                             style="font-size: 12px;">
+                    <div class="summary-icon">
 
-                            Pastikan data sudah sesuai dengan format import asset.
+                        <i class="fas fa-list-ol"></i>
 
-                        </div>
                     </div>
 
-                    <span class="badge bg-light text-dark">
-                        {{ $totalRows }} Data
-                    </span>
+
+                    <div>
+
+                        <div class="summary-label">
+
+                            Baris Ditampilkan
+
+                        </div>
+
+                        <div class="summary-value">
+
+                            {{ number_format($previewRows) }}
+
+                        </div>
+
+                    </div>
 
                 </div>
 
             </div>
 
+        </div>
 
-            <div class="card-body">
 
-                {{-- =================================================
-                     TABLE
-                ================================================== --}}
-                <div class="import-table-wrapper">
+        {{-- STATUS IMPORT --}}
 
-                    <table class="table table-bordered table-hover import-table">
+        <div class="col-md-4">
 
-                        <thead>
+            <div class="summary-card">
+
+                <div class="d-flex align-items-center gap-3">
+
+                    <div class="summary-icon">
+
+                        <i class="fas fa-check-circle"></i>
+
+                    </div>
+
+
+                    <div>
+
+                        <div class="summary-label">
+
+                            Status Import
+
+                        </div>
+
+                        <div class="summary-value">
+
+                            <span class="status-ready">
+
+                                <i class="fas fa-check-circle"></i>
+
+                                Siap Diimport
+
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    {{-- =====================================================
+         MAIN CARD
+    ====================================================== --}}
+
+    <div class="card import-card">
+
+        <div class="card-header">
+
+            <div class="d-flex justify-content-between align-items-center">
+
+                <div>
+
+                    <strong>
+
+                        <i class="fas fa-table me-2"></i>
+
+                        Data Excel
+
+                    </strong>
+
+                    <div class="text-muted mt-1"
+                         style="font-size: 12px;">
+
+                        Menampilkan maksimal 100 baris pertama
+                        dari file Excel.
+
+                    </div>
+
+                </div>
+
+
+                <span class="badge bg-light text-dark">
+
+                    {{ number_format($previewRows) }}
+                    Baris Ditampilkan
+
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <div class="card-body">
+
+            {{-- =================================================
+                 TABLE
+            ================================================== --}}
+
+            <div class="import-table-wrapper">
+
+                <table class="table table-bordered table-hover import-table">
+
+                    <thead>
+
+                        <tr>
+
+                            @foreach($data[0] as $header)
+
+                                <th>
+
+                                    {{ $header }}
+
+                                </th>
+
+                            @endforeach
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        @foreach($previewData as $index => $row)
 
                             <tr>
 
-                                <th class="row-number">
-                                    #
-                                </th>
+                                @foreach($row as $value)
 
-                                @foreach($data[0] as $header)
+                                    <td>
 
-                                    <th>
-                                        {{ $header }}
-                                    </th>
+                                        {{ $value ?? '-' }}
+
+                                    </td>
 
                                 @endforeach
 
                             </tr>
 
-                        </thead>
+                        @endforeach
+
+                    </tbody>
+
+                </table>
+
+            </div>
 
 
-                        <tbody>
+            {{-- =================================================
+                 PREVIEW INFORMATION
+            ================================================== --}}
 
-                            @foreach(array_slice($data, 1) as $index => $row)
+            @if($totalRows > $previewLimit)
 
-                                <tr>
-
-                                    <td class="row-number">
-                                        {{ $index + 1 }}
-                                    </td>
-
-                                    @foreach($row as $value)
-
-                                        <td>
-                                            {{ $value ?? '-' }}
-                                        </td>
-
-                                    @endforeach
-
-                                </tr>
-
-                            @endforeach
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-
-                {{-- =================================================
-                     INFORMATION
-                ================================================== --}}
-                <div class="import-info">
+                <div class="preview-limit">
 
                     <i class="fas fa-info-circle"></i>
 
-                    <div class="import-info-text">
+                    <span>
 
-                        <strong>Informasi Import</strong><br>
+                        Hanya <strong>{{ number_format($previewLimit) }}</strong>
+                        baris pertama yang ditampilkan pada preview.
 
-                        Data di atas masih dalam tahap preview dan
-                        <strong>belum disimpan ke database</strong>.
+                        Total data yang akan diproses:
 
-                        Saat tombol <strong>Submit & Import</strong>
-                        ditekan, sistem akan memproses seluruh data.
+                        <strong>{{ number_format($totalRows) }}</strong>
+                        data.
 
-                        <br>
-
-                        Category dan Sub Category yang belum tersedia
-                        akan <strong>dibuat otomatis</strong> berdasarkan
-                        data Excel.
-
-                    </div>
+                    </span>
 
                 </div>
 
-
-                {{-- =================================================
-                     ACTION
-                ================================================== --}}
-                <div class="import-action">
-
-                    <div class="text-muted"
-                         style="font-size: 13px;">
-
-                        <i class="fas fa-shield-alt me-1"></i>
-
-                        Pastikan data sudah benar sebelum melanjutkan.
-
-                    </div>
+            @endif
 
 
-                    <div class="d-flex gap-2">
+            {{-- =================================================
+                 INFORMATION
+            ================================================== --}}
 
-                        <a href="{{ route('assets.import') }}"
-                           class="btn btn-light">
+            <div class="import-info">
 
-                            <i class="fas fa-times me-1"></i>
-                            Batal
+                <i class="fas fa-info-circle"></i>
 
-                        </a>
+                <div class="import-info-text">
 
+                    <strong>Informasi Import</strong>
 
-                        {{-- =========================================
-                             SUBMIT IMPORT
-                        ========================================== --}}
-                        <form action="{{ route('assets.import.store') }}"
-                              method="POST"
-                              id="importForm">
+                    <br>
 
-                            @csrf
-                            <button type="submit"
-                                    class="btn btn-primary btn-import"
-                                    id="btnSubmitImport">
+                    Data di atas masih dalam tahap preview dan
+                    <strong>belum disimpan ke database</strong>.
 
-                                <i class="fas fa-cloud-upload-alt me-1"></i>
+                    Saat tombol
+                    <strong>Submit & Import</strong>
+                    ditekan, sistem akan memproses
+                    <strong>seluruh {{ number_format($totalRows) }} data</strong>
+                    dari file Excel.
 
-                                Submit & Import
+                    <br>
 
-                            </button>
-
-                        </form>
-
-                    </div>
+                    Category dan Sub Category yang belum tersedia
+                    akan <strong>dibuat otomatis</strong>
+                    berdasarkan data Excel.
 
                 </div>
 
             </div>
 
-        </div>
+
+            {{-- =================================================
+                 ACTION
+            ================================================== --}}
+
+            <div class="import-action">
+
+                <div class="text-muted"
+                     style="font-size: 13px;">
+
+                    <i class="fas fa-shield-alt me-1"></i>
+
+                    Pastikan data sudah benar sebelum melanjutkan.
+
+                </div>
 
 
-    @else
-
-        {{-- =====================================================
-             EMPTY STATE
-        ====================================================== --}}
-        <div class="card import-card">
-
-            <div class="card-body">
-
-                <div class="empty-import">
-
-                    <div class="empty-import-icon">
-                        <i class="fas fa-file-excel"></i>
-                    </div>
-
-                    <h5>
-                        Data Excel Kosong
-                    </h5>
-
-                    <p class="text-muted mb-4">
-                        Tidak ditemukan data yang dapat ditampilkan
-                        dari file Excel.
-                    </p>
+                <div class="d-flex gap-2">
 
                     <a href="{{ route('assets.import') }}"
-                       class="btn btn-primary">
+                       class="btn btn-light">
 
-                        <i class="fas fa-upload me-1"></i>
+                        <i class="fas fa-times me-1"></i>
 
-                        Upload File Lain
+                        Batal
 
                     </a>
 
+
+                    {{-- =========================================
+                         SUBMIT IMPORT
+                    ========================================== --}}
+
+                    <form action="{{ route('assets.import.store') }}"
+                          method="POST"
+                          id="importForm">
+
+                        @csrf
+
+                        <button type="submit"
+                                class="btn btn-primary btn-import"
+                                id="btnSubmitImport">
+
+                            <i class="fas fa-cloud-upload-alt me-1"></i>
+
+                            Submit & Import
+
+                        </button>
+
+                    </form>
+
                 </div>
 
             </div>
 
         </div>
 
-    @endif
+    </div>
+
+
+@else
+
+    {{-- =====================================================
+         EMPTY STATE
+    ====================================================== --}}
+
+    <div class="card import-card">
+
+        <div class="card-body">
+
+            <div class="empty-import">
+
+                <div class="empty-import-icon">
+
+                    <i class="fas fa-file-excel"></i>
+
+                </div>
+
+
+                <h5>
+
+                    Data Excel Kosong
+
+                </h5>
+
+
+                <p class="text-muted mb-4">
+
+                    Tidak ditemukan data yang dapat ditampilkan
+                    dari file Excel.
+
+                </p>
+
+
+                <a href="{{ route('assets.import') }}"
+                   class="btn btn-primary">
+
+                    <i class="fas fa-upload me-1"></i>
+
+                    Upload File Lain
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+@endif
+```
 
 </div>
 
-
 {{-- =============================================================
-     SUBMIT LOADING
+SUBMIT LOADING
 ============================================================= --}}
+
 <script>
-document.addEventListener('DOMContentLoaded', function () {
 
-    const form = document.getElementById('importForm');
-    const button = document.getElementById('btnSubmitImport');
+document.addEventListener(
+    'DOMContentLoaded',
+    function () {
 
-    if (form && button) {
+        const form =
+            document.getElementById(
+                'importForm'
+            );
 
-        form.addEventListener('submit', function () {
+        const button =
+            document.getElementById(
+                'btnSubmitImport'
+            );
 
-            button.disabled = true;
 
-            button.innerHTML = `
-                <span class="spinner-border spinner-border-sm me-1"
-                      role="status"
-                      aria-hidden="true"></span>
-                Sedang Mengimport...
-            `;
+        if (
+            form &&
+            button
+        ) {
 
-        });
+            form.addEventListener(
+                'submit',
+                function () {
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Disable tombol submit
+                    |--------------------------------------------------------------------------
+                    */
+
+                    button.disabled = true;
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Ubah tampilan tombol
+                    |--------------------------------------------------------------------------
+                    */
+
+                    button.innerHTML = `
+
+                        <span
+                            class="spinner-border spinner-border-sm me-1"
+                            role="status"
+                            aria-hidden="true">
+                        </span>
+
+                        Sedang Mengimport...
+
+                    `;
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Disable tombol kembali / batal
+                    |--------------------------------------------------------------------------
+                    */
+
+                    const links =
+                        document.querySelectorAll(
+                            '.import-action a'
+                        );
+
+
+                    links.forEach(
+                        function (link) {
+
+                            link.style.pointerEvents =
+                                'none';
+
+                            link.style.opacity =
+                                '0.6';
+
+                        }
+                    );
+
+                }
+            );
+
+        }
 
     }
+);
 
-});
 </script>
 
 @endsection

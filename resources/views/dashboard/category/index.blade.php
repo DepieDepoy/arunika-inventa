@@ -1,19 +1,11 @@
 @extends('dashboard.layouts.wrapper')
-
 @section('title', 'Dashboard')
-
 @section('content')
-
 <div class="content-wrapper">
-
     <div class="container-xxl flex-grow-1 container-p-y">
-
         <div class="row">
-
             <div class="col-xxl-12 mb-12 order-0">
-
                 <div class="card">
-
                     {{-- =====================================================
                          HEADER
                     ====================================================== --}}
@@ -27,24 +19,29 @@
                             </small>
                         </div>
                         <div class="d-flex gap-2">
-                            {{-- Export --}}
-                            <a
-                                href="{{ route('category.export') }}"
-                                class="btn btn-success"
-                            >
-                                <i class="fa-solid fa-file-excel me-1"></i>
-                                Export Excel
-                            </a>
+                            {{-- Export Category --}}
+                            @if(auth()->user()->hasPermission('category.export'))
+                                <a
+                                    href="{{ route('category.export') }}"
+                                    class="btn btn-success"
+                                >
+                                    <i class="fa-solid fa-file-excel me-1"></i>
+                                    Export Excel
+                                </a>
+                            @endif
                             {{-- Add Category --}}
-                            <button
-                                type="button"
-                                class="btn btn-primary"
-                                data-bs-toggle="modal"
-                                data-bs-target="#modalAddCategory"
-                            >
-                                <i class="fa-solid fa-plus me-1"></i>
-                                Add Category
-                            </button>
+                            @if(auth()->user()->hasPermission('category.create'))
+                                <button
+                                    type="button"
+                                    class="btn btn-primary"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modalAddCategory"
+                                >
+                                    <i class="fa-solid fa-plus me-1"></i>
+                                    Add Category
+                                </button>
+                            @endif
+
                         </div>
                     </div>
                     {{-- =====================================================
@@ -90,13 +87,9 @@
         </div>
     </div>
 </div>
-
-
-
 {{-- ================================================================
      MODAL ADD CATEGORY
 ================================================================ --}}
-
 <div
     class="modal fade"
     id="modalAddCategory"
@@ -163,7 +156,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="modal-footer">
                     <button
                         type="button"
@@ -172,7 +164,6 @@
                     >
                         Close
                     </button>
-
                     <button
                         type="submit"
                         class="btn btn-primary"
@@ -185,13 +176,9 @@
         </form>
     </div>
 </div>
-
-
-
 {{-- ================================================================
      MODAL EDIT CATEGORY
 ================================================================ --}}
-
 <div
     class="modal fade"
     id="modalEditCategory"
@@ -283,12 +270,9 @@
     </div>
 </div>
 
-
-
 {{-- ================================================================
      MODAL ADD SUB CATEGORY
 ================================================================ --}}
-
 <div
     class="modal fade"
     id="modalAddSubCategory"
@@ -371,7 +355,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="modal-footer">
                     <button
                         type="button"
@@ -392,9 +375,6 @@
         </form>
     </div>
 </div>
-
-
-
 {{-- ================================================================
      MODAL EDIT SUB CATEGORY
 ================================================================ --}}
@@ -484,7 +464,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="modal-footer">
                     <button
                         type="button"
@@ -505,23 +484,13 @@
         </form>
     </div>
 </div>
-
-
-
 @endsection
-
-
 @section('js')
-
 <script>
-
 $(function () {
-
-
     /* =========================================================
        CATEGORY DATATABLE
        ========================================================= */
-
     let categoryTable = $('#table-category').DataTable({
 
         processing: true,
@@ -585,12 +554,9 @@ $(function () {
 
     });
 
-
-
     /* =========================================================
        EXPAND CATEGORY
        ========================================================= */
-
     $(document).on(
         'click',
         '.btn-expand-category',
@@ -604,13 +570,9 @@ $(function () {
             let row =
                 categoryTable
                     .row(button.closest('tr'));
-
-
-
             /* -------------------------------------------------
                Already open
             ------------------------------------------------- */
-
             if (row.child.isShown()) {
 
                 row.child.hide();
@@ -620,13 +582,9 @@ $(function () {
                 return;
 
             }
-
-
-
             /* -------------------------------------------------
                Show loading
             ------------------------------------------------- */
-
             row.child(`
                 <div class="subcategory-container">
 
@@ -642,13 +600,9 @@ $(function () {
             `).show();
 
             button.addClass('open');
-
-
-
             /* -------------------------------------------------
                Load ONLY when opened
             ------------------------------------------------- */
-
             loadSubCategories(
                 row,
                 categoryId,
@@ -657,20 +611,15 @@ $(function () {
 
         }
     );
-
-
-
     /* =========================================================
        LOAD SUB CATEGORY
        ========================================================= */
-
     function loadSubCategories(
         row,
         categoryId,
         page
     )
     {
-
         $.ajax({
 
             url:
@@ -706,8 +655,6 @@ $(function () {
                     return;
 
                 }
-
-
                 row.child(
                     buildSubCategoryHtml(
                         response.category,
@@ -737,64 +684,45 @@ $(function () {
         });
 
     }
-
-
-
     /* =========================================================
        BUILD SUB CATEGORY
        ========================================================= */
-
     function buildSubCategoryHtml(
         category,
         subCategories,
         meta
     )
     {
+        const canCreateSubCategory = @json(auth()->user()->hasPermission('subcategory.create'));
 
         let html = `
-
             <div class="subcategory-container">
-
                 <div class="subcategory-header">
-
                     <div class="subcategory-title">
-
                         <i class="fa-solid fa-layer-group me-1"></i>
-
                         Sub Category
-
                         <span class="text-muted ms-1">
-
                             (${meta.total})
-
                         </span>
-
                     </div>
-
-
+                    ${canCreateSubCategory ? `
                     <button
                         type="button"
                         class="btn-add-subcategory btn-add-sub"
                         data-category-id="${category.id}"
                         data-category-name="${escapeHtml(category.category_name)}"
                     >
-
                         <i class="fa-solid fa-plus me-1"></i>
-
                         Add Sub Category
-
                     </button>
-
+                    ` : ''}
                 </div>
 
         `;
 
-
-
         /* =====================================================
            EMPTY
         ===================================================== */
-
         if (
             !subCategories ||
             subCategories.length === 0
@@ -815,63 +743,40 @@ $(function () {
             html += `</div>`;
 
             return html;
-
         }
-
-
-
         /* =====================================================
            TABLE
         ===================================================== */
-
         html += `
-
             <div class="table-responsive">
-
                 <table class="table subcategory-table">
-
                     <thead>
-
                         <tr>
-
                             <th width="5%">
                                 #
                             </th>
-
                             <th>
                                 Name
                             </th>
-
                             <th>
                                 Code
                             </th>
-
                             <th>
                                 Description
                             </th>
-
                             <th>
                                 Total Asset
                             </th>
-
                             <th>
                                 Status
                             </th>
-
                             <th width="10%">
                                 Action
                             </th>
-
                         </tr>
-
                     </thead>
-
                     <tbody>
-
         `;
-
-
-
         subCategories.forEach(
             function (sub, index) {
 
@@ -882,198 +787,111 @@ $(function () {
                     ) +
                     index +
                     1;
-
-
-
                 let statusHtml = '';
-
-
-
                 if (sub.status == 1) {
-
                     statusHtml = `
-
                         <span class="badge-status badge-active">
-
                             <i class="fa-solid fa-circle-check me-1"></i>
-
                             Active
-
                         </span>
 
                     `;
-
                 } else {
-
                     statusHtml = `
-
                         <span class="badge-status badge-inactive">
-
                             <i class="fa-solid fa-circle-xmark me-1"></i>
-
                             Inactive
-
                         </span>
-
                     `;
-
                 }
-
-
-
                 html += `
-
                     <tr>
-
                         <td>
                             ${number}
                         </td>
-
                         <td>
-
                             <div class="subcategory-name">
-
                                 ${escapeHtml(
                                     sub.sub_category_name
                                 )}
-
                             </div>
-
                         </td>
-
                         <td>
-
                             <div class="subcategory-code">
-
                                 ${escapeHtml(
                                     sub.sub_category_code ?? ''
                                 )}
-
                             </div>
-
                         </td>
-
                         <td>
-
                             ${escapeHtml(
                                 sub.description ?? '-'
                             )}
-
                         </td>
-
                         <td>
-
                             ${sub.assets_count ?? 0}
-
                         </td>
-
                         <td>
-
                             ${statusHtml}
-
                         </td>
-
                         <td>
-
                             <div class="d-flex gap-1">
-
                                 <button
                                     type="button"
                                     class="btn-action btn-edit-subcategory"
                                     data-id="${sub.id}"
                                     title="Edit"
                                 >
-
                                     <i class="fa-solid fa-pen-to-square"></i>
-
                                 </button>
-
-
                                 <button
                                     type="button"
                                     class="btn-action btn-delete-subcategory"
                                     data-id="${sub.id}"
                                     title="Delete"
                                 >
-
                                     <i class="fa-solid fa-trash"></i>
-
                                 </button>
-
                             </div>
-
                         </td>
-
                     </tr>
-
                 `;
-
             }
         );
-
-
-
         html += `
-
                     </tbody>
-
                 </table>
-
             </div>
-
         `;
-
-
-
         /* =====================================================
            PAGINATION
         ===================================================== */
-
         if (meta.last_page > 1) {
-
             html += `
-
                 <div class="subcategory-pagination-wrapper">
-
                     <nav>
-
                         <ul class="pagination pagination-sm subcategory-pagination">
-
             `;
-
-
-
             /* Previous */
-
             html += `
-
                 <li class="page-item
                     ${meta.current_page <= 1 ? 'disabled' : ''}"
                 >
-
                     <button
                         type="button"
                         class="page-link subcategory-page"
                         data-page="${meta.current_page - 1}"
                         data-category-id="${category.id}"
                     >
-
                         <i class="fa-solid fa-chevron-left"></i>
-
                     </button>
-
                 </li>
-
             `;
-
-
-
             /*
             |--------------------------------------------------------------------------
             | Page numbers
             |--------------------------------------------------------------------------
             */
-
             let startPage =
                 Math.max(
                     1,
@@ -1086,38 +904,26 @@ $(function () {
                     meta.current_page + 2
                 );
 
-
-
             for (
                 let i = startPage;
                 i <= endPage;
                 i++
             ) {
-
                 html += `
-
                     <li class="page-item
                         ${i === meta.current_page ? 'active' : ''}"
                     >
-
                         <button
                             type="button"
                             class="page-link subcategory-page"
                             data-page="${i}"
                             data-category-id="${category.id}"
                         >
-
                             ${i}
-
                         </button>
-
                     </li>
-
                 `;
-
             }
-
-
 
             /* Next */
 
@@ -1142,8 +948,6 @@ $(function () {
 
             `;
 
-
-
             html += `
 
                         </ul>
@@ -1165,9 +969,6 @@ $(function () {
         return html;
 
     }
-
-
-
     /* =========================================================
        SUBCATEGORY PAGINATION
        ========================================================= */
@@ -1277,8 +1078,6 @@ $(function () {
 
         }
     );
-
-
 
     /* =========================================================
        ADD CATEGORY
@@ -1477,12 +1276,9 @@ $(function () {
         }
     );
 
-
-
     /* =========================================================
        UPDATE CATEGORY
        ========================================================= */
-
     $('#formEditCategory').submit(
         function (e) {
 

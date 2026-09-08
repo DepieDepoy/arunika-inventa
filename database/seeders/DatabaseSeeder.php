@@ -21,5 +21,9 @@ class DatabaseSeeder extends Seeder
             CompanySeeder::class,
             UserSeeder::class,
         ]);*/
+        $this->call([
+            PermissionSeeder::class,
+            PlanSeeder::class,
+        ]);
     }
 }

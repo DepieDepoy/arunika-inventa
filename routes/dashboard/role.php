@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Dashboard\RoleController;
+use App\Http\Controllers\Dashboard\PermissionController;
 
 Route::prefix('dashboard')
     ->middleware('auth')
@@ -28,15 +29,13 @@ Route::prefix('dashboard')
         Route::get('/roles/export', [RoleController::class, 'export'])
             ->name('roles.export');
         
-        Route::get('/roles/permission/{role}', [RoleController::class, 'permission'])
+        // =====================================================
+        // ROLE PERMISSION
+        // =====================================================
+        Route::get('/roles/permission/{role}', [PermissionController::class, 'index'])
             ->name('roles.permission');
 
-        Route::post('/roles/permission/{role}', [RoleController::class, 'savePermission'])
+        Route::post('/roles/permission/{role}', [PermissionController::class, 'savePermission'])
             ->name('roles.permission.save');
-            
-        Route::get('/roles/permission/{role}', [RoleController::class, 'permission'])
-            ->name('roles.permission');
 
-        Route::post('/roles/permission/{role}', [RoleController::class, 'savePermission'])
-            ->name('roles.permission.save');
     });

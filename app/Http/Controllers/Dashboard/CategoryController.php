@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Dashboard;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\SubCategory;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -48,6 +49,8 @@ class CategoryController extends Controller
             ->withCount('assets')
             ->latest('id');
 
+        /** @var User $user */
+        $user = Auth::user();
         return DataTables::of($query)
             ->addIndexColumn()
             ->editColumn('category_name', function ($row) {
@@ -113,26 +116,38 @@ class CategoryController extends Controller
                 ';
             })
 
-            ->addColumn('action', function ($row) {
-                return '
+            ->addColumn('action', function ($row) use ($user) {
+                $action = '
                     <div class="d-flex justify-content-center align-items-center gap-1">
+                ';
 
+                if ($user->hasPermission('category.edit')) {
+                    $action .= '
                         <a href="javascript:void(0)"
-                           class="btn-action btn-edit"
-                           data-id="' . $row->id . '"
-                           title="Edit">
+                        class="btn-action btn-edit"
+                        data-id="' . $row->id . '"
+                        title="Edit">
                             <i class="fa-solid fa-pen-to-square"></i>
                         </a>
+                    ';
+                }
 
+                if ($user->hasPermission('category.delete')) {
+                    $action .= '
                         <a href="javascript:void(0)"
-                           class="btn-action btn-delete"
-                           data-id="' . $row->id . '"
-                           title="Delete">
+                        class="btn-action btn-delete"
+                        data-id="' . $row->id . '"
+                        title="Delete">
                             <i class="fa-solid fa-trash"></i>
                         </a>
+                    ';
+                }
 
+                $action .= '
                     </div>
                 ';
+
+                return $action;
             })
 
             ->rawColumns([

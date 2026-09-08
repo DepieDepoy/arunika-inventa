@@ -76,4 +76,23 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Role::class);
     }
+
+    public function hasPermission(string $permission): bool
+    {
+        // Administrator memiliki seluruh permission
+        if ($this->role && $this->role->role_code === 'administrator') {
+            return true;
+        }
+
+        // Role tidak aktif = tidak memiliki permission
+        if (!$this->role || $this->role->status != 1) {
+            return false;
+        }
+
+        return $this->role
+            ->permissions()
+            ->where('permission_code', $permission)
+            ->exists();
+    }
+    
 }
