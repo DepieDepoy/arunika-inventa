@@ -101,9 +101,9 @@ class PermissionSeeder extends Seeder
             [
                 'permission_name' => 'Export Category',
                 'permission_code' => 'category.export',
-                'module' => 'category',
-                'action' => 'export',
-                'description' => 'Export data category',
+                'module'          => 'category',
+                'action'          => 'export',
+                'description'     => 'Export data category',
             ],
 
             // =====================================================
@@ -140,9 +140,9 @@ class PermissionSeeder extends Seeder
             [
                 'permission_name' => 'Export Sub Category',
                 'permission_code' => 'subcategory.export',
-                'module' => 'subcategory',
-                'action' => 'export',
-                'description' => 'Export data category',
+                'module'          => 'subcategory',
+                'action'          => 'export',
+                'description'     => 'Export data category',
             ],
 
             // =====================================================
@@ -179,9 +179,9 @@ class PermissionSeeder extends Seeder
             [
                 'permission_name' => 'Export Vendor',
                 'permission_code' => 'vendor.export',
-                'module' => 'vendor',
-                'action' => 'export',
-                'description' => 'Export data vendor',
+                'module'          => 'vendor',
+                'action'          => 'export',
+                'description'     => 'Export data vendor',
             ],
 
             // =====================================================
@@ -218,9 +218,9 @@ class PermissionSeeder extends Seeder
             [
                 'permission_name' => 'Export User',
                 'permission_code' => 'user.export',
-                'module' => 'user',
-                'action' => 'export',
-                'description' => 'Export data user',
+                'module'          => 'user',
+                'action'          => 'export',
+                'description'     => 'Export data user',
             ],
             [
                 'permission_name' => 'Import User',
@@ -229,6 +229,7 @@ class PermissionSeeder extends Seeder
                 'action'          => 'import',
                 'description'     => 'Import data user',
             ],
+
             // =====================================================
             // ROLE
             // =====================================================
@@ -280,42 +281,46 @@ class PermissionSeeder extends Seeder
             ],
 
             // =====================================================
-            // MAINTENANCE
+            // MAINTENANCE REQUEST
             // =====================================================
             [
-                'permission_name' => 'View Maintenance',
-                'permission_code' => 'maintenance.view',
-                'module'          => 'maintenance',
+                'permission_name' => 'View Maintenance Requests',
+                'permission_code' => 'maintenance.request.view',
+                'module'          => 'maintenance_request',
                 'action'          => 'view',
-                'description'     => 'Melihat maintenance asset',
+                'description'     => 'Melihat daftar permintaan maintenance',
             ],
             [
-                'permission_name' => 'Create Maintenance',
-                'permission_code' => 'maintenance.create',
-                'module'          => 'maintenance',
+                'permission_name' => 'Create Maintenance Request',
+                'permission_code' => 'maintenance.request.create',
+                'module'          => 'maintenance_request',
                 'action'          => 'create',
-                'description'     => 'Menambahkan maintenance',
+                'description'     => 'Membuat permintaan maintenance dari aset yang menjadi tanggung jawabnya',
             ],
             [
-                'permission_name' => 'Edit Maintenance',
-                'permission_code' => 'maintenance.edit',
-                'module'          => 'maintenance',
+                'permission_name' => 'Edit Maintenance Request',
+                'permission_code' => 'maintenance.request.edit',
+                'module'          => 'maintenance_request',
                 'action'          => 'edit',
-                'description'     => 'Mengubah maintenance',
+                'description'     => 'Mengambil, mengerjakan, menambahkan progres, dan menyelesaikan permintaan maintenance',
             ],
             [
-                'permission_name' => 'Delete Maintenance',
-                'permission_code' => 'maintenance.delete',
-                'module'          => 'maintenance',
+                'permission_name' => 'Delete Maintenance Request',
+                'permission_code' => 'maintenance.request.delete',
+                'module'          => 'maintenance_request',
                 'action'          => 'delete',
-                'description'     => 'Menghapus maintenance',
+                'description'     => 'Menghapus permintaan maintenance',
             ],
+
+            // =====================================================
+            // MAINTENANCE HISTORY
+            // =====================================================
             [
-                'permission_name' => 'Export Maintenance',
-                'permission_code' => 'maintenance.export',
-                'module'          => 'maintenance',
-                'action'          => 'export',
-                'description'     => 'Export data maintenance',
+                'permission_name' => 'View Maintenance History',
+                'permission_code' => 'maintenance.history.view',
+                'module'          => 'maintenance_history',
+                'action'          => 'view',
+                'description'     => 'Melihat riwayat maintenance yang telah selesai',
             ],
         ];
 
