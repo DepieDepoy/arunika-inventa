@@ -5,7 +5,7 @@
     ====================================================== --}}
     <div class="sidebar-header d-flex align-items-center justify-content-start">
 
-        <a href="{{ url('/dashboard') }}" class="navbar-brand">
+        <a href="{{ url('/dashboard/home') }}" class="navbar-brand">
             <div class="logo-main vasetra-logo">
                 {{-- LOGO NORMAL --}}
                 <div class="logo-normal">
@@ -87,7 +87,7 @@
 
                     <a class="nav-link {{ request()->routeIs('dashboard*') ? 'active' : '' }}"
                        aria-current="{{ request()->routeIs('dashboard*') ? 'page' : 'false' }}"
-                       href="{{ url('/dashboard') }}">
+                       href="{{ url('/dashboard/home') }}">
 
                         <i class="icon">
 

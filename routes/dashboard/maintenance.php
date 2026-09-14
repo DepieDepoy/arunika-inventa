@@ -150,7 +150,28 @@ Route::prefix('dashboard')
             ->middleware('permission:maintenance.request.edit')
             ->name('maintenance.requests.complete');
 
+        
+        /*
+        |--------------------------------------------------------------------------
+        | All Maintenance
+        |--------------------------------------------------------------------------
+        | Menampilkan seluruh asset perusahaan yang memiliki jadwal maintenance.
+        |
+        | Digunakan untuk melihat:
+        | - Maintenance overdue
+        | - Maintenance hari ini
+        | - Maintenance minggu ini
+        | - Maintenance berikutnya
+        |--------------------------------------------------------------------------
+        */
 
+        Route::get(
+            '/maintenance',
+            [MaintenanceController::class, 'index']
+        )
+            ->middleware('permission:maintenance.view')
+            ->name('maintenance.index');
+            
         /*
         |--------------------------------------------------------------------------
         | My Assets

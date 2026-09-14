@@ -484,66 +484,91 @@ class AssetController extends Controller
                     'nullable',
                     'string'
                 ],
+
+                /*
+                |--------------------------------------------------------------------------
+                | MAINTENANCE
+                |--------------------------------------------------------------------------
+                */
+
                 'maintenance_required' => [
                     'required',
                     'boolean'
                 ],
+
                 'maintenance_type' => [
+                    'required_if:maintenance_required,1',
                     'nullable',
                     'string',
-                    'max:50'
+                    'in:preventive,corrective',
                 ],
+
                 'maintenance_trigger' => [
+                    'required_if:maintenance_required,1',
                     'nullable',
                     'string',
-                    'max:50'
+                    'in:calendar',
                 ],
+
                 'maintenance_interval' => [
+                    'required_if:maintenance_required,1',
                     'nullable',
                     'integer',
                     'min:1'
                 ],
+
                 'maintenance_interval_unit' => [
+                    'required_if:maintenance_required,1',
                     'nullable',
                     'in:day,week,month,year'
                 ],
+
                 'maintenance_start_date' => [
+                    'required_if:maintenance_required,1',
                     'nullable',
                     'date'
                 ],
+
                 'last_maintenance_date' => [
                     'nullable',
                     'date'
                 ],
+
                 'next_maintenance_date' => [
                     'nullable',
                     'date'
                 ],
+
                 'location' => [
                     'nullable',
                     'string',
                     'max:255'
                 ],
+
                 'status' => [
                     'required',
                     'integer',
                     'in:0,1'
                 ],
+
                 'asset_photos' => [
                     'nullable',
                     'array',
                     'max:3'
                 ],
+
                 'asset_photos.*' => [
                     'file',
                     'max:5120',
                     'mimes:jpg,jpeg,png'
                 ],
+
                 'invoice_documents' => [
                     'nullable',
                     'array',
                     'max:5'
                 ],
+
                 'invoice_documents.*' => [
                     'file',
                     'max:10240',
@@ -553,9 +578,6 @@ class AssetController extends Controller
             [
                 'asset_name.required' =>
                     'Nama asset wajib diisi.',
-
-                'asset_condition.required' =>
-                    'Kondisi asset wajib diisi.',
 
                 'category_id.required' =>
                     'Kategori wajib dipilih atau diisi.',
@@ -583,6 +605,21 @@ class AssetController extends Controller
 
                 'warranty_end.after_or_equal' =>
                     'Tanggal akhir warranty tidak boleh sebelum tanggal mulai.',
+
+                'maintenance_type.required_if' =>
+                    'Jenis maintenance wajib dipilih jika maintenance aktif.',
+
+                'maintenance_trigger.required_if' =>
+                    'Trigger maintenance wajib dipilih jika maintenance aktif.',
+
+                'maintenance_interval.required_if' =>
+                    'Interval maintenance wajib diisi jika maintenance aktif.',
+
+                'maintenance_interval_unit.required_if' =>
+                    'Satuan interval maintenance wajib dipilih jika maintenance aktif.',
+
+                'maintenance_start_date.required_if' =>
+                    'Tanggal mulai maintenance wajib diisi jika maintenance aktif.',
 
                 'status.required' =>
                     'Status wajib dipilih.',
@@ -963,10 +1000,40 @@ class AssetController extends Controller
             |--------------------------------------------------------------------------
             | MAINTENANCE NEXT DATE
             |--------------------------------------------------------------------------
+            |
+            | Jika user mengisi next_maintenance_date,
+            | tanggal tersebut menjadi sumber utama.
+            |
+            | Jika kosong, baru dihitung otomatis.
+            |
             */
 
-            $nextMaintenanceDate =
-                $this->calculateNextMaintenanceDate($request);
+            $maintenanceRequired =
+                $request->boolean('maintenance_required');
+
+            $nextMaintenanceDate = null;
+
+            if ($maintenanceRequired) {
+
+                if (
+                    $request->filled(
+                        'next_maintenance_date'
+                    )
+                ) {
+
+                    $nextMaintenanceDate =
+                        Carbon::parse(
+                            $request->next_maintenance_date
+                        );
+
+                } else {
+
+                    $nextMaintenanceDate =
+                        $this->calculateNextMaintenanceDate(
+                            $request
+                        );
+                }
+            }
 
 
             /*
@@ -974,9 +1041,6 @@ class AssetController extends Controller
             | CREATE ASSET
             |--------------------------------------------------------------------------
             */
-
-            $maintenanceRequired =
-                $request->boolean('maintenance_required');
 
             $asset = Asset::create([
 
@@ -1106,10 +1170,6 @@ class AssetController extends Controller
             |--------------------------------------------------------------------------
             | CREATE MAINTENANCE SCHEDULE
             |--------------------------------------------------------------------------
-            |
-            | Hanya dibuat apabila maintenance aktif dan
-            | tanggal maintenance berikutnya tersedia.
-            |
             */
 
             if (
@@ -1461,163 +1521,211 @@ class AssetController extends Controller
                     'required',
                     'integer'
                 ],
+
                 'asset_name' => [
                     'required',
                     'string',
                     'max:255'
                 ],
+
                 'category_id' => [
                     'required'
                 ],
+
                 'sub_category_id' => [
                     'nullable'
                 ],
+
                 'vendor_id' => [
                     'required',
                     'exists:vendors,id'
                 ],
+
                 'responsible_user_id' => [
                     'nullable',
                     'exists:users,id'
                 ],
+
                 'brand' => [
                     'nullable',
                     'string',
                     'max:100'
                 ],
+
                 'model' => [
                     'nullable',
                     'string',
                     'max:150'
                 ],
+
                 'serial_number' => [
                     'nullable',
                     'string',
                     'max:150'
                 ],
+
                 'description' => [
                     'nullable',
                     'string'
                 ],
+
                 'purchase_date' => [
                     'nullable',
                     'date'
                 ],
+
                 'purchase_price' => [
                     'nullable',
                     'numeric',
                     'min:0'
                 ],
+
                 'purchase_invoice' => [
                     'nullable',
                     'string',
                     'max:100'
                 ],
+
                 'depreciation_method' => [
                     'nullable',
                     'string',
                     'max:50'
                 ],
+
                 'useful_life' => [
                     'nullable',
                     'integer',
                     'min:1'
                 ],
+
                 'residual_value' => [
                     'nullable',
                     'numeric',
                     'min:0'
                 ],
+
                 'depreciation_start_date' => [
                     'nullable',
                     'date'
                 ],
+
                 'warranty_start' => [
                     'nullable',
                     'date'
                 ],
+
                 'warranty_end' => [
                     'nullable',
                     'date',
                     'after_or_equal:warranty_start'
                 ],
+
                 'warranty_note' => [
                     'nullable',
                     'string'
                 ],
+
+                /*
+                |--------------------------------------------------------------------------
+                | MAINTENANCE
+                |--------------------------------------------------------------------------
+                */
+
                 'maintenance_required' => [
                     'required',
                     'boolean',
                 ],
+
                 'maintenance_type' => [
+                    'required_if:maintenance_required,1',
                     'nullable',
                     'string',
                     'in:preventive,corrective',
                 ],
+
                 'maintenance_trigger' => [
+                    'required_if:maintenance_required,1',
                     'nullable',
                     'string',
                     'in:calendar',
                 ],
+
                 'maintenance_interval' => [
+                    'required_if:maintenance_required,1',
                     'nullable',
                     'integer',
                     'min:1',
                 ],
+
                 'maintenance_interval_unit' => [
+                    'required_if:maintenance_required,1',
                     'nullable',
                     'string',
                     'in:day,week,month,year',
                 ],
+
                 'maintenance_start_date' => [
+                    'required_if:maintenance_required,1',
                     'nullable',
                     'date',
                 ],
+
                 'last_maintenance_date' => [
                     'nullable',
                     'date',
                 ],
+
                 'next_maintenance_date' => [
                     'nullable',
                     'date',
                 ],
+
                 'location' => [
                     'nullable',
                     'string',
                     'max:255'
                 ],
+
                 'status' => [
                     'required',
                     'integer',
                     'in:0,1'
                 ],
+
                 'delete_images' => [
                     'nullable',
                     'array'
                 ],
+
                 'delete_images.*' => [
                     'integer'
                 ],
+
                 'asset_photos' => [
                     'nullable',
                     'array'
                 ],
+
                 'asset_photos.*' => [
                     'file',
                     'max:5120',
                     'mimes:jpg,jpeg,png'
                 ],
+
                 'delete_invoice_documents' => [
                     'nullable',
                     'array'
                 ],
+
                 'delete_invoice_documents.*' => [
                     'integer'
                 ],
+
                 'invoice_documents' => [
                     'nullable',
                     'array'
                 ],
+
                 'invoice_documents.*' => [
                     'file',
                     'max:10240',
@@ -1661,6 +1769,21 @@ class AssetController extends Controller
                 'warranty_end.after_or_equal' =>
                     'Tanggal akhir warranty tidak boleh sebelum tanggal mulai.',
 
+                'maintenance_type.required_if' =>
+                    'Jenis maintenance wajib dipilih jika maintenance aktif.',
+
+                'maintenance_trigger.required_if' =>
+                    'Trigger maintenance wajib dipilih jika maintenance aktif.',
+
+                'maintenance_interval.required_if' =>
+                    'Interval maintenance wajib diisi jika maintenance aktif.',
+
+                'maintenance_interval_unit.required_if' =>
+                    'Satuan interval maintenance wajib dipilih jika maintenance aktif.',
+
+                'maintenance_start_date.required_if' =>
+                    'Tanggal mulai maintenance wajib diisi jika maintenance aktif.',
+
                 'status.required' =>
                     'Status wajib dipilih.',
 
@@ -1678,9 +1801,6 @@ class AssetController extends Controller
 
                 'delete_invoice_documents.*.integer' =>
                     'ID dokumen tidak valid.',
-
-                'asset_photos.*.mimes' =>
-                    'Foto hanya boleh JPG, JPEG atau PNG.',
 
                 'invoice_documents.*.file' =>
                     'File invoice tidak valid.',
@@ -2505,13 +2625,40 @@ class AssetController extends Controller
             |--------------------------------------------------------------------------
             | MAINTENANCE CALCULATION
             |--------------------------------------------------------------------------
+            |
+            | PRIORITAS:
+            |
+            | 1. next_maintenance_date dari form
+            | 2. jika kosong -> hitung otomatis
+            |
             */
 
             $maintenanceRequired =
                 $request->boolean('maintenance_required');
 
-            $nextMaintenanceDate =
-                $this->calculateNextMaintenanceDate($request);
+            $nextMaintenanceDate = null;
+
+            if ($maintenanceRequired) {
+
+                if (
+                    $request->filled(
+                        'next_maintenance_date'
+                    )
+                ) {
+
+                    $nextMaintenanceDate =
+                        Carbon::parse(
+                            $request->next_maintenance_date
+                        );
+
+                } else {
+
+                    $nextMaintenanceDate =
+                        $this->calculateNextMaintenanceDate(
+                            $request
+                        );
+                }
+            }
 
 
             /*
@@ -3719,14 +3866,17 @@ class AssetController extends Controller
      * Aturan:
      *
      * 1. Maintenance OFF
-     *    -> hapus schedule aktif.
+     *    -> hapus schedule "scheduled".
      *
      * 2. Maintenance ON + tanggal tersedia
-     *    -> update schedule aktif jika sudah ada.
+     *    -> update schedule "scheduled" jika sudah ada.
      *    -> jika belum ada, buat schedule baru.
      *
-     * 3. Maintenance yang sudah COMPLETED
-     *    -> tidak disentuh.
+     * 3. Maintenance "in_progress"
+     *    -> jangan disentuh.
+     *
+     * 4. Maintenance "completed"
+     *    -> jangan disentuh.
      *
      */
     private function syncMaintenanceSchedule(
@@ -3738,36 +3888,14 @@ class AssetController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | CARI MAINTENANCE AKTIF
-        |--------------------------------------------------------------------------
-        */
-
-        $activeMaintenance =
-            Maintenance::where(
-                'company_id',
-                $companyId
-            )
-                ->where(
-                    'asset_id',
-                    $asset->id
-                )
-                ->whereIn(
-                    'status',
-                    [
-                        'scheduled',
-                        'in_progress'
-                    ]
-                )
-                ->orderBy(
-                    'maintenance_date'
-                )
-                ->first();
-
-
-        /*
-        |--------------------------------------------------------------------------
         | MAINTENANCE OFF
         |--------------------------------------------------------------------------
+        |
+        | Jika maintenance dimatikan, hanya schedule yang masih
+        | berstatus scheduled yang dihapus.
+        |
+        | completed dan in_progress tetap aman.
+        |
         */
 
         if (
@@ -3783,16 +3911,46 @@ class AssetController extends Controller
                     'asset_id',
                     $asset->id
                 )
-                ->whereIn(
+                ->where(
                     'status',
-                    [
-                        'scheduled'
-                    ]
+                    'scheduled'
                 )
                 ->delete();
 
             return;
         }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CARI SCHEDULE AKTIF
+        |--------------------------------------------------------------------------
+        |
+        | HANYA status scheduled yang boleh disinkronkan
+        |
+        | Jangan mengambil in_progress karena maintenance yang
+        | sedang dikerjakan tidak boleh tiba-tiba dikembalikan
+        | menjadi scheduled.
+        |
+        */
+
+        $activeMaintenance =
+            Maintenance::where(
+                'company_id',
+                $companyId
+            )
+                ->where(
+                    'asset_id',
+                    $asset->id
+                )
+                ->where(
+                    'status',
+                    'scheduled'
+                )
+                ->orderBy(
+                    'maintenance_date'
+                )
+                ->first();
 
 
         /*
@@ -3813,9 +3971,6 @@ class AssetController extends Controller
 
                 'vendor_id' =>
                     $asset->vendor_id,
-
-                'status' =>
-                    'scheduled',
             ]);
 
             return;
@@ -3826,6 +3981,13 @@ class AssetController extends Controller
         |--------------------------------------------------------------------------
         | CREATE NEW SCHEDULE
         |--------------------------------------------------------------------------
+        |
+        | Jika tidak ada scheduled:
+        |
+        | - completed ada -> tetap dipertahankan
+        | - in_progress ada -> tetap dipertahankan
+        | - scheduled tidak ada -> buat schedule baru
+        |
         */
 
         Maintenance::create([

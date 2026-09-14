@@ -17,37 +17,146 @@ use Yajra\DataTables\Facades\DataTables;
 class MaintenanceController extends Controller
 {
     /**
-     * ========================================================================
-     * MAINTENANCE INDEX
-     * ========================================================================
+     * ============================================================================
+     * ALL MAINTENANCE
+     * ============================================================================
      *
-     * Legacy maintenance page.
+     * Menampilkan seluruh asset perusahaan yang memiliki
+     * scheduled maintenance.
      *
-     * Tetap dipertahankan agar route / view lama tidak langsung rusak.
+     * Kategori:
+     * - Overdue
+     * - Today
+     * - This Week
+     * - Upcoming
      */
     public function index()
-    {
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
+{
+    /** @var \App\Models\User $user */
+    $user = Auth::user();
 
-        $assets = Asset::where(
-                'company_id',
-                $user->company_id
-            )
-            ->orderBy('asset_name')
-            ->get([
-                'id',
-                'asset_code',
-                'asset_name',
-            ]);
+    $today = now()->startOfDay();
+    $endOfWeek = now()->endOfWeek();
 
-        return view(
-            'dashboard.maintenance.index',
-            compact('assets')
-        );
-    }
+    /*
+    |--------------------------------------------------------------------------
+    | BASE QUERY
+    |--------------------------------------------------------------------------
+    | Ambil maintenance schedule dari tabel maintenances.
+    | Hanya maintenance yang masih aktif:
+    | - scheduled
+    | - in_progress
+    |
+    */
 
+    $baseQuery = Maintenance::with([
+        'asset.category',
+        'asset.subCategory',
+        'asset.responsibleUser',
+        'vendor',
+    ])
+        ->where('company_id', $user->company_id)
+        ->whereIn('status', [
+            'scheduled',
+            'in_progress',
+        ]);
 
+    /*
+    |--------------------------------------------------------------------------
+    | OVERDUE
+    |--------------------------------------------------------------------------
+    */
+
+    $overdue = (clone $baseQuery)
+        ->whereDate(
+            'maintenance_date',
+            '<',
+            $today
+        )
+        ->orderBy('maintenance_date')
+        ->get();
+
+    /*
+    |--------------------------------------------------------------------------
+    | TODAY
+    |--------------------------------------------------------------------------
+    */
+
+    $todayMaintenance = (clone $baseQuery)
+        ->whereDate(
+            'maintenance_date',
+            $today
+        )
+        ->orderBy('maintenance_date')
+        ->get();
+
+    /*
+    |--------------------------------------------------------------------------
+    | THIS WEEK
+    |--------------------------------------------------------------------------
+    | Besok sampai akhir minggu.
+    | Hari ini dipisahkan agar tidak double count.
+    */
+
+    $thisWeek = (clone $baseQuery)
+        ->whereDate(
+            'maintenance_date',
+            '>',
+            $today
+        )
+        ->whereDate(
+            'maintenance_date',
+            '<=',
+            $endOfWeek
+        )
+        ->orderBy('maintenance_date')
+        ->get();
+
+    /*
+    |--------------------------------------------------------------------------
+    | UPCOMING
+    |--------------------------------------------------------------------------
+    | Maintenance setelah minggu berjalan.
+    */
+
+    $upcoming = (clone $baseQuery)
+        ->whereDate(
+            'maintenance_date',
+            '>',
+            $endOfWeek
+        )
+        ->orderBy('maintenance_date')
+        ->get();
+
+    /*
+    |--------------------------------------------------------------------------
+    | SUMMARY
+    |--------------------------------------------------------------------------
+    */
+
+    $summary = [
+        'overdue' => $overdue->count(),
+        'today' => $todayMaintenance->count(),
+        'this_week' => $thisWeek->count(),
+        'upcoming' => $upcoming->count(),
+
+        'total' => $overdue->count()
+            + $todayMaintenance->count()
+            + $thisWeek->count()
+            + $upcoming->count(),
+    ];
+
+    return view(
+        'dashboard.maintenance.index',
+        compact(
+            'overdue',
+            'todayMaintenance',
+            'thisWeek',
+            'upcoming',
+            'summary'
+        )
+    );
+}
     /**
      * ========================================================================
      * CREATE MAINTENANCE
