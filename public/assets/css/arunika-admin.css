@@ -529,3 +529,70 @@ table.dataTable tbody tr:hover{
         color: #fff;
         background: #ff3e1d;
     }
+
+    /* =====================================================
+   VASETRA SIDEBAR LOGO
+===================================================== */
+
+.sidebar-header .vasetra-logo {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    flex-shrink: 0;
+}
+
+/* =====================================================
+   LOGO NORMAL
+===================================================== */
+
+.sidebar-header .vasetra-logo .logo-normal {
+    display: flex;
+    align-items: center;
+}
+
+.sidebar-header .vasetra-logo .logo-normal img {
+    width: 210px;
+    height: auto;
+    max-width: 210px;
+    display: block;
+    object-fit: contain;
+}
+
+
+/* =====================================================
+   LOGO MINI
+===================================================== */
+
+.sidebar-header .vasetra-logo .logo-mini {
+    display: none;
+}
+
+.sidebar-header .vasetra-logo .logo-mini img {
+    width: 34px;
+    height: 34px;
+    max-width: 34px;
+    max-height: 34px;
+    display: block;
+    object-fit: contain;
+}
+
+/* =====================================================
+   SIDEBAR MINIMIZED
+===================================================== */
+
+.sidebar-mini .sidebar-header .vasetra-logo .logo-normal {
+    display: none !important;
+}
+
+.sidebar-mini .sidebar-header .vasetra-logo .logo-mini {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidebar-mini .sidebar-header .vasetra-logo .logo-mini img {
+    width: 34px !important;
+    height: 34px !important;
+    max-width: 34px !important;
+    max-height: 34px !important;
+}

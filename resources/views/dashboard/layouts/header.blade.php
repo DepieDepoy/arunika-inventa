@@ -31,14 +31,14 @@
                             Masa berlangganan
                             <strong>{{ $company->company_name }}</strong>
                             telah berakhir.
-                            Silakan lakukan perpanjangan untuk melanjutkan penggunaan AMS.
+                            Silakan lakukan perpanjangan untuk melanjutkan penggunaan Assets Management System.
                         </p>
 
                     @elseif ($expiredAt && $daysLeft <= 7)
 
                         {{-- AKAN EXPIRED --}}
                         <h1>
-                            Selamat Datang di AMS 👋
+                            Selamat Datang di Assets Management System 👋
                         </h1>
 
                         <p>
@@ -53,7 +53,7 @@
 
                         {{-- AKTIF --}}
                         <h1>
-                            Selamat Datang di AMS 👋
+                            Selamat Datang di Assets Management System 👋
                         </h1>
 
                         <p>
