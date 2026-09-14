@@ -327,9 +327,24 @@
 
                     <button
                         type="submit"
+                        id="btnSaveUser"
                         class="btn btn-primary">
 
-                        Save User
+                        <span class="btn-save-text">
+                            Save User
+                        </span>
+
+                        <span
+                            class="btn-save-loading d-none">
+
+                            <span
+                                class="spinner-border spinner-border-sm me-1"
+                                role="status">
+                            </span>
+
+                            Saving...
+
+                        </span>
 
                     </button>
 
@@ -523,9 +538,24 @@
 
                     <button
                         type="submit"
+                        id="btnUpdateUser"
                         class="btn btn-primary">
 
-                        Save User
+                        <span class="btn-update-text">
+                            Save User
+                        </span>
+
+                        <span
+                            class="btn-update-loading d-none">
+
+                            <span
+                                class="spinner-border spinner-border-sm me-1"
+                                role="status">
+                            </span>
+
+                            Saving...
+
+                        </span>
 
                     </button>
 
@@ -547,6 +577,7 @@
 <script>
 
 $(function () {
+
 
     /* =====================================================
        DATATABLE
@@ -625,393 +656,74 @@ $(function () {
 
     });
 
-});
 
+    /* =====================================================
+       ADD USER
+    ====================================================== */
 
-/* =====================================================
-   ADD USER
-====================================================== */
+    $('#formAddUser').on('submit', function (e) {
 
-$('#formAddUser').submit(function (e) {
+        e.preventDefault();
 
-    if (!this.checkValidity()) {
 
-        this.reportValidity();
+        let form = this;
 
-        return false;
-    }
 
-    e.preventDefault();
+        if (!form.checkValidity()) {
 
+            form.reportValidity();
 
-    let formData = new FormData(this);
-
-
-    $.ajax({
-
-        url: "{{ route('users.store') }}",
-
-        type: "POST",
-
-        data: formData,
-
-        processData: false,
-
-        contentType: false,
-
-        headers: {
-
-            'Accept': 'application/json'
-
-        },
-
-
-        success: function (response) {
-
-            if (response.success) {
-
-                Swal.fire({
-
-                    icon: 'success',
-
-                    title: 'Berhasil',
-
-                    html: `
-
-                        <div class="text-start">
-
-                            <p class="mb-2">
-                                User berhasil ditambahkan.
-                            </p>
-
-                            <label class="fw-bold">
-                                Password sementara
-                            </label>
-
-                            <div class="input-group mb-3">
-
-                                <input
-                                    type="text"
-                                    id="tempPassword"
-                                    class="form-control"
-                                    value="${response.password}"
-                                    readonly>
-
-                                <button
-                                    class="btn btn-primary"
-                                    type="button"
-                                    onclick="copyPassword()">
-
-                                    <i class="fa-solid fa-copy"></i>
-
-                                </button>
-
-                            </div>
-
-                            <small class="text-danger">
-                                Simpan password ini sebelum menutup pesan.
-                            </small>
-
-                        </div>
-
-                    `,
-
-                    confirmButtonText: 'OK'
-
-                });
-
-
-                let modal = bootstrap.Modal.getInstance(
-                    document.getElementById('modalAddUser')
-                );
-
-
-                if (modal) {
-
-                    modal.hide();
-
-                }
-
-
-                $('#formAddUser')[0].reset();
-
-
-                $('#table-users')
-                    .DataTable()
-                    .ajax
-                    .reload();
-
-            }
-
-        },
-
-
-        error: function (xhr) {
-
-            if (xhr.status == 422) {
-
-                let errors = xhr.responseJSON.errors;
-
-                let message = '';
-
-
-                $.each(errors, function (key, value) {
-
-                    message += value[0] + '<br>';
-
-                });
-
-
-                Swal.fire({
-
-                    icon: 'error',
-
-                    title: 'Validasi Gagal',
-
-                    html: message,
-
-                    allowOutsideClick: false,
-
-                    backdrop: true
-
-                });
-
-            }
-
-        }
-
-    });
-
-});
-
-
-/* =====================================================
-   EDIT USER
-====================================================== */
-
-$(document).on('click', '.btn-edit', function () {
-
-    let id = $(this).data('id');
-
-
-    let url = "{{ route('users.edit', ['id' => ':id']) }}";
-
-    url = url.replace(':id', id);
-
-
-    $.get(url, function (response) {
-
-        /* ---------------------------------------------
-           BASIC DATA
-        --------------------------------------------- */
-
-        $('#edit_id').val(response.id);
-
-        $('#edit_name').val(response.name);
-
-        $('#edit_nik').val(response.nik);
-
-        $('#edit_email').val(response.email);
-
-        $('#edit_phone').val(response.phone);
-
-        $('#edit_status').val(response.status);
-
-
-        /* ---------------------------------------------
-           ROLE
-
-           IMPORTANT:
-           Controller users.edit harus mengembalikan
-           response.role_id
-        --------------------------------------------- */
-
-        if (response.role_id !== undefined && response.role_id !== null) {
-
-            $('#edit_role').val(String(response.role_id));
-
-        } else {
-
-            console.warn(
-                'role_id tidak ditemukan pada response users.edit'
-            );
-
-            $('#edit_role').val('');
+            return false;
 
         }
 
 
-        /* ---------------------------------------------
-           SHOW MODAL
-        --------------------------------------------- */
+        let formData = new FormData(form);
 
-        let modal = new bootstrap.Modal(
-            document.getElementById('modalEditUser')
-        );
+        let button = $('#btnSaveUser');
 
-        modal.show();
 
-    });
+        /*
+        |--------------------------------------------------------------------------
+        | DISABLE BUTTON
+        |--------------------------------------------------------------------------
+        */
 
+        button.prop('disabled', true);
 
-});
+        button.find('.btn-save-text')
+            .addClass('d-none');
 
+        button.find('.btn-save-loading')
+            .removeClass('d-none');
 
-/* =====================================================
-   UPDATE USER
-====================================================== */
 
-$('#formEditUser').submit(function (e) {
+        $.ajax({
 
-    e.preventDefault();
+            url: "{{ route('users.store') }}",
 
+            type: "POST",
 
-    let formData = new FormData(this);
+            data: formData,
 
+            processData: false,
 
-    $.ajax({
+            contentType: false,
 
-        url: "{{ route('users.update') }}",
+            headers: {
 
-        type: "POST",
+                'Accept': 'application/json',
 
-        data: formData,
+                'X-Requested-With': 'XMLHttpRequest'
 
-        processData: false,
+            },
 
-        contentType: false,
 
-        headers: {
+            success: function (response) {
 
-            'Accept': 'application/json'
 
-        },
+                if (response.success) {
 
-
-        success: function (response) {
-
-            if (response.success) {
-
-                Swal.fire({
-
-                    icon: 'success',
-
-                    title: 'Berhasil',
-
-                    text: 'User berhasil diupdate',
-
-                    timer: 1500,
-
-                    showConfirmButton: false
-
-                });
-
-
-                let modal = bootstrap.Modal.getInstance(
-                    document.getElementById('modalEditUser')
-                );
-
-
-                if (modal) {
-
-                    modal.hide();
-
-                }
-
-
-                $('#table-users')
-                    .DataTable()
-                    .ajax
-                    .reload();
-
-            }
-
-        },
-
-
-        error: function (xhr) {
-
-            if (xhr.status == 422) {
-
-                let errors = xhr.responseJSON.errors;
-
-                let message = '';
-
-
-                $.each(errors, function (key, value) {
-
-                    message += value[0] + '<br>';
-
-                });
-
-
-                Swal.fire({
-
-                    icon: 'error',
-
-                    title: 'Validasi Gagal',
-
-                    html: message
-
-                });
-
-            }
-
-        }
-
-    });
-
-});
-
-
-/* =====================================================
-   DELETE USER
-====================================================== */
-
-$(document).on('click', '.btn-delete', function () {
-
-    let id = $(this).data('id');
-
-
-    let url = "{{ route('users.destroy', ['id' => ':id']) }}";
-
-    url = url.replace(':id', id);
-
-
-    Swal.fire({
-
-        title: 'Hapus Data?',
-
-        text: 'Data yang sudah dihapus tidak bisa dikembalikan!',
-
-        icon: 'warning',
-
-        showCancelButton: true,
-
-        confirmButtonText: 'Ya, Hapus!',
-
-        cancelButtonText: 'Batal'
-
-    }).then((result) => {
-
-
-        if (result.isConfirmed) {
-
-
-            $.ajax({
-
-                url: url,
-
-                type: 'DELETE',
-
-                data: {
-
-                    _token: $('meta[name="csrf-token"]').attr('content')
-
-                },
-
-
-                success: function (response) {
 
                     Swal.fire({
 
@@ -1019,22 +731,74 @@ $(document).on('click', '.btn-delete', function () {
 
                         title: 'Berhasil',
 
-                        text: response.message
+                        html: `
+
+                            <div class="text-start">
+
+                                <p class="mb-2">
+                                    User berhasil ditambahkan.
+                                </p>
+
+                                <label class="fw-bold">
+                                    Password sementara
+                                </label>
+
+                                <div class="input-group mb-3">
+
+                                    <input
+                                        type="text"
+                                        id="tempPassword"
+                                        class="form-control"
+                                        value="${response.password ?? ''}"
+                                        readonly>
+
+                                    <button
+                                        class="btn btn-primary"
+                                        type="button"
+                                        onclick="copyPassword()">
+
+                                        <i class="fa-solid fa-copy"></i>
+
+                                    </button>
+
+                                </div>
+
+                                <small class="text-danger">
+                                    Simpan password ini sebelum menutup pesan.
+                                </small>
+
+                            </div>
+
+                        `,
+
+                        confirmButtonText: 'OK'
 
                     });
+
+
+                    let modal =
+                        bootstrap.Modal.getInstance(
+                            document.getElementById('modalAddUser')
+                        );
+
+
+                    if (modal) {
+
+                        modal.hide();
+
+                    }
+
+
+                    form.reset();
 
 
                     $('#table-users')
                         .DataTable()
                         .ajax
-                        .reload();
-
-                },
+                        .reload(null, false);
 
 
-                error: function (xhr) {
-
-                    console.log(xhr);
+                } else {
 
 
                     Swal.fire({
@@ -1044,60 +808,784 @@ $(document).on('click', '.btn-delete', function () {
                         title: 'Gagal',
 
                         text:
-                            xhr.responseJSON?.message ||
-                            'Data gagal dihapus'
+                            response.message ||
+                            'User gagal ditambahkan.'
 
                     });
+
+                }
+
+            },
+
+
+            error: function (xhr) {
+
+
+                console.log(
+                    'ADD USER ERROR:',
+                    xhr
+                );
+
+
+                showAjaxError(
+                    xhr,
+                    'User gagal ditambahkan.'
+                );
+
+            },
+
+
+            complete: function () {
+
+                button.prop('disabled', false);
+
+                button.find('.btn-save-text')
+                    .removeClass('d-none');
+
+                button.find('.btn-save-loading')
+                    .addClass('d-none');
+
+            }
+
+        });
+
+    });
+
+
+    /* =====================================================
+       EDIT USER
+    ====================================================== */
+
+    $(document).on(
+        'click',
+        '.btn-edit',
+        function () {
+
+
+            let id = $(this).data('id');
+
+
+            let url =
+                "{{ route('users.edit', ['id' => ':id']) }}";
+
+
+            url = url.replace(
+                ':id',
+                id
+            );
+
+
+            $.ajax({
+
+                url: url,
+
+                type: 'GET',
+
+                headers: {
+
+                    'Accept': 'application/json',
+
+                    'X-Requested-With': 'XMLHttpRequest'
+
+                },
+
+
+                success: function (response) {
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | BASIC DATA
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $('#edit_id')
+                        .val(response.id);
+
+                    $('#edit_name')
+                        .val(response.name);
+
+                    $('#edit_nik')
+                        .val(response.nik);
+
+                    $('#edit_email')
+                        .val(response.email);
+
+                    $('#edit_phone')
+                        .val(response.phone);
+
+                    $('#edit_status')
+                        .val(response.status);
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | ROLE
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        response.role_id !== undefined &&
+                        response.role_id !== null
+                    ) {
+
+                        $('#edit_role')
+                            .val(String(response.role_id));
+
+                    } else {
+
+                        console.warn(
+                            'role_id tidak ditemukan pada response users.edit'
+                        );
+
+                        $('#edit_role')
+                            .val('');
+
+                    }
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | SHOW MODAL
+                    |--------------------------------------------------------------------------
+                    */
+
+                    let modal =
+                        new bootstrap.Modal(
+                            document.getElementById(
+                                'modalEditUser'
+                            )
+                        );
+
+
+                    modal.show();
+
+                },
+
+
+                error: function (xhr) {
+
+                    console.log(
+                        'GET USER ERROR:',
+                        xhr
+                    );
+
+
+                    showAjaxError(
+                        xhr,
+                        'Data user gagal dimuat.'
+                    );
 
                 }
 
             });
 
         }
+    );
+
+
+    /* =====================================================
+       UPDATE USER
+    ====================================================== */
+
+    $('#formEditUser').on('submit', function (e) {
+
+        e.preventDefault();
+
+
+        let form = this;
+
+
+        if (!form.checkValidity()) {
+
+            form.reportValidity();
+
+            return false;
+
+        }
+
+
+        let formData =
+            new FormData(form);
+
+
+        let button =
+            $('#btnUpdateUser');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | DISABLE BUTTON
+        |--------------------------------------------------------------------------
+        */
+
+        button.prop('disabled', true);
+
+        button.find('.btn-update-text')
+            .addClass('d-none');
+
+        button.find('.btn-update-loading')
+            .removeClass('d-none');
+
+
+        $.ajax({
+
+            url: "{{ route('users.update') }}",
+
+            type: "POST",
+
+            data: formData,
+
+            processData: false,
+
+            contentType: false,
+
+            headers: {
+
+                'Accept': 'application/json',
+
+                'X-Requested-With': 'XMLHttpRequest'
+
+            },
+
+
+            success: function (response) {
+
+
+                if (response.success) {
+
+
+                    Swal.fire({
+
+                        icon: 'success',
+
+                        title: 'Berhasil',
+
+                        text: 'User berhasil diupdate',
+
+                        timer: 1500,
+
+                        showConfirmButton: false
+
+                    });
+
+
+                    let modal =
+                        bootstrap.Modal.getInstance(
+                            document.getElementById(
+                                'modalEditUser'
+                            )
+                        );
+
+
+                    if (modal) {
+
+                        modal.hide();
+
+                    }
+
+
+                    $('#table-users')
+                        .DataTable()
+                        .ajax
+                        .reload(null, false);
+
+
+                } else {
+
+
+                    Swal.fire({
+
+                        icon: 'error',
+
+                        title: 'Gagal',
+
+                        text:
+                            response.message ||
+                            'User gagal diupdate.'
+
+                    });
+
+                }
+
+            },
+
+
+            error: function (xhr) {
+
+
+                console.log(
+                    'UPDATE USER ERROR:',
+                    xhr
+                );
+
+
+                showAjaxError(
+                    xhr,
+                    'User gagal diupdate.'
+                );
+
+            },
+
+
+            complete: function () {
+
+                button.prop('disabled', false);
+
+                button.find('.btn-update-text')
+                    .removeClass('d-none');
+
+                button.find('.btn-update-loading')
+                    .addClass('d-none');
+
+            }
+
+        });
 
     });
+
+
+    /* =====================================================
+       DELETE USER
+    ====================================================== */
+
+    $(document).on(
+        'click',
+        '.btn-delete',
+        function () {
+
+
+            let id =
+                $(this).data('id');
+
+
+            let url =
+                "{{ route('users.destroy', ['id' => ':id']) }}";
+
+
+            url =
+                url.replace(
+                    ':id',
+                    id
+                );
+
+
+            Swal.fire({
+
+                title: 'Hapus Data?',
+
+                text:
+                    'Data yang sudah dihapus tidak bisa dikembalikan!',
+
+                icon: 'warning',
+
+                showCancelButton: true,
+
+                confirmButtonText:
+                    'Ya, Hapus!',
+
+                cancelButtonText:
+                    'Batal'
+
+            }).then((result) => {
+
+
+                if (!result.isConfirmed) {
+
+                    return;
+
+                }
+
+
+                $.ajax({
+
+                    url: url,
+
+                    type: 'DELETE',
+
+                    headers: {
+
+                        'Accept': 'application/json',
+
+                        'X-Requested-With':
+                            'XMLHttpRequest'
+
+                    },
+
+                    data: {
+
+                        _token:
+                            $('meta[name="csrf-token"]')
+                                .attr('content')
+
+                    },
+
+
+                    success: function (response) {
+
+
+                        Swal.fire({
+
+                            icon: 'success',
+
+                            title: 'Berhasil',
+
+                            text:
+                                response.message ||
+                                'User berhasil dihapus.'
+
+                        });
+
+
+                        $('#table-users')
+                            .DataTable()
+                            .ajax
+                            .reload(
+                                null,
+                                false
+                            );
+
+                    },
+
+
+                    error: function (xhr) {
+
+
+                        console.log(
+                            'DELETE USER ERROR:',
+                            xhr
+                        );
+
+
+                        showAjaxError(
+                            xhr,
+                            'Data user gagal dihapus.'
+                        );
+
+                    }
+
+                });
+
+            });
+
+        }
+    );
+
+
+    /* =====================================================
+       FOCUS ADD MODAL
+    ====================================================== */
+
+    $('#modalAddUser').on(
+        'shown.bs.modal',
+        function () {
+
+            $('#name')
+                .trigger('focus');
+
+        }
+    );
+
+
+    /* =====================================================
+       FOCUS EDIT MODAL
+    ====================================================== */
+
+    $('#modalEditUser').on(
+        'shown.bs.modal',
+        function () {
+
+            $('#edit_name')
+                .trigger('focus')
+                .select();
+
+        }
+    );
 
 });
 
 
-/* =====================================================
-   FOCUS ADD MODAL
-====================================================== */
+/* =========================================================
+   GLOBAL AJAX ERROR HANDLER
+========================================================= */
 
-$('#modalAddUser').on(
-    'shown.bs.modal',
-    function () {
+function showAjaxError(
+    xhr,
+    defaultMessage = 'Terjadi kesalahan.'
+) {
 
-        $('#name').trigger('focus');
+
+    /*
+    |--------------------------------------------------------------------------
+    | DEFAULT
+    |--------------------------------------------------------------------------
+    */
+
+    let title =
+        'Gagal';
+
+
+    let message =
+        defaultMessage;
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | HTTP STATUS
+    |--------------------------------------------------------------------------
+    */
+
+    if (xhr.status === 0) {
+
+        title =
+            'Koneksi Gagal';
+
+        message =
+            'Tidak dapat terhubung ke server. Periksa koneksi Anda.';
 
     }
-);
 
 
-/* =====================================================
-   FOCUS EDIT MODAL
-====================================================== */
+    else if (xhr.status === 401) {
 
-$('#modalEditUser').on(
-    'shown.bs.modal',
-    function () {
+        title =
+            'Sesi Berakhir';
 
-        $('#edit_name')
-            .trigger('focus')
-            .select();
+        message =
+            'Sesi login Anda telah berakhir. Silakan login kembali.';
 
     }
-);
 
 
-/* =====================================================
+    else if (xhr.status === 403) {
+
+        title =
+            'Tidak Diizinkan';
+
+        message =
+            'Anda tidak memiliki izin untuk melakukan tindakan ini.';
+
+    }
+
+
+    else if (xhr.status === 404) {
+
+        title =
+            'Data Tidak Ditemukan';
+
+        message =
+            'Endpoint atau data yang diminta tidak ditemukan.';
+
+    }
+
+
+    else if (xhr.status === 419) {
+
+        title =
+            'Sesi Berakhir';
+
+        message =
+            'Halaman sudah tidak aktif. Silakan refresh halaman dan coba lagi.';
+
+    }
+
+
+    else if (xhr.status === 422) {
+
+        title =
+            'Validasi Gagal';
+
+    }
+
+
+    else if (xhr.status === 409) {
+
+        title =
+            'Data Sudah Ada';
+
+        message =
+            'Data yang dimasukkan sudah terdaftar.';
+
+    }
+
+
+    else if (xhr.status >= 500) {
+
+        title =
+            'Server Error';
+
+        message =
+            'Terjadi kesalahan pada server. Silakan coba lagi.';
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | PARSE RESPONSE JSON
+    |--------------------------------------------------------------------------
+    */
+
+    let response =
+        xhr.responseJSON;
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | VALIDATION ERRORS
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+        response &&
+        response.errors
+    ) {
+
+
+        let errors = [];
+
+
+        $.each(
+            response.errors,
+            function (
+                key,
+                value
+            ) {
+
+
+                if (
+                    Array.isArray(value)
+                ) {
+
+                    value.forEach(
+                        function (error) {
+
+                            errors.push(
+                                error
+                            );
+
+                        }
+                    );
+
+                }
+
+                else if (
+                    typeof value ===
+                    'string'
+                ) {
+
+                    errors.push(
+                        value
+                    );
+
+                }
+
+            }
+        );
+
+
+        if (errors.length > 0) {
+
+            message =
+                errors.join('<br>');
+
+        }
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | SERVER MESSAGE
+    |--------------------------------------------------------------------------
+    */
+
+    else if (
+        response &&
+        response.message
+    ) {
+
+        /*
+         * Jangan menampilkan SQL mentah.
+         * Kalau message dari server normal,
+         * gunakan message tersebut.
+         */
+
+        message =
+            response.message;
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | SPECIAL DUPLICATE EMAIL DETECTION
+    |--------------------------------------------------------------------------
+    */
+
+    let rawResponse =
+        xhr.responseText || '';
+
+
+    if (
+        rawResponse.toLowerCase().includes(
+            'duplicate'
+        ) &&
+        rawResponse.toLowerCase().includes(
+            'email'
+        )
+    ) {
+
+        title =
+            'Email Sudah Terdaftar';
+
+        message =
+            'Email tersebut sudah digunakan oleh user lain.';
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | SHOW SWEETALERT
+    |--------------------------------------------------------------------------
+    */
+
+    Swal.fire({
+
+        icon: 'error',
+
+        title: title,
+
+        html: message,
+
+        allowOutsideClick: false,
+
+        confirmButtonText: 'OK'
+
+    });
+
+}
+
+
+/* =========================================================
    COPY TEMPORARY PASSWORD
-====================================================== */
+========================================================= */
 
 function copyPassword() {
 
+
     let input =
-        document.getElementById('tempPassword');
+        document.getElementById(
+            'tempPassword'
+        );
+
+
+    if (!input) {
+
+        return;
+
+    }
 
 
     navigator.clipboard.writeText(
@@ -1109,7 +1597,8 @@ function copyPassword() {
 
         icon: 'success',
 
-        title: 'Password berhasil disalin',
+        title:
+            'Password berhasil disalin',
 
         timer: 1000,
 
