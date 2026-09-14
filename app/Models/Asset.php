@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\AssetPhoto;
 use App\Models\AssetDocument;
-
+use App\Models\Maintenance;
+use App\Models\MaintenanceRequest;
 
 class Asset extends Model
 {
@@ -122,4 +123,14 @@ class Asset extends Model
         return $this->hasMany(AssetMaintenance::class);
     }
 
+    public function activeMaintenanceRequest()
+    {
+        return $this->hasOne(MaintenanceRequest::class)
+            ->whereIn('status', [
+                'pending',
+                'approved',
+                'in_progress',
+            ])
+            ->latestOfMany();
+    }
 }

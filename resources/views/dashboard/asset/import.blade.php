@@ -200,17 +200,30 @@
     }
 </style>
 
-<div class="container-fluid">
-{{-- PAGE HEADER --}}
-<div class="import-page-header">
-    <h4>Import Assets</h4>
-    <p>
-        Import data aset dalam jumlah banyak menggunakan file Excel.
-    </p>
-</div>
+<div class="content-wrapper">
+<!-- Content -->
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="row">
+    <div class="col-xxl-12 mb-12 order-0">
+    <div class="card">
 
+    <div class="card-header d-flex justify-content-between align-items-center">
 
-<div class="row">
+        <div>
+            <h5 class="mb-0">Import Assets</h5>
+            <small class="text-muted">
+                Import data aset dalam jumlah banyak menggunakan file Excel.
+            </small>
+        </div>
+
+        <div class="d-flex gap-2">
+
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="card permission-role-card">
+            <div class="card-body">
+                <div class="row">
 
     {{-- =====================================================
          LEFT : UPLOAD
@@ -480,6 +493,16 @@
 
 </div>
 
+            </div>
+
+        </div>
+
+
+    </div>
+    </div>
+</div>
+    </div>
+</div>
 </div>
 
 <script>

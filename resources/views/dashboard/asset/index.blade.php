@@ -89,33 +89,43 @@
                             Manage company assets
                         </small>
                     </div>
-                    <div class="d-flex gap-2">
-                        <!-- EXPORT EXCEL -->
-                        <a
-                            href="{{ route('assets.export') }}"
-                            class="btn btn-success"
-                        >
-                            <i class="fa-solid fa-file-excel me-1"></i>
-                            Export Excel
-                        </a>
-                        <!-- PRINT QR -->
-                        <button
-                            type="button"
-                            class="btn btn-dark"
-                            id="btnPrintQr"
-                        >
-                            <i class="fa-solid fa-qrcode me-1"></i>
-                            Print QR
-                        </button>
-                        <!-- ADD ASSET -->
-                        <a
-                            href="{{ route('assets.create') }}"
-                            class="btn btn-primary"
-                        >
-                            <i class="fa-solid fa-plus me-1"></i>
-                            Add Asset
-                        </a>
-                    </div>
+                   <div class="d-flex gap-2">
+
+    {{-- Export Asset --}}
+    @if(auth()->user()->hasPermission('asset.export'))
+        <a
+            href="{{ route('assets.export') }}"
+            class="btn btn-success"
+        >
+            <i class="fa-solid fa-file-excel me-1"></i>
+            Export Excel
+        </a>
+    @endif
+
+    {{-- Print QR --}}
+    @if(auth()->user()->hasPermission('asset.print_qr'))
+        <button
+            type="button"
+            class="btn btn-dark"
+            id="btnPrintQr"
+        >
+            <i class="fa-solid fa-qrcode me-1"></i>
+            Print QR
+        </button>
+    @endif
+
+    {{-- Add Asset --}}
+    @if(auth()->user()->hasPermission('asset.create'))
+        <a
+            href="{{ route('assets.create') }}"
+            class="btn btn-primary"
+        >
+            <i class="fa-solid fa-plus me-1"></i>
+            Add Asset
+        </a>
+    @endif
+
+</div>
                 </div>
                 <!-- ===================================================== -->
                 <!-- BODY -->
@@ -1288,7 +1298,7 @@ $(function () {
     | DROPDOWN ACTION
     |--------------------------------------------------------------------------
     */
-
+/*
     $(document).on(
         'shown.bs.dropdown',
         '.dropdown',
@@ -1334,7 +1344,7 @@ $(function () {
 
         }
     );
-
+*/
 
     /*
     |--------------------------------------------------------------------------

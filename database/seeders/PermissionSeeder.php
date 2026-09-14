@@ -222,7 +222,13 @@ class PermissionSeeder extends Seeder
                 'action' => 'export',
                 'description' => 'Export data user',
             ],
-
+            [
+                'permission_name' => 'Import User',
+                'permission_code' => 'user.import',
+                'module'          => 'user',
+                'action'          => 'import',
+                'description'     => 'Import data user',
+            ],
             // =====================================================
             // ROLE
             // =====================================================

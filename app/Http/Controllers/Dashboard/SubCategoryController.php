@@ -303,30 +303,40 @@ class SubCategoryController extends Controller
             */
 
             ->addColumn('action', function ($row) {
+                /** @var User $user */
+                $user = Auth::user();
 
-                return '
+                $action = '
                     <div class="d-flex justify-content-center align-items-center gap-1">
+                ';
 
+                if ($user->hasPermission('subcategory.edit')) {
+                    $action .= '
                         <a href="javascript:void(0)"
                         class="btn-action btn-edit"
                         data-id="' . $row->id . '"
                         title="Edit">
-
                             <i class="fa-solid fa-pen-to-square"></i>
-
                         </a>
+                    ';
+                }
 
+                if ($user->hasPermission('subcategory.delete')) {
+                    $action .= '
                         <a href="javascript:void(0)"
                         class="btn-action btn-delete"
                         data-id="' . $row->id . '"
                         title="Delete">
-
                             <i class="fa-solid fa-trash"></i>
-
                         </a>
+                    ';
+                }
 
+                $action .= '
                     </div>
                 ';
+
+                return $action;
             })
 
             ->rawColumns([

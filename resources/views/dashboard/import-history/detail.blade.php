@@ -329,43 +329,40 @@ if ($history->started_at) {
     }
 </style>
 
-<div class="container-fluid">
+<div class="content-wrapper">
+<!-- Content -->
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="row">
+    <div class="col-xxl-12 mb-12 order-0">
+    <div class="card">
 
+    <div class="card-header d-flex justify-content-between align-items-center">
 
-{{-- =========================================================
-     HEADER
-========================================================== --}}
-<div class="import-detail-header d-flex justify-content-between align-items-center">
-
-    <div>
-
-        <h4>
-            Import History Detail
-        </h4>
-
-        <p class="text-muted">
-            Detail hasil proses import
+        <div>
+            <h5 class="mb-0">
+                Import History Detail
+            </h5>
+            <small class="text-muted">
+                Detail hasil proses import
             {{ ucfirst($module ?: '-') }}
-        </p>
+            </small>
+        </div>
 
+        <div class="d-flex gap-2">
+             <a
+                href="{{ route('import.history') }}"
+                class="btn btn-outline-secondary import-back-button"
+            >
+                <i class="fas fa-arrow-left me-1"></i>
+                Kembali
+            </a>
+        </div>
     </div>
-
-
-    <a
-        href="{{ route('import.history') }}"
-        class="btn btn-outline-secondary import-back-button"
-    >
-        <i class="fas fa-arrow-left me-1"></i>
-        Kembali
-    </a>
-
-</div>
-
-
-{{-- =========================================================
-     SUMMARY CARDS
-========================================================== --}}
-<div class="row g-3 mb-4">
+    <div class="card-body">
+        <div class="card permission-role-card">
+            <div class="card-body">
+                <div class="row">
+                    <div class="row g-3 mb-4">
 
     {{-- FILE --}}
     <div class="col-lg-4 col-md-6">
@@ -893,8 +890,21 @@ if ($history->started_at) {
     </div>
 
 </div>
+            </div>
+    </div>
+
+</div>
+
+            </div>
+
+        </div>
 
 
+    </div>
+    </div>
+</div>
+    </div>
+</div>
 </div>
 
 {{-- =========================================================

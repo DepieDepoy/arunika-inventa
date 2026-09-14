@@ -49,8 +49,7 @@ class CategoryController extends Controller
             ->withCount('assets')
             ->latest('id');
 
-        /** @var User $user */
-        $user = Auth::user();
+        
         return DataTables::of($query)
             ->addIndexColumn()
             ->editColumn('category_name', function ($row) {
@@ -116,7 +115,11 @@ class CategoryController extends Controller
                 ';
             })
 
-            ->addColumn('action', function ($row) use ($user) {
+            //->addColumn('action', function ($row) use ($user) {
+            ->addColumn('action', function ($row) {    
+                /** @var User $user */
+                $user = Auth::user();
+
                 $action = '
                     <div class="d-flex justify-content-center align-items-center gap-1">
                 ';

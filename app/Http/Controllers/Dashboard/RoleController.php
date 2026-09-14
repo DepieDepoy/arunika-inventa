@@ -109,32 +109,64 @@ class RoleController extends Controller
                 ';
             })
 
-            ->addColumn('action', function ($row) {
-                return '
-                    <div class="d-flex justify-content-center align-items-center gap-1">
+           ->addColumn('action', function ($row) {
 
+                /** @var User $user */
+                $user = Auth::user();
+
+                $action = '
+                    <div class="d-flex justify-content-center align-items-center gap-1">
+                ';
+
+                // =====================================================
+                // MANAGE PERMISSION
+                // =====================================================
+                if ($user->hasPermission('role.permission')) {
+
+                    $action .= '
                         <a href="' . route('roles.permission', $row->id) . '"
                         class="btn-action"
                         title="Permission">
                             <i class="fa-solid fa-key"></i>
                         </a>
+                    ';
+                }
 
+                // =====================================================
+                // EDIT
+                // =====================================================
+                if ($user->hasPermission('role.edit')) {
+
+                    $action .= '
                         <a href="javascript:void(0)"
                         class="btn-action btn-edit"
                         data-id="' . $row->id . '"
                         title="Edit">
                             <i class="fa-solid fa-pen-to-square"></i>
                         </a>
+                    ';
+                }
 
+                // =====================================================
+                // DELETE
+                // =====================================================
+                if ($user->hasPermission('role.delete')) {
+
+                    $action .= '
                         <a href="javascript:void(0)"
                         class="btn-action btn-delete"
                         data-id="' . $row->id . '"
                         title="Delete">
                             <i class="fa-solid fa-trash"></i>
                         </a>
+                    ';
+                }
 
+                $action .= '
                     </div>
                 ';
+
+                return $action;
             })
 
             ->rawColumns([

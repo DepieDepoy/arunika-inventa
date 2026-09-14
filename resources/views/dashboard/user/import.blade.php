@@ -4,26 +4,32 @@
 
 @section('content')
 
-<div class="container-fluid">
+<div class="content-wrapper">
+<!-- Content -->
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="row">
+    <div class="col-xxl-12 mb-12 order-0">
+    <div class="card">
 
-    {{-- =========================================================
-         PAGE HEADER
-    ========================================================== --}}
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+
         <div>
-            <h4 class="mb-1">Import User</h4>
-            <p class="text-muted mb-0">
+            <h5 class="mb-0">
+                Import User
+            </h5>
+            <small class="text-muted">
                 Import data user secara massal menggunakan file Excel.
-            </p>
+            </small>
         </div>
 
-        <a href="{{ route('users.index') }}"
-           class="btn btn-light">
-            <i class="fas fa-arrow-left me-1"></i>
-            Kembali
-        </a>
+        <div class="d-flex gap-2">
+             <a href="{{ route('users.index') }}"
+                class="btn btn-light">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    Kembali
+                </a>
+        </div>
     </div>
-
 
     {{-- =========================================================
          ALERT
@@ -72,37 +78,10 @@
         </div>
     @endif
 
-
-    {{-- =========================================================
-         IMPORT CARD
-    ========================================================== --}}
-    <div class="card border-0 shadow-sm">
-
-        <div class="card-header bg-white border-bottom py-3">
-            <div class="d-flex align-items-center">
-
-                <div class="me-3"
-                     style="
-                        width:42px;
-                        height:42px;
-                        border-radius:10px;
-                        background:#f0fdf4;
-                        display:flex;
-                        align-items:center;
-                        justify-content:center;
-                     ">
-                    <i class="fas fa-file-excel text-success"></i>
-                </div>
-
-                <div>
-                    <h5 class="mb-1">Import Data User</h5>
-                    <small class="text-muted">
-                        Upload file Excel untuk menambahkan banyak user sekaligus.
-                    </small>
-                </div>
-
-            </div>
-        </div>
+        <div class="card permission-role-card">
+            <div class="card-body">
+                <div class="row">
+                    <div class="card border-0 shadow-sm">
 
 
         <div class="card-body p-4">
@@ -351,6 +330,14 @@
 
     </div>
 
+        </div>
+
+
+    </div>
+    </div>
+</div>
+    </div>
+</div>
 </div>
 
 

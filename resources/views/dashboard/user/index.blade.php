@@ -25,13 +25,14 @@
         </div>
 
         <div class="d-flex gap-2">
-
+            @if(auth()->user()->hasPermission('users.view'))
             <a href="{{ route('users.export') }}"
             class="btn btn-success">
                 <i class="fa-solid fa-file-excel"></i>
                 Export Excel
             </a>
-
+            @endif
+            @if(auth()->user()->hasPermission('users.create'))
             <button
                 class="btn btn-primary"
                 data-bs-toggle="modal"
@@ -39,6 +40,7 @@
                 <i class="fa-solid fa-plus"></i>
                 Add Users
             </button>
+            @endif
         </div>
     </div>
     <div class="card-body">
@@ -250,7 +252,7 @@ $(function() {
         order: [[2, 'asc']]
     });
 });
-
+/*
 $(document).on('shown.bs.dropdown', '.dropdown', function () {
 
     let menu = $(this).find('.dropdown-menu');
@@ -268,7 +270,7 @@ $(document).on('shown.bs.dropdown', '.dropdown', function () {
         display: 'block',
         zIndex: 999999
     });
-});
+});*/
 //submit
 $('#formAddUser').submit(function(e){
 

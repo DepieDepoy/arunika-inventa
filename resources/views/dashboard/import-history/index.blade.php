@@ -4,83 +4,61 @@
 
 @section('content')
 
-<div class="container-fluid">
-
-    {{-- =========================================================
-         PAGE HEADER
-    ========================================================== --}}
-    <div class="d-flex justify-content-between align-items-center mb-4">
-
-        <div>
-            <h4 class="mb-1">
-                Import History
-            </h4>
-
-            <p class="text-muted mb-0">
-                Riwayat proses import data ke sistem.
-            </p>
-        </div>
-
-        <a
-            href="{{ url()->previous() }}"
-            class="btn btn-light"
-        >
-            <i class="fas fa-arrow-left me-1"></i>
-            Kembali
-        </a>
-
-    </div>
-
-
-    {{-- =========================================================
-         INFO
-    ========================================================== --}}
-    <div class="alert alert-info d-flex align-items-start mb-4">
-
-        <i class="fas fa-info-circle me-2 mt-1"></i>
-
-        <div>
-            <strong>Import History</strong>
-
-            <div class="small mt-1">
-                Halaman ini menampilkan seluruh riwayat import
-                User, Asset dan modul lainnya.
-            </div>
-        </div>
-
-    </div>
-
-
-    {{-- =========================================================
-         TABLE CARD
-    ========================================================== --}}
+<div class="content-wrapper">
+<!-- Content -->
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="row">
+    <div class="col-xxl-12 mb-12 order-0">
     <div class="card">
 
-        <div class="card-header">
+    <div class="card-header d-flex justify-content-between align-items-center">
 
-            <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h5 class="mb-0">
+                Import History
+            </h5>
+            <small class="text-muted">
+                Riwayat proses import data ke sistem.
+            </small>
+        </div>
 
-                <h5 class="mb-0">
-                    Riwayat Import
-                </h5>
+        <div class="d-flex gap-2">
+             <a
+                href="{{ url()->previous() }}"
+                class="btn btn-light"
+            >
+                <i class="fas fa-arrow-left me-1"></i>
+                Kembali
+            </a>
+        </div>
+        
+    </div>
+    
+    <div class="card-body">
+        {{-- =========================================================
+         INFO
+        ========================================================== --}}
+        <div class="alert alert-info d-flex align-items-start mb-4">
 
-               <!-- <button
-                    type="button"
-                    class="btn btn-sm btn-outline-secondary"
-                    onclick="loadImportHistory()"
-                >
-                    <i class="fas fa-sync-alt me-1"></i>
-                    Refresh
-                </button>-->
+            <i class="fas fa-info-circle me-2 mt-1"></i>
 
+            <div>
+                <strong>Import History</strong>
+
+                <div class="small mt-1">
+                    Halaman ini menampilkan seluruh riwayat import
+                    User, Asset dan modul lainnya.
+                </div>
             </div>
 
         </div>
-
-
-        <div class="card-body">
-
-            <div class="table-responsive">
+        <div class="card permission-role-card">
+            <div class="card-body">
+                <div class="row">
+                    <h5 class="mb-0">
+                    Riwayat Import
+                </h5>
+                <div class="table-responsive">
 
                 <table
                     class="table table-hover align-middle"
@@ -157,11 +135,22 @@
                 </table>
 
             </div>
+    </div>
+
+</div>
+
+            </div>
+            </div>
+            </div>
 
         </div>
 
-    </div>
 
+    </div>
+    </div>
+</div>
+    </div>
+</div>
 </div>
 
 

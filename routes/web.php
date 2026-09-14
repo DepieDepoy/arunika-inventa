@@ -23,6 +23,7 @@ require __DIR__.'/dashboard/category.php';
 require __DIR__.'/dashboard/subcategory.php';
 require __DIR__.'/dashboard/vendor.php';
 require __DIR__.'/dashboard/asset.php';
+require __DIR__.'/dashboard/maintenance.php';
 
 
 Route::get('/dashboard/import-history',[ImportHistoryController::class, 'index'])->name('import.history');

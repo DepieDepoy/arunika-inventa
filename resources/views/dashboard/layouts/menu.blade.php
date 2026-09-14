@@ -539,6 +539,241 @@
 
                 @endif
 
+                {{-- =================================================
+                MAINTENANCE
+                ================================================== --}}
+                @if(
+                auth()->user()->hasPermission('maintenance.request.view') ||
+                auth()->user()->hasPermission('maintenance.request.create') ||
+                auth()->user()->hasPermission('maintenance.history.view')
+                )
+
+                
+                @php
+                    $maintenanceActive =
+                        request()->routeIs('maintenance.requests.*') ||
+                        request()->routeIs('my-assets.*') ||
+                        request()->routeIs('maintenance.history');
+                @endphp
+
+                <li class="nav-item">
+
+                    <a
+                        class="nav-link {{ $maintenanceActive ? 'active' : '' }}"
+                        data-bs-toggle="collapse"
+                        href="#sidebar-maintenance"
+                        role="button"
+                        aria-expanded="{{ $maintenanceActive ? 'true' : 'false' }}"
+                        aria-controls="sidebar-maintenance"
+                    >
+
+                        <i class="icon">
+
+                            <svg
+                                class="icon-20"
+                                width="20"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+
+                                <path
+                                    d="M21.73 18.27L16.56 13.1C17.09 12.19 17.39 11.12 17.39 9.98C17.39 6.67 14.72 4 11.41 4C10.34 4 9.33 4.28 8.46 4.77L12.12 8.43L10.43 10.12L6.77 6.46C6.28 7.33 6 8.34 6 9.41C6 12.72 8.67 15.39 11.98 15.39C13.12 15.39 14.19 15.09 15.1 14.56L20.27 19.73C20.66 20.12 21.29 20.12 21.68 19.73C22.07 19.34 22.07 18.66 21.73 18.27Z"
+                                    fill="currentColor"
+                                />
+
+                                <path
+                                    opacity="0.4"
+                                    d="M5.5 18.5C5.5 19.3284 4.82843 20 4 20C3.17157 20 2.5 19.3284 2.5 18.5C2.5 17.6716 3.17157 17 4 17C4.82843 17 5.5 17.6716 5.5 18.5Z"
+                                    fill="currentColor"
+                                />
+
+                            </svg>
+
+                        </i>
+
+                        <span class="item-name">
+                            Maintenance
+                        </span>
+
+                        <i class="right-icon">
+
+                            <svg
+                                class="icon-18"
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="18"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M9 5l7 7-7 7"
+                                />
+
+                            </svg>
+
+                        </i>
+
+                    </a>
+
+
+                    <ul
+                        class="sub-nav collapse {{ $maintenanceActive ? 'show' : '' }}"
+                        id="sidebar-maintenance"
+                        data-bs-parent="#sidebar-menu"
+                    >
+
+
+                        {{-- =================================================
+                            MAINTENANCE REQUESTS
+                        ================================================== --}}
+                        @if(auth()->user()->hasPermission('maintenance.request.view'))
+
+                            <li class="nav-item">
+
+                                <a
+                                    class="nav-link {{ request()->routeIs('maintenance.requests.*') ? 'active' : '' }}"
+                                    href="{{ route('maintenance.requests.index') }}"
+                                >
+
+                                    <i class="icon">
+
+                                        <svg
+                                            class="icon-10"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            width="10"
+                                            viewBox="0 0 24 24"
+                                            fill="currentColor"
+                                        >
+
+                                            <circle
+                                                cx="12"
+                                                cy="12"
+                                                r="8"
+                                                fill="currentColor"
+                                            />
+
+                                        </svg>
+
+                                    </i>
+
+                                    <i class="sidenav-mini-icon">R</i>
+
+                                    <span class="item-name">
+                                        Maintenance Requests
+                                    </span>
+
+                                </a>
+
+                            </li>
+
+                        @endif
+
+
+                        {{-- =================================================
+                            MY ASSETS
+                        ================================================== --}}
+                        @if(auth()->user()->hasPermission('maintenance.request.create'))
+
+                            <li class="nav-item">
+
+                                <a
+                                    class="nav-link {{ request()->routeIs('my-assets.*') ? 'active' : '' }}"
+                                    href="{{ route('my-assets.index') }}"
+                                >
+
+                                    <i class="icon">
+
+                                        <svg
+                                            class="icon-10"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            width="10"
+                                            viewBox="0 0 24 24"
+                                            fill="currentColor"
+                                        >
+
+                                            <circle
+                                                cx="12"
+                                                cy="12"
+                                                r="8"
+                                                fill="currentColor"
+                                            />
+
+                                        </svg>
+
+                                    </i>
+
+                                    <i class="sidenav-mini-icon">A</i>
+
+                                    <span class="item-name">
+                                        My Assets
+                                    </span>
+
+                                </a>
+
+                            </li>
+
+                        @endif
+
+
+                        {{-- =================================================
+                            MAINTENANCE HISTORY
+                        ================================================== --}}
+                        @if(auth()->user()->hasPermission('maintenance.history.view'))
+
+                            <li class="nav-item">
+
+                                <a
+                                    class="nav-link {{ request()->routeIs('maintenance.history') ? 'active' : '' }}"
+                                    href="{{ route('maintenance.history') }}"
+                                >
+
+                                    <i class="icon">
+
+                                        <svg
+                                            class="icon-10"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            width="10"
+                                            viewBox="0 0 24 24"
+                                            fill="currentColor"
+                                        >
+
+                                            <circle
+                                                cx="12"
+                                                cy="12"
+                                                r="8"
+                                                fill="currentColor"
+                                            />
+
+                                        </svg>
+
+                                    </i>
+
+                                    <i class="sidenav-mini-icon">H</i>
+
+                                    <span class="item-name">
+                                        Maintenance History
+                                    </span>
+
+                                </a>
+
+                            </li>
+
+                        @endif
+
+
+                    </ul>
+
+                </li>
+                
+
+                @endif
+
+
 
                 {{-- =================================================
                      HISTORY
@@ -765,7 +1000,7 @@
 
 
                 {{-- =================================================
-                     USERS
+                    USERS
                 ================================================== --}}
                 @if(auth()->user()->hasPermission('user.view'))
 
@@ -776,26 +1011,26 @@
                     <li class="nav-item">
 
                         <a class="nav-link {{ $userActive ? 'active' : '' }}"
-                           data-bs-toggle="collapse"
-                           href="#sidebar-users"
-                           role="button"
-                           aria-expanded="{{ $userActive ? 'true' : 'false' }}"
-                           aria-controls="sidebar-users">
+                        data-bs-toggle="collapse"
+                        href="#sidebar-users"
+                        role="button"
+                        aria-expanded="{{ $userActive ? 'true' : 'false' }}"
+                        aria-controls="sidebar-users">
 
                             <i class="icon">
 
                                 <svg class="icon-20"
-                                     width="20"
-                                     viewBox="0 0 24 24"
-                                     fill="none"
-                                     xmlns="http://www.w3.org/2000/svg">
+                                    width="20"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
 
                                     <path d="M11.9488 14.54C8.49884 14.54 5.58789 15.1038 5.58789 17.2795C5.58789 19.4562 8.51765 20.0001 11.9488 20.0001C15.3988 20.0001 18.3098 19.4364 18.3098 17.2606C18.3098 15.084 15.38 14.54 11.9488 14.54Z"
-                                          fill="currentColor"/>
+                                        fill="currentColor"/>
 
                                     <path opacity="0.4"
-                                          d="M11.949 12.467C14.2851 12.467 16.1583 10.5831 16.1583 8.23351C16.1583 5.88306 14.2851 4 11.949 4C9.61293 4 7.73975 5.88306 7.73975 8.23351C7.73975 10.5831 9.61293 12.467 11.949 12.467Z"
-                                          fill="currentColor"/>
+                                        d="M11.949 12.467C14.2851 12.467 16.1583 10.5831 16.1583 8.23351C16.1583 5.88306 14.2851 4 11.949 4C9.61293 4 7.73975 5.88306 7.73975 8.23351C7.73975 10.5831 9.61293 12.467 11.949 12.467Z"
+                                        fill="currentColor"/>
 
                                 </svg>
 
@@ -806,16 +1041,16 @@
                             <i class="right-icon">
 
                                 <svg class="icon-18"
-                                     xmlns="http://www.w3.org/2000/svg"
-                                     width="18"
-                                     fill="none"
-                                     viewBox="0 0 24 24"
-                                     stroke="currentColor">
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="18"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor">
 
                                     <path stroke-linecap="round"
-                                          stroke-linejoin="round"
-                                          stroke-width="2"
-                                          d="M9 5l7 7-7 7"/>
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M9 5l7 7-7 7"/>
 
                                 </svg>
 
@@ -830,65 +1065,73 @@
 
 
                             {{-- USERS VIEW --}}
-                            <li class="nav-item">
+                            @if(auth()->user()->hasPermission('user.view'))
 
-                                <a class="nav-link {{ request()->routeIs('users.index') ? 'active' : '' }}"
-                                   href="{{ route('users.index') }}">
+                                <li class="nav-item">
 
-                                    <i class="icon">
+                                    <a class="nav-link {{ request()->routeIs('users.index') ? 'active' : '' }}"
+                                    href="{{ route('users.index') }}">
 
-                                        <svg class="icon-10"
-                                             xmlns="http://www.w3.org/2000/svg"
-                                             width="10"
-                                             viewBox="0 0 24 24"
-                                             fill="currentColor">
+                                        <i class="icon">
 
-                                            <circle cx="12"
-                                                    cy="12"
-                                                    r="8"
-                                                    fill="currentColor"/>
+                                            <svg class="icon-10"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                width="10"
+                                                viewBox="0 0 24 24"
+                                                fill="currentColor">
 
-                                        </svg>
+                                                <circle cx="12"
+                                                        cy="12"
+                                                        r="8"
+                                                        fill="currentColor"/>
 
-                                    </i>
+                                            </svg>
 
-                                    <i class="sidenav-mini-icon">D</i>
+                                        </i>
 
-                                    <span class="item-name">View</span>
+                                        <i class="sidenav-mini-icon">D</i>
 
-                                </a>
+                                        <span class="item-name">View</span>
 
-                            </li>
+                                    </a>
+
+                                </li>
+
+                            @endif
 
 
                             {{-- USERS IMPORT --}}
-                            <li class="nav-item">
+                            @if(auth()->user()->hasPermission('user.import'))
 
-                                <a class="nav-link {{ request()->routeIs('users.import*') ? 'active' : '' }}"
-                                   href="{{ route('users.import') }}">
+                                <li class="nav-item">
 
-                                    <i class="icon">
+                                    <a class="nav-link {{ request()->routeIs('users.import*') ? 'active' : '' }}"
+                                    href="{{ route('users.import') }}">
 
-                                        <svg class="icon-10"
-                                             xmlns="http://www.w3.org/2000/svg"
-                                             width="10"
-                                             viewBox="0 0 24 24"
-                                             fill="currentColor">
+                                        <i class="icon">
 
-                                            <circle cx="12"
-                                                    cy="12"
-                                                    r="8"
-                                                    fill="currentColor"/>
+                                            <svg class="icon-10"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                width="10"
+                                                viewBox="0 0 24 24"
+                                                fill="currentColor">
 
-                                        </svg>
+                                                <circle cx="12"
+                                                        cy="12"
+                                                        r="8"
+                                                        fill="currentColor"/>
 
-                                    </i>
+                                            </svg>
 
-                                    <span class="item-name">Import</span>
+                                        </i>
 
-                                </a>
+                                        <span class="item-name">Import</span>
 
-                            </li>
+                                    </a>
+
+                                </li>
+
+                            @endif
 
                         </ul>
 

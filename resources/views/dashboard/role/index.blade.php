@@ -33,13 +33,14 @@
         </div>
 
         <div class="d-flex gap-2">
-
+            @if(auth()->user()->hasPermission('role.view'))
             <a href="{{ route('roles.export') }}"
             class="btn btn-success">
                 <i class="fa-solid fa-file-excel"></i>
                 Export Excel
             </a>
-
+            @endif
+            @if(auth()->user()->hasPermission('role.create'))
             <button
                 class="btn btn-primary"
                 data-bs-toggle="modal"
@@ -47,6 +48,7 @@
                 <i class="fa-solid fa-plus"></i>
                 Add Role
             </button>
+            @endif
         </div>
     </div>
     <div class="card-body">
@@ -193,24 +195,6 @@ $(function() {
     });
 });
 
-$(document).on('shown.bs.dropdown', '.dropdown', function () {
-
-    let menu = $(this).find('.dropdown-menu');
-
-    $('body').append(menu.detach());
-
-    let btn = $(this).find('[data-bs-toggle="dropdown"]');
-
-    let pos = btn.offset();
-
-    menu.css({
-        position: 'absolute',
-        top: pos.top + btn.outerHeight(),
-        left: pos.left - menu.outerWidth() + btn.outerWidth(),
-        display: 'block',
-        zIndex: 999999
-    });
-});
 //submit
 $('#formAddRole').submit(function(e){
 
