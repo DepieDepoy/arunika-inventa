@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
-use App\Models\Subcategory;
+use App\Models\SubCategory;
 use App\Models\User;
 use App\Models\Category;
 use App\Models\Role;
