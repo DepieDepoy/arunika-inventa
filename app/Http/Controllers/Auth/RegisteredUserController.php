@@ -16,10 +16,8 @@ use Illuminate\Support\Str;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-//use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -48,8 +46,7 @@ class RegisteredUserController extends Controller
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'password_confirmation' => ['required'],
-        ],
-        [
+        ], [
             'name.required' => 'Full name is required.',
             'nik.required' => 'ID Person is required.',
             'company_name.required' => 'Company name is required.',
@@ -65,10 +62,18 @@ class RegisteredUserController extends Controller
             'password_confirmation.required' => 'Please confirm your password.',
         ]);
 
-        // Generate company code
-        $companyCode = CompanyHelper::generateCode($request->company_name);
+        // =====================================================
+        // GENERATE COMPANY CODE
+        // =====================================================
 
-        // Cek apakah perusahaan sudah ada
+        $companyCode = CompanyHelper::generateCode(
+            $request->company_name
+        );
+
+        // =====================================================
+        // CEK APAKAH PERUSAHAAN SUDAH TERDAFTAR
+        // =====================================================
+
         if (Company::where('company_code', $companyCode)->exists()) {
 
             return back()
@@ -84,7 +89,7 @@ class RegisteredUserController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | Ambil Plan FREE
+            | AMBIL PLAN FREE
             |--------------------------------------------------------------------------
             */
 
@@ -100,7 +105,23 @@ class RegisteredUserController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | Simpan perusahaan
+            | TANGGAL SUBSCRIPTION FREE
+            |--------------------------------------------------------------------------
+            |
+            | trial_days diambil dari tabel plans.
+            | Jadi kalau nanti FREE diubah dari 14 hari menjadi 7/30 hari,
+            | controller tidak perlu diubah.
+            |
+            */
+
+            $startDate = today();
+
+            $endDate = $startDate->copy()
+                ->addDays($freePlan->trial_days);
+
+            /*
+            |--------------------------------------------------------------------------
+            | SIMPAN PERUSAHAAN
             |--------------------------------------------------------------------------
             */
 
@@ -109,30 +130,36 @@ class RegisteredUserController extends Controller
                 'company_code' => $companyCode,
                 'status'       => 1,
 
-                // Tetap isi data lama untuk sementara
+                // Snapshot subscription aktif
                 'subscription_plan'   => $freePlan->plan_code,
                 'subscription_status' => 'active',
-                'started_at'          => now(),
-                'expired_at'          => now()->addDays($freePlan->duration_days),
+                'started_at'          => $startDate,
+                'expired_at'          => $endDate,
             ]);
 
             /*
             |--------------------------------------------------------------------------
-            | Buat Subscription FREE Trial
+            | BUAT SUBSCRIPTION FREE TRIAL
             |--------------------------------------------------------------------------
             */
 
             Subscription::create([
                 'company_id' => $company->id,
-                'plan_id'    => $freePlan->id,
-                'start_date' => today(),
-                'end_date'   => today()->addDays($freePlan->duration_days),
-                'status'     => 'active',
+                'plan_id' => $freePlan->id,
+
+                'billing_cycle' => 'trial',
+                'price' => 0,
+
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+
+                'status' => 'active',
+                'payment_status' => 'paid',
             ]);
 
             /*
             |--------------------------------------------------------------------------
-            | Generate default role
+            | GENERATE DEFAULT ROLE
             |--------------------------------------------------------------------------
             */
 
@@ -147,16 +174,15 @@ class RegisteredUserController extends Controller
 
                 Role::create([
                     'company_id' => $company->id,
-                    'role_name'  => $role,
-                    'role_code'  => Str::slug($role, '_'),
-                    'status'     => 1,
+                    'role_name' => $role,
+                    'role_code' => Str::slug($role, '_'),
+                    'status' => 1,
                 ]);
-
             }
 
             /*
             |--------------------------------------------------------------------------
-            | Ambil role Administrator
+            | AMBIL ROLE ADMINISTRATOR
             |--------------------------------------------------------------------------
             */
 
@@ -164,27 +190,33 @@ class RegisteredUserController extends Controller
                 ->where('role_code', 'administrator')
                 ->first();
 
+            if (!$adminRole) {
+                throw new \Exception(
+                    'Role Administrator gagal dibuat.'
+                );
+            }
+
             /*
             |--------------------------------------------------------------------------
-            | Simpan user Administrator
+            | SIMPAN USER ADMINISTRATOR
             |--------------------------------------------------------------------------
             */
 
             $user = User::create([
                 'company_id' => $company->id,
-                'role_id'    => $adminRole->id,
+                'role_id' => $adminRole->id,
 
-                'name'       => $request->name,
-                'nik'        => $request->nik,
-                'phone'      => $request->phone,
-                'email'      => $request->email,
-                'password'   => Hash::make($request->password),
-                'status'     => 1,
+                'name' => $request->name,
+                'nik' => $request->nik,
+                'phone' => $request->phone,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'status' => 1,
             ]);
 
             /*
             |--------------------------------------------------------------------------
-            | Administrator mendapatkan semua permission
+            | ADMINISTRATOR MENDAPATKAN SEMUA PERMISSION
             |--------------------------------------------------------------------------
             */
 
@@ -192,13 +224,22 @@ class RegisteredUserController extends Controller
                 Permission::pluck('id')
             );
 
+            /*
+            |--------------------------------------------------------------------------
+            | COMMIT TRANSACTION
+            |--------------------------------------------------------------------------
+            */
+
             DB::commit();
 
             event(new Registered($user));
 
             return redirect()
                 ->route('login')
-                ->with('success', 'Registration successful. Please login.');
+                ->with(
+                    'success',
+                    'Registration successful. Please login.'
+                );
 
         } catch (\Exception $e) {
 

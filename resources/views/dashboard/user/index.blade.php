@@ -665,9 +665,7 @@ $(function () {
 
         e.preventDefault();
 
-
         let form = this;
-
 
         if (!form.checkValidity()) {
 
@@ -676,7 +674,6 @@ $(function () {
             return false;
 
         }
-
 
         let formData = new FormData(form);
 
@@ -714,7 +711,8 @@ $(function () {
 
                 'Accept': 'application/json',
 
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With':
+                    'XMLHttpRequest'
 
             },
 
@@ -749,7 +747,7 @@ $(function () {
                                         type="text"
                                         id="tempPassword"
                                         class="form-control"
-                                        value="${response.password ?? ''}"
+                                        value="${escapeHtml(response.password ?? '')}"
                                         readonly>
 
                                     <button
@@ -771,14 +769,17 @@ $(function () {
 
                         `,
 
-                        confirmButtonText: 'OK'
+                        confirmButtonText:
+                            'OK'
 
                     });
 
 
                     let modal =
                         bootstrap.Modal.getInstance(
-                            document.getElementById('modalAddUser')
+                            document.getElementById(
+                                'modalAddUser'
+                            )
                         );
 
 
@@ -795,7 +796,10 @@ $(function () {
                     $('#table-users')
                         .DataTable()
                         .ajax
-                        .reload(null, false);
+                        .reload(
+                            null,
+                            false
+                        );
 
 
                 } else {
@@ -820,12 +824,10 @@ $(function () {
 
             error: function (xhr) {
 
-
                 console.log(
                     'ADD USER ERROR:',
                     xhr
                 );
-
 
                 showAjaxError(
                     xhr,
@@ -837,13 +839,18 @@ $(function () {
 
             complete: function () {
 
-                button.prop('disabled', false);
+                button.prop(
+                    'disabled',
+                    false
+                );
 
-                button.find('.btn-save-text')
-                    .removeClass('d-none');
+                button.find(
+                    '.btn-save-text'
+                ).removeClass('d-none');
 
-                button.find('.btn-save-loading')
-                    .addClass('d-none');
+                button.find(
+                    '.btn-save-loading'
+                ).addClass('d-none');
 
             }
 
@@ -862,17 +869,19 @@ $(function () {
         function () {
 
 
-            let id = $(this).data('id');
+            let id =
+                $(this).data('id');
 
 
             let url =
                 "{{ route('users.edit', ['id' => ':id']) }}";
 
 
-            url = url.replace(
-                ':id',
-                id
-            );
+            url =
+                url.replace(
+                    ':id',
+                    id
+                );
 
 
             $.ajax({
@@ -883,21 +892,17 @@ $(function () {
 
                 headers: {
 
-                    'Accept': 'application/json',
+                    'Accept':
+                        'application/json',
 
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'X-Requested-With':
+                        'XMLHttpRequest'
 
                 },
 
 
                 success: function (response) {
 
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | BASIC DATA
-                    |--------------------------------------------------------------------------
-                    */
 
                     $('#edit_id')
                         .val(response.id);
@@ -918,19 +923,17 @@ $(function () {
                         .val(response.status);
 
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | ROLE
-                    |--------------------------------------------------------------------------
-                    */
-
                     if (
                         response.role_id !== undefined &&
                         response.role_id !== null
                     ) {
 
                         $('#edit_role')
-                            .val(String(response.role_id));
+                            .val(
+                                String(
+                                    response.role_id
+                                )
+                            );
 
                     } else {
 
@@ -943,12 +946,6 @@ $(function () {
 
                     }
 
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | SHOW MODAL
-                    |--------------------------------------------------------------------------
-                    */
 
                     let modal =
                         new bootstrap.Modal(
@@ -969,7 +966,6 @@ $(function () {
                         'GET USER ERROR:',
                         xhr
                     );
-
 
                     showAjaxError(
                         xhr,
@@ -1013,38 +1009,44 @@ $(function () {
             $('#btnUpdateUser');
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | DISABLE BUTTON
-        |--------------------------------------------------------------------------
-        */
+        button.prop(
+            'disabled',
+            true
+        );
 
-        button.prop('disabled', true);
+        button.find(
+            '.btn-update-text'
+        ).addClass('d-none');
 
-        button.find('.btn-update-text')
-            .addClass('d-none');
-
-        button.find('.btn-update-loading')
-            .removeClass('d-none');
+        button.find(
+            '.btn-update-loading'
+        ).removeClass('d-none');
 
 
         $.ajax({
 
-            url: "{{ route('users.update') }}",
+            url:
+                "{{ route('users.update') }}",
 
-            type: "POST",
+            type:
+                "POST",
 
-            data: formData,
+            data:
+                formData,
 
-            processData: false,
+            processData:
+                false,
 
-            contentType: false,
+            contentType:
+                false,
 
             headers: {
 
-                'Accept': 'application/json',
+                'Accept':
+                    'application/json',
 
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With':
+                    'XMLHttpRequest'
 
             },
 
@@ -1057,15 +1059,20 @@ $(function () {
 
                     Swal.fire({
 
-                        icon: 'success',
+                        icon:
+                            'success',
 
-                        title: 'Berhasil',
+                        title:
+                            'Berhasil',
 
-                        text: 'User berhasil diupdate',
+                        text:
+                            'User berhasil diupdate',
 
-                        timer: 1500,
+                        timer:
+                            1500,
 
-                        showConfirmButton: false
+                        showConfirmButton:
+                            false
 
                     });
 
@@ -1088,7 +1095,10 @@ $(function () {
                     $('#table-users')
                         .DataTable()
                         .ajax
-                        .reload(null, false);
+                        .reload(
+                            null,
+                            false
+                        );
 
 
                 } else {
@@ -1096,9 +1106,11 @@ $(function () {
 
                     Swal.fire({
 
-                        icon: 'error',
+                        icon:
+                            'error',
 
-                        title: 'Gagal',
+                        title:
+                            'Gagal',
 
                         text:
                             response.message ||
@@ -1113,12 +1125,10 @@ $(function () {
 
             error: function (xhr) {
 
-
                 console.log(
                     'UPDATE USER ERROR:',
                     xhr
                 );
-
 
                 showAjaxError(
                     xhr,
@@ -1130,13 +1140,18 @@ $(function () {
 
             complete: function () {
 
-                button.prop('disabled', false);
+                button.prop(
+                    'disabled',
+                    false
+                );
 
-                button.find('.btn-update-text')
-                    .removeClass('d-none');
+                button.find(
+                    '.btn-update-text'
+                ).removeClass('d-none');
 
-                button.find('.btn-update-loading')
-                    .addClass('d-none');
+                button.find(
+                    '.btn-update-loading'
+                ).addClass('d-none');
 
             }
 
@@ -1172,14 +1187,17 @@ $(function () {
 
             Swal.fire({
 
-                title: 'Hapus Data?',
+                title:
+                    'Hapus Data?',
 
                 text:
                     'Data yang sudah dihapus tidak bisa dikembalikan!',
 
-                icon: 'warning',
+                icon:
+                    'warning',
 
-                showCancelButton: true,
+                showCancelButton:
+                    true,
 
                 confirmButtonText:
                     'Ya, Hapus!',
@@ -1199,13 +1217,16 @@ $(function () {
 
                 $.ajax({
 
-                    url: url,
+                    url:
+                        url,
 
-                    type: 'DELETE',
+                    type:
+                        'DELETE',
 
                     headers: {
 
-                        'Accept': 'application/json',
+                        'Accept':
+                            'application/json',
 
                         'X-Requested-With':
                             'XMLHttpRequest'
@@ -1221,48 +1242,50 @@ $(function () {
                     },
 
 
-                    success: function (response) {
+                    success:
+                        function (response) {
 
 
-                        Swal.fire({
+                            Swal.fire({
 
-                            icon: 'success',
+                                icon:
+                                    'success',
 
-                            title: 'Berhasil',
+                                title:
+                                    'Berhasil',
 
-                            text:
-                                response.message ||
-                                'User berhasil dihapus.'
+                                text:
+                                    response.message ||
+                                    'User berhasil dihapus.'
 
-                        });
+                            });
 
 
-                        $('#table-users')
-                            .DataTable()
-                            .ajax
-                            .reload(
-                                null,
-                                false
+                            $('#table-users')
+                                .DataTable()
+                                .ajax
+                                .reload(
+                                    null,
+                                    false
+                                );
+
+                        },
+
+
+                    error:
+                        function (xhr) {
+
+                            console.log(
+                                'DELETE USER ERROR:',
+                                xhr
                             );
 
-                    },
+                            showAjaxError(
+                                xhr,
+                                'Data user gagal dihapus.'
+                            );
 
-
-                    error: function (xhr) {
-
-
-                        console.log(
-                            'DELETE USER ERROR:',
-                            xhr
-                        );
-
-
-                        showAjaxError(
-                            xhr,
-                            'Data user gagal dihapus.'
-                        );
-
-                    }
+                        }
 
                 });
 
@@ -1314,12 +1337,6 @@ function showAjaxError(
     defaultMessage = 'Terjadi kesalahan.'
 ) {
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | DEFAULT
-    |--------------------------------------------------------------------------
-    */
 
     let title =
         'Gagal';
@@ -1422,7 +1439,7 @@ function showAjaxError(
 
     /*
     |--------------------------------------------------------------------------
-    | PARSE RESPONSE JSON
+    | RESPONSE JSON
     |--------------------------------------------------------------------------
     */
 
@@ -1432,7 +1449,7 @@ function showAjaxError(
 
     /*
     |--------------------------------------------------------------------------
-    | VALIDATION ERRORS
+    | VALIDATION / BUSINESS ERRORS
     |--------------------------------------------------------------------------
     */
 
@@ -1457,26 +1474,42 @@ function showAjaxError(
                     Array.isArray(value)
                 ) {
 
+
                     value.forEach(
                         function (error) {
 
-                            errors.push(
-                                error
-                            );
+                            if (
+                                error !== null &&
+                                error !== undefined &&
+                                String(error).trim() !== ''
+                            ) {
+
+                                errors.push(
+                                    String(error)
+                                );
+
+                            }
 
                         }
                     );
 
                 }
 
+
                 else if (
-                    typeof value ===
-                    'string'
+                    typeof value === 'string'
                 ) {
 
-                    errors.push(
-                        value
-                    );
+
+                    if (
+                        value.trim() !== ''
+                    ) {
+
+                        errors.push(
+                            value
+                        );
+
+                    }
 
                 }
 
@@ -1489,6 +1522,86 @@ function showAjaxError(
             message =
                 errors.join('<br>');
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | KHUSUS DUPLICATE EMAIL
+            |--------------------------------------------------------------------------
+            |
+            | Hanya jika Laravel benar-benar mengirim
+            | errors.email.
+            |
+            */
+
+            if (
+                response.errors.email &&
+                Array.isArray(
+                    response.errors.email
+                )
+            ) {
+
+                let emailErrors =
+                    response.errors.email.join(' ');
+
+                if (
+                    emailErrors
+                        .toLowerCase()
+                        .includes('sudah terdaftar')
+                ) {
+
+                    title =
+                        'Email Sudah Terdaftar';
+
+                }
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | KHUSUS DUPLICATE PHONE
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                response.errors.phone &&
+                Array.isArray(
+                    response.errors.phone
+                )
+            ) {
+
+                let phoneErrors =
+                    response.errors.phone.join(' ');
+
+                if (
+                    phoneErrors
+                        .toLowerCase()
+                        .includes('sudah terdaftar')
+                ) {
+
+                    title =
+                        'Phone Sudah Terdaftar';
+
+                }
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | PLAN LIMIT
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                response.errors.plan_limit
+            ) {
+
+                title =
+                    'Batas Paket Tercapai';
+
+            }
+
         }
 
     }
@@ -1496,7 +1609,7 @@ function showAjaxError(
 
     /*
     |--------------------------------------------------------------------------
-    | SERVER MESSAGE
+    | NORMAL SERVER MESSAGE
     |--------------------------------------------------------------------------
     */
 
@@ -1504,12 +1617,6 @@ function showAjaxError(
         response &&
         response.message
     ) {
-
-        /*
-         * Jangan menampilkan SQL mentah.
-         * Kalau message dari server normal,
-         * gunakan message tersebut.
-         */
 
         message =
             response.message;
@@ -1519,51 +1626,59 @@ function showAjaxError(
 
     /*
     |--------------------------------------------------------------------------
-    | SPECIAL DUPLICATE EMAIL DETECTION
-    |--------------------------------------------------------------------------
-    */
-
-    let rawResponse =
-        xhr.responseText || '';
-
-
-    if (
-        rawResponse.toLowerCase().includes(
-            'duplicate'
-        ) &&
-        rawResponse.toLowerCase().includes(
-            'email'
-        )
-    ) {
-
-        title =
-            'Email Sudah Terdaftar';
-
-        message =
-            'Email tersebut sudah digunakan oleh user lain.';
-
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | SHOW SWEETALERT
+    | SWEETALERT
     |--------------------------------------------------------------------------
     */
 
     Swal.fire({
 
-        icon: 'error',
+        icon:
+            'error',
 
-        title: title,
+        title:
+            title,
 
-        html: message,
+        html:
+            message,
 
-        allowOutsideClick: false,
+        allowOutsideClick:
+            false,
 
-        confirmButtonText: 'OK'
+        confirmButtonText:
+            'OK'
 
     });
+
+}
+
+
+/* =========================================================
+   ESCAPE HTML
+========================================================= */
+
+function escapeHtml(value) {
+
+    return String(value ?? '')
+        .replace(
+            /&/g,
+            '&amp;'
+        )
+        .replace(
+            /</g,
+            '&lt;'
+        )
+        .replace(
+            />/g,
+            '&gt;'
+        )
+        .replace(
+            /"/g,
+            '&quot;'
+        )
+        .replace(
+            /'/g,
+            '&#039;'
+        );
 
 }
 
@@ -1595,14 +1710,17 @@ function copyPassword() {
 
     Swal.fire({
 
-        icon: 'success',
+        icon:
+            'success',
 
         title:
             'Password berhasil disalin',
 
-        timer: 1000,
+        timer:
+            1000,
 
-        showConfirmButton: false
+        showConfirmButton:
+            false
 
     });
 

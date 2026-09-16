@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Dashboard;
+
 use App\Http\Controllers\Controller;
 use App\Models\Role;
 use Illuminate\Http\Request;
@@ -21,6 +22,7 @@ class RoleController extends Controller
     {
         return view('dashboard.role.index');
     }
+
 
     public function store(Request $request)
     {
@@ -69,23 +71,34 @@ class RoleController extends Controller
             'status'     => $request->status,
             'created_by' => Auth::id(),
         ]);
+
         return response()->json([
             'success' => true
         ]);
     }
 
+
     public function data()
     {
-        $query = Role::where('company_id', Auth::user()->company_id)
+        $query = Role::where(
+                'company_id',
+                Auth::user()->company_id
+            )
             ->latest();
+
         return DataTables::of($query)
             ->addIndexColumn()
 
             ->editColumn('role_name', function ($row) {
+
                 return '
                     <div>
-                        <div class="fw-bold text-dark">'.$row->role_name.'</div>
-                        <!--<small class="text-muted">'.$row->role_code.'</small>-->
+                        <div class="fw-bold text-dark">
+                            ' . $row->role_name . '
+                        </div>
+                        <!--<small class="text-muted">
+                            ' . $row->role_code . '
+                        </small>-->
                     </div>
                 ';
             })
@@ -93,6 +106,7 @@ class RoleController extends Controller
             ->editColumn('status', function ($row) {
 
                 if ($row->status == 1) {
+
                     return '
                         <span class="badge rounded-pill bg-success-subtle text-success px-3 py-2">
                             <i class="fa-solid fa-circle-check me-1 text-success"></i>
@@ -109,58 +123,82 @@ class RoleController extends Controller
                 ';
             })
 
-           ->addColumn('action', function ($row) {
+            ->addColumn('action', function ($row) {
 
                 /** @var User $user */
                 $user = Auth::user();
+
+                /*
+                |--------------------------------------------------------------------------
+                | Encrypt ID
+                |--------------------------------------------------------------------------
+                */
+
+                $encryptedId = encryptId($row->id);
 
                 $action = '
                     <div class="d-flex justify-content-center align-items-center gap-1">
                 ';
 
+
                 // =====================================================
                 // MANAGE PERMISSION
                 // =====================================================
+
                 if ($user->hasPermission('role.permission')) {
 
                     $action .= '
-                        <a href="' . route('roles.permission', $row->id) . '"
+                        <a href="' . route(
+                            'roles.permission',
+                            $encryptedId
+                        ) . '"
                         class="btn-action"
                         title="Permission">
+
                             <i class="fa-solid fa-key"></i>
+
                         </a>
                     ';
                 }
 
+
                 // =====================================================
                 // EDIT
                 // =====================================================
+
                 if ($user->hasPermission('role.edit')) {
 
                     $action .= '
                         <a href="javascript:void(0)"
                         class="btn-action btn-edit"
-                        data-id="' . $row->id . '"
+                        data-id="' . $encryptedId . '"
                         title="Edit">
+
                             <i class="fa-solid fa-pen-to-square"></i>
+
                         </a>
                     ';
                 }
 
+
                 // =====================================================
                 // DELETE
                 // =====================================================
+
                 if ($user->hasPermission('role.delete')) {
 
                     $action .= '
                         <a href="javascript:void(0)"
                         class="btn-action btn-delete"
-                        data-id="' . $row->id . '"
+                        data-id="' . $encryptedId . '"
                         title="Delete">
+
                             <i class="fa-solid fa-trash"></i>
+
                         </a>
                     ';
                 }
+
 
                 $action .= '
                     </div>
@@ -178,167 +216,442 @@ class RoleController extends Controller
             ->make(true);
     }
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | EDIT
+    |--------------------------------------------------------------------------
+    */
+
     public function edit($id)
     {
-        $role = Role::findOrFail($id);
+        // Decode encrypted ID
+        $id = decryptId($id);
+
+        if (!$id) {
+            abort(404);
+        }
+
+        // Cari berdasarkan ID asli
+        $role = Role::where('company_id', Auth::user()->company_id)
+            ->where('id', $id)
+            ->firstOrFail();
 
         return response()->json($role);
     }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | UPDATE
+    |--------------------------------------------------------------------------
+    */
 
     public function update(Request $request)
     {
         $validator = Validator::make(
             $request->all(),
             [
-                'role_name'   => 'required',
-                'status' => 'required',
+                'role_name' => 'required',
+                'status'    => 'required',
             ]
         );
 
         if ($validator->fails()) {
+
             return response()->json([
                 'success' => false,
-                'errors' => $validator->errors()
+                'errors'  => $validator->errors()
             ], 422);
         }
 
-        $role = Role::findOrFail($request->id);
 
-        $role->role_name   = $request->role_name;
-        $role->status = $request->status;
+        // Decode encrypted ID
+        $id = decryptId($request->id);
+
+        if (!$id) {
+
+            return response()->json([
+                'success' => false,
+                'message' => 'ID Role tidak valid.'
+            ], 422);
+        }
+
+
+        // Cari menggunakan ID asli
+        $role = Role::where('company_id', Auth::user()->company_id)
+            ->where('id', $id)
+            ->firstOrFail();
+
+
+        $role->role_name = $request->role_name;
+        $role->status    = $request->status;
 
         $role->save();
+
 
         return response()->json([
             'success' => true
         ]);
     }
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | DELETE
+    |--------------------------------------------------------------------------
+    */
+
     public function destroy($id)
     {
-        $role = Role::where('company_id', Auth::user()->company_id)
+        // Decode encrypted ID
+        $id = decryptId($id);
+
+        if (!$id) {
+            abort(404);
+        }
+
+
+        $role = Role::where(
+                'company_id',
+                Auth::user()->company_id
+            )
             ->where('id', $id)
             ->firstOrFail();
 
+
         // Cek apakah role masih digunakan oleh user
         if ($role->users()->exists()) {
+
             return response()->json([
                 'success' => false,
                 'message' => 'Role tidak dapat dihapus karena masih digunakan oleh user.'
             ], 422);
         }
 
+
         $role->delete();
+
 
         return response()->json([
             'success' => true,
             'message' => 'Role berhasil dihapus.'
         ]);
     }
-    
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | EXPORT
+    |--------------------------------------------------------------------------
+    */
+
     public function export()
     {
-       $role = Role::select(
+        $role = Role::select(
             'roles.*',
             'companies.company_name'
         )
-        ->leftJoin('companies', 'companies.id', '=', 'roles.company_id')
+        ->leftJoin(
+            'companies',
+            'companies.id',
+            '=',
+            'roles.company_id'
+        )
         ->where(
             'roles.company_id',
             Auth::user()->company_id
         )
         ->get();
 
+
         $spreadsheet = new Spreadsheet();
+
         $sheet = $spreadsheet->getActiveSheet();
 
+
         // Header
-        $sheet->setCellValue('A1', 'Companies Name');
-        $sheet->setCellValue('B1', 'Role Name');
-        $sheet->setCellValue('C1', 'Role Code');
-        $sheet->setCellValue('D1', 'Status');
+        $sheet->setCellValue(
+            'A1',
+            'Companies Name'
+        );
 
-         // Styling Header
-        $sheet->getStyle('A1:E1')->getFont()->setBold(true);
+        $sheet->setCellValue(
+            'B1',
+            'Role Name'
+        );
 
-        foreach (range('A', 'E') as $column) {
+        $sheet->setCellValue(
+            'C1',
+            'Role Code'
+        );
+
+        $sheet->setCellValue(
+            'D1',
+            'Status'
+        );
+
+
+        // Styling Header
+        $sheet->getStyle('A1:D1')
+            ->getFont()
+            ->setBold(true);
+
+
+        foreach (range('A', 'D') as $column) {
+
             $sheet->getColumnDimension($column)
                 ->setAutoSize(true);
         }
-        
+
+
         $row = 2;
 
+
         foreach ($role as $items) {
-            if ($items->status == 1){$s = "Active";} else {$s = "Non Active";}
-            $sheet->setCellValue('A'.$row, $items->company_name);
-            $sheet->setCellValue('B'.$row, $items->role_name);
-            $sheet->setCellValue('C'.$row, $items->role_code);
-            $sheet->setCellValue('D'.$row, $s);
+
+            if ($items->status == 1) {
+                $s = "Active";
+            } else {
+                $s = "Non Active";
+            }
+
+
+            $sheet->setCellValue(
+                'A' . $row,
+                $items->company_name
+            );
+
+            $sheet->setCellValue(
+                'B' . $row,
+                $items->role_name
+            );
+
+            $sheet->setCellValue(
+                'C' . $row,
+                $items->role_code
+            );
+
+            $sheet->setCellValue(
+                'D' . $row,
+                $s
+            );
+
 
             $row++;
         }
 
+
         $writer = new Xlsx($spreadsheet);
 
-        $filename = 'Role_'.date('Ymd_His').'.xlsx';
+        $filename = 'Role_' . date('Ymd_His') . '.xlsx';
 
-        $temp_file = tempnam(sys_get_temp_dir(), 'users');
+        $temp_file = tempnam(
+            sys_get_temp_dir(),
+            'users'
+        );
+
 
         $writer->save($temp_file);
 
-        return response()->download(
-            $temp_file,
-            $filename
-        )->deleteFileAfterSend(true);
+
+        return response()
+            ->download(
+                $temp_file,
+                $filename
+            )
+            ->deleteFileAfterSend(true);
     }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | PERMISSION
+    |--------------------------------------------------------------------------
+    */
 
     public function permission($role)
     {
+        /*
+        |--------------------------------------------------------------------------
+        | $role dari URL adalah encrypted ID
+        |--------------------------------------------------------------------------
+        */
+
+        $id = decryptId($role);
+
+        if (!$id) {
+            abort(404);
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Cari Role berdasarkan ID asli
+        |--------------------------------------------------------------------------
+        */
+
+        $roleModel = Role::where(
+                'company_id',
+                Auth::user()->company_id
+            )
+            ->where('id', $id)
+            ->firstOrFail();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Ambil role_code
+        |--------------------------------------------------------------------------
+        */
+
+        $roleCode = $roleModel->role_code;
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Permissions
+        |--------------------------------------------------------------------------
+        */
+
         $permissions = DB::table('permissions')
             ->orderBy('permission_code')
             ->get();
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | Permission yang sudah dimiliki role
+        |--------------------------------------------------------------------------
+        */
+
         $rolePermissions = DB::table('role_permissions')
-            ->where('role_code', $role)
+            ->where('role_code', $roleCode)
             ->pluck('permission_id')
             ->toArray();
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | Group permission
+        |--------------------------------------------------------------------------
+        */
+
         $groupedPermissions = [];
+
 
         foreach ($permissions as $permission) {
 
-            $parts = explode('.', $permission->permission_code);
+            $parts = explode(
+                '.',
+                $permission->permission_code
+            );
 
             $menu = $parts[0];
+
             $action = $parts[1] ?? 'view';
 
             $groupedPermissions[$menu][$action] = $permission;
         }
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | Kirim roleCode ke view
+        |--------------------------------------------------------------------------
+        */
+
         return view(
             'dashboard.roles.permission',
             compact(
                 'role',
+                'roleCode',
                 'groupedPermissions',
                 'rolePermissions'
             )
         );
     }
 
-    public function savePermission(Request $request, $role)
-    {
+
+    /*
+    |--------------------------------------------------------------------------
+    | SAVE PERMISSION
+    |--------------------------------------------------------------------------
+    */
+
+    public function savePermission(
+        Request $request,
+        $role
+    ) {
+
+        /*
+        |--------------------------------------------------------------------------
+        | Decode encrypted ID
+        |--------------------------------------------------------------------------
+        */
+
+        $id = decryptId($role);
+
+        if (!$id) {
+
+            abort(404);
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Cari Role
+        |--------------------------------------------------------------------------
+        */
+
+        $roleModel = Role::where(
+                'company_id',
+                Auth::user()->company_id
+            )
+            ->where('id', $id)
+            ->firstOrFail();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Ambil role_code
+        |--------------------------------------------------------------------------
+        */
+
+        $roleCode = $roleModel->role_code;
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Hapus permission lama
+        |--------------------------------------------------------------------------
+        */
+
         DB::table('role_permissions')
-            ->where('role_code', $role)
+            ->where('role_code', $roleCode)
             ->delete();
 
-        foreach ($request->permissions ?? [] as $permissionId) {
-            DB::table('role_permissions')->insert([
-                'role_code' => $role,
-                'permission_id' => $permissionId,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Simpan permission baru
+        |--------------------------------------------------------------------------
+        */
+
+        foreach (
+            $request->permissions ?? []
+            as $permissionId
+        ) {
+
+            DB::table('role_permissions')
+                ->insert([
+                    'role_code'    => $roleCode,
+                    'permission_id' => $permissionId,
+                    'created_at'   => now(),
+                    'updated_at'   => now(),
+                ]);
         }
+
 
         return back()->with([
             'success' => true,

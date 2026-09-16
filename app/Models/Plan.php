@@ -11,8 +11,9 @@ class Plan extends Model
         'plan_code',
         'plan_name',
         'description',
-        'price',
-        'duration_days',
+        'price_monthly',
+        'price_yearly',
+        'trial_days',
         'max_users',
         'max_assets',
         'status',
@@ -21,7 +22,11 @@ class Plan extends Model
     protected function casts(): array
     {
         return [
-            'price' => 'decimal:2',
+            'price_monthly' => 'decimal:2',
+            'price_yearly' => 'decimal:2',
+            'trial_days' => 'integer',
+            'max_users' => 'integer',
+            'max_assets' => 'integer',
             'status' => 'integer',
         ];
     }
@@ -30,4 +35,11 @@ class Plan extends Model
     {
         return $this->hasMany(Subscription::class);
     }
+
+    public function paymentTransactions(): HasMany
+    {
+        return $this->hasMany(PaymentTransaction::class);
+    }
+
+
 }

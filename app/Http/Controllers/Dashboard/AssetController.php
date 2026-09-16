@@ -11,7 +11,10 @@ use App\Models\SubCategory;
 use App\Models\Vendor;
 use App\Models\User;
 use App\Models\Maintenance;
+use App\Models\ImportHistory;
+
 use App\Helpers\CodeHelper;
+use App\Helpers\PlanLimitHelper;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -25,12 +28,9 @@ use Yajra\DataTables\Facades\DataTables;
 use Carbon\Carbon;
 
 use App\Exports\AssetImportTemplateExport;
-use App\Imports\AssetImport;
-use App\Imports\AssetPreviewImport;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Services\ExcelPreviewService;
 use App\Jobs\ProcessAssetImport;
-use App\Models\ImportHistory;
 
 Carbon::setLocale('id');
 
@@ -659,6 +659,40 @@ class AssetController extends Controller
             ], 422);
         }
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | PLAN LIMIT - MANUAL ASSET
+        |--------------------------------------------------------------------------
+        |
+        | Cek dilakukan sebelum transaction dan sebelum file upload.
+        |
+        | Sumber limit:
+        | plans.max_assets
+        |
+        */
+
+        if (!PlanLimitHelper::canAddAssets(1)) {
+
+            $limit =
+                PlanLimitHelper::maxAssets();
+
+            $current =
+                PlanLimitHelper::currentAssets();
+
+            return response()->json([
+                'success' => false,
+                'errors' => [
+                    'plan_limit' => [
+                        "Batas asset pada paket Anda adalah {$limit} asset. " .
+                        "Saat ini sudah terdapat {$current} asset. " .
+                        "Silakan upgrade subscription untuk menambah asset."
+                    ]
+                ]
+            ], 422);
+        }
+
+
         DB::beginTransaction();
 
         $uploadedImagePaths = [];
@@ -1000,12 +1034,6 @@ class AssetController extends Controller
             |--------------------------------------------------------------------------
             | MAINTENANCE NEXT DATE
             |--------------------------------------------------------------------------
-            |
-            | Jika user mengisi next_maintenance_date,
-            | tanggal tersebut menjadi sumber utama.
-            |
-            | Jika kosong, baru dihitung otomatis.
-            |
             */
 
             $maintenanceRequired =
@@ -2625,12 +2653,6 @@ class AssetController extends Controller
             |--------------------------------------------------------------------------
             | MAINTENANCE CALCULATION
             |--------------------------------------------------------------------------
-            |
-            | PRIORITAS:
-            |
-            | 1. next_maintenance_date dari form
-            | 2. jika kosong -> hitung otomatis
-            |
             */
 
             $maintenanceRequired =
@@ -3035,10 +3057,6 @@ class AssetController extends Controller
             |--------------------------------------------------------------------------
             | DELETE MAINTENANCE
             |--------------------------------------------------------------------------
-            |
-            | Semua record maintenance yang berhubungan dengan
-            | asset ini ikut dihapus.
-            |
             */
 
             Maintenance::where(
@@ -3241,6 +3259,8 @@ class AssetController extends Controller
             ],
         ]);
 
+        $filePath = null;
+
         try {
 
             /*
@@ -3291,6 +3311,12 @@ class AssetController extends Controller
                 (int) $preview['totalRows'];
 
 
+            /*
+            |--------------------------------------------------------------------------
+            | MAX FILE ROWS
+            |--------------------------------------------------------------------------
+            */
+
             if ($totalRows > 10000) {
 
                 Storage::delete($filePath);
@@ -3309,6 +3335,59 @@ class AssetController extends Controller
 
             /*
             |--------------------------------------------------------------------------
+            | PLAN LIMIT - ASSET IMPORT
+            |--------------------------------------------------------------------------
+            |
+            | current asset + jumlah baris Excel
+            | tidak boleh melebihi plans.max_assets.
+            |
+            */
+
+            $maxAssets =
+                PlanLimitHelper::maxAssets();
+
+            $currentAssets =
+                PlanLimitHelper::currentAssets();
+
+            if (
+                $maxAssets > 0 &&
+                (
+                    $currentAssets +
+                    $totalRows
+                ) > $maxAssets
+            ) {
+
+                Storage::delete($filePath);
+
+                $remaining =
+                    max(
+                        0,
+                        $maxAssets -
+                        $currentAssets
+                    );
+
+                return back()
+                    ->withInput()
+                    ->withErrors([
+                        'excel_file' =>
+                            'Import asset ditolak. ' .
+                            'Paket Anda maksimal ' .
+                            number_format($maxAssets) .
+                            ' asset. ' .
+                            'Saat ini sudah ada ' .
+                            number_format($currentAssets) .
+                            ' asset. ' .
+                            'Sisa slot hanya ' .
+                            number_format($remaining) .
+                            ' asset, sedangkan file berisi ' .
+                            number_format($totalRows) .
+                            ' data.',
+                    ]);
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
             | SIMPAN FILE + TOTAL ROWS KE SESSION
             |--------------------------------------------------------------------------
             */
@@ -3318,7 +3397,7 @@ class AssetController extends Controller
                     $filePath,
 
                 'asset_import_total_rows' =>
-                    $preview['totalRows'],
+                    $totalRows,
             ]);
 
 
@@ -3335,7 +3414,7 @@ class AssetController extends Controller
                         $preview['data'],
 
                     'totalRows' =>
-                        $preview['totalRows'],
+                        $totalRows,
 
                     'previewRows' =>
                         $preview['previewRows'],
@@ -3355,7 +3434,7 @@ class AssetController extends Controller
                 ]
             );
 
-            if (!empty($filePath ?? null)) {
+            if (!empty($filePath)) {
                 Storage::delete($filePath);
             }
 
@@ -3431,6 +3510,64 @@ class AssetController extends Controller
             */
 
             $user = Auth::user();
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | PLAN LIMIT - SECOND CHECK
+            |--------------------------------------------------------------------------
+            |
+            | Cek ulang sebelum job masuk queue.
+            |
+            | Penting karena kondisi asset bisa berubah setelah
+            | preview dilakukan.
+            |
+            */
+
+            $maxAssets =
+                PlanLimitHelper::maxAssets();
+
+            $currentAssets =
+                PlanLimitHelper::currentAssets();
+
+            if (
+                $maxAssets > 0 &&
+                (
+                    $currentAssets +
+                    $totalRows
+                ) > $maxAssets
+            ) {
+
+                Storage::delete($filePath);
+
+                session()->forget([
+                    'asset_import_file',
+                    'asset_import_total_rows',
+                ]);
+
+                $remaining =
+                    max(
+                        0,
+                        $maxAssets -
+                        $currentAssets
+                    );
+
+                return redirect()
+                    ->route('assets.import')
+                    ->with(
+                        'error',
+                        'Import asset dibatalkan. ' .
+                        'Batas paket Anda adalah ' .
+                        number_format($maxAssets) .
+                        ' asset. ' .
+                        'Saat ini sudah ada ' .
+                        number_format($currentAssets) .
+                        ' asset. ' .
+                        'Sisa slot hanya ' .
+                        number_format($remaining) .
+                        ' asset.'
+                    );
+            }
 
 
             /*
@@ -3763,41 +3900,14 @@ class AssetController extends Controller
         }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | START DATE
-        |--------------------------------------------------------------------------
-        */
-
         $startDate =
             $request->maintenance_start_date;
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | INTERVAL
-        |--------------------------------------------------------------------------
-        */
 
         $interval =
             $request->maintenance_interval;
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | UNIT
-        |--------------------------------------------------------------------------
-        */
-
         $unit =
             $request->maintenance_interval_unit;
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Jika belum lengkap, jangan membuat tanggal.
-        |--------------------------------------------------------------------------
-        */
 
         if (
             !$startDate ||
@@ -3862,22 +3972,6 @@ class AssetController extends Controller
      * =========================================================================
      * SYNC MAINTENANCE SCHEDULE
      * =========================================================================
-     *
-     * Aturan:
-     *
-     * 1. Maintenance OFF
-     *    -> hapus schedule "scheduled".
-     *
-     * 2. Maintenance ON + tanggal tersedia
-     *    -> update schedule "scheduled" jika sudah ada.
-     *    -> jika belum ada, buat schedule baru.
-     *
-     * 3. Maintenance "in_progress"
-     *    -> jangan disentuh.
-     *
-     * 4. Maintenance "completed"
-     *    -> jangan disentuh.
-     *
      */
     private function syncMaintenanceSchedule(
         Asset $asset,
@@ -3890,12 +3984,6 @@ class AssetController extends Controller
         |--------------------------------------------------------------------------
         | MAINTENANCE OFF
         |--------------------------------------------------------------------------
-        |
-        | Jika maintenance dimatikan, hanya schedule yang masih
-        | berstatus scheduled yang dihapus.
-        |
-        | completed dan in_progress tetap aman.
-        |
         */
 
         if (
@@ -3925,13 +4013,6 @@ class AssetController extends Controller
         |--------------------------------------------------------------------------
         | CARI SCHEDULE AKTIF
         |--------------------------------------------------------------------------
-        |
-        | HANYA status scheduled yang boleh disinkronkan
-        |
-        | Jangan mengambil in_progress karena maintenance yang
-        | sedang dikerjakan tidak boleh tiba-tiba dikembalikan
-        | menjadi scheduled.
-        |
         */
 
         $activeMaintenance =
@@ -3981,13 +4062,6 @@ class AssetController extends Controller
         |--------------------------------------------------------------------------
         | CREATE NEW SCHEDULE
         |--------------------------------------------------------------------------
-        |
-        | Jika tidak ada scheduled:
-        |
-        | - completed ada -> tetap dipertahankan
-        | - in_progress ada -> tetap dipertahankan
-        | - scheduled tidak ada -> buat schedule baru
-        |
         */
 
         Maintenance::create([

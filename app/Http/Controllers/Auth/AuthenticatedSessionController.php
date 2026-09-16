@@ -6,7 +6,6 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -38,6 +37,12 @@ class AuthenticatedSessionController extends Controller
             ]
         );
 
+        /*
+        |--------------------------------------------------------------------------
+        | FIND USER
+        |--------------------------------------------------------------------------
+        */
+
         $field = filter_var($request->login, FILTER_VALIDATE_EMAIL)
             ? 'email'
             : 'phone';
@@ -45,7 +50,6 @@ class AuthenticatedSessionController extends Controller
         $user = User::where($field, $request->login)->first();
 
         if (!$user) {
-
             return back()
                 ->withErrors([
                     'login' => 'Invalid email/WhatsApp number or password.'
@@ -53,16 +57,26 @@ class AuthenticatedSessionController extends Controller
                 ->onlyInput('login');
         }
 
-        if ($user->status != 1) {
+        /*
+        |--------------------------------------------------------------------------
+        | CHECK USER STATUS
+        |--------------------------------------------------------------------------
+        */
 
+        if ($user->status != 1) {
             return back()
                 ->withErrors([
                     'login' => 'Your account is inactive.'
                 ]);
         }
 
-        if (!Hash::check($request->password, $user->password)) {
+        /*
+        |--------------------------------------------------------------------------
+        | CHECK PASSWORD
+        |--------------------------------------------------------------------------
+        */
 
+        if (!Hash::check($request->password, $user->password)) {
             return back()
                 ->withErrors([
                     'login' => 'Invalid email/WhatsApp number or password.'
@@ -70,15 +84,91 @@ class AuthenticatedSessionController extends Controller
                 ->onlyInput('login');
         }
 
-        Auth::login($user, $request->boolean('remember'));
+        /*
+        |--------------------------------------------------------------------------
+        | LOGIN
+        |--------------------------------------------------------------------------
+        */
+
+        Auth::login(
+            $user,
+            $request->boolean('remember')
+        );
+
         $user->update([
             'last_login_at' => now(),
             'last_login_ip' => $request->ip(),
         ]);
+
         $request->session()->regenerate();
 
-        //return redirect()->intended(route('cms.home'));
-        return redirect()->route('dashboard.home');
+        /*
+        |--------------------------------------------------------------------------
+        | CHECK SUBSCRIPTION AFTER LOGIN
+        |--------------------------------------------------------------------------
+        */
+
+        $subscription = $user->company?->activeSubscription;
+
+        /*
+        |--------------------------------------------------------------------------
+        | SUBSCRIPTION AKTIF
+        |--------------------------------------------------------------------------
+        |
+        | Semua user boleh masuk aplikasi.
+        |
+        */
+
+        if ($subscription) {
+            return redirect()->route('dashboard.home');
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | SUBSCRIPTION EXPIRED
+        |--------------------------------------------------------------------------
+        */
+
+        $isAdministrator =
+            $user->role &&
+            $user->role->role_code === 'administrator';
+
+        /*
+        |--------------------------------------------------------------------------
+        | ADMINISTRATOR
+        |--------------------------------------------------------------------------
+        |
+        | Administrator tetap boleh masuk aplikasi untuk:
+        |
+        | - melihat data
+        | | - membuka halaman subscription
+        | - melakukan perpanjangan
+        |
+        | Tetapi operasi Add/Edit/Delete akan tetap diblokir
+        | oleh middleware subscription.active.
+        |
+        */
+
+        if ($isAdministrator) {
+            return redirect()->route('dashboard.home');
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | NON-ADMINISTRATOR
+        |--------------------------------------------------------------------------
+        |
+        | Subscription expired:
+        | user tidak boleh masuk dashboard.
+        |
+        */
+
+        return redirect()
+            ->route('subscription.expired')
+            ->with(
+                'warning',
+                'Subscription perusahaan Anda telah berakhir. Silakan hubungi Administrator untuk melakukan perpanjangan.'
+            );
     }
 
     /**

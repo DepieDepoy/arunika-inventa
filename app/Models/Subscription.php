@@ -4,20 +4,25 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Subscription extends Model
 {
     protected $fillable = [
         'company_id',
         'plan_id',
+        'billing_cycle',
+        'price',
         'start_date',
         'end_date',
         'status',
+        'payment_status',
     ];
 
     protected function casts(): array
     {
         return [
+            'price' => 'decimal:2',
             'start_date' => 'date',
             'end_date' => 'date',
         ];
@@ -44,4 +49,11 @@ class Subscription extends Model
     {
         return $this->end_date->lt(today());
     }
+
+    public function paymentTransactions(): HasMany
+    {
+        return $this->hasMany(PaymentTransaction::class);
+    }
+
+
 }

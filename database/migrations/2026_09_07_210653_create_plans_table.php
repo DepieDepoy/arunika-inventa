@@ -11,18 +11,36 @@ return new class extends Migration
         Schema::create('plans', function (Blueprint $table) {
             $table->id();
 
+            // =====================================================
+            // PLAN INFORMATION
+            // =====================================================
             $table->string('plan_code', 50)->unique();
             $table->string('plan_name', 100);
-
             $table->text('description')->nullable();
 
-            $table->decimal('price', 15, 2)->default(0);
+            // =====================================================
+            // PRICING
+            // =====================================================
+            $table->decimal('price_monthly', 15, 2)->default(0);
+            $table->decimal('price_yearly', 15, 2)->default(0);
 
-            $table->unsignedInteger('duration_days')->default(30);
+            // =====================================================
+            // FREE TRIAL
+            // =====================================================
+            $table->unsignedInteger('trial_days')->default(0);
 
+            // =====================================================
+            // PLAN LIMITS
+            // NULL = UNLIMITED
+            // =====================================================
             $table->unsignedInteger('max_users')->nullable();
             $table->unsignedInteger('max_assets')->nullable();
 
+            // =====================================================
+            // STATUS
+            // 1 = Active
+            // 0 = Inactive
+            // =====================================================
             $table->tinyInteger('status')->default(1);
 
             $table->timestamps();

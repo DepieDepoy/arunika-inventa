@@ -4,18 +4,47 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\ImportHistoryController;
-use App\Http\Controllers\SubscriptionController;
+
 Route::get('/', function () {
     return view('welcome');
 });
 
+
+/*
+|--------------------------------------------------------------------------
+| PROFILE
+|--------------------------------------------------------------------------
+*/
+
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::get('/profile', [ProfileController::class, 'edit'])
+        ->name('profile.edit');
+
+    Route::patch('/profile', [ProfileController::class, 'update'])
+        ->name('profile.update');
+
+    Route::delete('/profile', [ProfileController::class, 'destroy'])
+        ->name('profile.destroy');
+
 });
 
+
+/*
+|--------------------------------------------------------------------------
+| AUTH
+|--------------------------------------------------------------------------
+*/
+
 require __DIR__.'/auth.php';
+
+
+/*
+|--------------------------------------------------------------------------
+| DASHBOARD MODULES
+|--------------------------------------------------------------------------
+*/
+
 require __DIR__.'/dashboard/home.php';
 require __DIR__.'/dashboard/role.php';
 require __DIR__.'/dashboard/user.php';
@@ -24,17 +53,23 @@ require __DIR__.'/dashboard/subcategory.php';
 require __DIR__.'/dashboard/vendor.php';
 require __DIR__.'/dashboard/asset.php';
 require __DIR__.'/dashboard/maintenance.php';
+require __DIR__.'/dashboard/subscription.php';
 
 
-Route::get('/dashboard/import-history',[ImportHistoryController::class, 'index'])->name('import.history');
+/*
+|--------------------------------------------------------------------------
+| IMPORT HISTORY
+|--------------------------------------------------------------------------
+*/
 
-Route::get('/dashboard/import-history/progress', [ImportHistoryController::class, 'progress'])->name('import.history.progress');
+Route::get('/dashboard/import-history', [ImportHistoryController::class, 'index'])
+    ->name('import.history');
 
-Route::get('/dashboard/import-history-detail/{id}/errors',[ImportHistoryController::class, 'detailErrors'])->name('import.history.detail.errors');
+Route::get('/dashboard/import-history/progress', [ImportHistoryController::class, 'progress'])
+    ->name('import.history.progress');
 
-Route::get('/dashboard/import-history-detail/{id}',[ImportHistoryController::class, 'detail'])->name('import.history.detail');
+Route::get('/dashboard/import-history-detail/{id}/errors', [ImportHistoryController::class, 'detailErrors'])
+    ->name('import.history.detail.errors');
 
-Route::middleware('auth')->group(function () {
-    Route::get('/subscription/expired', [SubscriptionController::class, 'expired'])
-        ->name('subscription.expired');
-});
+Route::get('/dashboard/import-history-detail/{id}', [ImportHistoryController::class, 'detail'])
+    ->name('import.history.detail');

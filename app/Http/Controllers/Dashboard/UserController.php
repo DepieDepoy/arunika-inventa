@@ -25,6 +25,8 @@ use App\Exports\UserImportTemplateExport;
 use App\Services\ExcelPreviewService;
 use App\Jobs\ProcessUserImport;
 use App\Models\ImportHistory;
+use App\Helpers\PlanLimitHelper;
+
 
 class UserController extends Controller
 {
@@ -41,14 +43,17 @@ class UserController extends Controller
         ->orderBy('name')
         ->get();
 
-        $roles = Role::where('company_id', Auth::user()->company_id)
+        $roles = Role::where(
+            'company_id',
+            Auth::user()->company_id
+        )
         ->where('status', 1)
         ->orderBy('role_name')
         ->get();
 
         return view(
             'dashboard.user.index',
-            compact('users','roles')
+            compact('users', 'roles')
         );
     }
 
@@ -61,20 +66,20 @@ class UserController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'name'     => 'required',
+                'name'    => 'required',
                 'nik'     => 'required',
-                'email'    => 'required|email',
+                'email'   => 'required|email',
                 'phone'   => 'required',
-                'role_id'  => 'required',
+                'role_id' => 'required',
                 //'password' => 'required|min:8|confirmed',
-                'status'   => 'required',
+                'status'  => 'required',
             ],
             [
                 'name.required'     => 'Nama wajib diisi',
-                'nik.required'     => 'NIK wajib diisi',
+                'nik.required'      => 'NIK wajib diisi',
                 'email.required'    => 'Email wajib diisi',
                 'email.email'       => 'Format email tidak valid',
-                'phone.required'   => 'No. Telepon wajib diisi',
+                'phone.required'    => 'No. Telepon wajib diisi',
                 'role_id.required'  => 'Role wajib dipilih',
                 //'password.required' => 'Password wajib diisi',
                 //'password.min'      => 'Password minimal 8 karakter',
@@ -94,13 +99,40 @@ class UserController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Cek Email&Phone Duplicate
+        | PLAN LIMIT - USER
+        |--------------------------------------------------------------------------
+        */
+
+        if (!PlanLimitHelper::canAddUsers(1)) {
+
+            $limit = PlanLimitHelper::maxUsers();
+            $current = PlanLimitHelper::currentUsers();
+
+            return response()->json([
+                'success' => false,
+                'errors' => [
+                    'plan_limit' => [
+                        "Batas user pada paket Anda adalah {$limit} user. " .
+                        "Saat ini sudah terdapat {$current} user. " .
+                        "Silakan upgrade subscription untuk menambah user."
+                    ]
+                ]
+            ], 422);
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Cek Email Duplicate
         |--------------------------------------------------------------------------
         */
 
         if (
             User::where('email', $request->email)
-                ->where('company_id', Auth::user()->company_id)
+                ->where(
+                    'company_id',
+                    Auth::user()->company_id
+                )
                 ->exists()
         ) {
             return response()->json([
@@ -112,15 +144,26 @@ class UserController extends Controller
                 ]
             ], 422);
         }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Cek Phone Duplicate
+        |--------------------------------------------------------------------------
+        */
+
         if (
             User::where('phone', $request->phone)
-                ->where('company_id', Auth::user()->company_id)
+                ->where(
+                    'company_id',
+                    Auth::user()->company_id
+                )
                 ->exists()
         ) {
             return response()->json([
                 'success' => false,
                 'errors' => [
-                    'email' => [
+                    'phone' => [
                         'No Phone sudah terdaftar'
                     ]
                 ]
@@ -134,12 +177,15 @@ class UserController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $role = Role::where('id', $request->role_id)
-            ->where(
-                'company_id',
-                Auth::user()->company_id
-            )
-            ->first();
+        $role = Role::where(
+            'id',
+            $request->role_id
+        )
+        ->where(
+            'company_id',
+            Auth::user()->company_id
+        )
+        ->first();
 
         if (!$role) {
             return response()->json([
@@ -158,24 +204,26 @@ class UserController extends Controller
         | Create User
         |--------------------------------------------------------------------------
         */
+
         $passwordPlain = Str::password(
             length: 10
         );
+
         User::create([
             'company_id' => Auth::user()->company_id,
-            'role_id'      => $request->role_id,
-            'name'         => $request->name,
-            'nik'         => $request->nik,
-            'phone'       => $request->phone,
-            'email'        => $request->email,
-            'password'     => Hash::make($passwordPlain),
-            'status'       => $request->status,
+            'role_id'    => $request->role_id,
+            'name'       => $request->name,
+            'nik'        => $request->nik,
+            'phone'      => $request->phone,
+            'email'      => $request->email,
+            'password'   => Hash::make($passwordPlain),
+            'status'     => $request->status,
         ]);
 
 
         return response()->json([
-            'success' => true,
-            'message' => 'User berhasil ditambahkan',
+            'success'  => true,
+            'message'  => 'User berhasil ditambahkan',
             'password' => $passwordPlain
         ]);
     }
@@ -212,6 +260,7 @@ class UserController extends Controller
 
         return DataTables::of($query)
             ->addIndexColumn()
+
             ->editColumn('name', function ($row) {
                 return '
                     <div>
@@ -221,6 +270,7 @@ class UserController extends Controller
                     </div>
                 ';
             })
+
             ->editColumn('nik', function ($row) {
                 return '
                     <div>
@@ -230,6 +280,7 @@ class UserController extends Controller
                     </div>
                 ';
             })
+
             ->editColumn('email', function ($row) {
                 return '
                     <span class="text-dark">
@@ -237,6 +288,7 @@ class UserController extends Controller
                     </span>
                 ';
             })
+
             ->editColumn('phone', function ($row) {
                 return '
                     <span class="text-dark">
@@ -244,6 +296,7 @@ class UserController extends Controller
                     </span>
                 ';
             })
+
             ->editColumn('companies', function ($row) {
                 return '
                     <span class="text-dark">
@@ -251,15 +304,18 @@ class UserController extends Controller
                     </span>
                 ';
             })
+
             ->editColumn('role_name', function ($row) {
                 return '
                     <span class="badge rounded-pill bg-primary-subtle text-primary px-3 py-2">
                         <i class="fa-solid fa-user-shield me-1"></i>
-                        '.e($row->role_name).'
+                        ' . e($row->role_name) . '
                     </span>
                 ';
             })
+
             ->editColumn('status', function ($row) {
+
                 if ($row->status == 1) {
                     return '
                         <span class="badge rounded-pill bg-success-subtle text-success px-3 py-2">
@@ -268,6 +324,7 @@ class UserController extends Controller
                         </span>
                     ';
                 }
+
                 return '
                     <span class="badge rounded-pill bg-danger-subtle text-danger px-3 py-2">
                         <i class="fa-solid fa-circle-xmark me-1 text-danger"></i>
@@ -277,6 +334,7 @@ class UserController extends Controller
             })
 
             ->addColumn('action', function ($row) {
+
                 /** @var User $user */
                 $user = Auth::user();
 
@@ -285,6 +343,7 @@ class UserController extends Controller
                 ';
 
                 if ($user->hasPermission('user.edit')) {
+
                     $action .= '
                         <a href="javascript:void(0)"
                         class="btn-action btn-edit"
@@ -296,6 +355,7 @@ class UserController extends Controller
                 }
 
                 if ($user->hasPermission('user.delete')) {
+
                     $action .= '
                         <a href="javascript:void(0)"
                         class="btn-action btn-delete"
@@ -313,7 +373,6 @@ class UserController extends Controller
                 return $action;
             })
 
-
             ->rawColumns([
                 'name',
                 'nik',
@@ -324,7 +383,6 @@ class UserController extends Controller
                 'status',
                 'action'
             ])
-
 
             ->make(true);
     }
@@ -355,20 +413,20 @@ class UserController extends Controller
             [
                 'id'      => 'required',
                 'name'    => 'required',
-                'nik'    => 'required',
+                'nik'     => 'required',
                 'email'   => 'required|email',
-                'phone'  => 'required',
+                'phone'   => 'required',
                 'role_id' => 'required',
                 'status'  => 'required',
             ],
             [
-                'name.required'    => 'Nama wajib diisi',
-                'nik.required'    => 'NIK wajib diisi',
-                'email.required'   => 'Email wajib diisi',
-                'email.email'      => 'Format email tidak valid',
-                'phone.required'  => 'No. Telepon wajib diisi',
-                'role_id.required' => 'Role wajib dipilih',
-                'status.required'  => 'Status wajib dipilih',
+                'name.required'     => 'Nama wajib diisi',
+                'nik.required'      => 'NIK wajib diisi',
+                'email.required'    => 'Email wajib diisi',
+                'email.email'       => 'Format email tidak valid',
+                'phone.required'    => 'No. Telepon wajib diisi',
+                'role_id.required'  => 'Role wajib dipilih',
+                'status.required'   => 'Status wajib dipilih',
             ]
         );
 
@@ -401,13 +459,20 @@ class UserController extends Controller
         */
 
         if (
-            User::where('email', $request->email)
-                ->where('id', '!=', $user->id)
-                ->where(
-                    'company_id',
-                    Auth::user()->company_id
-                )
-                ->exists()
+            User::where(
+                'email',
+                $request->email
+            )
+            ->where(
+                'id',
+                '!=',
+                $user->id
+            )
+            ->where(
+                'company_id',
+                Auth::user()->company_id
+            )
+            ->exists()
         ) {
             return response()->json([
                 'success' => false,
@@ -426,12 +491,15 @@ class UserController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $role = Role::where('id', $request->role_id)
-            ->where(
-                'company_id',
-                Auth::user()->company_id
-            )
-            ->first();
+        $role = Role::where(
+            'id',
+            $request->role_id
+        )
+        ->where(
+            'company_id',
+            Auth::user()->company_id
+        )
+        ->first();
 
         if (!$role) {
             return response()->json([
@@ -452,9 +520,9 @@ class UserController extends Controller
         */
 
         $user->name    = $request->name;
-        $user->nik    = $request->nik;
+        $user->nik     = $request->nik;
         $user->email   = $request->email;
-        $user->phone  = $request->phone;
+        $user->phone   = $request->phone;
         $user->role_id = $request->role_id;
         $user->status  = $request->status;
 
@@ -476,8 +544,11 @@ class UserController extends Controller
                     'password' => 'min:8|confirmed'
                 ],
                 [
-                    'password.min' => 'Password minimal 8 karakter',
-                    'password.confirmed' => 'Konfirmasi password tidak sesuai',
+                    'password.min' =>
+                        'Password minimal 8 karakter',
+
+                    'password.confirmed' =>
+                        'Konfirmasi password tidak sesuai',
                 ]
             );
 
@@ -706,7 +777,7 @@ class UserController extends Controller
         )->deleteFileAfterSend(true);
     }
 
-    
+
     /**
      * Halaman Import User
      */
@@ -734,6 +805,7 @@ class UserController extends Controller
     public function previewImport(Request $request)
     {
         $filePath = null;
+
         $request->validate([
             'excel_file' => [
                 'required',
@@ -742,6 +814,7 @@ class UserController extends Controller
                 'max:10240',
             ],
         ]);
+
 
         try {
 
@@ -753,7 +826,8 @@ class UserController extends Controller
 
             $file = $request->file('excel_file');
 
-            $fileName = uniqid('user_import_') . '.' .
+            $fileName =
+                uniqid('user_import_') . '.' .
                 $file->getClientOriginalExtension();
 
             $filePath = $file->storeAs(
@@ -761,13 +835,17 @@ class UserController extends Controller
                 $fileName
             );
 
+
             /*
             |--------------------------------------------------------------------------
             | Full path file
             |--------------------------------------------------------------------------
             */
 
-            $fullPath = Storage::path($filePath);
+            $fullPath = Storage::path(
+                $filePath
+            );
+
 
             /*
             |--------------------------------------------------------------------------
@@ -777,15 +855,75 @@ class UserController extends Controller
             | Tidak menggunakan Excel::toArray()
             |
             | Hanya membaca maksimal 100 data pertama.
+            |
+            */
+
+            $previewService =
+                new ExcelPreviewService();
+
+            $preview =
+                $previewService->preview(
+                    $fullPath,
+                    100
+                );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | PLAN LIMIT - USER IMPORT
             |--------------------------------------------------------------------------
             */
 
-            $previewService = new ExcelPreviewService();
+            $totalRows =
+                (int) $preview['totalRows'];
 
-            $preview = $previewService->preview(
-                $fullPath,
-                100
-            );
+            $maxUsers =
+                PlanLimitHelper::maxUsers();
+
+            $currentUsers =
+                PlanLimitHelper::currentUsers();
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | 0 = unlimited
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                $maxUsers > 0 &&
+                ($currentUsers + $totalRows) > $maxUsers
+            ) {
+
+                Storage::delete(
+                    $filePath
+                );
+
+                $remaining =
+                    max(
+                        0,
+                        $maxUsers - $currentUsers
+                    );
+
+                return back()
+                    ->withInput()
+                    ->withErrors([
+                        'excel_file' =>
+                            'Import user ditolak. ' .
+                            'Paket Anda maksimal ' .
+                            number_format($maxUsers) .
+                            ' user. ' .
+                            'Saat ini sudah ada ' .
+                            number_format($currentUsers) .
+                            ' user. ' .
+                            'Sisa slot hanya ' .
+                            number_format($remaining) .
+                            ' user, sedangkan file berisi ' .
+                            number_format($totalRows) .
+                            ' data.'
+                    ]);
+            }
+
 
             /*
             |--------------------------------------------------------------------------
@@ -801,6 +939,7 @@ class UserController extends Controller
                     $preview['totalRows'],
             ]);
 
+
             /*
             |--------------------------------------------------------------------------
             | Return Preview
@@ -810,24 +949,31 @@ class UserController extends Controller
             return view(
                 'dashboard.user.import-preview',
                 [
-                    'data' => $preview['data'],
+                    'data' =>
+                        $preview['data'],
 
-                    'totalRows' => $preview['totalRows'],
+                    'totalRows' =>
+                        $preview['totalRows'],
 
-                    'previewRows' => $preview['previewRows'],
+                    'previewRows' =>
+                        $preview['previewRows'],
                 ]
             );
+
 
         } catch (\Throwable $e) {
 
             Log::error(
                 'User import preview gagal',
                 [
-                    'error' => $e->getMessage(),
+                    'error' =>
+                        $e->getMessage(),
 
-                    'trace' => $e->getTraceAsString(),
+                    'trace' =>
+                        $e->getTraceAsString(),
                 ]
             );
+
 
             /*
             |--------------------------------------------------------------------------
@@ -836,8 +982,12 @@ class UserController extends Controller
             */
 
             if (!empty($filePath ?? null)) {
-                Storage::delete($filePath);
+
+                Storage::delete(
+                    $filePath
+                );
             }
+
 
             return back()->with(
                 'error',
@@ -862,6 +1012,7 @@ class UserController extends Controller
                 0
             );
 
+
         /*
         |--------------------------------------------------------------------------
         | Check Session
@@ -877,6 +1028,7 @@ class UserController extends Controller
                     'Session file import sudah tidak tersedia.'
                 );
         }
+
 
         try {
 
@@ -896,6 +1048,7 @@ class UserController extends Controller
                     );
             }
 
+
             /*
             |--------------------------------------------------------------------------
             | Current User
@@ -904,6 +1057,61 @@ class UserController extends Controller
 
             $user =
                 Auth::user();
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | PLAN LIMIT - SECOND CHECK
+            |--------------------------------------------------------------------------
+            |
+            | Preview sudah melakukan pengecekan.
+            | Di sini kita cek ulang sebelum Job masuk queue.
+            |
+            */
+
+            $totalRows =
+                (int) $totalRows;
+
+            $maxUsers =
+                PlanLimitHelper::maxUsers();
+
+            $currentUsers =
+                PlanLimitHelper::currentUsers();
+
+
+            if (
+                $maxUsers > 0 &&
+                ($currentUsers + $totalRows) > $maxUsers
+            ) {
+
+                Storage::delete(
+                    $filePath
+                );
+
+                session()->forget([
+                    'user_import_file',
+                    'user_import_total_rows',
+                ]);
+
+
+                $remaining =
+                    max(
+                        0,
+                        $maxUsers - $currentUsers
+                    );
+
+
+                return redirect()
+                    ->route('users.import')
+                    ->with(
+                        'error',
+                        'Import user dibatalkan. ' .
+                        'Sisa slot user pada paket Anda hanya ' .
+                        number_format($remaining) .
+                        ' user.'
+                    );
+            }
+
 
             /*
             |--------------------------------------------------------------------------
@@ -944,6 +1152,7 @@ class UserController extends Controller
                         null,
                 ]);
 
+
             /*
             |--------------------------------------------------------------------------
             | Dispatch Queue
@@ -955,6 +1164,7 @@ class UserController extends Controller
                 $filePath
             );
 
+
             /*
             |--------------------------------------------------------------------------
             | Clear Session
@@ -965,6 +1175,7 @@ class UserController extends Controller
                 'user_import_file',
                 'user_import_total_rows',
             ]);
+
 
             /*
             |--------------------------------------------------------------------------
@@ -981,6 +1192,7 @@ class UserController extends Controller
                     'Import berhasil dimasukkan ke antrian. Proses akan berjalan di background.'
                 );
 
+
         } catch (\Throwable $e) {
 
             Log::error(
@@ -994,6 +1206,7 @@ class UserController extends Controller
                 ]
             );
 
+
             return back()
                 ->with(
                     'error',
@@ -1003,6 +1216,10 @@ class UserController extends Controller
         }
     }
 
+
+    /**
+     * Import History
+     */
     public function importHistory()
     {
         $histories =
@@ -1023,116 +1240,213 @@ class UserController extends Controller
         );
     }
 
+
+    /**
+     * Import History Progress
+     */
     public function importHistoryProgress()
     {
-        $histories = ImportHistory::where(
-            'company_id',
-            Auth::user()->company_id
-        )
-            ->where('module', 'user')
+        $histories =
+            ImportHistory::where(
+                'company_id',
+                Auth::user()->company_id
+            )
+            ->where(
+                'module',
+                'user'
+            )
             ->latest()
             ->get();
 
-        $data = $histories->map(function ($history) {
 
-            $total = (int) $history->total_rows;
-            $success = (int) $history->success_rows;
-            $failed = (int) $history->failed_rows;
+        $data =
+            $histories->map(
+                function ($history) {
 
-            $processed = $success + $failed;
+                    $total =
+                        (int) $history->total_rows;
 
-            $progress = $total > 0
-                ? min(round(($processed / $total) * 100), 100)
-                : 0;
+                    $success =
+                        (int) $history->success_rows;
 
-            /*
-            |--------------------------------------------------------------------------
-            | DURASI IMPORT
-            |--------------------------------------------------------------------------
-            */
-            $duration = null;
+                    $failed =
+                        (int) $history->failed_rows;
 
-            if ($history->started_at) {
+                    $processed =
+                        $success + $failed;
 
-                // Jika masih processing, hitung sampai sekarang
-                $endTime = $history->finished_at ?? now();
 
-                $seconds = $history->started_at->diffInSeconds($endTime);
+                    $progress =
+                        $total > 0
+                            ? min(
+                                round(
+                                    ($processed / $total) * 100
+                                ),
+                                100
+                            )
+                            : 0;
 
-                $hours = intdiv($seconds, 3600);
-                $minutes = intdiv($seconds % 3600, 60);
-                $remainingSeconds = $seconds % 60;
 
-                if ($hours > 0) {
+                    /*
+                    |--------------------------------------------------------------------------
+                    | DURASI IMPORT
+                    |--------------------------------------------------------------------------
+                    */
 
-                    $duration = $hours . ' jam';
+                    $duration = null;
 
-                    if ($minutes > 0) {
-                        $duration .= ' ' . $minutes . ' menit';
+
+                    if ($history->started_at) {
+
+                        // Jika masih processing, hitung sampai sekarang
+                        $endTime =
+                            $history->finished_at ??
+                            now();
+
+
+                        $seconds =
+                            $history->started_at
+                                ->diffInSeconds($endTime);
+
+
+                        $hours =
+                            intdiv(
+                                $seconds,
+                                3600
+                            );
+
+                        $minutes =
+                            intdiv(
+                                $seconds % 3600,
+                                60
+                            );
+
+                        $remainingSeconds =
+                            $seconds % 60;
+
+
+                        if ($hours > 0) {
+
+                            $duration =
+                                $hours . ' jam';
+
+                            if ($minutes > 0) {
+
+                                $duration .=
+                                    ' ' .
+                                    $minutes .
+                                    ' menit';
+                            }
+
+                            if ($remainingSeconds > 0) {
+
+                                $duration .=
+                                    ' ' .
+                                    $remainingSeconds .
+                                    ' detik';
+                            }
+
+                        } elseif ($minutes > 0) {
+
+                            $duration =
+                                $minutes .
+                                ' menit';
+
+                            if ($remainingSeconds > 0) {
+
+                                $duration .=
+                                    ' ' .
+                                    $remainingSeconds .
+                                    ' detik';
+                            }
+
+                        } else {
+
+                            $duration =
+                                $remainingSeconds .
+                                ' detik';
+                        }
+
+
+                        // Kalau masih berjalan
+                        if (
+                            $history->status ===
+                            'processing'
+                        ) {
+
+                            $duration .=
+                                ' (berjalan)';
+                        }
                     }
 
-                    if ($remainingSeconds > 0) {
-                        $duration .= ' ' . $remainingSeconds . ' detik';
-                    }
 
-                } elseif ($minutes > 0) {
+                    return [
+                        'id' =>
+                            $history->id,
 
-                    $duration = $minutes . ' menit';
+                        'total_rows' =>
+                            $total,
 
-                    if ($remainingSeconds > 0) {
-                        $duration .= ' ' . $remainingSeconds . ' detik';
-                    }
+                        'success_rows' =>
+                            $success,
 
-                } else {
+                        'failed_rows' =>
+                            $failed,
 
-                    $duration = $remainingSeconds . ' detik';
+                        'processed_rows' =>
+                            $processed,
+
+                        'progress' =>
+                            $progress,
+
+                        'status' =>
+                            $history->status,
+
+                        'started_at' =>
+                            $history->started_at
+                                ? $history->started_at
+                                    ->format(
+                                        'd M Y H:i:s'
+                                    )
+                                : null,
+
+                        'finished_at' =>
+                            $history->finished_at
+                                ? $history->finished_at
+                                    ->format(
+                                        'd M Y H:i:s'
+                                    )
+                                : null,
+
+                        'duration' =>
+                            $duration,
+                    ];
                 }
+            );
 
-                // Kalau masih berjalan
-                if ($history->status === 'processing') {
-                    $duration .= ' (berjalan)';
-                }
-            }
 
-            return [
-                'id' => $history->id,
-
-                'total_rows' => $total,
-
-                'success_rows' => $success,
-
-                'failed_rows' => $failed,
-
-                'processed_rows' => $processed,
-
-                'progress' => $progress,
-
-                'status' => $history->status,
-
-                'started_at' => $history->started_at
-                    ? $history->started_at->format('d M Y H:i:s')
-                    : null,
-
-                'finished_at' => $history->finished_at
-                    ? $history->finished_at->format('d M Y H:i:s')
-                    : null,
-
-                // TAMBAHAN INI
-                'duration' => $duration,
-            ];
-        });
-
-        return response()->json($data);
+        return response()->json(
+            $data
+        );
     }
 
+
+    /**
+     * Import History Detail
+     */
     public function importHistoryDetail(int $id)
     {
-        $history = ImportHistory::where(
-            'company_id',
-            Auth::user()->company_id
-        )
-            ->where('module', 'user')
+        $history =
+            ImportHistory::where(
+                'company_id',
+                Auth::user()->company_id
+            )
+            ->where(
+                'module',
+                'user'
+            )
             ->findOrFail($id);
+
 
         return view(
             'dashboard.user.import-history-detail',
@@ -1140,64 +1454,112 @@ class UserController extends Controller
         );
     }
 
-    public function importHistoryErrors(Request $request, int $id)
-    {
-        $history = ImportHistory::where(
-            'company_id',
-            Auth::user()->company_id
-        )
-            ->where('module', 'user')
+
+    /**
+     * Import History Errors
+     */
+    public function importHistoryErrors(
+        Request $request,
+        int $id
+    ) {
+        $history =
+            ImportHistory::where(
+                'company_id',
+                Auth::user()->company_id
+            )
+            ->where(
+                'module',
+                'user'
+            )
             ->findOrFail($id);
 
-        $query = $history->errors()
-            ->select([
-                'id',
-                'row_number',
-                'data',
-                'error_message',
-                'created_at',
-            ]);
+
+        $query =
+            $history->errors()
+                ->select([
+                    'id',
+                    'row_number',
+                    'data',
+                    'error_message',
+                    'created_at',
+                ]);
+
 
         return DataTables::of($query)
 
-            ->addColumn('row_display', function ($error) {
-                return $error->row_number ?: '-';
-            })
+            ->addColumn(
+                'row_display',
+                function ($error) {
 
-            ->addColumn('data_display', function ($error) {
-
-                if (empty($error->data)) {
-                    return '<span class="text-muted">-</span>';
+                    return $error->row_number
+                        ?: '-';
                 }
+            )
 
-                $data = is_array($error->data)
-                    ? $error->data
-                    : json_decode($error->data, true);
+            ->addColumn(
+                'data_display',
+                function ($error) {
 
-                if (!is_array($data)) {
-                    return e($error->data);
+                    if (empty($error->data)) {
+
+                        return '
+                            <span class="text-muted">
+                                -
+                            </span>
+                        ';
+                    }
+
+
+                    $data =
+                        is_array($error->data)
+                            ? $error->data
+                            : json_decode(
+                                $error->data,
+                                true
+                            );
+
+
+                    if (!is_array($data)) {
+
+                        return e(
+                            $error->data
+                        );
+                    }
+
+
+                    return '
+                        <pre class="mb-0 small" style="
+                            max-width: 500px;
+                            max-height: 120px;
+                            overflow: auto;
+                            white-space: pre-wrap;
+                        ">' .
+                        e(
+                            json_encode(
+                                $data,
+                                JSON_PRETTY_PRINT |
+                                JSON_UNESCAPED_UNICODE |
+                                JSON_UNESCAPED_SLASHES
+                            )
+                        ) .
+                        '</pre>
+                    ';
                 }
+            )
 
-                return '<pre class="mb-0 small" style="
-                    max-width: 500px;
-                    max-height: 120px;
-                    overflow: auto;
-                    white-space: pre-wrap;
-                ">' .
-                    e(json_encode(
-                        $data,
-                        JSON_PRETTY_PRINT |
-                        JSON_UNESCAPED_UNICODE |
-                        JSON_UNESCAPED_SLASHES
-                    )) .
-                '</pre>';
-            })
+            ->addColumn(
+                'error_display',
+                function ($error) {
 
-            ->addColumn('error_display', function ($error) {
-                return '<span class="text-danger">'
-                    . e($error->error_message)
-                    . '</span>';
-            })
+                    return '
+                        <span class="text-danger">' .
+                        e(
+                            $error->error_message
+                        ) .
+                        '</span>
+                    ';
+                }
+            )
 
             ->rawColumns([
                 'data_display',

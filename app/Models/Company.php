@@ -52,4 +52,10 @@ class Company extends Model
             ->whereDate('end_date', '>=', today())
             ->latestOfMany();
     }
+
+    public function paymentTransactions(): HasMany
+    {
+        return $this->hasMany(PaymentTransaction::class);
+    }
+
 }

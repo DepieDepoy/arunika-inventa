@@ -14,18 +14,52 @@ class PermissionController extends Controller
     {
         $companyId = Auth::user()->company_id;
 
+        /*
+        |--------------------------------------------------------------------------
+        | Decode encrypted role ID
+        |--------------------------------------------------------------------------
+        */
+
+        $roleId = decryptId($role);
+
+        if (!$roleId) {
+            abort(404);
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Cari role berdasarkan ID asli
+        |--------------------------------------------------------------------------
+        */
+
         $role = Role::where('company_id', $companyId)
-            ->where('id', $role)
+            ->where('id', $roleId)
             ->firstOrFail();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Ambil permissions
+        |--------------------------------------------------------------------------
+        */
 
         $permissions = Permission::orderBy('module')
             ->orderBy('id')
             ->get()
             ->groupBy('module');
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | Permission yang dimiliki role
+        |--------------------------------------------------------------------------
+        */
+
         $rolePermissions = $role->permissions()
             ->pluck('permissions.id')
             ->toArray();
+
 
         return view(
             'dashboard.role.permission',
@@ -37,20 +71,71 @@ class PermissionController extends Controller
         );
     }
 
+
     public function savePermission(Request $request, $role)
     {
         $companyId = Auth::user()->company_id;
 
-        $role = Role::where('company_id', $companyId)
-            ->where('id', $role)
+        /*
+        |--------------------------------------------------------------------------
+        | Decode encrypted role ID
+        |--------------------------------------------------------------------------
+        */
+
+        $roleId = decryptId($role);
+
+        if (!$roleId) {
+            abort(404);
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Cari role berdasarkan ID asli
+        |--------------------------------------------------------------------------
+        */
+
+        $roleModel = Role::where('company_id', $companyId)
+            ->where('id', $roleId)
             ->firstOrFail();
 
-        $permissionIds = $request->input('permissions', []);
 
-        $role->permissions()->sync($permissionIds);
+        /*
+        |--------------------------------------------------------------------------
+        | Ambil permission IDs
+        |--------------------------------------------------------------------------
+        */
+
+        $permissionIds = $request->input(
+            'permissions',
+            []
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Simpan permission
+        |--------------------------------------------------------------------------
+        */
+
+        $roleModel->permissions()
+            ->sync($permissionIds);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Redirect kembali menggunakan encrypted ID
+        |--------------------------------------------------------------------------
+        */
 
         return redirect()
-            ->route('roles.permission', $role->id)
-            ->with('success', 'Permission berhasil disimpan.');
+            ->route(
+                'roles.permission',
+                encryptId($roleModel->id)
+            )
+            ->with(
+                'success',
+                'Permission berhasil disimpan.'
+            );
     }
 }

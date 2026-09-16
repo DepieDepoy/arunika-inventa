@@ -4,535 +4,601 @@
 
 @section('content')
 
-@if(session('error'))
-    <div class="alert alert-danger">
-        <i class="fas fa-exclamation-circle me-1"></i>
-        {{ session('error') }}
-    </div>
-@endif
+<div class="content-wrapper">
 
-@if($errors->any())
-    <div class="alert alert-danger">
-        <strong>Terjadi error:</strong>
-        <ul class="mb-0 mt-2">
-            @foreach($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
+    <!-- Content -->
+    <div class="container-xxl flex-grow-1 container-p-y">
+
+        <div class="row">
+
+            <div class="col-xxl-12 mb-12 order-0">
+
+                <div class="card">
+
+                    {{-- =====================================================
+                         HEADER
+                    ====================================================== --}}
+                    <div class="card-header d-flex justify-content-between align-items-center">
+
+                        <div>
+
+                            <h5 class="mb-0">
+                                Import Assets
+                            </h5>
+
+                            <small class="text-muted">
+                                Import data aset secara massal menggunakan file Excel.
+                            </small>
+
+                        </div>
+
+
+                        <div class="d-flex gap-2">
+
+                            <a href="{{ route('assets.index') }}"
+                               class="btn btn-light">
+
+                                <i class="fas fa-arrow-left me-1"></i>
+
+                                Kembali
+
+                            </a>
+
+                        </div>
+
+                    </div>
+
+
+                    {{-- =====================================================
+                         ALERT
+                    ====================================================== --}}
+
+                    @if(session('success'))
+
+                        <div class="alert alert-success alert-dismissible fade show m-3"
+                             role="alert">
+
+                            <i class="fas fa-check-circle me-2"></i>
+
+                            {{ session('success') }}
+
+                            <button type="button"
+                                    class="btn-close"
+                                    data-bs-dismiss="alert">
+                            </button>
+
+                        </div>
+
+                    @endif
+
+
+                    @if(session('error'))
+
+                        <div class="alert alert-danger alert-dismissible fade show m-3"
+                             role="alert">
+
+                            <i class="fas fa-exclamation-circle me-2"></i>
+
+                            {{ session('error') }}
+
+                            <button type="button"
+                                    class="btn-close"
+                                    data-bs-dismiss="alert">
+                            </button>
+
+                        </div>
+
+                    @endif
+
+
+                    @if($errors->any())
+
+                        <div class="alert alert-danger alert-dismissible fade show m-3"
+                             role="alert">
+
+                            <strong>
+
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+
+                                Validasi gagal
+
+                            </strong>
+
+
+                            <ul class="mb-0 mt-2">
+
+                                @foreach($errors->all() as $error)
+
+                                    <li>
+                                        {{ $error }}
+                                    </li>
+
+                                @endforeach
+
+                            </ul>
+
+
+                            <button type="button"
+                                    class="btn-close"
+                                    data-bs-dismiss="alert">
+                            </button>
+
+                        </div>
+
+                    @endif
+
+
+                    {{-- =====================================================
+                         CONTENT
+                    ====================================================== --}}
+
+                    <div class="card permission-role-card">
+
+                        <div class="card-body">
+
+                            <div class="row">
+
+                                <div class="card border-0 shadow-sm">
+
+
+                                    <div class="card-body p-4">
+
+
+                                        {{-- =================================================
+                                             INFORMATION
+                                        ================================================== --}}
+
+                                        <div class="alert alert-info border-0 mb-4">
+
+                                            <div class="d-flex">
+
+                                                <div class="me-3">
+
+                                                    <i class="fas fa-info-circle fa-lg"></i>
+
+                                                </div>
+
+
+                                                <div>
+
+                                                    <strong>
+                                                        Perhatian
+                                                    </strong>
+
+
+                                                    <ul class="mb-0 mt-2">
+
+                                                        <li>
+                                                            Gunakan template Excel yang telah
+                                                            disediakan.
+                                                        </li>
+
+                                                        <li>
+                                                            Header Excel harus mengikuti
+                                                            format template.
+                                                        </li>
+
+                                                        <li>
+                                                            Asset Code harus unik.
+                                                        </li>
+
+                                                        <li>
+                                                            Data akan diperiksa terlebih dahulu
+                                                            melalui halaman <strong>Preview</strong>.
+                                                        </li>
+
+                                                        <li>
+                                                            Pastikan data kategori,
+                                                            subkategori, vendor, dan
+                                                            responsible user sesuai dengan
+                                                            data yang tersedia di sistem.
+                                                        </li>
+
+                                                    </ul>
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+
+                                        {{-- =================================================
+                                             DOWNLOAD TEMPLATE
+                                        ================================================== --}}
+
+                                        <div class="border rounded-3 p-4 mb-4">
+
+                                            <div class="row align-items-center">
+
+                                                <div class="col-md-8">
+
+                                                    <div class="d-flex align-items-center">
+
+                                                        <div class="me-3"
+                                                             style="
+                                                                width:48px;
+                                                                height:48px;
+                                                                border-radius:10px;
+                                                                background:#ecfdf5;
+                                                                display:flex;
+                                                                align-items:center;
+                                                                justify-content:center;
+                                                             ">
+
+                                                            <i class="fas fa-file-download text-success fa-lg"></i>
+
+                                                        </div>
+
+
+                                                        <div>
+
+                                                            <h6 class="mb-1">
+                                                                Download Template Excel
+                                                            </h6>
+
+                                                            <p class="text-muted mb-0 small">
+
+                                                                Gunakan template ini agar format
+                                                                data asset sesuai dengan sistem.
+
+                                                            </p>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                </div>
+
+
+                                                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+
+                                                    <a href="{{ route('assets.import.template') }}"
+                                                       class="btn btn-outline-success">
+
+                                                        <i class="fas fa-download me-1"></i>
+
+                                                        Download Template
+
+                                                    </a>
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+
+                                        {{-- =================================================
+                                             UPLOAD FORM
+                                        ================================================== --}}
+
+                                        <form action="{{ route('assets.import.preview') }}"
+                                              method="POST"
+                                              enctype="multipart/form-data"
+                                              id="assetImportForm">
+
+                                            @csrf
+
+
+                                            <div class="mb-3">
+
+                                                <label for="excel_file"
+                                                       class="form-label fw-semibold">
+
+                                                    File Excel
+
+                                                    <span class="text-danger">*</span>
+
+                                                </label>
+
+
+                                                {{-- =================================================
+                                                     UPLOAD AREA
+                                                ================================================== --}}
+
+                                                <div id="uploadArea"
+                                                     class="border border-2 border-dashed rounded-3 p-5 text-center"
+                                                     style="
+                                                        cursor:pointer;
+                                                        transition:all .2s ease;
+                                                     ">
+
+
+                                                    <input type="file"
+                                                           name="excel_file"
+                                                           id="excel_file"
+                                                           class="d-none"
+                                                           accept=".xlsx,.xls">
+
+
+                                                    {{-- =================================================
+                                                         PLACEHOLDER
+                                                    ================================================== --}}
+
+                                                    <div id="uploadPlaceholder">
+
+                                                        <div class="mb-3">
+
+                                                            <i class="fas fa-cloud-upload-alt"
+                                                               style="
+                                                                  font-size:42px;
+                                                                  color:#6c757d;
+                                                               ">
+                                                            </i>
+
+                                                        </div>
+
+
+                                                        <h6 class="mb-2">
+
+                                                            Pilih File Excel
+
+                                                        </h6>
+
+
+                                                        <p class="text-muted mb-2">
+
+                                                            Klik area ini untuk memilih file
+
+                                                        </p>
+
+
+                                                        <small class="text-muted">
+
+                                                            Format yang diperbolehkan:
+
+                                                            <strong>.xlsx</strong>
+                                                            atau
+                                                            <strong>.xls</strong>
+
+                                                            <br>
+
+                                                            Maksimal ukuran file:
+
+                                                            <strong>10 MB</strong>
+
+                                                        </small>
+
+                                                    </div>
+
+
+                                                    {{-- =================================================
+                                                         SELECTED FILE
+                                                    ================================================== --}}
+
+                                                    <div id="selectedFile"
+                                                         class="d-none">
+
+
+                                                        <div class="mb-3">
+
+                                                            <i class="fas fa-file-excel text-success"
+                                                               style="font-size:42px;">
+                                                            </i>
+
+                                                        </div>
+
+
+                                                        <h6 id="fileName"
+                                                            class="mb-1">
+                                                        </h6>
+
+
+                                                        <small id="fileSize"
+                                                               class="text-muted">
+                                                        </small>
+
+
+                                                        <div class="mt-3">
+
+                                                            <button type="button"
+                                                                    class="btn btn-sm btn-outline-danger"
+                                                                    id="removeFile">
+
+                                                                <i class="fas fa-times me-1"></i>
+
+                                                                Ganti File
+
+                                                            </button>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                </div>
+
+
+                                                @error('excel_file')
+
+                                                    <div class="text-danger small mt-2">
+
+                                                        {{ $message }}
+
+                                                    </div>
+
+                                                @enderror
+
+
+                                                <div class="form-text mt-2">
+
+                                                    Pastikan data Excel sudah sesuai
+                                                    sebelum melakukan preview.
+
+                                                </div>
+
+                                            </div>
+
+
+                                            {{-- =================================================
+                                                 ACTION BUTTON
+                                            ================================================== --}}
+
+                                            <div class="d-flex justify-content-end gap-2 mt-4">
+
+
+                                                <a href="{{ route('assets.index') }}"
+                                                   class="btn btn-light">
+
+                                                    <i class="fas fa-times me-1"></i>
+
+                                                    Batal
+
+                                                </a>
+
+
+                                                <button type="submit"
+                                                        class="btn btn-primary"
+                                                        id="previewButton"
+                                                        disabled>
+
+                                                    <i class="fas fa-eye me-1"></i>
+
+                                                    Preview Data
+
+                                                </button>
+
+                                            </div>
+
+
+                                        </form>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
     </div>
-@endif
+
+</div>
+
+
+{{-- =============================================================
+     STYLE
+============================================================= --}}
+
 <style>
-    .import-page-header {
-        margin-bottom: 1.5rem;
+
+    .border-dashed {
+        border-style: dashed !important;
     }
 
-    .import-page-header h4 {
-        margin-bottom: .35rem;
-        font-weight: 600;
+
+    #uploadArea:hover {
+
+        background-color: #f8f9fa;
+
+        border-color: #198754 !important;
+
     }
 
-    .import-page-header p {
-        margin-bottom: 0;
-        color: #6c757d;
+
+    #uploadArea.drag-over {
+
+        background-color: #f0fdf4;
+
+        border-color: #198754 !important;
+
     }
 
-    .import-card {
-        background: #fff;
-        border: 1px solid #e9ecef;
-        border-radius: 12px;
-        overflow: hidden;
-        margin-bottom: 1.5rem;
+
+    #previewButton:disabled {
+
+        cursor: not-allowed;
+
+        opacity: .65;
+
     }
 
-    .import-card-header {
-        padding: 1rem 1.25rem;
-        border-bottom: 1px solid #e9ecef;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-    }
-
-    .import-card-header h5 {
-        margin: 0;
-        font-size: 1rem;
-        font-weight: 600;
-    }
-
-    .import-card-body {
-        padding: 1.5rem;
-    }
-
-    /* Upload */
-    .upload-area {
-        border: 2px dashed #d9dee3;
-        border-radius: 12px;
-        padding: 3rem 1.5rem;
-        text-align: center;
-        background: #fafbfc;
-        cursor: pointer;
-        transition: all .2s ease;
-    }
-
-    .upload-area:hover {
-        border-color: #adb5bd;
-        background: #f8f9fa;
-    }
-
-    .upload-icon {
-        width: 64px;
-        height: 64px;
-        margin: 0 auto 1rem;
-        border-radius: 50%;
-        background: #f1f3f5;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 26px;
-        color: #6c757d;
-    }
-
-    .upload-area h6 {
-        margin-bottom: .4rem;
-        font-weight: 600;
-    }
-
-    .upload-area p {
-        color: #6c757d;
-        font-size: .875rem;
-        margin-bottom: 1rem;
-    }
-
-    .selected-file {
-        display: none;
-        margin-top: 1rem;
-        padding: .75rem 1rem;
-        background: #f1f3f5;
-        border-radius: 8px;
-        text-align: left;
-        font-size: .875rem;
-    }
-
-    .selected-file i {
-        margin-right: .5rem;
-    }
-
-    /* Steps */
-    .import-steps {
-        display: flex;
-        flex-direction: column;
-        gap: 1.15rem;
-    }
-
-    .import-step {
-        display: flex;
-        gap: .8rem;
-        align-items: flex-start;
-    }
-
-    .step-number {
-        width: 30px;
-        min-width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        background: #f1f3f5;
-        color: #495057;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: .8rem;
-        font-weight: 600;
-    }
-
-    .import-step strong {
-        display: block;
-        font-size: .875rem;
-        margin-bottom: .15rem;
-    }
-
-    .import-step span {
-        display: block;
-        color: #6c757d;
-        font-size: .8rem;
-        line-height: 1.5;
-    }
-
-    /* Information */
-    .import-info {
-        padding: 1rem;
-        border-radius: 10px;
-        background: #f8f9fa;
-        border: 1px solid #e9ecef;
-        font-size: .85rem;
-        color: #495057;
-    }
-
-    .import-info strong {
-        display: block;
-        margin-bottom: .4rem;
-    }
-
-    .format-list {
-        margin: 0;
-        padding-left: 1.1rem;
-        color: #6c757d;
-        font-size: .83rem;
-    }
-
-    .format-list li {
-        margin-bottom: .4rem;
-    }
-
-    .action-buttons {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 1.25rem;
-        gap: 1rem;
-    }
-
-    @media (max-width: 767px) {
-        .import-card-header,
-        .action-buttons {
-            flex-direction: column;
-            align-items: stretch;
-        }
-    }
 </style>
 
-<div class="content-wrapper">
-<!-- Content -->
-<div class="container-xxl flex-grow-1 container-p-y">
-    <div class="row">
-    <div class="col-xxl-12 mb-12 order-0">
-    <div class="card">
 
-    <div class="card-header d-flex justify-content-between align-items-center">
-
-        <div>
-            <h5 class="mb-0">Import Assets</h5>
-            <small class="text-muted">
-                Import data aset dalam jumlah banyak menggunakan file Excel.
-            </small>
-        </div>
-
-        <div class="d-flex gap-2">
-
-        </div>
-    </div>
-    <div class="card-body">
-        <div class="card permission-role-card">
-            <div class="card-body">
-                <div class="row">
-
-    {{-- =====================================================
-         LEFT : UPLOAD
-    ====================================================== --}}
-    <div class="col-lg-8">
-
-        <div class="import-card">
-
-            <div class="import-card-header">
-
-                <div>
-                    <h5>Upload File Excel</h5>
-                </div>
-
-                {{-- NANTI ROUTE INI KITA BUAT --}}
-                <a
-                    href="{{ route('assets.import.template') }}"
-                    class="btn btn-outline-primary"
-                >
-                    <i class="fas fa-download me-1"></i>
-                    Download Template
-                </a>
-
-            </div>
-
-
-            <div class="import-card-body">
-            
-                {{-- NANTI ACTION INI KITA BUAT --}}
-                <form action="{{ route('assets.import.preview') }}"
-                      method="POST"
-                      enctype="multipart/form-data">
-                    @csrf
-                    <div class="upload-area"
-                         onclick="document.getElementById('excel_file').click()">
-                        <div class="upload-icon">
-                            <i class="fas fa-file-excel"></i>
-                        </div>
-                        <h6>Pilih File Excel</h6>
-                        <p>
-                            Upload file Excel yang berisi data aset
-                            <br>
-                            Format yang didukung: <strong>.xlsx</strong> dan <strong>.xls</strong>
-                        </p>
-                        <button type="button"
-                                class="btn btn-outline-primary btn-sm"
-                                onclick="event.stopPropagation(); document.getElementById('excel_file').click()">
-                            <i class="fas fa-folder-open me-1"></i>
-                            Pilih File
-                        </button>
-                        <input type="file"
-                               id="excel_file"
-                               name="excel_file"
-                               accept=".xlsx,.xls"
-                               hidden>
-                        <div class="selected-file"
-                             id="selectedFile">
-
-                            <i class="fas fa-file-excel"></i>
-
-                            <span id="fileName"></span>
-
-                        </div>
-
-                    </div>
-
-
-                    {{-- ERROR --}}
-                    @error('excel_file')
-
-                        <div class="text-danger small mt-2">
-                            {{ $message }}
-                        </div>
-
-                    @enderror
-
-
-                    <div class="import-info mt-4">
-
-                        <strong>
-                            <i class="fas fa-info-circle me-1"></i>
-                            Perhatian
-                        </strong>
-
-                        Pastikan data Excel mengikuti format template.
-                        Data akan divalidasi terlebih dahulu sebelum disimpan
-                        ke database.
-
-                    </div>
-
-
-                    <div class="action-buttons">
-
-                        <a href="{{ route('assets.index') }}"
-                           class="btn btn-light">
-
-                            <i class="fas fa-arrow-left me-1"></i>
-                            Kembali
-
-                        </a>
-
-
-                        <button type="submit"
-                                id="previewButton"
-                                class="btn btn-primary"
-                                disabled>
-
-                            <i class="fas fa-eye me-1"></i>
-                            Preview Data
-
-                        </button>
-
-                    </div>
-
-                </form>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-
-    {{-- =====================================================
-         RIGHT : INSTRUCTIONS
-    ====================================================== --}}
-    <div class="col-lg-4">
-
-        <div class="import-card">
-
-            <div class="import-card-header">
-
-                <h5>Cara Import</h5>
-
-            </div>
-
-
-            <div class="import-card-body">
-
-                <div class="import-steps">
-
-                    <div class="import-step">
-
-                        <div class="step-number">
-                            1
-                        </div>
-
-                        <div>
-                            <strong>Download Template</strong>
-
-                            <span>
-                                Gunakan template Excel yang sudah
-                                disediakan.
-                            </span>
-                        </div>
-
-                    </div>
-
-
-                    <div class="import-step">
-
-                        <div class="step-number">
-                            2
-                        </div>
-
-                        <div>
-                            <strong>Isi Data Asset</strong>
-
-                            <span>
-                                Isi data asset sesuai dengan
-                                kolom yang tersedia.
-                            </span>
-                        </div>
-
-                    </div>
-
-
-                    <div class="import-step">
-
-                        <div class="step-number">
-                            3
-                        </div>
-
-                        <div>
-                            <strong>Upload Excel</strong>
-
-                            <span>
-                                Upload file Excel yang sudah
-                                selesai diisi.
-                            </span>
-                        </div>
-
-                    </div>
-
-
-                    <div class="import-step">
-
-                        <div class="step-number">
-                            4
-                        </div>
-
-                        <div>
-                            <strong>Preview & Import</strong>
-
-                            <span>
-                                Periksa data terlebih dahulu
-                                sebelum dimasukkan ke sistem.
-                            </span>
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-
-        <div class="import-card">
-
-            <div class="import-card-header">
-
-                <h5>Ketentuan File</h5>
-
-            </div>
-
-
-            <div class="import-card-body">
-
-                <ul class="format-list">
-
-                    <li>
-                        Format file <strong>.xlsx</strong> atau <strong>.xls</strong>
-                    </li>
-
-                    <li>
-                        Header Excel harus mengikuti template.
-                    </li>
-
-                    <li>
-                        Asset Code harus unik.
-                    </li>
-
-                    <li>
-                        Purchase Date menggunakan format tanggal.
-                    </li>
-
-                    <li>
-                        Purchase Price diisi dalam angka.
-                    </li>
-
-                    <li>
-                        Maksimal ukuran file akan ditentukan
-                        pada proses validasi.
-                    </li>
-
-                </ul>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-
-            </div>
-
-        </div>
-
-
-    </div>
-    </div>
-</div>
-    </div>
-</div>
-</div>
+{{-- =============================================================
+     SCRIPT
+============================================================= --}}
 
 <script>
+
 document.addEventListener('DOMContentLoaded', function () {
 
-    const fileInput = document.getElementById('excel_file');
-    const selectedFile = document.getElementById('selectedFile');
-    const fileName = document.getElementById('fileName');
-    const previewButton = document.getElementById('previewButton');
+
+    const uploadArea =
+        document.getElementById('uploadArea');
+
+
+    const fileInput =
+        document.getElementById('excel_file');
+
+
+    const uploadPlaceholder =
+        document.getElementById('uploadPlaceholder');
+
+
+    const selectedFile =
+        document.getElementById('selectedFile');
+
+
+    const fileName =
+        document.getElementById('fileName');
+
+
+    const fileSize =
+        document.getElementById('fileSize');
+
+
+    const removeFile =
+        document.getElementById('removeFile');
+
+
+    const previewButton =
+        document.getElementById('previewButton');
+
+
+    const form =
+        document.getElementById('assetImportForm');
+
 
     /*
-     * Saat file Excel dipilih
+     * ==========================================================
+     * CLICK UPLOAD AREA
+     * ==========================================================
      */
+
+    uploadArea.addEventListener('click', function (e) {
+
+        if (e.target.closest('#removeFile')) {
+
+            return;
+
+        }
+
+        fileInput.click();
+
+    });
+
+
+    /*
+     * ==========================================================
+     * FILE SELECTED
+     * ==========================================================
+     */
+
     fileInput.addEventListener('change', function () {
 
         if (this.files.length > 0) {
 
-            fileName.textContent = this.files[0].name;
-
-            selectedFile.style.display = 'block';
-
-            previewButton.disabled = false;
-
-        } else {
-
-            fileName.textContent = '';
-
-            selectedFile.style.display = 'none';
-
-            previewButton.disabled = true;
+            handleFile(this.files[0]);
 
         }
 
@@ -540,30 +606,287 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
     /*
-     * Saat tombol Preview Data ditekan
+     * ==========================================================
+     * HANDLE FILE
+     * ==========================================================
      */
-    const form = fileInput.closest('form');
+
+    function handleFile(file) {
+
+
+        const allowedExtensions = [
+            'xlsx',
+            'xls'
+        ];
+
+
+        const extension =
+            file.name
+                .split('.')
+                .pop()
+                .toLowerCase();
+
+
+        /*
+         * Check extension
+         */
+
+        if (!allowedExtensions.includes(extension)) {
+
+            alert(
+                'Format file tidak valid. Silakan pilih file Excel (.xlsx atau .xls).'
+            );
+
+            resetFile();
+
+            return;
+
+        }
+
+
+        /*
+         * Check size
+         * 10 MB
+         */
+
+        const maxSize =
+            10 * 1024 * 1024;
+
+
+        if (file.size > maxSize) {
+
+            alert(
+                'Ukuran file terlalu besar. Maksimal 10 MB.'
+            );
+
+            resetFile();
+
+            return;
+
+        }
+
+
+        /*
+         * Show selected file
+         */
+
+        uploadPlaceholder.classList.add(
+            'd-none'
+        );
+
+
+        selectedFile.classList.remove(
+            'd-none'
+        );
+
+
+        fileName.textContent =
+            file.name;
+
+
+        fileSize.textContent =
+            formatFileSize(file.size);
+
+
+        previewButton.disabled = false;
+
+    }
+
+
+    /*
+     * ==========================================================
+     * REMOVE / CHANGE FILE
+     * ==========================================================
+     */
+
+    removeFile.addEventListener('click', function (e) {
+
+        e.preventDefault();
+
+        e.stopPropagation();
+
+        resetFile();
+
+    });
+
+
+    /*
+     * ==========================================================
+     * RESET FILE
+     * ==========================================================
+     */
+
+    function resetFile() {
+
+        fileInput.value = '';
+
+
+        uploadPlaceholder.classList.remove(
+            'd-none'
+        );
+
+
+        selectedFile.classList.add(
+            'd-none'
+        );
+
+
+        fileName.textContent = '';
+
+        fileSize.textContent = '';
+
+
+        previewButton.disabled = true;
+
+    }
+
+
+    /*
+     * ==========================================================
+     * FORMAT FILE SIZE
+     * ==========================================================
+     */
+
+    function formatFileSize(bytes) {
+
+        if (bytes === 0) {
+
+            return '0 Bytes';
+
+        }
+
+
+        const sizes = [
+            'Bytes',
+            'KB',
+            'MB',
+            'GB'
+        ];
+
+
+        const i =
+            Math.floor(
+                Math.log(bytes) /
+                Math.log(1024)
+            );
+
+
+        return (
+            Math.round(
+                bytes /
+                Math.pow(1024, i) *
+                100
+            ) / 100
+        ) + ' ' + sizes[i];
+
+    }
+
+
+    /*
+     * ==========================================================
+     * DRAG & DROP
+     * ==========================================================
+     */
+
+    uploadArea.addEventListener(
+        'dragover',
+        function (e) {
+
+            e.preventDefault();
+
+            uploadArea.classList.add(
+                'drag-over'
+            );
+
+        }
+    );
+
+
+    uploadArea.addEventListener(
+        'dragleave',
+        function () {
+
+            uploadArea.classList.remove(
+                'drag-over'
+            );
+
+        }
+    );
+
+
+    uploadArea.addEventListener(
+        'drop',
+        function (e) {
+
+            e.preventDefault();
+
+
+            uploadArea.classList.remove(
+                'drag-over'
+            );
+
+
+            const files =
+                e.dataTransfer.files;
+
+
+            if (files.length > 0) {
+
+                const file =
+                    files[0];
+
+
+                /*
+                 * Masukkan file ke input
+                 */
+
+                try {
+
+                    const dataTransfer =
+                        new DataTransfer();
+
+
+                    dataTransfer.items.add(
+                        file
+                    );
+
+
+                    fileInput.files =
+                        dataTransfer.files;
+
+
+                    handleFile(file);
+
+                } catch (error) {
+
+                    handleFile(file);
+
+                }
+
+            }
+
+        }
+    );
+
+
+    /*
+     * ==========================================================
+     * SUBMIT
+     * ==========================================================
+     */
 
     form.addEventListener('submit', function () {
 
-        /*
-         * Cegah submit ulang / double click
-         */
         previewButton.disabled = true;
 
-        /*
-         * Ubah isi tombol
-         */
-        previewButton.innerHTML = `
-            <span class="spinner-border spinner-border-sm me-1"
-                  role="status"
-                  aria-hidden="true"></span>
-            Membaca Excel...
-        `;
+
+        previewButton.innerHTML =
+            '<i class="fas fa-spinner fa-spin me-1"></i> Membaca Excel...';
 
     });
 
 });
+
 </script>
 
 @endsection
