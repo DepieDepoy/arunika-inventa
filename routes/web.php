@@ -54,6 +54,7 @@ require __DIR__.'/dashboard/vendor.php';
 require __DIR__.'/dashboard/asset.php';
 require __DIR__.'/dashboard/maintenance.php';
 require __DIR__.'/dashboard/subscription.php';
+require __DIR__.'/dashboard/profile.php';
 
 
 /*

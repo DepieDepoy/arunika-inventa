@@ -336,14 +336,14 @@ class AssetController extends Controller
             })
 
             ->addColumn('action', function ($asset) {
-
+                $encryptedId = encryptId($asset->id);
                 return '
                     <div class="d-flex gap-1">
 
                         <a
                             href="' . route(
                                 'assets.show',
-                                $asset->id
+                                $encryptedId
                             ) . '"
                             class="btn btn-sm btn-info"
                             title="View"
@@ -354,7 +354,7 @@ class AssetController extends Controller
                         <a
                             href="' . route(
                                 'assets.edit',
-                                $asset->id
+                                $encryptedId
                             ) . '"
                             class="btn btn-sm btn-warning"
                             title="Edit"
@@ -365,7 +365,7 @@ class AssetController extends Controller
                         <button
                             type="button"
                             class="btn btn-sm btn-danger btn-delete"
-                            data-id="' . $asset->id . '"
+                            data-id="' . $encryptedId . '"
                             title="Delete"
                         >
                             <i class="fa fa-trash"></i>
@@ -1471,6 +1471,7 @@ class AssetController extends Controller
      */
     public function edit($id)
     {
+        $id = decryptId($id);
         $companyId = Auth::user()->company_id;
 
         $asset = Asset::where(
@@ -3129,6 +3130,7 @@ class AssetController extends Controller
      */
     public function show($id)
     {
+        $id = decryptId($id);
         $companyId = Auth::user()->company_id;
 
         $asset = Asset::with([
@@ -3156,6 +3158,7 @@ class AssetController extends Controller
      */
     public function qr($id)
     {
+        $id = decryptId($id);
         $companyId = Auth::user()->company_id;
 
         $asset = Asset::where('company_id', $companyId)
