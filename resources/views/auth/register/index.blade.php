@@ -41,7 +41,7 @@
                             class="navbar-brand d-flex align-items-center mb-3">
 
                                 <img
-                                    src="{{ asset('assets/images/auth/vasetra.jpeg') }}"
+                                    src="{{ asset('assets/images/auth/vasetra.png') }}"
                                     alt="VASETRA - Asset Lifecycle Platform"
                                     style="max-width: 280px; height: auto;"
                                 >

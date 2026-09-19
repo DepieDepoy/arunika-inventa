@@ -762,7 +762,99 @@ class SubscriptionController extends Controller
             );
     }
 
+        /*
+    |--------------------------------------------------------------------------
+    | SUBSCRIPTION HISTORY
+    |--------------------------------------------------------------------------
+    |
+    | Menampilkan seluruh riwayat subscription milik company
+    |
+    */
 
+    public function history(Request $request): View
+    {
+        $user = Auth::user();
+
+        /*
+        |--------------------------------------------------------------------------
+        | ONLY ADMINISTRATOR
+        |--------------------------------------------------------------------------
+        */
+
+        $isAdministrator =
+            $user->role &&
+            $user->role->role_code === 'administrator';
+
+        if (!$isAdministrator) {
+            abort(
+                403,
+                'Only Administrator can view subscription history.'
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | COMPANY
+        |--------------------------------------------------------------------------
+        */
+
+        $company = $user->company;
+
+        if (!$company) {
+            abort(
+                404,
+                'Company tidak ditemukan.'
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | SUBSCRIPTION HISTORY
+        |--------------------------------------------------------------------------
+        |
+        | Ambil seluruh subscription milik company.
+        |
+        | Tidak mengambil subscription milik company lain.
+        |
+        */
+
+        $subscriptions = $company
+            ->subscriptions()
+            ->with('plan')
+            ->latest('start_date')
+            ->latest('id')
+            ->paginate(10)
+            ->withQueryString();
+
+        /*
+        |--------------------------------------------------------------------------
+        | SUMMARY
+        |--------------------------------------------------------------------------
+        */
+
+        $totalSubscriptions = $company
+            ->subscriptions()
+            ->count();
+
+        $activeSubscription = $company
+            ->subscriptions()
+            ->where('status', 'active')
+            ->whereDate('start_date', '<=', today())
+            ->whereDate('end_date', '>=', today())
+            ->latest('end_date')
+            ->first();
+
+        return view(
+            'dashboard.subscription.history',
+            compact(
+                'company',
+                'subscriptions',
+                'totalSubscriptions',
+                'activeSubscription'
+            )
+        );
+    }
+    
     /*
     |--------------------------------------------------------------------------
     | EXPIRED PAGE

@@ -13,9 +13,13 @@ Route::prefix('dashboard')
         |--------------------------------------------------------------------------
         */
 
-        // Halaman subscription
+        // Halaman subscription / pilih paket
         Route::get('/subscription', [SubscriptionController::class, 'index'])
             ->name('subscription.index');
+
+        // Subscription history
+        Route::get('/subscription/history', [SubscriptionController::class, 'history'])
+            ->name('subscription.history');
 
         // Halaman expired
         Route::get('/subscription/expired', [SubscriptionController::class, 'expired'])
@@ -25,6 +29,7 @@ Route::prefix('dashboard')
         Route::post('/subscription/renew', [SubscriptionController::class, 'renew'])
             ->name('subscription.renew');
 
+        // Halaman setelah pembayaran selesai
         Route::get('/subscription/payment/finish', [SubscriptionController::class, 'paymentFinish'])
             ->name('subscription.payment.finish');
 

@@ -9,7 +9,12 @@ use Illuminate\Support\Facades\Auth;
 class PlanLimitHelper
 {
     /**
-     * Get active subscription beserta plan perusahaan user yang sedang login.
+     * =========================================================
+     * GET ACTIVE SUBSCRIPTION
+     * =========================================================
+     *
+     * Mengambil subscription aktif milik company user yang login
+     * beserta data plan.
      */
     public static function subscription()
     {
@@ -19,6 +24,12 @@ class PlanLimitHelper
             return null;
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | Ambil company
+        |--------------------------------------------------------------------------
+        */
+
         $company = $user->company;
 
         if (!$company) {
@@ -27,11 +38,13 @@ class PlanLimitHelper
 
         /*
         |--------------------------------------------------------------------------
-        | Ambil relationship activeSubscription
+        | Ambil active subscription + plan
         |--------------------------------------------------------------------------
         |
-        | activeSubscription() adalah HasOne relationship.
-        | Jangan gunakan ->load() langsung pada relationship.
+        | activeSubscription() adalah HasOne.
+        |
+        | Gunakan with('plan') pada relationship query,
+        | BUKAN load() pada HasOne.
         |
         */
 
@@ -43,45 +56,65 @@ class PlanLimitHelper
 
 
     /**
-     * Maximum user sesuai plan aktif.
+     * =========================================================
+     * MAX USERS
+     * =========================================================
+     *
+     * Mengambil batas maksimal user dari plan aktif.
      */
     public static function maxUsers(): int
     {
         $subscription = self::subscription();
 
-        if (!$subscription || !$subscription->plan) {
+        if (!$subscription) {
             return 0;
         }
 
-        $limit = $subscription->plan->max_users;
+        if (!$subscription->plan) {
+            return 0;
+        }
 
-        return $limit !== null
-            ? (int) $limit
-            : 0;
+        if ($subscription->plan->max_users === null) {
+            return 0;
+        }
+
+        return (int) $subscription->plan->max_users;
     }
 
 
     /**
-     * Maximum asset sesuai plan aktif.
+     * =========================================================
+     * MAX ASSETS
+     * =========================================================
+     *
+     * Mengambil batas maksimal asset dari plan aktif.
      */
     public static function maxAssets(): int
     {
         $subscription = self::subscription();
 
-        if (!$subscription || !$subscription->plan) {
+        if (!$subscription) {
             return 0;
         }
 
-        $limit = $subscription->plan->max_assets;
+        if (!$subscription->plan) {
+            return 0;
+        }
 
-        return $limit !== null
-            ? (int) $limit
-            : 0;
+        if ($subscription->plan->max_assets === null) {
+            return 0;
+        }
+
+        return (int) $subscription->plan->max_assets;
     }
 
 
     /**
-     * Jumlah user perusahaan saat ini.
+     * =========================================================
+     * CURRENT USERS
+     * =========================================================
+     *
+     * Menghitung jumlah user dalam company yang sedang login.
      */
     public static function currentUsers(): int
     {
@@ -91,15 +124,18 @@ class PlanLimitHelper
             return 0;
         }
 
-        return User::where(
-            'company_id',
-            $user->company_id
-        )->count();
+        return User::query()
+            ->where('company_id', $user->company_id)
+            ->count();
     }
 
 
     /**
-     * Jumlah asset perusahaan saat ini.
+     * =========================================================
+     * CURRENT ASSETS
+     * =========================================================
+     *
+     * Menghitung jumlah asset dalam company yang sedang login.
      */
     public static function currentAssets(): int
     {
@@ -109,25 +145,49 @@ class PlanLimitHelper
             return 0;
         }
 
-        return Asset::where(
-            'company_id',
-            $user->company_id
-        )->count();
+        return Asset::query()
+            ->where('company_id', $user->company_id)
+            ->count();
     }
 
 
     /**
-     * Cek apakah masih boleh menambah user.
+     * =========================================================
+     * CAN ADD USERS
+     * =========================================================
+     *
+     * Mengecek apakah company masih mempunyai slot user.
+     *
+     * Contoh:
+     *
+     * max_users = 5
+     * current   = 4
+     * additional = 1
+     *
+     * hasil = true
+     *
+     * Jika current = 5:
+     * hasil = false
      */
     public static function canAddUsers(
         int $additionalUsers = 1
     ): bool {
 
+        /*
+        |--------------------------------------------------------------------------
+        | Additional tidak boleh negatif
+        |--------------------------------------------------------------------------
+        */
+
+        if ($additionalUsers < 1) {
+            $additionalUsers = 1;
+        }
+
         $limit = self::maxUsers();
 
         /*
         |--------------------------------------------------------------------------
-        | Limit 0 dianggap unlimited
+        | Limit 0 = unlimited
         |--------------------------------------------------------------------------
         */
 
@@ -135,24 +195,40 @@ class PlanLimitHelper
             return true;
         }
 
+        $current = self::currentUsers();
+
         return (
-            self::currentUsers() + $additionalUsers
+            $current + $additionalUsers
         ) <= $limit;
     }
 
 
     /**
-     * Cek apakah masih boleh menambah asset.
+     * =========================================================
+     * CAN ADD ASSETS
+     * =========================================================
+     *
+     * Mengecek apakah company masih mempunyai slot asset.
      */
     public static function canAddAssets(
         int $additionalAssets = 1
     ): bool {
 
+        /*
+        |--------------------------------------------------------------------------
+        | Additional tidak boleh negatif
+        |--------------------------------------------------------------------------
+        */
+
+        if ($additionalAssets < 1) {
+            $additionalAssets = 1;
+        }
+
         $limit = self::maxAssets();
 
         /*
         |--------------------------------------------------------------------------
-        | Limit 0 dianggap unlimited
+        | Limit 0 = unlimited
         |--------------------------------------------------------------------------
         */
 
@@ -160,44 +236,74 @@ class PlanLimitHelper
             return true;
         }
 
+        $current = self::currentAssets();
+
         return (
-            self::currentAssets() + $additionalAssets
+            $current + $additionalAssets
         ) <= $limit;
     }
 
 
     /**
-     * Sisa slot user.
+     * =========================================================
+     * REMAINING USERS
+     * =========================================================
+     *
+     * Mengembalikan jumlah slot user yang masih tersedia.
+     *
+     * null = unlimited.
      */
     public static function remainingUsers(): ?int
     {
         $limit = self::maxUsers();
 
+        /*
+        |--------------------------------------------------------------------------
+        | Unlimited
+        |--------------------------------------------------------------------------
+        */
+
         if ($limit <= 0) {
             return null;
         }
 
+        $current = self::currentUsers();
+
         return max(
             0,
-            $limit - self::currentUsers()
+            $limit - $current
         );
     }
 
 
     /**
-     * Sisa slot asset.
+     * =========================================================
+     * REMAINING ASSETS
+     * =========================================================
+     *
+     * Mengembalikan jumlah slot asset yang masih tersedia.
+     *
+     * null = unlimited.
      */
     public static function remainingAssets(): ?int
     {
         $limit = self::maxAssets();
 
+        /*
+        |--------------------------------------------------------------------------
+        | Unlimited
+        |--------------------------------------------------------------------------
+        */
+
         if ($limit <= 0) {
             return null;
         }
 
+        $current = self::currentAssets();
+
         return max(
             0,
-            $limit - self::currentAssets()
+            $limit - $current
         );
     }
 }

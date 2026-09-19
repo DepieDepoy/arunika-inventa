@@ -46,7 +46,7 @@
                             class="navbar-brand d-flex align-items-center mb-3">
 
                                 <img
-                                    src="{{ asset('assets/images/auth/vasetra.jpeg') }}"
+                                    src="{{ asset('assets/images/auth/vasetra.png') }}"
                                     alt="VASETRA - Asset Lifecycle Platform"
                                     style="max-width: 280px; height: auto;"
                                 >
@@ -107,7 +107,7 @@
                                             Remember Me
                                         </label>
                                     </div>
-                                    <a href="recoverpw.html">Forgot Password?</a>
+                                    <a href="{{ route('password.request') }}">Forgot Password?</a>
                                  </div>
                               </div>
                               <div class="d-flex justify-content-center">
