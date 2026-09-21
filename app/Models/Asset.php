@@ -128,7 +128,7 @@ class Asset extends Model
         return $this->hasOne(MaintenanceRequest::class)
             ->whereIn('status', [
                 'pending',
-                'approved',
+                //'approved',
                 'in_progress',
             ])
             ->latestOfMany();

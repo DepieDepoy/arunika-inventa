@@ -2,17 +2,18 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use App\Models\Company;
-use App\Models\Role;
+use App\Notifications\ResetPasswordNotification;
+use App\Notifications\VerifyEmailNotification;
 
 use Database\Factories\UserFactory;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use App\Notifications\ResetPasswordNotification;
+use Laravel\Sanctum\HasApiTokens;
+
 
 /**
  * User Model
@@ -20,6 +21,7 @@ use App\Notifications\ResetPasswordNotification;
  * @property int $id
  * @property int $company_id
  * @property string $name
+ * @property string|null $nik
  * @property string|null $phone
  * @property string $email
  * @property string|null $photo
@@ -29,12 +31,11 @@ use App\Notifications\ResetPasswordNotification;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  */
-
 #[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * Mass assignable attributes.
@@ -62,7 +63,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'must_change_password' => 'boolean',    
+            'must_change_password' => 'boolean',
         ];
     }
 
@@ -73,11 +74,18 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Company::class);
     }
+
+    /**
+     * Relasi ke role.
+     */
     public function role(): BelongsTo
     {
         return $this->belongsTo(Role::class);
     }
 
+    /**
+     * Cek permission user.
+     */
     public function hasPermission(string $permission): bool
     {
         // Administrator memiliki seluruh permission
@@ -96,9 +104,23 @@ class User extends Authenticatable
             ->exists();
     }
 
+    /**
+     * Custom email reset password.
+     */
     public function sendPasswordResetNotification($token): void
     {
-        $this->notify(new ResetPasswordNotification($token));
+        $this->notify(
+            new ResetPasswordNotification($token)
+        );
     }
-    
+
+    /**
+     * Custom email verification VASETRA.
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(
+            new VerifyEmailNotification()
+        );
+    }
 }

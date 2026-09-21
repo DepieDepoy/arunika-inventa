@@ -22,6 +22,27 @@ class CheckSubscriptionAccess
         */
 
         if (!$user) {
+
+            /*
+            |--------------------------------------------------------------------------
+            | API
+            |--------------------------------------------------------------------------
+            */
+
+            if ($request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthenticated.',
+                    'code' => 'UNAUTHENTICATED',
+                ], 401);
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | WEB / DASHBOARD
+            |--------------------------------------------------------------------------
+            */
+
             return redirect()->route('login');
         }
 
@@ -62,12 +83,73 @@ class CheckSubscriptionAccess
 
         /*
         |--------------------------------------------------------------------------
-        | USER NON-ADMINISTRATOR
+        | API - SUBSCRIPTION EXPIRED
         |--------------------------------------------------------------------------
         |
-        | Setelah subscription expired, user selain Administrator
-        | tidak boleh masuk ke aplikasi.
+        | Untuk API kita TIDAK boleh redirect ke halaman login/HTML.
         |
+        | Non-Administrator:
+        | -> 403 JSON
+        |
+        | Administrator:
+        | -> GET / HEAD tetap boleh
+        | -> method selain GET/HEAD ditolak
+        |
+        */
+
+        if ($request->is('api/*')) {
+
+            /*
+            |--------------------------------------------------------------------------
+            | NON-ADMINISTRATOR
+            |--------------------------------------------------------------------------
+            */
+
+            if (!$isAdministrator) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Company subscription has expired.',
+                    'code' => 'SUBSCRIPTION_EXPIRED',
+                ], 403);
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | ADMINISTRATOR - VIEW ONLY
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                !in_array(
+                    strtoupper($request->method()),
+                    ['GET', 'HEAD'],
+                    true
+                )
+            ) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Company subscription has expired. Please renew your subscription to continue.',
+                    'code' => 'SUBSCRIPTION_EXPIRED',
+                ], 403);
+            }
+
+            return $next($request);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | WEB / DASHBOARD
+        |--------------------------------------------------------------------------
+        |
+        | Mulai bagian ini behavior dashboard tetap sama
+        | seperti sebelumnya.
+        |
+        */
+
+        /*
+        |--------------------------------------------------------------------------
+        | USER NON-ADMINISTRATOR
+        |--------------------------------------------------------------------------
         */
 
         if (!$isAdministrator) {
@@ -83,10 +165,6 @@ class CheckSubscriptionAccess
         |--------------------------------------------------------------------------
         | ADMINISTRATOR - VIEW ONLY
         |--------------------------------------------------------------------------
-        |
-        | Administrator masih boleh masuk setelah expired,
-        | tetapi hanya untuk melihat data dan melakukan perpanjangan.
-        |
         */
 
         /*
