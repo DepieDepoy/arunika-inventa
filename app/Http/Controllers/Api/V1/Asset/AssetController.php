@@ -8,6 +8,7 @@ use App\Models\AssetMaintenance;
 use App\Models\MaintenanceRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class AssetController extends Controller
 {
@@ -25,7 +26,10 @@ class AssetController extends Controller
         $user = $request->user();
 
         $query = Asset::query()
-            ->where('company_id', $user->company_id)
+            ->where(
+                'company_id',
+                $user->company_id
+            )
             ->with([
                 'category:id,category_name',
                 'subCategory:id,sub_category_name',
@@ -61,15 +65,22 @@ class AssetController extends Controller
             ])
             ->orderByDesc('id');
 
-        $this->applySearch($query, $request);
+        $this->applySearch(
+            $query,
+            $request
+        );
 
         $assets = $query->paginate(
             $this->perPage($request)
         );
 
-        $data = collect($assets->items())
+        $data = collect(
+            $assets->items()
+        )
             ->map(function (Asset $asset) {
-                return $this->formatAsset($asset);
+                return $this->formatAsset(
+                    $asset
+                );
             })
             ->values();
 
@@ -78,7 +89,8 @@ class AssetController extends Controller
             'data' => [
                 'assets' => $data,
             ],
-            'pagination' => $this->pagination($assets),
+            'pagination' =>
+                $this->pagination($assets),
         ]);
     }
 
@@ -92,13 +104,20 @@ class AssetController extends Controller
     |
     */
 
-    public function myAssets(Request $request): JsonResponse
-    {
+    public function myAssets(
+        Request $request
+    ): JsonResponse {
         $user = $request->user();
 
         $query = Asset::query()
-            ->where('company_id', $user->company_id)
-            ->where('responsible_user_id', $user->id)
+            ->where(
+                'company_id',
+                $user->company_id
+            )
+            ->where(
+                'responsible_user_id',
+                $user->id
+            )
             ->with([
                 'category:id,category_name',
                 'subCategory:id,sub_category_name',
@@ -134,15 +153,22 @@ class AssetController extends Controller
             ])
             ->orderByDesc('id');
 
-        $this->applySearch($query, $request);
+        $this->applySearch(
+            $query,
+            $request
+        );
 
         $assets = $query->paginate(
             $this->perPage($request)
         );
 
-        $data = collect($assets->items())
+        $data = collect(
+            $assets->items()
+        )
             ->map(function (Asset $asset) {
-                return $this->formatAsset($asset);
+                return $this->formatAsset(
+                    $asset
+                );
             })
             ->values();
 
@@ -151,7 +177,8 @@ class AssetController extends Controller
             'data' => [
                 'assets' => $data,
             ],
-            'pagination' => $this->pagination($assets),
+            'pagination' =>
+                $this->pagination($assets),
         ]);
     }
 
@@ -162,12 +189,17 @@ class AssetController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    public function show(Request $request, int $id): JsonResponse
-    {
+    public function show(
+        Request $request,
+        int $id
+    ): JsonResponse {
         $user = $request->user();
 
         $asset = Asset::query()
-            ->where('company_id', $user->company_id)
+            ->where(
+                'company_id',
+                $user->company_id
+            )
             ->with([
                 'category',
                 'subCategory',
@@ -179,7 +211,10 @@ class AssetController extends Controller
         return response()->json([
             'success' => true,
             'data' => [
-                'asset' => $this->formatAssetDetail($asset),
+                'asset' =>
+                    $this->formatAssetDetail(
+                        $asset
+                    ),
             ],
         ]);
     }
@@ -191,13 +226,21 @@ class AssetController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    public function myAssetShow(Request $request, int $id): JsonResponse
-    {
+    public function myAssetShow(
+        Request $request,
+        int $id
+    ): JsonResponse {
         $user = $request->user();
 
         $asset = Asset::query()
-            ->where('company_id', $user->company_id)
-            ->where('responsible_user_id', $user->id)
+            ->where(
+                'company_id',
+                $user->company_id
+            )
+            ->where(
+                'responsible_user_id',
+                $user->id
+            )
             ->with([
                 'category',
                 'subCategory',
@@ -209,9 +252,196 @@ class AssetController extends Controller
         return response()->json([
             'success' => true,
             'data' => [
-                'asset' => $this->formatAssetDetail($asset),
+                'asset' =>
+                    $this->formatAssetDetail(
+                        $asset
+                    ),
             ],
         ]);
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ASSET PHOTO
+    |--------------------------------------------------------------------------
+    |
+    | Endpoint khusus untuk mengambil foto asset.
+    |
+    | Flutter tidak lagi mengambil:
+    |
+    | /storage/documents/...
+    |
+    | tetapi:
+    |
+    | /api/v1/assets/photos/{photoId}
+    |
+    | Request melewati Laravel sehingga:
+    |
+    | - Bearer Token tetap digunakan
+    | - company isolation tetap berlaku
+    | - permission asset.view tetap berlaku
+    | - CORS dapat diberikan oleh Laravel
+    |
+    */
+
+    public function photo(
+        Request $request,
+        int $photoId
+    ) {
+        $user = $request->user();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Cari asset milik company user
+        |--------------------------------------------------------------------------
+        */
+
+        $asset = Asset::query()
+            ->where(
+                'company_id',
+                $user->company_id
+            )
+            ->whereHas(
+                'photos',
+                function ($query) use ($photoId) {
+                    $query->where(
+                        'id',
+                        $photoId
+                    );
+                }
+            )
+            ->with([
+                'photos' => function ($query) use (
+                    $photoId
+                ) {
+                    $query->where(
+                        'id',
+                        $photoId
+                    );
+                },
+            ])
+            ->first();
+
+        if (!$asset) {
+            abort(404);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Ambil photo
+        |--------------------------------------------------------------------------
+        */
+
+        $photo =
+            $asset->photos->first();
+
+        if (!$photo) {
+            abort(404);
+        }
+
+        if (
+            !$photo->file_path ||
+            trim($photo->file_path) === ''
+        ) {
+            abort(404);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Storage path
+        |--------------------------------------------------------------------------
+        */
+
+        $path = ltrim(
+            $photo->file_path,
+            '/'
+        );
+
+        $disk = Storage::disk(
+            'public'
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Pastikan file ada
+        |--------------------------------------------------------------------------
+        */
+
+        if (!$disk->exists($path)) {
+            abort(404);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Return file
+        |--------------------------------------------------------------------------
+        */
+
+        return response()->file(
+            $disk->path($path),
+            [
+                'Content-Type' =>
+                    $this->getPhotoMimeType(
+                        $path
+                    ),
+
+                'Cache-Control' =>
+                    'public, max-age=86400',
+
+                'Access-Control-Allow-Origin' =>
+                    $request
+                        ->headers
+                        ->get('Origin')
+                    ?? '*',
+
+                'Access-Control-Allow-Methods' =>
+                    'GET, OPTIONS',
+
+                'Access-Control-Allow-Headers' =>
+                    'Content-Type, Authorization, X-Requested-With, Accept',
+
+                'Access-Control-Expose-Headers' =>
+                    'Content-Length, Content-Type',
+            ]
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | PHOTO MIME TYPE
+    |--------------------------------------------------------------------------
+    */
+
+    private function getPhotoMimeType(
+        string $path
+    ): string {
+        $extension = strtolower(
+            pathinfo(
+                $path,
+                PATHINFO_EXTENSION
+            )
+        );
+
+        return match ($extension) {
+
+            'jpg',
+            'jpeg' =>
+                'image/jpeg',
+
+            'png' =>
+                'image/png',
+
+            'webp' =>
+                'image/webp',
+
+            'gif' =>
+                'image/gif',
+
+            default =>
+                'application/octet-stream',
+        };
     }
 
 
@@ -228,7 +458,10 @@ class AssetController extends Controller
         $user = $request->user();
 
         $asset = Asset::query()
-            ->where('company_id', $user->company_id)
+            ->where(
+                'company_id',
+                $user->company_id
+            )
             ->findOrFail($id);
 
         return $this->maintenanceResponse(
@@ -251,8 +484,14 @@ class AssetController extends Controller
         $user = $request->user();
 
         $asset = Asset::query()
-            ->where('company_id', $user->company_id)
-            ->where('responsible_user_id', $user->id)
+            ->where(
+                'company_id',
+                $user->company_id
+            )
+            ->where(
+                'responsible_user_id',
+                $user->id
+            )
             ->findOrFail($id);
 
         return $this->maintenanceResponse(
@@ -261,21 +500,28 @@ class AssetController extends Controller
         );
     }
 
-    /**
-     * Get asset by QR token.
-     *
-     * User must:
-     * - be authenticated
-     * - belong to the same company as the asset
-     * - have asset.view permission
-     */
-    public function scanQr(Request $request, string $qrToken): JsonResponse
-    {
+
+    /*
+    |--------------------------------------------------------------------------
+    | SCAN QR
+    |--------------------------------------------------------------------------
+    */
+
+    public function scanQr(
+        Request $request,
+        string $qrToken
+    ): JsonResponse {
         $user = $request->user();
 
         $asset = Asset::query()
-            ->where('company_id', $user->company_id)
-            ->where('qr_token', $qrToken)
+            ->where(
+                'company_id',
+                $user->company_id
+            )
+            ->where(
+                'qr_token',
+                $qrToken
+            )
             ->with([
                 'category',
                 'subCategory',
@@ -287,18 +533,25 @@ class AssetController extends Controller
         if (!$asset) {
             return response()->json([
                 'success' => false,
-                'message' => 'Asset tidak ditemukan atau QR Code tidak valid.',
-                'code' => 'ASSET_NOT_FOUND',
+                'message' =>
+                    'Asset tidak ditemukan atau QR Code tidak valid.',
+                'code' =>
+                    'ASSET_NOT_FOUND',
             ], 404);
         }
 
         return response()->json([
             'success' => true,
             'data' => [
-                'asset' => $this->formatAssetDetail($asset),
+                'asset' =>
+                    $this->formatAssetDetail(
+                        $asset
+                    ),
             ],
         ]);
     }
+
+
     /*
     |--------------------------------------------------------------------------
     | MAINTENANCE RESPONSE
@@ -309,60 +562,108 @@ class AssetController extends Controller
         Request $request,
         Asset $asset
     ): JsonResponse {
-        $maintenances = AssetMaintenance::query()
-            ->where('company_id', $asset->company_id)
-            ->where('asset_id', $asset->id)
-            ->orderByDesc('maintenance_date')
-            ->orderByDesc('id')
-            ->paginate(
-                $this->perPage($request)
-            );
+        $maintenances =
+            AssetMaintenance::query()
+                ->where(
+                    'company_id',
+                    $asset->company_id
+                )
+                ->where(
+                    'asset_id',
+                    $asset->id
+                )
+                ->orderByDesc(
+                    'maintenance_date'
+                )
+                ->orderByDesc('id')
+                ->paginate(
+                    $this->perPage($request)
+                );
 
-        $data = collect($maintenances->items())
-            ->map(function (AssetMaintenance $maintenance) {
-                return [
-                    'id' => $maintenance->id,
-                    'maintenance_date' =>
-                        $maintenance->maintenance_date,
-                    'maintenance_type' =>
-                        $maintenance->maintenance_type,
-                    'maintenance_title' =>
-                        $maintenance->maintenance_title,
-                    'description' =>
-                        $maintenance->description,
-                    'technician_name' =>
-                        $maintenance->technician_name,
-                    'technician_phone' =>
-                        $maintenance->technician_phone,
-                    'cost' =>
-                        $maintenance->cost,
-                    'result' =>
-                        $maintenance->result,
-                    'notes' =>
-                        $maintenance->notes,
-                    'next_maintenance_date' =>
-                        $maintenance->next_maintenance_date,
-                    'status' =>
-                        $maintenance->status,
-                    'documents' =>
-                        $maintenance->documents,
-                    'photos' =>
-                        $maintenance->photos,
-                ];
-            })
+        $data = collect(
+            $maintenances->items()
+        )
+            ->map(
+                function (
+                    AssetMaintenance $maintenance
+                ) {
+                    return [
+                        'id' =>
+                            $maintenance->id,
+
+                        'maintenance_date' =>
+                            $maintenance
+                                ->maintenance_date,
+
+                        'maintenance_type' =>
+                            $maintenance
+                                ->maintenance_type,
+
+                        'maintenance_title' =>
+                            $maintenance
+                                ->maintenance_title,
+
+                        'description' =>
+                            $maintenance
+                                ->description,
+
+                        'technician_name' =>
+                            $maintenance
+                                ->technician_name,
+
+                        'technician_phone' =>
+                            $maintenance
+                                ->technician_phone,
+
+                        'cost' =>
+                            $maintenance->cost,
+
+                        'result' =>
+                            $maintenance->result,
+
+                        'notes' =>
+                            $maintenance->notes,
+
+                        'next_maintenance_date' =>
+                            $maintenance
+                                ->next_maintenance_date,
+
+                        'status' =>
+                            $maintenance->status,
+
+                        'documents' =>
+                            $maintenance->documents,
+
+                        'photos' =>
+                            $maintenance->photos,
+                    ];
+                }
+            )
             ->values();
 
         return response()->json([
             'success' => true,
+
             'data' => [
                 'asset' => [
-                    'id' => $asset->id,
-                    'asset_code' => $asset->asset_code,
-                    'asset_name' => $asset->asset_name,
+                    'id' =>
+                        $asset->id,
+
+                    'asset_code' =>
+                        $asset->asset_code,
+
+                    'asset_name' =>
+                        $asset->asset_name,
                 ],
-                'maintenances' => $data,
+
+                'maintenances' =>
+                    $data,
             ],
-            'pagination' => $this->pagination($maintenances),
+
+            'pagination' =>
+                $this->pagination(
+                    $maintenances
+                ),
         ]);
     }
 
@@ -373,21 +674,26 @@ class AssetController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    private function formatAsset(Asset $asset): array
-    {
-        $photo = $asset->photos->first();
+    private function formatAsset(
+        Asset $asset
+    ): array {
+        $photo =
+            $asset->photos->first();
 
         /*
-         * Jangan menggunakan eager-load activeMaintenanceRequest
-         * karena relasi latestOfMany() menimbulkan ambiguous asset_id
-         * ketika digunakan pada query list.
-         *
-         * Kita ambil request aktif secara eksplisit.
-         */
-        $activeRequest = $this->getActiveRequest($asset);
+        |--------------------------------------------------------------------------
+        | ACTIVE REQUEST
+        |--------------------------------------------------------------------------
+        */
+
+        $activeRequest =
+            $this->getActiveRequest(
+                $asset
+            );
 
         return [
-            'id' => $asset->id,
+            'id' =>
+                $asset->id,
 
             'asset_code' =>
                 $asset->asset_code,
@@ -400,8 +706,10 @@ class AssetController extends Controller
                     ? [
                         'id' =>
                             $asset->category->id,
+
                         'name' =>
-                            $asset->category->category_name,
+                            $asset->category
+                                ->category_name,
                     ]
                     : null,
 
@@ -409,9 +717,14 @@ class AssetController extends Controller
                 $asset->subCategory
                     ? [
                         'id' =>
-                            $asset->subCategory->id,
+                            $asset
+                                ->subCategory
+                                ->id,
+
                         'name' =>
-                            $asset->subCategory->sub_category_name,
+                            $asset
+                                ->subCategory
+                                ->sub_category_name,
                     ]
                     : null,
 
@@ -436,14 +749,30 @@ class AssetController extends Controller
             'responsible_user_id' =>
                 $asset->responsible_user_id,
 
+            /*
+            |--------------------------------------------------------------------------
+            | PHOTO URL
+            |--------------------------------------------------------------------------
+            */
+
             'photo_url' =>
                 $photo
-                    ? $this->fileUrl($photo->file_path)
+                    ? route(
+                        'api.v1.assets.photos',
+                        $photo->id
+                    )
                     : null,
+
+            /*
+            |--------------------------------------------------------------------------
+            | MAINTENANCE
+            |--------------------------------------------------------------------------
+            */
 
             'maintenance' => [
                 'required' =>
-                    (bool) $asset->maintenance_required,
+                    (bool)
+                    $asset->maintenance_required,
 
                 'type' =>
                     $asset->maintenance_type,
@@ -467,6 +796,12 @@ class AssetController extends Controller
                     $asset->next_maintenance_date,
             ],
 
+            /*
+            |--------------------------------------------------------------------------
+            | ACTIVE REQUEST
+            |--------------------------------------------------------------------------
+            */
+
             'has_active_request' =>
                 $activeRequest !== null,
 
@@ -477,16 +812,19 @@ class AssetController extends Controller
                             $activeRequest->id,
 
                         'request_type' =>
-                            $activeRequest->request_type,
+                            $activeRequest
+                                ->request_type,
 
                         'description' =>
-                            $activeRequest->description,
+                            $activeRequest
+                                ->description,
 
                         'status' =>
                             $activeRequest->status,
 
                         'created_at' =>
-                            $activeRequest->created_at,
+                            $activeRequest
+                                ->created_at,
                     ]
                     : null,
         ];
@@ -502,7 +840,16 @@ class AssetController extends Controller
     private function formatAssetDetail(
         Asset $asset
     ): array {
+
+        /*
+        |--------------------------------------------------------------------------
+        | PHOTOS
+        |--------------------------------------------------------------------------
+        */
+
         $photos = $asset->photos
+            ->sortBy('sort_order')
+            ->take(3)
             ->map(function ($photo) {
                 return [
                     'id' =>
@@ -517,71 +864,111 @@ class AssetController extends Controller
                     'sort_order' =>
                         $photo->sort_order,
 
+                    /*
+                    |--------------------------------------------------------------------------
+                    | IMPORTANT
+                    |--------------------------------------------------------------------------
+                    |
+                    | Jangan lagi menggunakan:
+                    |
+                    | asset('storage/...')
+                    |
+                    | karena Flutter Web akan terkena CORS
+                    | pada static storage.
+                    |
+                    */
+
                     'url' =>
-                        $this->fileUrl(
-                            $photo->file_path
+                        route(
+                            'api.v1.assets.photos',
+                            $photo->id
                         ),
                 ];
             })
             ->values();
 
-        $activeRequest = $this->getActiveRequest(
-            $asset,
-            true
-        );
+        /*
+        |--------------------------------------------------------------------------
+        | ACTIVE REQUEST
+        |--------------------------------------------------------------------------
+        */
 
-        $maintenanceHistory = $asset->maintenances()
-            ->orderByDesc('maintenance_date')
-            ->orderByDesc('id')
-            ->get()
-            ->map(function (
-                AssetMaintenance $maintenance
-            ) {
-                return [
-                    'id' =>
-                        $maintenance->id,
+        $activeRequest =
+            $this->getActiveRequest(
+                $asset,
+                true
+            );
 
-                    'maintenance_date' =>
-                        $maintenance->maintenance_date,
+        /*
+        |--------------------------------------------------------------------------
+        | MAINTENANCE HISTORY
+        |--------------------------------------------------------------------------
+        */
 
-                    'maintenance_type' =>
-                        $maintenance->maintenance_type,
+        $maintenanceHistory =
+            $asset->maintenances()
+                ->orderByDesc(
+                    'maintenance_date'
+                )
+                ->orderByDesc('id')
+                ->get()
+                ->map(
+                    function (
+                        AssetMaintenance $maintenance
+                    ) {
+                        return [
+                            'id' =>
+                                $maintenance->id,
 
-                    'maintenance_title' =>
-                        $maintenance->maintenance_title,
+                            'maintenance_date' =>
+                                $maintenance
+                                    ->maintenance_date,
 
-                    'description' =>
-                        $maintenance->description,
+                            'maintenance_type' =>
+                                $maintenance
+                                    ->maintenance_type,
 
-                    'technician_name' =>
-                        $maintenance->technician_name,
+                            'maintenance_title' =>
+                                $maintenance
+                                    ->maintenance_title,
 
-                    'technician_phone' =>
-                        $maintenance->technician_phone,
+                            'description' =>
+                                $maintenance
+                                    ->description,
 
-                    'cost' =>
-                        $maintenance->cost,
+                            'technician_name' =>
+                                $maintenance
+                                    ->technician_name,
 
-                    'result' =>
-                        $maintenance->result,
+                            'technician_phone' =>
+                                $maintenance
+                                    ->technician_phone,
 
-                    'notes' =>
-                        $maintenance->notes,
+                            'cost' =>
+                                $maintenance->cost,
 
-                    'next_maintenance_date' =>
-                        $maintenance->next_maintenance_date,
+                            'result' =>
+                                $maintenance->result,
 
-                    'status' =>
-                        $maintenance->status,
+                            'notes' =>
+                                $maintenance->notes,
 
-                    'documents' =>
-                        $maintenance->documents,
+                            'next_maintenance_date' =>
+                                $maintenance
+                                    ->next_maintenance_date,
 
-                    'photos' =>
-                        $maintenance->photos,
-                ];
-            })
-            ->values();
+                            'status' =>
+                                $maintenance->status,
+
+                            'documents' =>
+                                $maintenance->documents,
+
+                            'photos' =>
+                                $maintenance->photos,
+                        ];
+                    }
+                )
+                ->values();
 
         return [
             'id' =>
@@ -598,8 +985,10 @@ class AssetController extends Controller
                     ? [
                         'id' =>
                             $asset->category->id,
+
                         'name' =>
-                            $asset->category->category_name,
+                            $asset->category
+                                ->category_name,
                     ]
                     : null,
 
@@ -607,9 +996,14 @@ class AssetController extends Controller
                 $asset->subCategory
                     ? [
                         'id' =>
-                            $asset->subCategory->id,
+                            $asset
+                                ->subCategory
+                                ->id,
+
                         'name' =>
-                            $asset->subCategory->sub_category_name,
+                            $asset
+                                ->subCategory
+                                ->sub_category_name,
                     ]
                     : null,
 
@@ -617,9 +1011,14 @@ class AssetController extends Controller
                 $asset->responsibleUser
                     ? [
                         'id' =>
-                            $asset->responsibleUser->id,
+                            $asset
+                                ->responsibleUser
+                                ->id,
+
                         'name' =>
-                            $asset->responsibleUser->name,
+                            $asset
+                                ->responsibleUser
+                                ->name,
                     ]
                     : null,
 
@@ -658,12 +1057,25 @@ class AssetController extends Controller
             'status' =>
                 $asset->status,
 
+            /*
+            |--------------------------------------------------------------------------
+            | PHOTOS
+            |--------------------------------------------------------------------------
+            */
+
             'photos' =>
                 $photos,
 
+            /*
+            |--------------------------------------------------------------------------
+            | MAINTENANCE
+            |--------------------------------------------------------------------------
+            */
+
             'maintenance' => [
                 'required' =>
-                    (bool) $asset->maintenance_required,
+                    (bool)
+                    $asset->maintenance_required,
 
                 'type' =>
                     $asset->maintenance_type,
@@ -687,6 +1099,12 @@ class AssetController extends Controller
                     $asset->next_maintenance_date,
             ],
 
+            /*
+            |--------------------------------------------------------------------------
+            | ACTIVE REQUEST
+            |--------------------------------------------------------------------------
+            */
+
             'active_request' =>
                 $activeRequest
                     ? [
@@ -694,32 +1112,47 @@ class AssetController extends Controller
                             $activeRequest->id,
 
                         'request_type' =>
-                            $activeRequest->request_type,
+                            $activeRequest
+                                ->request_type,
 
                         'description' =>
-                            $activeRequest->description,
+                            $activeRequest
+                                ->description,
 
                         'status' =>
-                            $activeRequest->status,
+                            $activeRequest
+                                ->status,
 
                         'handled_at' =>
-                            $activeRequest->handled_at,
+                            $activeRequest
+                                ->handled_at,
 
                         'completed_at' =>
-                            $activeRequest->completed_at,
+                            $activeRequest
+                                ->completed_at,
 
                         'handler' =>
                             $activeRequest->handler
                                 ? [
                                     'id' =>
-                                        $activeRequest->handler->id,
+                                        $activeRequest
+                                            ->handler
+                                            ->id,
 
                                     'name' =>
-                                        $activeRequest->handler->name,
+                                        $activeRequest
+                                            ->handler
+                                            ->name,
                                 ]
                                 : null,
                     ]
                     : null,
+
+            /*
+            |--------------------------------------------------------------------------
+            | MAINTENANCE HISTORY
+            |--------------------------------------------------------------------------
+            */
 
             'maintenance_history' =>
                 $maintenanceHistory,
@@ -737,13 +1170,23 @@ class AssetController extends Controller
         Asset $asset,
         bool $withRelations = false
     ): ?MaintenanceRequest {
+
         $query = MaintenanceRequest::query()
-            ->where('company_id', $asset->company_id)
-            ->where('asset_id', $asset->id)
-            ->whereIn('status', [
-                'pending',
-                'in_progress',
-            ])
+            ->where(
+                'company_id',
+                $asset->company_id
+            )
+            ->where(
+                'asset_id',
+                $asset->id
+            )
+            ->whereIn(
+                'status',
+                [
+                    'pending',
+                    'in_progress',
+                ]
+            )
             ->latest('id');
 
         if ($withRelations) {
@@ -767,6 +1210,7 @@ class AssetController extends Controller
         $query,
         Request $request
     ): void {
+
         if (!$request->filled('search')) {
             return;
         }
@@ -775,38 +1219,40 @@ class AssetController extends Controller
             $request->search
         );
 
-        $query->where(function ($q) use ($search) {
+        $query->where(
+            function ($q) use ($search) {
 
-            $q->where(
-                'asset_code',
-                'like',
-                "%{$search}%"
-            )
+                $q->where(
+                    'asset_code',
+                    'like',
+                    "%{$search}%"
+                )
 
-            ->orWhere(
-                'asset_name',
-                'like',
-                "%{$search}%"
-            )
+                    ->orWhere(
+                        'asset_name',
+                        'like',
+                        "%{$search}%"
+                    )
 
-            ->orWhere(
-                'brand',
-                'like',
-                "%{$search}%"
-            )
+                    ->orWhere(
+                        'brand',
+                        'like',
+                        "%{$search}%"
+                    )
 
-            ->orWhere(
-                'model',
-                'like',
-                "%{$search}%"
-            )
+                    ->orWhere(
+                        'model',
+                        'like',
+                        "%{$search}%"
+                    )
 
-            ->orWhere(
-                'serial_number',
-                'like',
-                "%{$search}%"
-            );
-        });
+                    ->orWhere(
+                        'serial_number',
+                        'like',
+                        "%{$search}%"
+                    );
+            }
+        );
     }
 
 
@@ -819,6 +1265,7 @@ class AssetController extends Controller
     private function perPage(
         Request $request
     ): int {
+
         return min(
             max(
                 $request->integer(
@@ -841,6 +1288,7 @@ class AssetController extends Controller
     private function pagination(
         $paginator
     ): array {
+
         return [
             'current_page' =>
                 $paginator->currentPage(),
@@ -865,20 +1313,28 @@ class AssetController extends Controller
 
     /*
     |--------------------------------------------------------------------------
-    | FILE URL
+    | OLD FILE URL HELPER
     |--------------------------------------------------------------------------
+    |
+    | Masih dipertahankan agar tidak merusak kode lain.
+    | Foto API sekarang menggunakan route() di atas.
+    |
     */
 
     private function fileUrl(
         ?string $path
     ): ?string {
+
         if (!$path) {
             return null;
         }
 
         return asset(
             'storage/' .
-            ltrim($path, '/')
+            ltrim(
+                $path,
+                '/'
+            )
         );
     }
 }

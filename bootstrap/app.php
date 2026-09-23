@@ -4,18 +4,19 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
+//use Throwable;
 
 use App\Http\Middleware\CheckPermission;
 use App\Http\Middleware\CheckSubscriptionAccess;
 use App\Http\Middleware\CheckSubscriptionActive;
 use App\Http\Middleware\EnsureUserCompany;
+use App\Http\Middleware\Cors;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -25,7 +26,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
 
+    /*
+    |--------------------------------------------------------------------------
+    | Middleware
+    |--------------------------------------------------------------------------
+    */
+
     ->withMiddleware(function (Middleware $middleware) {
+
         $middleware->alias([
             'permission' => CheckPermission::class,
             'subscription.access' => CheckSubscriptionAccess::class,
@@ -33,7 +41,23 @@ return Application::configure(basePath: dirname(__DIR__))
             'api.company' => EnsureUserCompany::class,
             'api.security' => \App\Http\Middleware\ApiSecurityHeaders::class,
         ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | CORS
+        |--------------------------------------------------------------------------
+        */
+
+        $middleware->append(
+            Cors::class
+        );
     })
+
+    /*
+    |--------------------------------------------------------------------------
+    | Exceptions
+    |--------------------------------------------------------------------------
+    */
 
     ->withExceptions(function (Exceptions $exceptions): void {
 
@@ -41,10 +65,6 @@ return Application::configure(basePath: dirname(__DIR__))
         |--------------------------------------------------------------------------
         | API JSON Response
         |--------------------------------------------------------------------------
-        |
-        | Semua request /api/* akan selalu mendapatkan response JSON.
-        | Dashboard/web tetap menggunakan response normal Laravel.
-        |
         */
 
         $exceptions->shouldRenderJsonWhen(
@@ -195,10 +215,6 @@ return Application::configure(basePath: dirname(__DIR__))
         |--------------------------------------------------------------------------
         | Unexpected Exception - 500
         |--------------------------------------------------------------------------
-        |
-        | Jangan pernah mengirim stack trace, file path, line, atau
-        | exception detail ke client API.
-        |
         */
 
         $exceptions->render(function (

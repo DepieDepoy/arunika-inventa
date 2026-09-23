@@ -77,28 +77,14 @@ Route::prefix('v1')->group(function () {
         |--------------------------------------------------------------------------
         */
 
-        Route::middleware('subscription.access')->group(function () {
+        Route::middleware(
+            'subscription.access'
+        )->group(function () {
 
             /*
             |--------------------------------------------------------------------------
             | ASSET VIEW
             |--------------------------------------------------------------------------
-            |
-            | Mobile Asset:
-            |
-            | ALL ASSETS
-            | GET /api/v1/assets
-            | GET /api/v1/assets/{id}
-            | GET /api/v1/assets/{id}/maintenances
-            |
-            | MY ASSETS
-            | GET /api/v1/my-assets
-            | GET /api/v1/my-assets/{id}
-            | GET /api/v1/my-assets/{id}/maintenances
-            |
-            | SCAN QR
-            | GET /api/v1/assets/qr/{qrToken}
-            |
             */
 
             Route::middleware(
@@ -109,12 +95,6 @@ Route::prefix('v1')->group(function () {
                 |--------------------------------------------------------------------------
                 | SCAN QR ASSET
                 |--------------------------------------------------------------------------
-                |
-                | User harus:
-                | - sudah login
-                | - memiliki permission asset.view
-                | - berada dalam company yang sama dengan asset
-                |
                 */
 
                 Route::get(
@@ -127,12 +107,39 @@ Route::prefix('v1')->group(function () {
 
                 /*
                 |--------------------------------------------------------------------------
-                | MY ASSETS
+                | ASSET PHOTO
                 |--------------------------------------------------------------------------
                 |
-                | Hanya asset yang:
-                | responsible_user_id = user yang sedang login
+                | Endpoint khusus untuk Flutter/mobile.
                 |
+                | Flutter tidak lagi mengambil foto langsung dari:
+                |
+                | /storage/...
+                |
+                | tetapi melalui:
+                |
+                | /api/v1/assets/photos/{photoId}
+                |
+                | Request membawa Bearer Token sehingga:
+                |
+                | - user harus login
+                | - user harus memiliki asset.view
+                | - company asset tetap diverifikasi
+                |
+                */
+
+                Route::get(
+                    '/assets/photos/{photoId}',
+                    [AssetController::class, 'photo']
+                )->name(
+                    'api.v1.assets.photos'
+                );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | MY ASSETS
+                |--------------------------------------------------------------------------
                 */
 
                 Route::get(
@@ -189,9 +196,6 @@ Route::prefix('v1')->group(function () {
                 |--------------------------------------------------------------------------
                 | ALL ASSETS
                 |--------------------------------------------------------------------------
-                |
-                | Menampilkan seluruh asset dalam company user.
-                |
                 */
 
                 Route::get(
@@ -334,8 +338,9 @@ Route::prefix('v1')->group(function () {
 
             Route::middleware(
                 'permission:maintenance.view'
-            )->prefix('maintenance/team')->group(
-                function () {
+            )
+                ->prefix('maintenance/team')
+                ->group(function () {
 
                     /*
                     |--------------------------------------------------------------------------
@@ -369,8 +374,7 @@ Route::prefix('v1')->group(function () {
                     )->name(
                         'api.v1.maintenance.team.requests.show'
                     );
-                }
-            );
+                });
 
 
             /*
@@ -385,8 +389,9 @@ Route::prefix('v1')->group(function () {
 
             Route::middleware(
                 'permission:maintenance.edit'
-            )->prefix('maintenance/team')->group(
-                function () {
+            )
+                ->prefix('maintenance/team')
+                ->group(function () {
 
                     /*
                     |--------------------------------------------------------------------------
@@ -448,8 +453,7 @@ Route::prefix('v1')->group(function () {
                     )->name(
                         'api.v1.maintenance.team.requests.complete'
                     );
-                }
-            );
+                });
         });
     });
 });
