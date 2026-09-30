@@ -1,6 +1,9 @@
 @extends('dashboard.layouts.wrapper')
+
 @section('title', 'Add Asset')
+
 @section('content')
+
 <style>
     .asset-page-header {
         margin-bottom: 1.5rem;
@@ -88,12 +91,14 @@
         align-items: center;
         gap: 10px;
         min-width: 0;
+        flex: 1;
     }
 
     .preview-item-left i {
         font-size: 20px;
         color: #696cff;
     }
+
     .preview-remove {
         border: none;
         background: transparent;
@@ -106,11 +111,6 @@
 
     .preview-remove:hover {
         background: #fff0ed;
-    }
-
-    .preview-item-left {
-        flex: 1;
-        min-width: 0;
     }
 
     .preview-file-name {
@@ -193,22 +193,33 @@
     }
 </style>
 
+
 <div class="content-wrapper">
+
     <div class="container-xxl flex-grow-1 container-p-y">
+
         <!-- ===================================================== -->
         <!-- PAGE HEADER -->
         <!-- ===================================================== -->
+
         <div class="asset-page-header">
+
             <div class="d-flex justify-content-between align-items-center">
+
                 <div>
+
                     <h4 class="fw-bold mb-1">
                         Add Asset
                     </h4>
+
                     <p class="text-muted mb-0">
                         Add new company asset information
                     </p>
+
                 </div>
+
                 <div>
+
                     <a
                         href="{{ route('assets.index') }}"
                         class="btn btn-label-secondary"
@@ -216,39 +227,69 @@
                         <i class="fa-solid fa-arrow-left me-1"></i>
                         Back to Assets
                     </a>
+
                 </div>
+
             </div>
+
         </div>
+
+
         <!-- ===================================================== -->
         <!-- FORM -->
         <!-- ===================================================== -->
-        <form id="formAddAsset" enctype="multipart/form-data">
+
+        <form
+            id="formAddAsset"
+            enctype="multipart/form-data"
+        >
+
             @csrf
+
+
             <!-- ================================================= -->
             <!-- 1. ASSET INFORMATION -->
             <!-- ================================================= -->
+
             <div class="card asset-section">
+
                 <div class="card-body">
+
                     <div class="asset-section-header">
+
                         <div class="asset-section-number">
                             1
                         </div>
+
                         <div>
+
                             <h6 class="asset-section-title">
                                 Asset Information
                             </h6>
+
                             <p class="asset-section-description">
                                 Basic information about the asset
                             </p>
+
                         </div>
+
                     </div>
+
+
                     <div class="row">
+
                         <!-- Asset Name -->
+
                         <div class="col-md-6 mb-3">
+
                             <label class="form-label">
+
                                 Asset Name
+
                                 <span class="required">*</span>
+
                             </label>
+
                             <input
                                 type="text"
                                 name="asset_name"
@@ -257,81 +298,133 @@
                                 placeholder="Enter asset name"
                                 required
                             >
+
                         </div>
+
+
                         <!-- Category -->
+
                         <div class="col-md-6 mb-3">
+
                             <label class="form-label">
+
                                 Category
+
                                 <span class="required">*</span>
+
                             </label>
+
                             <select
                                 name="category_id"
                                 id="category_id"
                                 class="form-select"
                                 required
                             >
+
                                 <option value="">
                                     Select or type category
                                 </option>
+
                                 @foreach($categories as $category)
+
                                     <option
                                         value="{{ $category->id }}"
                                         data-name="{{ $category->category_name }}"
                                     >
                                         {{ $category->category_name }}
                                     </option>
+
                                 @endforeach
+
                             </select>
+
                             <small class="text-muted">
                                 Type a new category if it is not registered yet.
                             </small>
+
                         </div>
+
+
                         <!-- Sub Category -->
+
                         <div class="col-md-6 mb-3">
+
                             <label class="form-label">
                                 Sub Category
                             </label>
+
                             <select
                                 name="sub_category_id"
                                 id="sub_category_id"
                                 class="form-select"
                             >
+
                                 <option value="">
                                     Select or type sub category
                                 </option>
+
                             </select>
+
                             <small class="text-muted">
                                 Sub category will follow the selected category.
                             </small>
+
                         </div>
+
+
                         <!-- Vendor -->
+
                         <div class="col-md-6 mb-3">
+
                             <label class="form-label">
+
                                 Vendor
+
                                 <span class="required">*</span>
+
                             </label>
+
                             <select
                                 name="vendor_id"
                                 id="vendor_id"
                                 class="form-select"
                                 required
                             >
+
                                 <option value="">
                                     Select vendor
                                 </option>
+
                                 @foreach($vendors as $vendor)
+
                                     <option value="{{ $vendor->id }}">
                                         {{ $vendor->vendor_name }}
                                     </option>
+
                                 @endforeach
+
                             </select>
+
                             <small class="text-muted">
                                 Vendor must be registered first.
                             </small>
+
                         </div>
+
+
+                        <!-- Asset Condition -->
+
                         <div class="col-md-6 mb-3">
-                            <label for="asset_condition" class="form-label">
-                                Asset Condition <span class="required">*</span>
+
+                            <label
+                                for="asset_condition"
+                                class="form-label"
+                            >
+
+                                Asset Condition
+
+                                <span class="required">*</span>
+
                             </label>
 
                             <select
@@ -340,204 +433,342 @@
                                 class="form-select"
                                 required
                             >
-                                <option value="">Select Condition</option>
-                                <option value="new" selected>New</option>
-                                <option value="used">Used</option>
+
+                                <option value="">
+                                    Select Condition
+                                </option>
+
+                                <option
+                                    value="new"
+                                    selected
+                                >
+                                    New
+                                </option>
+
+                                <option value="used">
+                                    Used
+                                </option>
+
                             </select>
 
                             <small class="text-muted">
                                 Select whether the asset is new or previously used.
                             </small>
+
                         </div>
+
+
                         <!-- Brand -->
+
                         <div class="col-md-6 mb-3">
+
                             <label class="form-label">
                                 Brand
                             </label>
+
                             <input
                                 type="text"
                                 name="brand"
                                 class="form-control"
                                 placeholder="Example: Dell, HP, Lenovo"
                             >
+
                         </div>
+
+
                         <!-- Model -->
+
                         <div class="col-md-6 mb-3">
+
                             <label class="form-label">
                                 Model
                             </label>
+
                             <input
                                 type="text"
                                 name="model"
                                 class="form-control"
                                 placeholder="Enter asset model"
                             >
+
                         </div>
+
+
                         <!-- Serial Number -->
+
                         <div class="col-md-6 mb-3">
+
                             <label class="form-label">
                                 Serial Number
                             </label>
+
                             <input
                                 type="text"
                                 name="serial_number"
                                 class="form-control"
                                 placeholder="Enter serial number"
                             >
+
                         </div>
+
+
                         <!-- Status -->
+
                         <div class="col-md-6 mb-3">
+
                             <label class="form-label">
+
                                 Status
+
                                 <span class="required">*</span>
+
                             </label>
+
                             <select
                                 name="status"
                                 class="form-select"
                                 required
                             >
-                                <option value="1" selected>
+
+                                <option
+                                    value="1"
+                                    selected
+                                >
                                     Active
                                 </option>
+
                                 <option value="0">
                                     Inactive
                                 </option>
+
                             </select>
+
                         </div>
+
+
                         <!-- Description -->
+
                         <div class="col-md-12 mb-3">
+
                             <label class="form-label">
                                 Description
                             </label>
+
                             <textarea
                                 name="description"
                                 class="form-control"
                                 rows="4"
                                 placeholder="Enter asset description"
                             ></textarea>
+
                         </div>
+
                     </div>
+
                 </div>
+
             </div>
+
+
             <!-- ================================================= -->
             <!-- 2. PURCHASE INFORMATION -->
             <!-- ================================================= -->
+
             <div class="card asset-section">
+
                 <div class="card-body">
+
                     <div class="asset-section-header">
+
                         <div class="asset-section-number">
                             2
                         </div>
+
                         <div>
+
                             <h6 class="asset-section-title">
                                 Purchase Information
                             </h6>
+
                             <p class="asset-section-description">
                                 Purchase and invoice information
                             </p>
+
                         </div>
+
                     </div>
+
+
                     <div class="row">
+
                         <!-- Purchase Date -->
+
                         <div class="col-md-4 mb-3">
+
                             <label class="form-label">
+
                                 Purchase Date
+
                                 <span class="required">*</span>
+
                             </label>
+
                             <input
                                 type="date"
                                 name="purchase_date"
-                                class="form-control"required
+                                class="form-control"
+                                required
                             >
+
                         </div>
+
+
                         <!-- Purchase Price -->
+
                         <div class="col-md-4 mb-3">
+
                             <label class="form-label">
+
                                 Purchase Price
+
                                 <span class="required">*</span>
+
                             </label>
+
                             <div class="input-group">
+
                                 <span class="input-group-text">
                                     Rp
                                 </span>
+
                                 <input
                                     type="number"
                                     name="purchase_price"
                                     class="form-control"
                                     min="0"
-                                    placeholder="0" required
+                                    placeholder="0"
+                                    required
                                 >
+
                             </div>
+
                         </div>
+
+
                         <!-- Invoice Number -->
+
                         <div class="col-md-4 mb-3">
+
                             <label class="form-label">
+
                                 Purchase Number
+
                                 <span class="required">*</span>
+
                             </label>
+
                             <input
                                 type="text"
                                 name="purchase_invoice"
                                 class="form-control"
-                                placeholder="Enter invoice number" required
+                                placeholder="Enter invoice number"
+                                required
                             >
+
                         </div>
+
                     </div>
+
                 </div>
+
             </div>
+
+
             <!-- ================================================= -->
             <!-- 3. DEPRECIATION -->
             <!-- ================================================= -->
+
             <div class="card asset-section">
+
                 <div class="card-body">
+
                     <div class="asset-section-header">
+
                         <div class="asset-section-number">
                             3
                         </div>
+
                         <div>
+
                             <h6 class="asset-section-title">
                                 Depreciation
                             </h6>
+
                             <p class="asset-section-description">
                                 Asset depreciation configuration
                             </p>
+
                         </div>
+
                     </div>
+
+
                     <div class="alert alert-info">
+
                         <div class="d-flex">
+
                             <i class="fa-solid fa-circle-info me-2 mt-1"></i>
+
                             <div>
                                 Depreciation will be calculated based on
                                 purchase price, useful life and depreciation
                                 method.
                             </div>
+
                         </div>
+
                     </div>
+
+
                     <div class="row">
+
                         <!-- Depreciation Method -->
+
                         <div class="col-md-4 mb-3">
+
                             <label class="form-label">
                                 Depreciation Method
                             </label>
+
                             <select
                                 name="depreciation_method"
                                 id="depreciation_method"
                                 class="form-select"
                             >
+
                                 <option value="">
                                     Select Method
                                 </option>
+
                                 <option value="straight_line">
                                     Straight Line
                                 </option>
+
                             </select>
+
                         </div>
+
+
                         <!-- Useful Life -->
+
                         <div class="col-md-4 mb-3">
+
                             <label class="form-label">
                                 Useful Life
                             </label>
+
                             <div class="input-group">
+
                                 <input
                                     type="number"
                                     name="useful_life"
@@ -545,20 +776,30 @@
                                     min="1"
                                     placeholder="5"
                                 >
+
                                 <span class="input-group-text">
                                     Years
                                 </span>
+
                             </div>
+
                         </div>
+
+
                         <!-- Residual Value -->
+
                         <div class="col-md-4 mb-3">
+
                             <label class="form-label">
                                 Residual Value
                             </label>
+
                             <div class="input-group">
+
                                 <span class="input-group-text">
                                     Rp
                                 </span>
+
                                 <input
                                     type="number"
                                     name="residual_value"
@@ -566,34 +807,51 @@
                                     min="0"
                                     placeholder="0"
                                 >
+
                             </div>
+
                         </div>
+
+
                         <!-- Depreciation Start -->
+
                         <div class="col-md-4 mb-3">
+
                             <label class="form-label">
                                 Depreciation Start Date
                             </label>
+
                             <input
                                 type="date"
                                 name="depreciation_start_date"
                                 class="form-control"
                             >
+
                         </div>
+
                     </div>
+
                 </div>
+
             </div>
-                        <!-- ================================================= -->
+
+
+            <!-- ================================================= -->
             <!-- 4. MAINTENANCE -->
             <!-- ================================================= -->
+
             <div class="card asset-section">
+
                 <div class="card-body">
 
                     <div class="asset-section-header">
+
                         <div class="asset-section-number">
                             4
                         </div>
 
                         <div>
+
                             <h6 class="asset-section-title">
                                 Maintenance
                             </h6>
@@ -601,18 +859,32 @@
                             <p class="asset-section-description">
                                 Maintenance schedule and configuration
                             </p>
+
                         </div>
+
                     </div>
+
 
                     <div class="row">
 
                         <!-- Maintenance Required -->
+
                         <div class="col-md-6 mb-3">
+
                             <label class="form-label">
                                 Maintenance Required
                             </label>
 
+                            {{-- Default = No --}}
+
+                            <input
+                                type="hidden"
+                                name="maintenance_required"
+                                value="0"
+                            >
+
                             <div class="form-check form-switch mt-2">
+
                                 <input
                                     class="form-check-input"
                                     type="checkbox"
@@ -628,22 +900,31 @@
                                 >
                                     No
                                 </label>
+
                             </div>
 
                             <small class="text-muted">
                                 Enable maintenance scheduling for this asset.
                             </small>
+
                         </div>
 
                     </div>
 
+
                     <!-- MAINTENANCE CONFIGURATION -->
-                    <div id="maintenance_config" style="display: none;">
+
+                    <div
+                        id="maintenance_config"
+                        style="display: none;"
+                    >
 
                         <div class="row">
 
                             <!-- Maintenance Type -->
+
                             <div class="col-md-6 mb-3">
+
                                 <label class="form-label">
                                     Maintenance Type
                                 </label>
@@ -653,6 +934,7 @@
                                     id="maintenance_type"
                                     class="form-select"
                                 >
+
                                     <option value="">
                                         Select Maintenance Type
                                     </option>
@@ -664,11 +946,16 @@
                                     <option value="corrective">
                                         Corrective Maintenance
                                     </option>
+
                                 </select>
+
                             </div>
 
+
                             <!-- Maintenance Trigger -->
+
                             <div class="col-md-6 mb-3">
+
                                 <label class="form-label">
                                     Maintenance Trigger
                                 </label>
@@ -678,22 +965,23 @@
                                     id="maintenance_trigger"
                                     class="form-select"
                                 >
-                                    <option value="">
-                                        Select Trigger
-                                    </option>
 
-                                    <option value="calendar" selected>
+                                    <option
+                                        value="calendar"
+                                        selected
+                                    >
                                         Calendar
                                     </option>
 
-                                    <option value="usage">
-                                        Usage / Meter
-                                    </option>
                                 </select>
+
                             </div>
 
+
                             <!-- Maintenance Interval -->
+
                             <div class="col-md-6 mb-3">
+
                                 <label class="form-label">
                                     Maintenance Interval
                                 </label>
@@ -715,6 +1003,7 @@
                                         class="form-select"
                                         style="max-width: 140px;"
                                     >
+
                                         <option value="day">
                                             Days
                                         </option>
@@ -723,13 +1012,17 @@
                                             Weeks
                                         </option>
 
-                                        <option value="month" selected>
+                                        <option
+                                            value="month"
+                                            selected
+                                        >
                                             Months
                                         </option>
 
                                         <option value="year">
                                             Years
                                         </option>
+
                                     </select>
 
                                 </div>
@@ -737,10 +1030,14 @@
                                 <small class="text-muted">
                                     Example: every 3 months.
                                 </small>
+
                             </div>
 
+
                             <!-- Maintenance Start Date -->
+
                             <div class="col-md-6 mb-3">
+
                                 <label class="form-label">
                                     Maintenance Start Date
                                 </label>
@@ -755,10 +1052,14 @@
                                 <small class="text-muted">
                                     Starting date for the maintenance schedule.
                                 </small>
+
                             </div>
 
+
                             <!-- Last Maintenance -->
+
                             <div class="col-md-6 mb-3">
+
                                 <label class="form-label">
                                     Last Maintenance
                                 </label>
@@ -773,10 +1074,14 @@
                                 <small class="text-muted">
                                     Leave empty if this asset has never been maintained.
                                 </small>
+
                             </div>
 
+
                             <!-- Next Maintenance -->
+
                             <div class="col-md-6 mb-3">
+
                                 <label class="form-label">
                                     Next Maintenance
                                 </label>
@@ -791,6 +1096,7 @@
                                 <small class="text-muted">
                                     Automatically calculated from the maintenance schedule.
                                 </small>
+
                             </div>
 
                         </div>
@@ -798,94 +1104,152 @@
                     </div>
 
                 </div>
+
             </div>
+
 
             <!-- ================================================= -->
             <!-- 5. ASSIGNMENT -->
             <!-- ================================================= -->
+
             <div class="card asset-section">
+
                 <div class="card-body">
+
                     <div class="asset-section-header">
+
                         <div class="asset-section-number">
                             5
                         </div>
+
                         <div>
+
                             <h6 class="asset-section-title">
                                 Asset Assignment
                             </h6>
+
                             <p class="asset-section-description">
                                 Person responsible for this asset
                             </p>
+
                         </div>
+
                     </div>
+
+
                     <div class="row">
+
                         <!-- Responsible -->
+
                         <div class="col-md-6 mb-3">
+
                             <label class="form-label">
                                 Responsible
                             </label>
+
                             <select
                                 name="responsible_user_id"
                                 class="form-select"
                             >
+
                                 <option value="">
                                     Select Responsible Person
                                 </option>
+
                                 @foreach($users as $user)
+
                                     <option value="{{ $user->id }}">
                                         {{ $user->name }}
                                     </option>
+
                                 @endforeach
+
                             </select>
+
                         </div>
+
+
                         <!-- Location -->
+
                         <div class="col-md-6 mb-3">
+
                             <label class="form-label">
                                 Location
                             </label>
+
                             <input
                                 type="text"
                                 name="location"
                                 class="form-control"
                                 placeholder="Example: Warehouse, Office, Room 01"
                             >
+
                         </div>
+
                     </div>
+
                 </div>
+
             </div>
+
+
             <!-- ================================================= -->
             <!-- 6. ASSET PHOTOS -->
             <!-- ================================================= -->
+
             <div class="card asset-section">
+
                 <div class="card-body">
+
                     <div class="asset-section-header">
+
                         <div class="asset-section-number">
                             6
                         </div>
+
                         <div>
+
                             <h6 class="asset-section-title">
+
                                 Asset Photos
+
                                 <span class="required">*</span>
+
                             </h6>
+
                             <p class="asset-section-description">
                                 Upload maximum 3 photos of the asset
                             </p>
+
                         </div>
+
                     </div>
+
+
                     <label
                         for="asset_photos"
                         class="upload-box w-100"
                     >
+
                         <i class="fa-solid fa-cloud-arrow-up d-block"></i>
+
                         <strong>
                             Click to upload asset photos
                         </strong>
+
                         <div class="text-muted small mt-1">
+
                             Maximum 3 files
+
                             <br>
+
                             JPG, JPEG, PNG
+
                         </div>
+
                     </label>
+
+
                     <input
                         type="file"
                         name="asset_photos[]"
@@ -895,45 +1259,75 @@
                         multiple
                         required
                     >
+
+
                     <div
                         id="photo_preview"
                         class="upload-preview"
                     ></div>
+
                 </div>
+
             </div>
+
+
             <!-- ================================================= -->
             <!-- 7. INVOICE DOCUMENT -->
             <!-- ================================================= -->
+
             <div class="card asset-section">
+
                 <div class="card-body">
+
                     <div class="asset-section-header">
+
                         <div class="asset-section-number">
                             7
                         </div>
+
                         <div>
+
                             <h6 class="asset-section-title">
+
                                 Invoice / Documents
+
                                 <span class="required">*</span>
+
                             </h6>
+
                             <p class="asset-section-description">
                                 Upload maximum 5 invoice or supporting documents
                             </p>
+
                         </div>
+
                     </div>
+
+
                     <label
                         for="invoice_documents"
                         class="upload-box w-100"
                     >
+
                         <i class="fa-solid fa-file-invoice d-block"></i>
+
                         <strong>
                             Click to upload invoice documents
                         </strong>
+
                         <div class="text-muted small mt-1">
+
                             Maximum 5 files
+
                             <br>
+
                             PDF, JPG, JPEG, PNG
+
                         </div>
+
                     </label>
+
+
                     <input
                         type="file"
                         name="invoice_documents[]"
@@ -943,6 +1337,8 @@
                         multiple
                         required
                     >
+
+
                     <div
                         id="invoice_preview"
                         class="upload-preview"
@@ -995,7 +1391,43 @@
 
 </div>
 
+
 @endsection
+
+
+{{-- ============================================================
+     SUB CATEGORY DATA
+     Blade/PHP berada di luar JavaScript agar tidak dibaca
+     sebagai @foreach oleh JavaScript parser maupun Blade compiler.
+============================================================ --}}
+
+@php
+
+    $subCategoryJson = $subCategories
+        ->map(function ($subCategory) {
+
+            return [
+
+                'id' => $subCategory->id,
+
+                'category_id' => $subCategory->category_id,
+
+                'name' => $subCategory->sub_category_name,
+
+            ];
+
+        })
+        ->values()
+        ->toJson();
+
+@endphp
+
+
+<div
+    id="subCategoriesData"
+    data-items="{{ $subCategoryJson }}"
+    style="display: none;"
+></div>
 
 
 @section('js')
@@ -1003,12 +1435,55 @@
 <!-- ============================================================ -->
 <!-- SELECT2 -->
 <!-- ============================================================ -->
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<link
+    href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css"
+    rel="stylesheet"
+/>
+
+<script
+    src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"
+></script>
+
 
 <script>
 
 $(document).ready(function () {
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | SUB CATEGORY DATA
+    |--------------------------------------------------------------------------
+    */
+
+    const subCategoriesDataElement =
+        document.getElementById('subCategoriesData');
+
+    let subCategoriesData = [];
+
+
+    if (subCategoriesDataElement) {
+
+        try {
+
+            subCategoriesData =
+                JSON.parse(
+                    subCategoriesDataElement.dataset.items || '[]'
+                );
+
+        } catch (error) {
+
+            console.error(
+                'Failed to parse sub category data:',
+                error
+            );
+
+            subCategoriesData = [];
+
+        }
+
+    }
 
 
     /*
@@ -1029,18 +1504,29 @@ $(document).ready(function () {
 
         createTag: function (params) {
 
-            let term = $.trim(params.term);
+            let term =
+                $.trim(params.term);
+
 
             if (term === '') {
+
                 return null;
+
             }
 
+
             return {
+
                 id: 'new:' + term,
+
                 text: term,
+
                 newTag: true
+
             };
+
         },
+
 
         templateResult: function (data) {
 
@@ -1056,6 +1542,7 @@ $(document).ready(function () {
             }
 
             return data.text;
+
         }
 
     });
@@ -1079,10 +1566,14 @@ $(document).ready(function () {
 
         createTag: function (params) {
 
-            let term = $.trim(params.term);
+            let term =
+                $.trim(params.term);
+
 
             if (term === '') {
+
                 return null;
+
             }
 
 
@@ -1104,6 +1595,7 @@ $(document).ready(function () {
                 });
 
                 return null;
+
             }
 
 
@@ -1157,7 +1649,9 @@ $(document).ready(function () {
 
 
         /*
+        |--------------------------------------------------------------------------
         | Reset sub category
+        |--------------------------------------------------------------------------
         */
 
         subCategory
@@ -1169,17 +1663,21 @@ $(document).ready(function () {
 
 
         if (!categoryValue) {
+
             return;
+
         }
 
 
         /*
+        |--------------------------------------------------------------------------
         | Category baru
         |
         | Contoh:
         | new:ATK
         |
         | Belum memiliki category_id.
+        |--------------------------------------------------------------------------
         */
 
         if (
@@ -1198,33 +1696,35 @@ $(document).ready(function () {
         |--------------------------------------------------------------------------
         */
 
-        @foreach($subCategories as $subCategory)
+        $.each(
+            subCategoriesData,
+            function (_, item) {
 
-            if (
-                "{{ $subCategory->category_id }}"
-                ==
-                categoryValue
-            ) {
+                if (
+                    String(item.category_id) ===
+                    String(categoryValue)
+                ) {
 
-                subCategory.append(
+                    subCategory.append(
 
-                    new Option(
+                        new Option(
 
-                        "{{ $subCategory->sub_category_name }}",
+                            item.name,
 
-                        "{{ $subCategory->id }}",
+                            item.id,
 
-                        false,
+                            false,
 
-                        false
+                            false
 
-                    )
+                        )
 
-                );
+                    );
+
+                }
 
             }
-
-        @endforeach
+        );
 
 
         subCategory.trigger('change');
@@ -1240,7 +1740,7 @@ $(document).ready(function () {
     | Vendor TIDAK menggunakan tags.
     |
     | User hanya dapat memilih vendor yang sudah terdaftar.
-    |
+    |--------------------------------------------------------------------------
     */
 
     $('#vendor_id').select2({
@@ -1290,682 +1790,929 @@ $(document).ready(function () {
     );
 
 
-    
-   /*
-|--------------------------------------------------------------------------
-| PHOTO UPLOAD
-|--------------------------------------------------------------------------
-*/
-
-let photoDataTransfer = new DataTransfer();
-
-$('#asset_photos').on('change', function () {
-
-    const input = this;
-    const preview = $('#photo_preview');
-
-    const MAX_PHOTOS = 3;
-    const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
-
-    const newFiles = Array.from(input.files);
-
     /*
     |--------------------------------------------------------------------------
-    | Add new files
+    | PHOTO UPLOAD
     |--------------------------------------------------------------------------
     */
 
-    for (let file of newFiles) {
+    let photoDataTransfer =
+        new DataTransfer();
+
+
+    $('#asset_photos').on('change', function () {
+
+        const input = this;
+
+        const preview =
+            $('#photo_preview');
+
+        const MAX_PHOTOS = 3;
+
+        const MAX_PHOTO_SIZE =
+            5 * 1024 * 1024;
+
+        const newFiles =
+            Array.from(input.files);
+
 
         /*
-        | Check duplicate file
+        |--------------------------------------------------------------------------
+        | Add new files
+        |--------------------------------------------------------------------------
         */
 
-        let duplicate = Array.from(photoDataTransfer.files).some(
-            existingFile =>
-                existingFile.name === file.name &&
-                existingFile.size === file.size
+        for (let file of newFiles) {
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Check duplicate file
+            |--------------------------------------------------------------------------
+            */
+
+            let duplicate =
+                Array.from(
+                    photoDataTransfer.files
+                ).some(
+                    existingFile =>
+
+                        existingFile.name === file.name &&
+
+                        existingFile.size === file.size
+                );
+
+
+            if (duplicate) {
+
+                continue;
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Maximum 3 photos
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                photoDataTransfer.files.length >=
+                MAX_PHOTOS
+            ) {
+
+                Swal.fire({
+
+                    icon: 'warning',
+
+                    title: 'Maximum 3 Photos',
+
+                    text:
+                        'Asset hanya dapat memiliki maksimal 3 foto.'
+
+                });
+
+                break;
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Validate MIME
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                !/^image\/(jpeg|png)$/.test(file.type)
+            ) {
+
+                Swal.fire({
+
+                    icon: 'error',
+
+                    title: 'Format Tidak Valid',
+
+                    text:
+                        'Foto harus JPG, JPEG atau PNG.'
+
+                });
+
+                continue;
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Validate size
+            |--------------------------------------------------------------------------
+            */
+
+            if (file.size > MAX_PHOTO_SIZE) {
+
+                Swal.fire({
+
+                    icon: 'error',
+
+                    title: 'Ukuran Foto Terlalu Besar',
+
+                    text:
+                        `"${file.name}" memiliki ukuran ` +
+                        `${(file.size / 1024 / 1024).toFixed(5)} MB. ` +
+                        `Maksimal ukuran setiap foto adalah 5 MB.`
+
+                });
+
+                continue;
+
+            }
+
+
+            photoDataTransfer.items.add(file);
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Update input files
+        |--------------------------------------------------------------------------
+        */
+
+        input.files =
+            photoDataTransfer.files;
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Render preview
+        |--------------------------------------------------------------------------
+        */
+
+        renderPhotoPreview();
+
+    });
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | RENDER PHOTO PREVIEW
+    |--------------------------------------------------------------------------
+    */
+
+    function renderPhotoPreview() {
+
+        const preview =
+            $('#photo_preview');
+
+
+        preview.empty();
+
+
+        Array.from(
+            photoDataTransfer.files
+        ).forEach(
+            function (file, index) {
+
+                const reader =
+                    new FileReader();
+
+
+                reader.onload =
+                    function (e) {
+
+                        preview.append(`
+
+                            <div class="preview-item">
+
+                                <div class="preview-item-left">
+
+                                    <img
+                                        src="${e.target.result}"
+                                        class="asset-photo-preview"
+                                    >
+
+                                    <div class="min-width-0">
+
+                                        <div
+                                            class="fw-semibold preview-file-name"
+                                        >
+                                            ${file.name}
+                                        </div>
+
+                                        <small class="text-muted">
+
+                                            ${(
+                                                file.size /
+                                                1024 /
+                                                1024
+                                            ).toFixed(5)} MB
+
+                                        </small>
+
+                                    </div>
+
+                                </div>
+
+
+                                <button
+                                    type="button"
+                                    class="preview-remove btn-remove-photo"
+                                    data-index="${index}"
+                                    title="Remove photo"
+                                >
+
+                                    <i class="fa-solid fa-trash"></i>
+
+                                </button>
+
+                            </div>
+
+                        `);
+
+                    };
+
+
+                reader.readAsDataURL(file);
+
+            }
         );
 
-        if (duplicate) {
-            continue;
-        }
 
         /*
-        | Maximum 3 photos
+        |--------------------------------------------------------------------------
+        | Required validation
+        |--------------------------------------------------------------------------
         */
 
-        if (photoDataTransfer.files.length >= MAX_PHOTOS) {
+        $('#asset_photos').prop(
+            'required',
+            photoDataTransfer.files.length === 0
+        );
 
-            Swal.fire({
-                icon: 'warning',
-                title: 'Maximum 3 Photos',
-                text: 'Asset hanya dapat memiliki maksimal 3 foto.'
-            });
-
-            break;
-        }
-
-        /*
-        | Validate MIME
-        */
-
-        if (!/^image\/(jpeg|png)$/.test(file.type)) {
-
-            Swal.fire({
-                icon: 'error',
-                title: 'Format Tidak Valid',
-                text: 'Foto harus JPG, JPEG atau PNG.'
-            });
-
-            continue;
-        }
-
-        /*
-        | Validate size
-        */
-
-        if (file.size > MAX_PHOTO_SIZE) {
-
-            Swal.fire({
-                icon: 'error',
-                title: 'Ukuran Foto Terlalu Besar',
-                text:
-                    `"${file.name}" memiliki ukuran ` +
-                    `${(file.size / 1024 / 1024).toFixed(5)} MB. ` +
-                    `Maksimal ukuran setiap foto adalah 5 MB.`
-            });
-
-            continue;
-        }
-
-        photoDataTransfer.items.add(file);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Update input files
-    |--------------------------------------------------------------------------
-    */
-
-    input.files = photoDataTransfer.files;
 
     /*
     |--------------------------------------------------------------------------
-    | Render preview
+    | REMOVE PHOTO
     |--------------------------------------------------------------------------
     */
 
-    renderPhotoPreview();
+    $(document).on(
+        'click',
+        '.btn-remove-photo',
+        function () {
 
-});
+            const index =
+                parseInt(
+                    $(this).data('index')
+                );
 
 
-function renderPhotoPreview() {
+            /*
+            |--------------------------------------------------------------------------
+            | Create new DataTransfer
+            |--------------------------------------------------------------------------
+            */
 
-    const preview = $('#photo_preview');
+            const newDataTransfer =
+                new DataTransfer();
 
-    preview.empty();
 
-    Array.from(photoDataTransfer.files).forEach(
-        function (file, index) {
+            /*
+            |--------------------------------------------------------------------------
+            | Copy all files except selected file
+            |--------------------------------------------------------------------------
+            */
 
-            const reader = new FileReader();
+            Array.from(
+                photoDataTransfer.files
+            ).forEach(
+                function (file, fileIndex) {
 
-            reader.onload = function (e) {
+                    if (fileIndex !== index) {
+
+                        newDataTransfer.items.add(file);
+
+                    }
+
+                }
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Replace DataTransfer
+            |--------------------------------------------------------------------------
+            */
+
+            photoDataTransfer =
+                newDataTransfer;
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Update input
+            |--------------------------------------------------------------------------
+            */
+
+            $('#asset_photos')[0].files =
+                photoDataTransfer.files;
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Re-render preview
+            |--------------------------------------------------------------------------
+            */
+
+            renderPhotoPreview();
+
+        }
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | INVOICE DOCUMENT UPLOAD
+    |--------------------------------------------------------------------------
+    */
+
+    let documentDataTransfer =
+        new DataTransfer();
+
+
+    $('#invoice_documents').on('change', function () {
+
+        const input = this;
+
+        const MAX_DOCUMENTS = 5;
+
+        const MAX_DOCUMENT_SIZE =
+            5 * 1024 * 1024;
+
+
+        const allowedExtensions = [
+
+            'pdf',
+            'jpg',
+            'jpeg',
+            'png'
+
+        ];
+
+
+        const newFiles =
+            Array.from(input.files);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Add new files
+        |--------------------------------------------------------------------------
+        */
+
+        for (let file of newFiles) {
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Check duplicate
+            |--------------------------------------------------------------------------
+            */
+
+            let duplicate =
+
+                Array.from(
+                    documentDataTransfer.files
+                ).some(
+                    existingFile =>
+
+                        existingFile.name === file.name &&
+
+                        existingFile.size === file.size
+                );
+
+
+            if (duplicate) {
+
+                continue;
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Maximum documents
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                documentDataTransfer.files.length >=
+                MAX_DOCUMENTS
+            ) {
+
+                Swal.fire({
+
+                    icon: 'warning',
+
+                    title: 'Maximum 5 Documents',
+
+                    text:
+                        'Invoice/document hanya dapat maksimal 5 file.'
+
+                });
+
+                break;
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Extension
+            |--------------------------------------------------------------------------
+            */
+
+            let extension =
+
+                file.name
+                    .split('.')
+                    .pop()
+                    .toLowerCase();
+
+
+            if (
+                !allowedExtensions.includes(extension)
+            ) {
+
+                Swal.fire({
+
+                    icon: 'error',
+
+                    title: 'Format Tidak Valid',
+
+                    text:
+                        'Document hanya PDF, JPG, JPEG atau PNG.'
+
+                });
+
+                continue;
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | File size
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                file.size > MAX_DOCUMENT_SIZE
+            ) {
+
+                Swal.fire({
+
+                    icon: 'error',
+
+                    title: 'Ukuran Dokumen Terlalu Besar',
+
+                    text:
+                        `"${file.name}" memiliki ukuran ` +
+                        `${(file.size / 1024 / 1024).toFixed(5)} MB. ` +
+                        `Maksimal ukuran setiap dokumen adalah 5 MB.`
+
+                });
+
+                continue;
+
+            }
+
+
+            documentDataTransfer.items.add(file);
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Update input
+        |--------------------------------------------------------------------------
+        */
+
+        input.files =
+            documentDataTransfer.files;
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Render
+        |--------------------------------------------------------------------------
+        */
+
+        renderDocumentPreview();
+
+    });
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | RENDER DOCUMENT PREVIEW
+    |--------------------------------------------------------------------------
+    */
+
+    function renderDocumentPreview() {
+
+        const preview =
+            $('#invoice_preview');
+
+
+        preview.empty();
+
+
+        Array.from(
+            documentDataTransfer.files
+        ).forEach(
+            function (file, index) {
+
+                let extension =
+
+                    file.name
+                        .split('.')
+                        .pop()
+                        .toLowerCase();
+
+
+                let icon =
+
+                    extension === 'pdf'
+
+                        ? 'fa-file-pdf'
+
+                        : 'fa-file-image';
+
 
                 preview.append(`
+
                     <div class="preview-item">
 
                         <div class="preview-item-left">
 
-                            <img
-                                src="${e.target.result}"
-                                class="asset-photo-preview"
-                            >
+                            <i
+                                class="fa-solid ${icon}"
+                            ></i>
+
 
                             <div class="min-width-0">
 
-                                <div class="fw-semibold preview-file-name">
+                                <div
+                                    class="preview-file-name fw-semibold"
+                                >
                                     ${file.name}
                                 </div>
 
+
                                 <small class="text-muted">
-                                    ${(file.size / 1024 / 1024).toFixed(5)} MB
+
+                                    ${(
+                                        file.size /
+                                        1024 /
+                                        1024
+                                    ).toFixed(5)} MB
+
                                 </small>
 
                             </div>
 
                         </div>
 
+
                         <button
                             type="button"
-                            class="preview-remove btn-remove-photo"
+                            class="preview-remove btn-remove-document"
                             data-index="${index}"
-                            title="Remove photo"
+                            title="Remove document"
                         >
+
                             <i class="fa-solid fa-trash"></i>
+
                         </button>
 
                     </div>
+
                 `);
 
-            };
-
-            reader.readAsDataURL(file);
-
-        }
-    );
-
-    /*
-    |--------------------------------------------------------------------------
-    | Required validation
-    |--------------------------------------------------------------------------
-    */
-
-    $('#asset_photos').prop(
-        'required',
-        photoDataTransfer.files.length === 0
-    );
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| REMOVE PHOTO
-|--------------------------------------------------------------------------
-*/
-
-$(document).on(
-    'click',
-    '.btn-remove-photo',
-    function () {
-
-        const index = parseInt(
-            $(this).data('index')
-        );
-
-        /*
-        | Create new DataTransfer
-        */
-
-        const newDataTransfer = new DataTransfer();
-
-        /*
-        | Copy all files except selected file
-        */
-
-        Array.from(photoDataTransfer.files).forEach(
-            function (file, fileIndex) {
-
-                if (fileIndex !== index) {
-
-                    newDataTransfer.items.add(file);
-
-                }
-
             }
         );
 
-        /*
-        | Replace DataTransfer
-        */
-
-        photoDataTransfer = newDataTransfer;
 
         /*
-        | Update input
+        |--------------------------------------------------------------------------
+        | Required validation
+        |--------------------------------------------------------------------------
         */
 
-        $('#asset_photos')[0].files =
-            photoDataTransfer.files;
-
-        /*
-        | Re-render preview
-        */
-
-        renderPhotoPreview();
+        $('#invoice_documents').prop(
+            'required',
+            documentDataTransfer.files.length === 0
+        );
 
     }
-);
 
-
-/*
-|--------------------------------------------------------------------------
-| INVOICE DOCUMENT UPLOAD
-|--------------------------------------------------------------------------
-*/
-
-let documentDataTransfer = new DataTransfer();
-
-$('#invoice_documents').on('change', function () {
-
-    const input = this;
-
-    const MAX_DOCUMENTS = 5;
-    const MAX_DOCUMENT_SIZE = 5 * 1024 * 1024;
-
-    const allowedExtensions = [
-        'pdf',
-        'jpg',
-        'jpeg',
-        'png'
-    ];
-
-    const newFiles = Array.from(input.files);
 
     /*
     |--------------------------------------------------------------------------
-    | Add new files
+    | REMOVE DOCUMENT
     |--------------------------------------------------------------------------
     */
 
-    for (let file of newFiles) {
+    $(document).on(
+        'click',
+        '.btn-remove-document',
+        function () {
 
-        /*
-        | Check duplicate
-        */
+            const index =
 
-        let duplicate =
+                parseInt(
+                    $(this).data('index')
+                );
+
+
+            const newDataTransfer =
+                new DataTransfer();
+
+
             Array.from(
                 documentDataTransfer.files
-            ).some(
-                existingFile =>
-                    existingFile.name === file.name &&
-                    existingFile.size === file.size
-            );
+            ).forEach(
+                function (file, fileIndex) {
 
-        if (duplicate) {
-            continue;
-        }
+                    if (fileIndex !== index) {
 
-        /*
-        | Maximum documents
-        */
+                        newDataTransfer.items.add(file);
 
-        if (
-            documentDataTransfer.files.length >=
-            MAX_DOCUMENTS
-        ) {
-
-            Swal.fire({
-                icon: 'warning',
-                title: 'Maximum 5 Documents',
-                text:
-                    'Invoice/document hanya dapat maksimal 5 file.'
-            });
-
-            break;
-        }
-
-        /*
-        | Extension
-        */
-
-        let extension =
-            file.name
-                .split('.')
-                .pop()
-                .toLowerCase();
-
-        if (!allowedExtensions.includes(extension)) {
-
-            Swal.fire({
-                icon: 'error',
-                title: 'Format Tidak Valid',
-                text:
-                    'Document hanya PDF, JPG, JPEG atau PNG.'
-            });
-
-            continue;
-        }
-
-        /*
-        | File size
-        */
-
-        if (file.size > MAX_DOCUMENT_SIZE) {
-
-            Swal.fire({
-                icon: 'error',
-                title: 'Ukuran Dokumen Terlalu Besar',
-                text:
-                    `"${file.name}" memiliki ukuran ` +
-                    `${(file.size / 1024 / 1024).toFixed(5)} MB. ` +
-                    `Maksimal ukuran setiap dokumen adalah 5 MB.`
-            });
-
-            continue;
-        }
-
-        documentDataTransfer.items.add(file);
-
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Update input
-    |--------------------------------------------------------------------------
-    */
-
-    input.files =
-        documentDataTransfer.files;
-
-    /*
-    |--------------------------------------------------------------------------
-    | Render
-    |--------------------------------------------------------------------------
-    */
-
-    renderDocumentPreview();
-
-});
-
-
-function renderDocumentPreview() {
-
-    const preview =
-        $('#invoice_preview');
-
-    preview.empty();
-
-    Array.from(
-        documentDataTransfer.files
-    ).forEach(
-        function (file, index) {
-
-            let extension =
-                file.name
-                    .split('.')
-                    .pop()
-                    .toLowerCase();
-
-            let icon =
-                extension === 'pdf'
-                    ? 'fa-file-pdf'
-                    : 'fa-file-image';
-
-            preview.append(`
-
-                <div class="preview-item">
-
-                    <div class="preview-item-left">
-
-                        <i
-                            class="fa-solid ${icon}"
-                        ></i>
-
-                        <div class="min-width-0">
-
-                            <div
-                                class="preview-file-name fw-semibold"
-                            >
-                                ${file.name}
-                            </div>
-
-                            <small class="text-muted">
-
-                                ${(
-                                    file.size /
-                                    1024 /
-                                    1024
-                                ).toFixed(5)} MB
-
-                            </small>
-
-                        </div>
-
-                    </div>
-
-                    <button
-                        type="button"
-                        class="preview-remove btn-remove-document"
-                        data-index="${index}"
-                        title="Remove document"
-                    >
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
-
-                </div>
-
-            `);
-
-        }
-    );
-
-    /*
-    |--------------------------------------------------------------------------
-    | Required validation
-    |--------------------------------------------------------------------------
-    */
-
-    $('#invoice_documents').prop(
-        'required',
-        documentDataTransfer.files.length === 0
-    );
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| REMOVE DOCUMENT
-|--------------------------------------------------------------------------
-*/
-
-$(document).on(
-    'click',
-    '.btn-remove-document',
-    function () {
-
-        const index =
-            parseInt(
-                $(this).data('index')
-            );
-
-        const newDataTransfer =
-            new DataTransfer();
-
-        Array.from(
-            documentDataTransfer.files
-        ).forEach(
-            function (file, fileIndex) {
-
-                if (fileIndex !== index) {
-
-                    newDataTransfer.items.add(file);
+                    }
 
                 }
+            );
 
-            }
-        );
 
-        documentDataTransfer =
-            newDataTransfer;
+            documentDataTransfer =
+                newDataTransfer;
 
-        $('#invoice_documents')[0].files =
-            documentDataTransfer.files;
 
-        renderDocumentPreview();
+            $('#invoice_documents')[0].files =
+                documentDataTransfer.files;
 
-    }
-);
-    /*
-|--------------------------------------------------------------------------
-| MAINTENANCE
-|--------------------------------------------------------------------------
-*/
 
-function updateMaintenanceUI() {
+            renderDocumentPreview();
 
-    const required = $('#maintenance_required').is(':checked');
-
-    $('#maintenance_config').toggle(required);
-
-    $('#maintenance_required_label').text(
-        required ? 'Yes' : 'No'
+        }
     );
 
-    if (!required) {
 
-        $('#maintenance_type').val('');
-        $('#maintenance_trigger').val('calendar');
-        $('#maintenance_interval').val('');
-        $('#maintenance_interval_unit').val('month');
-        $('#maintenance_start_date').val('');
-        $('#last_maintenance_date').val('');
-        $('#next_maintenance_date_display').val('');
+    /*
+    |--------------------------------------------------------------------------
+    | MAINTENANCE
+    |--------------------------------------------------------------------------
+    */
+
+    function updateMaintenanceUI() {
+
+        const required =
+            $('#maintenance_required').is(':checked');
+
+
+        $('#maintenance_config').toggle(required);
+
+
+        $('#maintenance_required_label').text(
+            required ? 'Yes' : 'No'
+        );
+
+
+        if (!required) {
+
+            $('#maintenance_type').val('');
+
+            $('#maintenance_trigger').val('calendar');
+
+            $('#maintenance_interval').val('');
+
+            $('#maintenance_interval_unit').val('month');
+
+            $('#maintenance_start_date').val('');
+
+            $('#last_maintenance_date').val('');
+
+            $('#next_maintenance_date_display').val('');
+
+        }
+
+
+        calculateNextMaintenanceDate();
+
     }
 
-    calculateNextMaintenanceDate();
-}
+
+    /*
+    |--------------------------------------------------------------------------
+    | MAINTENANCE TOGGLE
+    |--------------------------------------------------------------------------
+    */
+
+    $('#maintenance_required').on(
+        'change',
+        function () {
+
+            updateMaintenanceUI();
+
+        }
+    );
 
 
-/*
-|--------------------------------------------------------------------------
-| MAINTENANCE TOGGLE
-|--------------------------------------------------------------------------
-*/
+    /*
+    |--------------------------------------------------------------------------
+    | CALCULATE NEXT MAINTENANCE
+    |--------------------------------------------------------------------------
+    */
 
-$('#maintenance_required').on('change', function () {
+    function calculateNextMaintenanceDate() {
+
+        if (
+            !$('#maintenance_required').is(':checked')
+        ) {
+
+            $('#next_maintenance_date_display').val('');
+
+            return;
+
+        }
+
+
+        const interval =
+            parseInt(
+                $('#maintenance_interval').val()
+            );
+
+
+        const unit =
+            $('#maintenance_interval_unit').val();
+
+
+        const lastMaintenance =
+            $('#last_maintenance_date').val();
+
+
+        const startDate =
+            $('#maintenance_start_date').val();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Base date
+        |--------------------------------------------------------------------------
+        |
+        | Jika sudah pernah maintenance:
+        | gunakan Last Maintenance.
+        |
+        | Jika belum pernah:
+        | gunakan Maintenance Start Date.
+        |--------------------------------------------------------------------------
+        */
+
+        const baseDate =
+            lastMaintenance || startDate;
+
+
+        if (
+            !baseDate ||
+            !interval ||
+            interval < 1 ||
+            !unit
+        ) {
+
+            $('#next_maintenance_date_display').val('');
+
+            return;
+
+        }
+
+
+        const date =
+            new Date(
+                baseDate + 'T00:00:00'
+            );
+
+
+        if (
+            isNaN(date.getTime())
+        ) {
+
+            $('#next_maintenance_date_display').val('');
+
+            return;
+
+        }
+
+
+        switch (unit) {
+
+            case 'day':
+
+                date.setDate(
+                    date.getDate() + interval
+                );
+
+                break;
+
+
+            case 'week':
+
+                date.setDate(
+                    date.getDate() + (interval * 7)
+                );
+
+                break;
+
+
+            case 'month':
+
+                date.setMonth(
+                    date.getMonth() + interval
+                );
+
+                break;
+
+
+            case 'year':
+
+                date.setFullYear(
+                    date.getFullYear() + interval
+                );
+
+                break;
+
+        }
+
+
+        const year =
+            date.getFullYear();
+
+
+        const month =
+            String(
+                date.getMonth() + 1
+            ).padStart(2, '0');
+
+
+        const day =
+            String(
+                date.getDate()
+            ).padStart(2, '0');
+
+
+        $('#next_maintenance_date_display').val(
+
+            `${year}-${month}-${day}`
+
+        );
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | MAINTENANCE FIELD CHANGE
+    |--------------------------------------------------------------------------
+    */
+
+    $(
+        '#maintenance_interval, ' +
+        '#maintenance_interval_unit, ' +
+        '#maintenance_start_date, ' +
+        '#last_maintenance_date'
+    ).on(
+        'change input',
+        function () {
+
+            calculateNextMaintenanceDate();
+
+        }
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | INITIAL STATE
+    |--------------------------------------------------------------------------
+    */
 
     updateMaintenanceUI();
 
-});
-
-
-/*
-|--------------------------------------------------------------------------
-| CALCULATE NEXT MAINTENANCE
-|--------------------------------------------------------------------------
-*/
-
-function calculateNextMaintenanceDate() {
-
-    if (!$('#maintenance_required').is(':checked')) {
-
-        $('#next_maintenance_date_display').val('');
-
-        return;
-    }
-
-    const interval = parseInt(
-        $('#maintenance_interval').val()
-    );
-
-    const unit = $('#maintenance_interval_unit').val();
-
-    const lastMaintenance =
-        $('#last_maintenance_date').val();
-
-    const startDate =
-        $('#maintenance_start_date').val();
-
-    /*
-    |--------------------------------------------------------------------------
-    | Base date
-    |--------------------------------------------------------------------------
-    | Jika sudah pernah maintenance:
-    | gunakan Last Maintenance.
-    |
-    | Jika belum pernah:
-    | gunakan Maintenance Start Date.
-    |--------------------------------------------------------------------------
-    */
-
-    const baseDate = lastMaintenance || startDate;
-
-    if (
-        !baseDate ||
-        !interval ||
-        interval < 1 ||
-        !unit
-    ) {
-
-        $('#next_maintenance_date_display').val('');
-
-        return;
-    }
-
-    const date = new Date(baseDate + 'T00:00:00');
-
-    if (isNaN(date.getTime())) {
-
-        $('#next_maintenance_date_display').val('');
-
-        return;
-    }
-
-    switch (unit) {
-
-        case 'day':
-            date.setDate(
-                date.getDate() + interval
-            );
-            break;
-
-        case 'week':
-            date.setDate(
-                date.getDate() + (interval * 7)
-            );
-            break;
-
-        case 'month':
-            date.setMonth(
-                date.getMonth() + interval
-            );
-            break;
-
-        case 'year':
-            date.setFullYear(
-                date.getFullYear() + interval
-            );
-            break;
-    }
-
-    const year =
-        date.getFullYear();
-
-    const month =
-        String(date.getMonth() + 1)
-            .padStart(2, '0');
-
-    const day =
-        String(date.getDate())
-            .padStart(2, '0');
-
-    $('#next_maintenance_date_display').val(
-        `${year}-${month}-${day}`
-    );
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| MAINTENANCE FIELD CHANGE
-|--------------------------------------------------------------------------
-*/
-
-$(
-    '#maintenance_interval, ' +
-    '#maintenance_interval_unit, ' +
-    '#maintenance_start_date, ' +
-    '#last_maintenance_date'
-).on('change input', function () {
-
-    calculateNextMaintenanceDate();
-
-});
-
-
-/*
-|--------------------------------------------------------------------------
-| INITIAL STATE
-|--------------------------------------------------------------------------
-*/
-
-updateMaintenanceUI();
 
     /*
     |--------------------------------------------------------------------------
@@ -1973,182 +2720,207 @@ updateMaintenanceUI();
     |--------------------------------------------------------------------------
     */
 
-    $('#formAddAsset').submit(function (e) {
+    $('#formAddAsset').submit(
+        function (e) {
 
-        e.preventDefault();
-
-
-        /*
-        | Browser validation
-        */
-
-        if (!this.checkValidity()) {
-
-            this.reportValidity();
-
-            return;
-
-        }
+            e.preventDefault();
 
 
-        let form = this;
+            /*
+            |--------------------------------------------------------------------------
+            | Browser validation
+            |--------------------------------------------------------------------------
+            */
+
+            if (!this.checkValidity()) {
+
+                this.reportValidity();
+
+                return;
+
+            }
 
 
-        let formData =
-            new FormData(form);
+            let form =
+                this;
 
 
-        let button =
-            $('#btnSaveAsset');
+            let formData =
+                new FormData(form);
 
 
-        button
-
-            .prop('disabled', true)
-
-            .html(`
-
-                <span
-                    class="spinner-border spinner-border-sm me-1"
-                ></span>
-
-                Saving...
-
-            `);
+            let button =
+                $('#btnSaveAsset');
 
 
-        $.ajax({
+            button
+                .prop(
+                    'disabled',
+                    true
+                )
+                .html(`
 
-            url:
-                "{{ route('assets.store') }}",
+                    <span
+                        class="spinner-border spinner-border-sm me-1"
+                    ></span>
 
-            type:
-                "POST",
+                    Saving...
 
-            data:
-                formData,
-
-            processData:
-                false,
-
-            contentType:
-                false,
-
-            headers: {
-
-                'Accept':
-                    'application/json'
-
-            },
+                `);
 
 
-            success:
-                function (response) {
+            $.ajax({
 
+                url:
+                    "{{ route('assets.store') }}",
 
-                    if (
-                        response.success ||
-                        response.status
-                    ) {
+                type:
+                    "POST",
 
+                data:
+                    formData,
 
-                        Swal.fire({
+                processData:
+                    false,
 
-                            icon:
-                                'success',
+                contentType:
+                    false,
 
-                            title:
-                                'Berhasil',
+                headers: {
 
-                            text:
-                                response.message ||
-                                'Asset berhasil ditambahkan.',
-
-                            timer:
-                                1500,
-
-                            showConfirmButton:
-                                false
-
-                        }).then(function () {
-
-
-                            window.location.href =
-                                "{{ route('assets.index') }}";
-
-                        });
-
-                    }
+                    'Accept':
+                        'application/json'
 
                 },
 
 
-            error:
-                function (xhr) {
+                success:
+                    function (response) {
 
 
-                    button
-
-                        .prop(
-                            'disabled',
-                            false
-                        )
-
-                        .html(`
-
-                            <i
-                                class="fa-solid fa-save me-1"
-                            ></i>
-
-                            Save Asset
-
-                        `);
+                        if (
+                            response.success ||
+                            response.status
+                        ) {
 
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | VALIDATION ERROR
-                    |--------------------------------------------------------------------------
-                    */
+                            Swal.fire({
 
-                    if (
-                        xhr.status === 422
-                    ) {
+                                icon:
+                                    'success',
 
+                                title:
+                                    'Berhasil',
 
-                        let errors =
-                            xhr.responseJSON?.errors;
+                                text:
+                                    response.message ||
+                                    'Asset berhasil ditambahkan.',
 
+                                timer:
+                                    1500,
 
-                        let message =
-                            '';
+                                showConfirmButton:
+                                    false
 
+                            }).then(
+                                function () {
 
-                        if (errors) {
-
-
-                            $.each(
-
-                                errors,
-
-                                function (
-                                    key,
-                                    value
-                                ) {
-
-
-                                    message +=
-
-                                        value[0] +
-
-                                        '<br>';
+                                    window.location.href =
+                                        "{{ route('assets.index') }}";
 
                                 }
-
                             );
 
                         }
 
+                    },
+
+
+                error:
+                    function (xhr) {
+
+
+                        button
+                            .prop(
+                                'disabled',
+                                false
+                            )
+                            .html(`
+
+                                <i
+                                    class="fa-solid fa-save me-1"
+                                ></i>
+
+                                Save Asset
+
+                            `);
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | VALIDATION ERROR
+                        |--------------------------------------------------------------------------
+                        */
+
+                        if (
+                            xhr.status === 422
+                        ) {
+
+
+                            let errors =
+                                xhr.responseJSON?.errors;
+
+
+                            let message =
+                                '';
+
+
+                            if (errors) {
+
+                                $.each(
+
+                                    errors,
+
+                                    function (
+                                        key,
+                                        value
+                                    ) {
+
+                                        message +=
+                                            value[0] +
+                                            '<br>';
+
+                                    }
+
+                                );
+
+                            }
+
+
+                            Swal.fire({
+
+                                icon:
+                                    'error',
+
+                                title:
+                                    'Validasi Gagal',
+
+                                html:
+                                    message
+
+                            });
+
+
+                            return;
+
+                        }
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | GENERAL ERROR
+                        |--------------------------------------------------------------------------
+                        */
 
                         Swal.fire({
 
@@ -2156,44 +2928,20 @@ updateMaintenanceUI();
                                 'error',
 
                             title:
-                                'Validasi Gagal',
+                                'Gagal',
 
-                            html:
-                                message
+                            text:
+                                xhr.responseJSON?.message ||
+                                'Asset gagal disimpan.'
 
                         });
 
-
-                        return;
-
                     }
 
+            });
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | GENERAL ERROR
-                    |--------------------------------------------------------------------------
-                    */
-
-                    Swal.fire({
-
-                        icon:
-                            'error',
-
-                        title:
-                            'Gagal',
-
-                        text:
-                            xhr.responseJSON?.message ||
-                            'Asset gagal disimpan.'
-
-                    });
-
-                }
-
-        });
-
-    });
+        }
+    );
 
 
     /*
@@ -2205,6 +2953,7 @@ updateMaintenanceUI();
     $('#asset_name').trigger('focus');
 
 });
+
 </script>
 
 @endsection

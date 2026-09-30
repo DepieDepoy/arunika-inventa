@@ -107,6 +107,25 @@ class Asset extends Model
     {
         return $this->belongsTo(User::class, 'responsible_user_id');
     }
+
+    /**
+     * Assignment History
+     */
+    public function assignments(): HasMany
+    {
+        return $this->hasMany(AssetAssignment::class)
+            ->orderByDesc('start_at');
+    }
+
+    /**
+     * Current Assignment
+     */
+    public function currentAssignment()
+    {
+        return $this->hasOne(AssetAssignment::class)
+            ->whereNull('end_at')
+            ->latestOfMany('start_at');
+    }
     public function photos(): HasMany
     {
         return $this->hasMany(AssetPhoto::class)

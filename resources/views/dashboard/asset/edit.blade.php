@@ -5,6 +5,10 @@
 @section('content')
 
 <style>
+    /* ============================================================
+       PAGE
+    ============================================================ */
+
     .asset-page-header {
         margin-bottom: 1.5rem;
     }
@@ -52,6 +56,11 @@
         color: #ff3e1d;
     }
 
+
+    /* ============================================================
+       FORM
+    ============================================================ */
+
     .form-control,
     .form-select {
         min-height: 42px;
@@ -65,6 +74,34 @@
         border-color: #696cff !important;
         box-shadow: 0 0 0 0.15rem rgba(105, 108, 255, 0.15);
     }
+
+
+    /* ============================================================
+       READONLY DISPLAY
+    ============================================================ */
+
+    .readonly-display {
+        min-height: 42px;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        padding: 0.375rem 0.75rem;
+        border: 1px solid #d9dee3;
+        border-radius: 6px;
+        background-color: #f8f9fa;
+        color: #566a7f;
+        cursor: not-allowed;
+    }
+
+    .readonly-display i {
+        flex-shrink: 0;
+        color: #8592a3;
+    }
+
+
+    /* ============================================================
+       SELECT2
+    ============================================================ */
 
     .select2-container {
         width: 100% !important;
@@ -93,13 +130,18 @@
         padding: 8px 12px;
     }
 
+
+    /* ============================================================
+       UPLOAD
+    ============================================================ */
+
     .upload-box {
         border: 2px dashed #d9dee3;
         border-radius: 10px;
         padding: 25px;
         text-align: center;
         cursor: pointer;
-        transition: all .2s ease;
+        transition: all 0.2s ease;
     }
 
     .upload-box:hover {
@@ -185,412 +227,420 @@
         margin-left: 5px;
     }
 
+
+    /* ============================================================
+       FOOTER
+    ============================================================ */
+
     .sticky-footer {
         position: sticky;
         bottom: 0;
         z-index: 10;
-        background: rgba(255, 255, 255, .95);
+        background: rgba(255, 255, 255, 0.95);
         border-top: 1px solid #e5e7eb;
         padding: 15px 0;
         margin-top: 10px;
     }
 </style>
 
+
 <div class="content-wrapper">
 
-```
-<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="container-xxl flex-grow-1 container-p-y">
 
-    <!-- ===================================================== -->
-    <!-- HEADER -->
-    <!-- ===================================================== -->
+        <!-- ===================================================== -->
+        <!-- HEADER -->
+        <!-- ===================================================== -->
 
-    <div class="asset-page-header">
+        <div class="asset-page-header">
 
-        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex justify-content-between align-items-center">
 
-            <div>
-                <h4 class="fw-bold mb-1">
-                    Edit Asset
-                </h4>
+                <div>
+                    <h4 class="fw-bold mb-1">
+                        Edit Asset
+                    </h4>
 
-                <p class="text-muted mb-0">
-                    Update company asset information
-                </p>
-            </div>
+                    <p class="text-muted mb-0">
+                        Update company asset information
+                    </p>
+                </div>
 
-            <div>
-                <a
-                    href="{{ route('assets.index') }}"
-                    class="btn btn-label-secondary"
-                >
-                    <i class="fa-solid fa-arrow-left me-1"></i>
-                    Back to Assets
-                </a>
+                <div>
+                    <a
+                        href="{{ route('assets.index') }}"
+                        class="btn btn-label-secondary"
+                    >
+                        <i class="fa-solid fa-arrow-left me-1"></i>
+                        Back to Assets
+                    </a>
+                </div>
+
             </div>
 
         </div>
 
-    </div>
 
+        <!-- ===================================================== -->
+        <!-- FORM -->
+        <!-- ===================================================== -->
 
-    <!-- ===================================================== -->
-    <!-- FORM -->
-    <!-- ===================================================== -->
-
-    <form
-        id="formEditAsset"
-        action="{{ route('assets.update') }}"
-        method="POST"
-        enctype="multipart/form-data"
-        data-existing-photo-count="{{ $asset->photos->count() }}"
-        data-existing-document-count="{{ $asset->documents->count() }}"
-    >
-
-        @csrf
-
-        <input
-            type="hidden"
-            name="id"
-            value="{{ $asset->id }}"
+        <form
+            id="formEditAsset"
+            action="{{ route('assets.update') }}"
+            method="POST"
+            enctype="multipart/form-data"
+            data-existing-photo-count="{{ $asset->photos->count() }}"
+            data-existing-document-count="{{ $asset->documents->count() }}"
         >
 
+            @csrf
 
-        <!-- ================================================= -->
-        <!-- 1. ASSET INFORMATION -->
-        <!-- ================================================= -->
-
-        <div class="card asset-section">
-
-            <div class="card-body">
-
-                <div class="asset-section-header">
-
-                    <div class="asset-section-number">
-                        1
-                    </div>
-
-                    <div>
-
-                        <h6 class="asset-section-title">
-                            Asset Information
-                        </h6>
-
-                        <p class="asset-section-description">
-                            Basic information about the asset
-                        </p>
-
-                    </div>
-
-                </div>
+            <input
+                type="hidden"
+                name="id"
+                value="{{ $asset->id }}"
+            >
 
 
-                <div class="row">
+            <!-- ================================================= -->
+            <!-- 1. ASSET INFORMATION -->
+            <!-- ================================================= -->
 
-                    <!-- ASSET CODE -->
+            <div class="card asset-section">
 
-                    <div class="col-md-6 mb-3">
+                <div class="card-body">
 
-                        <label class="form-label">
-                            Asset Code
-                        </label>
+                    <div class="asset-section-header">
 
-                        <input
-                            type="text"
-                            class="form-control"
-                            value="{{ $asset->asset_code }}"
-                            readonly
-                        >
+                        <div class="asset-section-number">
+                            1
+                        </div>
 
-                        <small class="text-muted">
-                            Asset code cannot be changed.
-                        </small>
+                        <div>
+                            <h6 class="asset-section-title">
+                                Asset Information
+                            </h6>
+
+                            <p class="asset-section-description">
+                                Basic information about the asset
+                            </p>
+                        </div>
 
                     </div>
 
 
-                    <!-- ASSET NAME -->
+                    <div class="row">
 
-                    <div class="col-md-6 mb-3">
+                        <!-- ASSET CODE -->
 
-                        <label class="form-label">
-                            Asset Name
-                            <span class="required">*</span>
-                        </label>
+                        <div class="col-md-6 mb-3">
 
-                        <input
-                            type="text"
-                            name="asset_name"
-                            id="asset_name"
-                            class="form-control"
-                            value="{{ old('asset_name', $asset->asset_name) }}"
-                            placeholder="Enter asset name"
-                            required
-                        >
+                            <label class="form-label">
+                                Asset Code
+                            </label>
 
-                    </div>
-
-                    <!-- ASSET CONDITION -->
-
-                    <div class="col-md-6 mb-3">
-
-                        <label class="form-label">
-                            Asset Condition
-                            <span class="required">*</span>
-                        </label>
-
-                        <select
-                            name="asset_condition"
-                            id="asset_condition"
-                            class="form-select"
-                            required
-                        >
-
-                            <option value="">
-                                Select Condition
-                            </option>
-
-                            <option
-                                value="new"
-                                {{ old('asset_condition', $asset->asset_condition) == 'new' ? 'selected' : '' }}
+                            <input
+                                type="text"
+                                class="form-control"
+                                value="{{ $asset->asset_code }}"
+                                readonly
                             >
-                                New
-                            </option>
 
-                            <option
-                                value="used"
-                                {{ old('asset_condition', $asset->asset_condition) == 'used' ? 'selected' : '' }}
+                            <small class="text-muted">
+                                Asset code cannot be changed.
+                            </small>
+
+                        </div>
+
+
+                        <!-- ASSET NAME -->
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+                                Asset Name
+                                <span class="required">*</span>
+                            </label>
+
+                            <input
+                                type="text"
+                                name="asset_name"
+                                id="asset_name"
+                                class="form-control"
+                                value="{{ old('asset_name', $asset->asset_name) }}"
+                                placeholder="Enter asset name"
+                                required
                             >
-                                Used
-                            </option>
 
-                        </select>
+                        </div>
 
-                        <small class="text-muted">
-                            Indicates whether the asset was new or previously used when acquired.
-                        </small>
 
-                    </div>
-                    <!-- CATEGORY -->
+                        <!-- ASSET CONDITION -->
 
-                    <div class="col-md-6 mb-3">
+                        <div class="col-md-6 mb-3">
 
-                        <label class="form-label">
-                            Category
-                            <span class="required">*</span>
-                        </label>
+                            <label class="form-label">
+                                Asset Condition
+                                <span class="required">*</span>
+                            </label>
 
-                        <select
-                            name="category_id"
-                            id="category_id"
-                            class="form-select"
-                            required
-                        >
+                            <select
+                                name="asset_condition"
+                                id="asset_condition"
+                                class="form-select"
+                                required
+                            >
 
-                            <option value="">
-                                Select or type category
-                            </option>
-
-                            @foreach($categories as $category)
-
-                                <option
-                                    value="{{ $category->id }}"
-                                    {{ $asset->category_id == $category->id ? 'selected' : '' }}
-                                >
-                                    {{ $category->category_name }}
+                                <option value="">
+                                    Select Condition
                                 </option>
 
-                            @endforeach
-
-                        </select>
-
-                        <small class="text-muted">
-                            Type a new category if it is not registered yet.
-                        </small>
-
-                    </div>
-
-
-                    <!-- SUB CATEGORY -->
-
-                    <div class="col-md-6 mb-3">
-
-                        <label class="form-label">
-                            Sub Category
-                        </label>
-
-                        <select
-                            name="sub_category_id"
-                            id="sub_category_id"
-                            class="form-select"
-                        >
-
-                            <option value="">
-                                Select or type sub category
-                            </option>
-
-                            @foreach($subCategories as $subCategory)
-
                                 <option
-                                    value="{{ $subCategory->id }}"
-                                    data-category-id="{{ $subCategory->category_id }}"
-                                    {{ $asset->sub_category_id == $subCategory->id ? 'selected' : '' }}
+                                    value="new"
+                                    {{ old('asset_condition', $asset->asset_condition) == 'new' ? 'selected' : '' }}
                                 >
-                                    {{ $subCategory->sub_category_name }}
+                                    New
                                 </option>
 
-                            @endforeach
-
-                        </select>
-
-                        <small class="text-muted">
-                            Sub category will follow the selected category.
-                        </small>
-
-                    </div>
-
-
-                    <!-- VENDOR -->
-
-                    <div class="col-md-6 mb-3">
-
-                        <label class="form-label">
-                            Vendor
-                            <span class="required">*</span>
-                        </label>
-
-                        <select
-                            name="vendor_id"
-                            id="vendor_id"
-                            class="form-select"
-                            required
-                        >
-
-                            <option value="">
-                                Select vendor
-                            </option>
-
-                            @foreach($vendors as $vendor)
-
                                 <option
-                                    value="{{ $vendor->id }}"
-                                    {{ $asset->vendor_id == $vendor->id ? 'selected' : '' }}
+                                    value="used"
+                                    {{ old('asset_condition', $asset->asset_condition) == 'used' ? 'selected' : '' }}
                                 >
-                                    {{ $vendor->vendor_name }}
+                                    Used
                                 </option>
 
-                            @endforeach
+                            </select>
 
-                        </select>
+                            <small class="text-muted">
+                                Indicates whether the asset was new or previously used when acquired.
+                            </small>
 
-                    </div>
-
-
-                    <!-- BRAND -->
-
-                    <div class="col-md-6 mb-3">
-
-                        <label class="form-label">
-                            Brand
-                        </label>
-
-                        <input
-                            type="text"
-                            name="brand"
-                            class="form-control"
-                            value="{{ old('brand', $asset->brand) }}"
-                            placeholder="Example: Dell, HP, Lenovo"
-                        >
-
-                    </div>
+                        </div>
 
 
-                    <!-- MODEL -->
+                        <!-- CATEGORY -->
 
-                    <div class="col-md-6 mb-3">
+                        <div class="col-md-6 mb-3">
 
-                        <label class="form-label">
-                            Model
-                        </label>
+                            <label class="form-label">
+                                Category
+                                <span class="required">*</span>
+                            </label>
 
-                        <input
-                            type="text"
-                            name="model"
-                            class="form-control"
-                            value="{{ old('model', $asset->model) }}"
-                            placeholder="Enter asset model"
-                        >
-
-                    </div>
-
-
-                    <!-- SERIAL -->
-
-                    <div class="col-md-6 mb-3">
-
-                        <label class="form-label">
-                            Serial Number
-                        </label>
-
-                        <input
-                            type="text"
-                            name="serial_number"
-                            class="form-control"
-                            value="{{ old('serial_number', $asset->serial_number) }}"
-                            placeholder="Enter serial number"
-                        >
-
-                    </div>
-
-
-                    <!-- STATUS -->
-
-                    <div class="col-md-6 mb-3">
-
-                        <label class="form-label">
-                            Status
-                            <span class="required">*</span>
-                        </label>
-
-                        <select
-                            name="status"
-                            class="form-select"
-                            required
-                        >
-
-                            <option
-                                value="1"
-                                {{ $asset->status == 1 ? 'selected' : '' }}
+                            <select
+                                name="category_id"
+                                id="category_id"
+                                class="form-select"
+                                required
                             >
-                                Active
-                            </option>
 
-                            <option
-                                value="0"
-                                {{ $asset->status == 0 ? 'selected' : '' }}
+                                <option value="">
+                                    Select or type category
+                                </option>
+
+                                @foreach($categories as $category)
+
+                                    <option
+                                        value="{{ $category->id }}"
+                                        {{ $asset->category_id == $category->id ? 'selected' : '' }}
+                                    >
+                                        {{ $category->category_name }}
+                                    </option>
+
+                                @endforeach
+
+                            </select>
+
+                            <small class="text-muted">
+                                Type a new category if it is not registered yet.
+                            </small>
+
+                        </div>
+
+
+                        <!-- SUB CATEGORY -->
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+                                Sub Category
+                            </label>
+
+                            <select
+                                name="sub_category_id"
+                                id="sub_category_id"
+                                class="form-select"
                             >
-                                Inactive
-                            </option>
 
-                        </select>
+                                <option value="">
+                                    Select or type sub category
+                                </option>
 
-                    </div>
+                                @foreach($subCategories as $subCategory)
+
+                                    <option
+                                        value="{{ $subCategory->id }}"
+                                        data-category-id="{{ $subCategory->category_id }}"
+                                        {{ $asset->sub_category_id == $subCategory->id ? 'selected' : '' }}
+                                    >
+                                        {{ $subCategory->sub_category_name }}
+                                    </option>
+
+                                @endforeach
+
+                            </select>
+
+                            <small class="text-muted">
+                                Sub category will follow the selected category.
+                            </small>
+
+                        </div>
 
 
-                    <!-- DESCRIPTION -->
+                        <!-- VENDOR -->
 
-                    <div class="col-md-12 mb-3">
+                        <div class="col-md-6 mb-3">
 
-                        <label class="form-label">
-                            Description
-                        </label>
+                            <label class="form-label">
+                                Vendor
+                                <span class="required">*</span>
+                            </label>
 
-                        <textarea
-                            name="description"
-                            class="form-control"
-                            rows="4"
-                            placeholder="Enter asset description"
-                        >{{ old('description', $asset->description) }}</textarea>
+                            <select
+                                name="vendor_id"
+                                id="vendor_id"
+                                class="form-select"
+                                required
+                            >
+
+                                <option value="">
+                                    Select vendor
+                                </option>
+
+                                @foreach($vendors as $vendor)
+
+                                    <option
+                                        value="{{ $vendor->id }}"
+                                        {{ $asset->vendor_id == $vendor->id ? 'selected' : '' }}
+                                    >
+                                        {{ $vendor->vendor_name }}
+                                    </option>
+
+                                @endforeach
+
+                            </select>
+
+                        </div>
+
+
+                        <!-- BRAND -->
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+                                Brand
+                            </label>
+
+                            <input
+                                type="text"
+                                name="brand"
+                                class="form-control"
+                                value="{{ old('brand', $asset->brand) }}"
+                                placeholder="Example: Dell, HP, Lenovo"
+                            >
+
+                        </div>
+
+
+                        <!-- MODEL -->
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+                                Model
+                            </label>
+
+                            <input
+                                type="text"
+                                name="model"
+                                class="form-control"
+                                value="{{ old('model', $asset->model) }}"
+                                placeholder="Enter asset model"
+                            >
+
+                        </div>
+
+
+                        <!-- SERIAL -->
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+                                Serial Number
+                            </label>
+
+                            <input
+                                type="text"
+                                name="serial_number"
+                                class="form-control"
+                                value="{{ old('serial_number', $asset->serial_number) }}"
+                                placeholder="Enter serial number"
+                            >
+
+                        </div>
+
+
+                        <!-- STATUS -->
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+                                Status
+                                <span class="required">*</span>
+                            </label>
+
+                            <select
+                                name="status"
+                                class="form-select"
+                                required
+                            >
+
+                                <option
+                                    value="1"
+                                    {{ $asset->status == 1 ? 'selected' : '' }}
+                                >
+                                    Active
+                                </option>
+
+                                <option
+                                    value="0"
+                                    {{ $asset->status == 0 ? 'selected' : '' }}
+                                >
+                                    Inactive
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <!-- DESCRIPTION -->
+
+                        <div class="col-md-12 mb-3">
+
+                            <label class="form-label">
+                                Description
+                            </label>
+
+                            <textarea
+                                name="description"
+                                class="form-control"
+                                rows="4"
+                                placeholder="Enter asset description"
+                            >{{ old('description', $asset->description) }}</textarea>
+
+                        </div>
 
                     </div>
 
@@ -598,78 +648,101 @@
 
             </div>
 
-        </div>
 
+            <!-- ================================================= -->
+            <!-- 2. PURCHASE -->
+            <!-- ================================================= -->
 
-        <!-- ================================================= -->
-        <!-- 2. PURCHASE -->
-        <!-- ================================================= -->
+            <div class="card asset-section">
 
-        <div class="card asset-section">
+                <div class="card-body">
 
-            <div class="card-body">
+                    <div class="asset-section-header">
 
-                <div class="asset-section-header">
+                        <div class="asset-section-number">
+                            2
+                        </div>
 
-                    <div class="asset-section-number">
-                        2
-                    </div>
+                        <div>
+                            <h6 class="asset-section-title">
+                                Purchase Information
+                            </h6>
 
-                    <div>
-
-                        <h6 class="asset-section-title">
-                            Purchase Information
-                        </h6>
-
-                        <p class="asset-section-description">
-                            Purchase and invoice information
-                        </p>
-
-                    </div>
-
-                </div>
-
-
-                <div class="row">
-
-                    <div class="col-md-4 mb-3">
-
-                        <label class="form-label">
-                            Purchase Date
-                            <span class="required">*</span>
-                        </label>
-
-                        <input
-                            type="date"
-                            name="purchase_date"
-                            class="form-control"
-                            value="{{ old('purchase_date', $asset->purchase_date ? \Carbon\Carbon::parse($asset->purchase_date)->format('Y-m-d') : '') }}"
-                            required
-                        >
+                            <p class="asset-section-description">
+                                Purchase and invoice information
+                            </p>
+                        </div>
 
                     </div>
 
 
-                    <div class="col-md-4 mb-3">
+                    <div class="row">
 
-                        <label class="form-label">
-                            Purchase Price
-                            <span class="required">*</span>
-                        </label>
+                        <!-- PURCHASE DATE -->
 
-                        <div class="input-group">
+                        <div class="col-md-4 mb-3">
 
-                            <span class="input-group-text">
-                                Rp
-                            </span>
+                            <label class="form-label">
+                                Purchase Date
+                                <span class="required">*</span>
+                            </label>
 
                             <input
-                                type="number"
-                                name="purchase_price"
+                                type="date"
+                                name="purchase_date"
                                 class="form-control"
-                                min="0"
-                                value="{{ old('purchase_price', $asset->purchase_price) }}"
-                                placeholder="0"
+                                value="{{ old('purchase_date', $asset->purchase_date ? \Carbon\Carbon::parse($asset->purchase_date)->format('Y-m-d') : '') }}"
+                                required
+                            >
+
+                        </div>
+
+
+                        <!-- PURCHASE PRICE -->
+
+                        <div class="col-md-4 mb-3">
+
+                            <label class="form-label">
+                                Purchase Price
+                                <span class="required">*</span>
+                            </label>
+
+                            <div class="input-group">
+
+                                <span class="input-group-text">
+                                    Rp
+                                </span>
+
+                                <input
+                                    type="number"
+                                    name="purchase_price"
+                                    class="form-control"
+                                    min="0"
+                                    value="{{ old('purchase_price', $asset->purchase_price) }}"
+                                    placeholder="0"
+                                    required
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- PURCHASE NUMBER -->
+
+                        <div class="col-md-4 mb-3">
+
+                            <label class="form-label">
+                                Purchase Number
+                                <span class="required">*</span>
+                            </label>
+
+                            <input
+                                type="text"
+                                name="purchase_invoice"
+                                class="form-control"
+                                value="{{ old('purchase_invoice', $asset->purchase_invoice) }}"
+                                placeholder="Enter invoice number"
                                 required
                             >
 
@@ -677,489 +750,450 @@
 
                     </div>
 
-
-                    <div class="col-md-4 mb-3">
-
-                        <label class="form-label">
-                            Purchase Number
-                            <span class="required">*</span>
-                        </label>
-
-                        <input
-                            type="text"
-                            name="purchase_invoice"
-                            class="form-control"
-                            value="{{ old('purchase_invoice', $asset->purchase_invoice) }}"
-                            placeholder="Enter invoice number"
-                            required
-                        >
-
-                    </div>
-
                 </div>
 
             </div>
 
-        </div>
 
+            <!-- ================================================= -->
+            <!-- 3. DEPRECIATION -->
+            <!-- ================================================= -->
 
-        <!-- ================================================= -->
-        <!-- 3. DEPRECIATION -->
-        <!-- ================================================= -->
+            <div class="card asset-section">
 
-        <div class="card asset-section">
+                <div class="card-body">
 
-            <div class="card-body">
+                    <div class="asset-section-header">
 
-                <div class="asset-section-header">
-
-                    <div class="asset-section-number">
-                        3
-                    </div>
-
-                    <div>
-
-                        <h6 class="asset-section-title">
-                            Depreciation
-                        </h6>
-
-                        <p class="asset-section-description">
-                            Asset depreciation configuration
-                        </p>
-
-                    </div>
-
-                </div>
-
-
-                <div class="alert alert-info">
-
-                    <div class="d-flex">
-
-                        <i class="fa-solid fa-circle-info me-2 mt-1"></i>
+                        <div class="asset-section-number">
+                            3
+                        </div>
 
                         <div>
-                            Depreciation will be calculated based on
-                            purchase price, useful life and depreciation
-                            method.
+                            <h6 class="asset-section-title">
+                                Depreciation
+                            </h6>
+
+                            <p class="asset-section-description">
+                                Asset depreciation configuration
+                            </p>
                         </div>
 
                     </div>
 
-                </div>
 
+                    <div class="alert alert-info">
 
-                <div class="row">
+                        <div class="d-flex">
 
-                    <div class="col-md-4 mb-3">
+                            <i class="fa-solid fa-circle-info me-2 mt-1"></i>
 
-                        <label class="form-label">
-                            Depreciation Method
-                        </label>
-
-                        <select
-                            name="depreciation_method"
-                            class="form-select"
-                        >
-
-                            <option value="">
-                                Select Method
-                            </option>
-
-                            <option
-                                value="straight_line"
-                                {{ $asset->depreciation_method == 'straight_line' ? 'selected' : '' }}
-                            >
-                                Straight Line
-                            </option>
-
-                        </select>
-
-                    </div>
-
-
-                    <div class="col-md-4 mb-3">
-
-                        <label class="form-label">
-                            Useful Life
-                        </label>
-
-                        <div class="input-group">
-
-                            <input
-                                type="number"
-                                name="useful_life"
-                                class="form-control"
-                                min="1"
-                                value="{{ old('useful_life', $asset->useful_life) }}"
-                                placeholder="5"
-                            >
-
-                            <span class="input-group-text">
-                                Years
-                            </span>
+                            <div>
+                                Depreciation will be calculated based on
+                                purchase price, useful life and depreciation
+                                method.
+                            </div>
 
                         </div>
 
                     </div>
 
 
-                    <div class="col-md-4 mb-3">
-
-                        <label class="form-label">
-                            Residual Value
-                        </label>
-
-                        <div class="input-group">
-
-                            <span class="input-group-text">
-                                Rp
-                            </span>
-
-                            <input
-                                type="number"
-                                name="residual_value"
-                                class="form-control"
-                                min="0"
-                                value="{{ old('residual_value', $asset->residual_value) }}"
-                                placeholder="0"
-                            >
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="col-md-4 mb-3">
-
-                        <label class="form-label">
-                            Depreciation Start Date
-                        </label>
-
-                        <input
-                            type="date"
-                            name="depreciation_start_date"
-                            class="form-control"
-                            value="{{ old('depreciation_start_date', $asset->depreciation_start_date ? \Carbon\Carbon::parse($asset->depreciation_start_date)->format('Y-m-d') : '') }}"
-                        >
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-        <!-- ================================================= -->
-        <!-- 4. MAINTENANCE -->
-        <!-- ================================================= -->
-
-        <div class="card asset-section">
-
-            <div class="card-body">
-
-                <div class="asset-section-header">
-
-                    <div class="asset-section-number">
-                        4
-                    </div>
-
-                    <div>
-
-                        <h6 class="asset-section-title">
-                            Maintenance
-                        </h6>
-
-                        <p class="asset-section-description">
-                            Maintenance schedule and configuration
-                        </p>
-
-                    </div>
-
-                </div>
-
-
-                <div class="row">
-
-                    <!-- MAINTENANCE REQUIRED -->
-
-                    <div class="col-md-6 mb-3">
-
-                        <label class="form-label">
-                            Maintenance Required
-                        </label>
-
-                        {{-- Important: send 0 when checkbox is unchecked --}}
-                        <input
-                            type="hidden"
-                            name="maintenance_required"
-                            value="0"
-                        >
-
-                        <div class="form-check form-switch mt-2">
-
-                            <input
-                                class="form-check-input"
-                                type="checkbox"
-                                name="maintenance_required"
-                                id="maintenance_required"
-                                value="1"
-                                {{ old('maintenance_required', $asset->maintenance_required) ? 'checked' : '' }}
-                            >
-
-                            <label
-                                class="form-check-label"
-                                for="maintenance_required"
-                                id="maintenance_required_label"
-                            >
-                                {{ old('maintenance_required', $asset->maintenance_required) ? 'Yes' : 'No' }}
-                            </label>
-
-                        </div>
-
-                        <small class="text-muted">
-                            Enable maintenance scheduling for this asset.
-                        </small>
-
-                    </div>
-
-                </div>
-
-
-                <!-- MAINTENANCE CONFIGURATION -->
-                <div
-                    id="maintenance_config"
-                    style="{{ old('maintenance_required', $asset->maintenance_required) ? '' : 'display: none;' }}"
-                >
                     <div class="row">
-                        <!-- MAINTENANCE TYPE -->
-                        <div class="col-md-6 mb-3">
+
+                        <!-- DEPRECIATION METHOD -->
+
+                        <div class="col-md-4 mb-3">
+
                             <label class="form-label">
-                                Maintenance Type
+                                Depreciation Method
                             </label>
+
                             <select
-                                name="maintenance_type"
-                                id="maintenance_type"
+                                name="depreciation_method"
                                 class="form-select"
                             >
+
                                 <option value="">
-                                    Select Maintenance Type
+                                    Select Method
                                 </option>
+
                                 <option
-                                    value="preventive"
-                                    {{ old('maintenance_type', $asset->maintenance_type) == 'preventive' ? 'selected' : '' }}
+                                    value="straight_line"
+                                    {{ $asset->depreciation_method == 'straight_line' ? 'selected' : '' }}
                                 >
-                                    Preventive Maintenance
+                                    Straight Line
                                 </option>
-                                <option
-                                    value="corrective"
-                                    {{ old('maintenance_type', $asset->maintenance_type) == 'corrective' ? 'selected' : '' }}
-                                >
-                                    Corrective Maintenance
-                                </option>
+
                             </select>
+
                         </div>
-                        <!-- MAINTENANCE TRIGGER -->
-                        <div class="col-md-6 mb-3">
+
+
+                        <!-- USEFUL LIFE -->
+
+                        <div class="col-md-4 mb-3">
+
                             <label class="form-label">
-                                Maintenance Trigger
+                                Useful Life
                             </label>
-                            <select
-                                name="maintenance_trigger"
-                                id="maintenance_trigger"
-                                class="form-select"
-                            >
-                                <option
-                                    value="calendar"
-                                    {{ old('maintenance_trigger', $asset->maintenance_trigger ?? 'calendar') == 'calendar' ? 'selected' : '' }}
-                                >
-                                    Calendar
-                                </option>
-                            </select>
-                            <small class="text-muted">
-                                Currently maintenance is scheduled based on calendar date.
-                            </small>
-                        </div>
-                        <!-- MAINTENANCE INTERVAL -->
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">
-                                Maintenance Interval
-                            </label>
+
                             <div class="input-group">
+
                                 <input
                                     type="number"
-                                    name="maintenance_interval"
-                                    id="maintenance_interval"
+                                    name="useful_life"
                                     class="form-control"
                                     min="1"
-                                    value="{{ old('maintenance_interval', $asset->maintenance_interval) }}"
-                                    placeholder="3"
+                                    value="{{ old('useful_life', $asset->useful_life) }}"
+                                    placeholder="5"
                                 >
+
+                                <span class="input-group-text">
+                                    Years
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- RESIDUAL VALUE -->
+
+                        <div class="col-md-4 mb-3">
+
+                            <label class="form-label">
+                                Residual Value
+                            </label>
+
+                            <div class="input-group">
+
+                                <span class="input-group-text">
+                                    Rp
+                                </span>
+
+                                <input
+                                    type="number"
+                                    name="residual_value"
+                                    class="form-control"
+                                    min="0"
+                                    value="{{ old('residual_value', $asset->residual_value) }}"
+                                    placeholder="0"
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- DEPRECIATION START DATE -->
+
+                        <div class="col-md-4 mb-3">
+
+                            <label class="form-label">
+                                Depreciation Start Date
+                            </label>
+
+                            <input
+                                type="date"
+                                name="depreciation_start_date"
+                                class="form-control"
+                                value="{{ old('depreciation_start_date', $asset->depreciation_start_date ? \Carbon\Carbon::parse($asset->depreciation_start_date)->format('Y-m-d') : '') }}"
+                            >
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- 4. MAINTENANCE -->
+            <!-- ================================================= -->
+
+            <div class="card asset-section">
+
+                <div class="card-body">
+
+                    <div class="asset-section-header">
+
+                        <div class="asset-section-number">
+                            4
+                        </div>
+
+                        <div>
+                            <h6 class="asset-section-title">
+                                Maintenance
+                            </h6>
+
+                            <p class="asset-section-description">
+                                Maintenance schedule and configuration
+                            </p>
+                        </div>
+
+                    </div>
+
+
+                    <div class="row">
+
+                        <!-- MAINTENANCE REQUIRED -->
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+                                Maintenance Required
+                            </label>
+
+                            <input
+                                type="hidden"
+                                name="maintenance_required"
+                                value="0"
+                            >
+
+                            <div class="form-check form-switch mt-2">
+
+                                <input
+                                    class="form-check-input"
+                                    type="checkbox"
+                                    name="maintenance_required"
+                                    id="maintenance_required"
+                                    value="1"
+                                    {{ old('maintenance_required', $asset->maintenance_required) ? 'checked' : '' }}
+                                >
+
+                                <label
+                                    class="form-check-label"
+                                    for="maintenance_required"
+                                    id="maintenance_required_label"
+                                >
+                                    {{ old('maintenance_required', $asset->maintenance_required) ? 'Yes' : 'No' }}
+                                </label>
+
+                            </div>
+
+                            <small class="text-muted">
+                                Enable maintenance scheduling for this asset.
+                            </small>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- MAINTENANCE CONFIGURATION -->
+
+                    <div
+                        id="maintenance_config"
+                        style="{{ old('maintenance_required', $asset->maintenance_required) ? '' : 'display: none;' }}"
+                    >
+
+                        <div class="row">
+
+                            <!-- MAINTENANCE TYPE -->
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label">
+                                    Maintenance Type
+                                </label>
+
                                 <select
-                                    name="maintenance_interval_unit"
-                                    id="maintenance_interval_unit"
+                                    name="maintenance_type"
+                                    id="maintenance_type"
                                     class="form-select"
-                                    style="max-width: 140px;"
                                 >
-                                    <option
-                                        value="day"
-                                        {{ old('maintenance_interval_unit', $asset->maintenance_interval_unit ?? 'month') == 'day' ? 'selected' : '' }}
-                                    >
-                                        Days
+
+                                    <option value="">
+                                        Select Maintenance Type
                                     </option>
+
                                     <option
-                                        value="week"
-                                        {{ old('maintenance_interval_unit', $asset->maintenance_interval_unit ?? 'month') == 'week' ? 'selected' : '' }}
+                                        value="preventive"
+                                        {{ old('maintenance_type', $asset->maintenance_type) == 'preventive' ? 'selected' : '' }}
                                     >
-                                        Weeks
+                                        Preventive Maintenance
                                     </option>
+
                                     <option
-                                        value="month"
-                                        {{ old('maintenance_interval_unit', $asset->maintenance_interval_unit ?? 'month') == 'month' ? 'selected' : '' }}
+                                        value="corrective"
+                                        {{ old('maintenance_type', $asset->maintenance_type) == 'corrective' ? 'selected' : '' }}
                                     >
-                                        Months
+                                        Corrective Maintenance
                                     </option>
-                                    <option
-                                        value="year"
-                                        {{ old('maintenance_interval_unit', $asset->maintenance_interval_unit ?? 'month') == 'year' ? 'selected' : '' }}
-                                    >
-                                        Years
-                                    </option>
+
                                 </select>
+
                             </div>
-                            <small class="text-muted">
-                                Example: every 3 months.
-                            </small>
-                        </div>
-                        <!-- START DATE -->
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">
-                                Maintenance Start Date
-                            </label>
-                            <input
-                                type="date"
-                                name="maintenance_start_date"
-                                id="maintenance_start_date"
-                                class="form-control"
-                                value="{{ old('maintenance_start_date', $asset->maintenance_start_date ? \Carbon\Carbon::parse($asset->maintenance_start_date)->format('Y-m-d') : '') }}"
-                            >
-                            <small class="text-muted">
-                                Starting date for the maintenance schedule.
-                            </small>
-                        </div>
-                        <!-- LAST MAINTENANCE -->
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">
-                                Last Maintenance
-                            </label>
-                            <input
-                                type="date"
-                                name="last_maintenance_date"
-                                id="last_maintenance_date"
-                                class="form-control"
-                                value="{{ old('last_maintenance_date', $asset->last_maintenance_date ? \Carbon\Carbon::parse($asset->last_maintenance_date)->format('Y-m-d') : '') }}"
-                            >
-                            <small class="text-muted">
-                                Useful when the asset was previously used or already maintained.
-                            </small>
-                        </div>
-                        <!-- NEXT MAINTENANCE -->
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">
-                                Next Maintenance
-                            </label>
-                            <input
-                                type="date"
-                                name="next_maintenance_date"
-                                id="next_maintenance_date"
-                                class="form-control"
-                                value="{{ old('next_maintenance_date', $asset->next_maintenance_date ? \Carbon\Carbon::parse($asset->next_maintenance_date)->format('Y-m-d') : '') }}"
-                            >
-                            <small class="text-muted">
-                                Automatically calculated, but can be adjusted manually.
-                            </small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- ================================================= -->
-        <!-- 5. ASSIGNMENT -->
-        <!-- ================================================= -->
-
-        <div class="card asset-section">
-
-            <div class="card-body">
-
-                <div class="asset-section-header">
-
-                    <div class="asset-section-number">
-                        5
-                    </div>
-
-                    <div>
-
-                        <h6 class="asset-section-title">
-                            Asset Assignment
-                        </h6>
-
-                        <p class="asset-section-description">
-                            Person responsible for this asset
-                        </p>
-
-                    </div>
-
-                </div>
 
 
-                <div class="row">
+                            <!-- MAINTENANCE TRIGGER -->
 
-                    <div class="col-md-6 mb-3">
+                            <div class="col-md-6 mb-3">
 
-                        <label class="form-label">
-                            Responsible
-                        </label>
+                                <label class="form-label">
+                                    Maintenance Trigger
+                                </label>
 
-                        <select
-                            name="responsible_user_id"
-                            id="responsible_user_id"
-                            class="form-select"
-                        >
-
-                            <option value="">
-                                Select Responsible Person
-                            </option>
-
-                            @foreach($users as $user)
-
-                                <option
-                                    value="{{ $user->id }}"
-                                    {{ $asset->responsible_user_id == $user->id ? 'selected' : '' }}
+                                <select
+                                    name="maintenance_trigger"
+                                    id="maintenance_trigger"
+                                    class="form-select"
                                 >
-                                    {{ $user->name }}
-                                </option>
 
-                            @endforeach
+                                    <option
+                                        value="calendar"
+                                        {{ old('maintenance_trigger', $asset->maintenance_trigger ?? 'calendar') == 'calendar' ? 'selected' : '' }}
+                                    >
+                                        Calendar
+                                    </option>
 
-                        </select>
+                                </select>
 
-                    </div>
+                                <small class="text-muted">
+                                    Currently maintenance is scheduled based on calendar date.
+                                </small>
+
+                            </div>
 
 
-                    <div class="col-md-6 mb-3">
+                            <!-- MAINTENANCE INTERVAL -->
 
-                        <label class="form-label">
-                            Location
-                        </label>
+                            <div class="col-md-6 mb-3">
 
-                        <input
-                            type="text"
-                            name="location"
-                            class="form-control"
-                            value="{{ old('location', $asset->location) }}"
-                            placeholder="Example: Warehouse, Office, Room 01"
-                        >
+                                <label class="form-label">
+                                    Maintenance Interval
+                                </label>
+
+                                <div class="input-group">
+
+                                    <input
+                                        type="number"
+                                        name="maintenance_interval"
+                                        id="maintenance_interval"
+                                        class="form-control"
+                                        min="1"
+                                        value="{{ old('maintenance_interval', $asset->maintenance_interval) }}"
+                                        placeholder="3"
+                                    >
+
+                                    <select
+                                        name="maintenance_interval_unit"
+                                        id="maintenance_interval_unit"
+                                        class="form-select"
+                                        style="max-width: 140px;"
+                                    >
+
+                                        <option
+                                            value="day"
+                                            {{ old('maintenance_interval_unit', $asset->maintenance_interval_unit ?? 'month') == 'day' ? 'selected' : '' }}
+                                        >
+                                            Days
+                                        </option>
+
+                                        <option
+                                            value="week"
+                                            {{ old('maintenance_interval_unit', $asset->maintenance_interval_unit ?? 'month') == 'week' ? 'selected' : '' }}
+                                        >
+                                            Weeks
+                                        </option>
+
+                                        <option
+                                            value="month"
+                                            {{ old('maintenance_interval_unit', $asset->maintenance_interval_unit ?? 'month') == 'month' ? 'selected' : '' }}
+                                        >
+                                            Months
+                                        </option>
+
+                                        <option
+                                            value="year"
+                                            {{ old('maintenance_interval_unit', $asset->maintenance_interval_unit ?? 'month') == 'year' ? 'selected' : '' }}
+                                        >
+                                            Years
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+                                <small class="text-muted">
+                                    Example: every 3 months.
+                                </small>
+
+                            </div>
+
+
+                            <!-- START DATE -->
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label">
+                                    Maintenance Start Date
+                                </label>
+
+                                <input
+                                    type="date"
+                                    name="maintenance_start_date"
+                                    id="maintenance_start_date"
+                                    class="form-control"
+                                    value="{{ old('maintenance_start_date', $asset->maintenance_start_date ? \Carbon\Carbon::parse($asset->maintenance_start_date)->format('Y-m-d') : '') }}"
+                                >
+
+                                <small class="text-muted">
+                                    Starting date for the maintenance schedule.
+                                </small>
+
+                            </div>
+
+
+                            <!-- LAST MAINTENANCE -->
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label">
+                                    Last Maintenance
+                                </label>
+
+                                <input
+                                    type="date"
+                                    name="last_maintenance_date"
+                                    id="last_maintenance_date"
+                                    class="form-control"
+                                    value="{{ old('last_maintenance_date', $asset->last_maintenance_date ? \Carbon\Carbon::parse($asset->last_maintenance_date)->format('Y-m-d') : '') }}"
+                                >
+
+                                <small class="text-muted">
+                                    Useful when the asset was previously used or already maintained.
+                                </small>
+
+                            </div>
+
+
+                            <!-- NEXT MAINTENANCE -->
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label">
+                                    Next Maintenance
+                                </label>
+
+                                <input
+                                    type="date"
+                                    name="next_maintenance_date"
+                                    id="next_maintenance_date"
+                                    class="form-control"
+                                    value="{{ old('next_maintenance_date', $asset->next_maintenance_date ? \Carbon\Carbon::parse($asset->next_maintenance_date)->format('Y-m-d') : '') }}"
+                                >
+
+                                <small class="text-muted">
+                                    Automatically calculated, but can be adjusted manually.
+                                </small>
+
+                            </div>
+
+                        </div>
 
                     </div>
 
@@ -1167,383 +1201,482 @@
 
             </div>
 
-        </div>
 
+            <!-- ================================================= -->
+            <!-- 5. ASSIGNMENT & LOCATION -->
+            <!-- ================================================= -->
 
-        <!-- ================================================= -->
-        <!-- 6. PHOTOS -->
-        <!-- ================================================= -->
+            <div class="card asset-section">
 
-        <div class="card asset-section">
+                <div class="card-body">
 
-            <div class="card-body">
+                    <div class="asset-section-header">
 
-                <div class="asset-section-header">
+                        <div class="asset-section-number">
+                            5
+                        </div>
 
-                    <div class="asset-section-number">
-                        6
+                        <div>
+
+                            <h6 class="asset-section-title">
+                                Assignment &amp; Location
+                            </h6>
+
+                            <p class="asset-section-description">
+                                Current responsible person and asset location
+                            </p>
+
+                        </div>
+
                     </div>
 
-                    <div>
 
-                        <h6 class="asset-section-title">
-                            Asset Photos
-                            <span class="required">*</span>
-                        </h6>
+                    <div class="row">
 
-                        <p class="asset-section-description">
+                        <!-- RESPONSIBLE PERSON -->
+
+                        <div class="col-md-6 mb-3">
+
+                            <label
+                                for="responsible_user_display"
+                                class="form-label"
+                            >
+                                Responsible Person
+                            </label>
+
+                            <div
+                                id="responsible_user_display"
+                                class="readonly-display"
+                            >
+
+                                <i class="fa-solid fa-lock me-2"></i>
+
+                                <span>
+                                    {{ $asset->responsibleUser?->name ?? 'Unassigned' }}
+                                </span>
+
+                            </div>
+
+                            <small class="text-muted">
+                                Responsible Person can only be changed through the Assignment process.
+                            </small>
+
+                        </div>
+
+
+                        <!-- LOCATION -->
+
+                        <div class="col-md-6 mb-3">
+
+                            <label
+                                for="location_display"
+                                class="form-label"
+                            >
+                                Location
+                            </label>
+
+                            <div
+                                id="location_display"
+                                class="readonly-display"
+                            >
+
+                                <i class="fa-solid fa-lock me-2"></i>
+
+                                <span>
+                                    {{ $asset->location ?: 'Not specified' }}
+                                </span>
+
+                            </div>
+
+                            <small class="text-muted">
+                                Location can only be changed through the Asset Location process.
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- 6. PHOTOS -->
+            <!-- ================================================= -->
+
+            <div class="card asset-section">
+
+                <div class="card-body">
+
+                    <div class="asset-section-header">
+
+                        <div class="asset-section-number">
+                            6
+                        </div>
+
+                        <div>
+
+                            <h6 class="asset-section-title">
+                                Asset Photos
+                                <span class="required">*</span>
+                            </h6>
+
+                            <p class="asset-section-description">
+                                Maximum 3 photos total
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- EXISTING PHOTOS -->
+
+                    <div id="existing_photo_preview">
+
+                        @forelse($asset->photos as $photo)
+
+                            @php
+                                $photoUrl = asset(
+                                    'storage/' . $photo->file_path
+                                );
+                            @endphp
+
+                            <div
+                                class="preview-item existing-photo-item"
+                                data-id="{{ $photo->id }}"
+                            >
+
+                                <div class="preview-item-left">
+
+                                    <img
+                                        src="{{ $photoUrl }}"
+                                        class="asset-photo-preview"
+                                        alt="{{ $photo->original_name ?? 'Asset Photo' }}"
+                                    >
+
+                                    <div class="min-width-0">
+
+                                        <div class="fw-semibold preview-file-name">
+
+                                            {{ $photo->original_name ?? basename($photo->file_path) }}
+
+                                            <span class="old-file-badge">
+                                                Existing
+                                            </span>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+
+                                <div class="d-flex align-items-center gap-1">
+
+                                    <a
+                                        href="{{ $photoUrl }}"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="btn btn-sm btn-outline-primary"
+                                        title="View"
+                                    >
+                                        <i class="fa-solid fa-eye"></i>
+                                    </a>
+
+                                    <button
+                                        type="button"
+                                        class="preview-remove btn-remove-existing-photo"
+                                        data-id="{{ $photo->id }}"
+                                        title="Remove"
+                                    >
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                        @empty
+
+                            <div
+                                class="alert alert-warning"
+                                id="no-existing-photo"
+                            >
+                                <i class="fa-solid fa-image me-1"></i>
+                                Belum ada foto asset.
+                            </div>
+
+                        @endforelse
+
+                    </div>
+
+
+                    <!-- UPLOAD -->
+
+                    <label
+                        for="asset_photos"
+                        class="upload-box w-100"
+                    >
+
+                        <i class="fa-solid fa-cloud-arrow-up d-block"></i>
+
+                        <strong>
+                            Click to add asset photos
+                        </strong>
+
+                        <div class="text-muted small mt-1">
+
                             Maximum 3 photos total
-                        </p>
 
-                    </div>
+                            <br>
+
+                            JPG, JPEG, PNG — Maximum 5 MB each
+
+                        </div>
+
+                    </label>
+
+
+                    <input
+                        type="file"
+                        name="asset_photos[]"
+                        id="asset_photos"
+                        class="d-none"
+                        accept="image/jpeg,image/png"
+                        multiple
+                    >
+
+
+                    <div
+                        id="photo_preview"
+                        class="upload-preview"
+                    ></div>
+
+
+                    <!-- DELETE EXISTING PHOTOS -->
+
+                    <div id="deleted_photos_container"></div>
 
                 </div>
 
+            </div>
 
-                <!-- EXISTING PHOTOS -->
 
-                <div id="existing_photo_preview">
+            <!-- ================================================= -->
+            <!-- 7. DOCUMENTS -->
+            <!-- ================================================= -->
 
-                    @forelse($asset->photos as $photo)
+            <div class="card asset-section">
 
-                        @php
-                            $photoUrl = asset('storage/' .$photo->file_path);
-                        @endphp
+                <div class="card-body">
 
-                        <div
-                            class="preview-item existing-photo-item"
-                            data-id="{{ $photo->id }}"
-                        >
+                    <div class="asset-section-header">
 
-                            <div class="preview-item-left">
+                        <div class="asset-section-number">
+                            7
+                        </div>
 
-                                <img
-                                    src="{{ $photoUrl }}"
-                                    class="asset-photo-preview"
-                                    alt="{{ $photo->original_name ?? 'Asset Photo' }}"
-                                >
+                        <div>
 
-                                <div class="min-width-0">
+                            <h6 class="asset-section-title">
+                                Invoice / Documents
+                                <span class="required">*</span>
+                            </h6>
 
-                                    <div class="fw-semibold preview-file-name">
+                            <p class="asset-section-description">
+                                Maximum 5 invoice or supporting documents
+                            </p>
 
-                                        {{ $photo->original_name ?? basename($photo->file_path) }}
+                        </div>
 
-                                        <span class="old-file-badge">
-                                            Existing
-                                        </span>
+                    </div>
+
+
+                    <!-- EXISTING DOCUMENTS -->
+
+                    <div id="existing_invoice_preview">
+
+                        @forelse($asset->documents as $document)
+
+                            @php
+
+                                $extension = strtolower(
+                                    pathinfo(
+                                        $document->file_path,
+                                        PATHINFO_EXTENSION
+                                    )
+                                );
+
+                                $icon = $extension === 'pdf'
+                                    ? 'fa-file-pdf'
+                                    : 'fa-file-image';
+
+                                $documentUrl = asset(
+                                    'storage/' . $document->file_path
+                                );
+
+                            @endphp
+
+
+                            <div
+                                class="preview-item existing-document-item"
+                                data-id="{{ $document->id }}"
+                            >
+
+                                <div class="preview-item-left">
+
+                                    <i class="fa-solid {{ $icon }}"></i>
+
+                                    <div class="min-width-0">
+
+                                        <div class="fw-semibold preview-file-name">
+
+                                            {{ $document->original_name ?? basename($document->file_path) }}
+
+                                            <span class="old-file-badge">
+                                                Existing
+                                            </span>
+
+                                        </div>
 
                                     </div>
 
                                 </div>
 
-                            </div>
 
+                                <div class="d-flex align-items-center gap-1">
 
-                            <div class="d-flex align-items-center gap-1">
+                                    <a
+                                        href="{{ $documentUrl }}"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="btn btn-sm btn-outline-primary"
+                                        title="View"
+                                    >
+                                        <i class="fa-solid fa-eye"></i>
+                                    </a>
 
-                                <a
-                                    href="{{ $photoUrl }}"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    class="btn btn-sm btn-outline-primary"
-                                    title="View"
-                                >
-                                    <i class="fa-solid fa-eye"></i>
-                                </a>
-
-                                <button
-                                    type="button"
-                                    class="preview-remove btn-remove-existing-photo"
-                                    data-id="{{ $photo->id }}"
-                                >
-                                    <i class="fa-solid fa-trash"></i>
-                                </button>
-
-                            </div>
-
-                        </div>
-
-                    @empty
-
-                        <div
-                            class="alert alert-warning"
-                            id="no-existing-photo"
-                        >
-                            <i class="fa-solid fa-image me-1"></i>
-                            Belum ada foto asset.
-                        </div>
-
-                    @endforelse
-
-                </div>
-
-
-                <!-- UPLOAD -->
-
-                <label
-                    for="asset_photos"
-                    class="upload-box w-100"
-                >
-
-                    <i class="fa-solid fa-cloud-arrow-up d-block"></i>
-
-                    <strong>
-                        Click to add asset photos
-                    </strong>
-
-                    <div class="text-muted small mt-1">
-
-                        Maximum 3 photos total
-
-                        <br>
-
-                        JPG, JPEG, PNG — Maximum 5 MB each
-
-                    </div>
-
-                </label>
-
-
-                <input
-                    type="file"
-                    name="asset_photos[]"
-                    id="asset_photos"
-                    class="d-none"
-                    accept="image/jpeg,image/png"
-                    multiple
-                >
-
-
-                <div
-                    id="photo_preview"
-                    class="upload-preview"
-                ></div>
-
-
-                <!-- DELETE EXISTING PHOTOS -->
-
-                <div id="deleted_photos_container"></div>
-
-            </div>
-
-        </div>
-
-
-        <!-- ================================================= -->
-        <!-- 7. DOCUMENTS -->
-        <!-- ================================================= -->
-
-        <div class="card asset-section">
-
-            <div class="card-body">
-
-                <div class="asset-section-header">
-
-                    <div class="asset-section-number">
-                        7
-                    </div>
-
-                    <div>
-
-                        <h6 class="asset-section-title">
-                            Invoice / Documents
-                            <span class="required">*</span>
-                        </h6>
-
-                        <p class="asset-section-description">
-                            Maximum 5 invoice or supporting documents
-                        </p>
-
-                    </div>
-
-                </div>
-
-
-                <!-- EXISTING DOCUMENTS -->
-
-                <div id="existing_invoice_preview">
-
-                    @forelse($asset->documents as $document)
-
-                        @php
-
-                            $extension = strtolower(
-                                pathinfo(
-                                    $document->file_path,
-                                    PATHINFO_EXTENSION
-                                )
-                            );
-
-                            $icon = $extension === 'pdf'
-                                ? 'fa-file-pdf'
-                                : 'fa-file-image';
-
-                            $documentUrl = asset(
-                                'storage/' .$document->file_path
-                            );
-
-                        @endphp
-
-
-                        <div
-                            class="preview-item existing-document-item"
-                            data-id="{{ $document->id }}"
-                        >
-
-                            <div class="preview-item-left">
-
-                                <i
-                                    class="fa-solid {{ $icon }}"
-                                ></i>
-
-                                <div class="min-width-0">
-
-                                    <div class="fw-semibold preview-file-name">
-
-                                        {{ $document->original_name ?? basename($document->file_path) }}
-
-                                        <span class="old-file-badge">
-                                            Existing
-                                        </span>
-
-                                    </div>
+                                    <button
+                                        type="button"
+                                        class="preview-remove btn-remove-existing-document"
+                                        data-id="{{ $document->id }}"
+                                        title="Remove"
+                                    >
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
 
                                 </div>
 
                             </div>
 
+                        @empty
 
-                            <div class="d-flex align-items-center gap-1">
-
-                                <a
-                                    href="{{ $documentUrl }}"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    class="btn btn-sm btn-outline-primary"
-                                    title="View"
-                                >
-                                    <i class="fa-solid fa-eye"></i>
-                                </a>
-
-                                <button
-                                    type="button"
-                                    class="preview-remove btn-remove-existing-document"
-                                    data-id="{{ $document->id }}"
-                                >
-                                    <i class="fa-solid fa-trash"></i>
-                                </button>
-
+                            <div
+                                class="alert alert-warning"
+                                id="no-existing-document"
+                            >
+                                <i class="fa-solid fa-file me-1"></i>
+                                Belum ada invoice/document.
                             </div>
 
-                        </div>
-
-                    @empty
-
-                        <div
-                            class="alert alert-warning"
-                            id="no-existing-document"
-                        >
-                            <i class="fa-solid fa-file me-1"></i>
-                            Belum ada invoice/document.
-                        </div>
-
-                    @endforelse
-
-                </div>
-
-
-                <!-- UPLOAD -->
-
-                <label
-                    for="invoice_documents"
-                    class="upload-box w-100"
-                >
-
-                    <i class="fa-solid fa-file-invoice d-block"></i>
-
-                    <strong>
-                        Click to add invoice documents
-                    </strong>
-
-                    <div class="text-muted small mt-1">
-
-                        Maximum 5 documents total
-
-                        <br>
-
-                        PDF, JPG, JPEG, PNG — Maximum 5 MB each
+                        @endforelse
 
                     </div>
 
-                </label>
 
+                    <!-- UPLOAD -->
 
-                <input
-                    type="file"
-                    name="invoice_documents[]"
-                    id="invoice_documents"
-                    class="d-none"
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    multiple
-                >
-
-
-                <div
-                    id="invoice_preview"
-                    class="upload-preview"
-                ></div>
-
-
-                <!-- DELETE EXISTING DOCUMENTS -->
-
-                <div id="deleted_documents_container"></div>
-
-            </div>
-
-        </div>
-
-
-        <!-- ================================================= -->
-        <!-- FOOTER -->
-        <!-- ================================================= -->
-
-        <div class="sticky-footer">
-
-            <div class="container-xxl px-0">
-
-                <div class="d-flex justify-content-end gap-2">
-
-                    <a
-                        href="{{ route('assets.index') }}"
-                        class="btn btn-label-secondary"
+                    <label
+                        for="invoice_documents"
+                        class="upload-box w-100"
                     >
-                        Cancel
-                    </a>
 
-                    <button
-                        type="submit"
-                        class="btn btn-primary"
-                        id="btnUpdateAsset"
+                        <i class="fa-solid fa-file-invoice d-block"></i>
+
+                        <strong>
+                            Click to add invoice documents
+                        </strong>
+
+                        <div class="text-muted small mt-1">
+
+                            Maximum 5 documents total
+
+                            <br>
+
+                            PDF, JPG, JPEG, PNG — Maximum 5 MB each
+
+                        </div>
+
+                    </label>
+
+
+                    <input
+                        type="file"
+                        name="invoice_documents[]"
+                        id="invoice_documents"
+                        class="d-none"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        multiple
                     >
-                        <i class="fa-solid fa-save me-1"></i>
-                        Update Asset
-                    </button>
+
+
+                    <div
+                        id="invoice_preview"
+                        class="upload-preview"
+                    ></div>
+
+
+                    <!-- DELETE EXISTING DOCUMENTS -->
+
+                    <div id="deleted_documents_container"></div>
 
                 </div>
 
             </div>
 
-        </div>
 
-    </form>
+            <!-- ================================================= -->
+            <!-- FOOTER -->
+            <!-- ================================================= -->
 
-</div>
-```
+            <div class="sticky-footer">
+
+                <div class="container-xxl px-0">
+
+                    <div class="d-flex justify-content-end gap-2">
+
+                        <a
+                            href="{{ route('assets.index') }}"
+                            class="btn btn-label-secondary"
+                        >
+                            Cancel
+                        </a>
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary"
+                            id="btnUpdateAsset"
+                        >
+                            <i class="fa-solid fa-save me-1"></i>
+                            Update Asset
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </form>
+
+    </div>
 
 </div>
 
 @endsection
+
 
 @section('js')
 
@@ -1556,8 +1689,8 @@
     src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"
 ></script>
 
-<script>
 
+<script>
 $(function () {
 
     'use strict';
@@ -1603,7 +1736,6 @@ $(function () {
             form.attr('data-existing-photo-count'),
             10
         ) || 0;
-
 
     let existingDocumentCount =
         parseInt(
@@ -1709,7 +1841,6 @@ $(function () {
                 newTag: true
 
             };
-
         }
 
     });
@@ -1726,16 +1857,6 @@ $(function () {
     });
 
 
-    $('#responsible_user_id').select2({
-
-        width: '100%',
-
-        placeholder: 'Select Responsible Person',
-
-        allowClear: true
-
-    });
-
     // ============================================================
     // MAINTENANCE
     // ============================================================
@@ -1743,12 +1864,18 @@ $(function () {
     function calculateNextMaintenanceDate() {
 
         if (!$('#maintenance_required').is(':checked')) {
+
             $('#next_maintenance_date').val('');
+
             return;
         }
 
+
         const interval =
-            parseInt($('#maintenance_interval').val(), 10);
+            parseInt(
+                $('#maintenance_interval').val(),
+                10
+            );
 
         const unit =
             $('#maintenance_interval_unit').val();
@@ -1759,13 +1886,16 @@ $(function () {
         const startDate =
             $('#maintenance_start_date').val();
 
+
         /*
-        * If Last Maintenance exists,
-        * use it as the base date.
-        * Otherwise use Maintenance Start Date.
-        */
+         * If Last Maintenance exists,
+         * use it as the base date.
+         * Otherwise use Maintenance Start Date.
+         */
+
         const baseDate =
             lastMaintenance || startDate;
+
 
         if (
             !baseDate ||
@@ -1776,39 +1906,54 @@ $(function () {
             return;
         }
 
+
         const date =
             new Date(baseDate + 'T00:00:00');
+
 
         if (isNaN(date.getTime())) {
             return;
         }
 
+
         switch (unit) {
 
             case 'day':
+
                 date.setDate(
                     date.getDate() + interval
                 );
+
                 break;
 
+
             case 'week':
+
                 date.setDate(
                     date.getDate() + (interval * 7)
                 );
+
                 break;
 
+
             case 'month':
+
                 date.setMonth(
                     date.getMonth() + interval
                 );
+
                 break;
 
+
             case 'year':
+
                 date.setFullYear(
                     date.getFullYear() + interval
                 );
+
                 break;
         }
+
 
         const year =
             date.getFullYear();
@@ -1823,6 +1968,7 @@ $(function () {
                 date.getDate()
             ).padStart(2, '0');
 
+
         $('#next_maintenance_date').val(
             `${year}-${month}-${day}`
         );
@@ -1834,11 +1980,14 @@ $(function () {
         const required =
             $('#maintenance_required').is(':checked');
 
+
         $('#maintenance_config').toggle(required);
+
 
         $('#maintenance_required_label').text(
             required ? 'Yes' : 'No'
         );
+
 
         if (!required) {
 
@@ -1863,7 +2012,6 @@ $(function () {
             calculateNextMaintenanceDate();
 
         }
-
     }
 
 
@@ -1893,7 +2041,9 @@ $(function () {
 
 
     // Initial maintenance state
+
     updateMaintenanceUI();
+
 
     // ============================================================
     // CATEGORY CHANGE
@@ -1940,7 +2090,6 @@ $(function () {
                                 )
 
                         });
-
                     }
 
                 }
@@ -1952,8 +2101,12 @@ $(function () {
 
             subCategory.append(
                 $('<option>', {
+
                     value: '',
-                    text: 'Select or type sub category'
+
+                    text:
+                        'Select or type sub category'
+
                 })
             );
 
@@ -2005,7 +2158,6 @@ $(function () {
                             })
 
                         );
-
                     }
 
                 }
@@ -2186,7 +2338,6 @@ $(function () {
             $('#no-existing-photo').remove();
 
         }
-
     }
 
 
@@ -2394,6 +2545,7 @@ $(function () {
                                     type="button"
                                     class="preview-remove btn-remove-new-photo"
                                     data-index="${index}"
+                                    title="Remove"
                                 >
 
                                     <i
@@ -2650,7 +2802,6 @@ $(function () {
             $('#no-existing-document').remove();
 
         }
-
     }
 
 
@@ -2871,6 +3022,7 @@ $(function () {
                             type="button"
                             class="preview-remove btn-remove-new-document"
                             data-index="${index}"
+                            title="Remove"
                         >
 
                             <i
@@ -3015,7 +3167,6 @@ $(function () {
             const totalPhotos =
                 existingPhotoCount +
                 photoTransfer.files.length;
-
 
             const totalDocuments =
                 existingDocumentCount +
@@ -3448,6 +3599,7 @@ $(function () {
 
                             });
 
+
                             return;
 
                         }
@@ -3512,7 +3664,6 @@ $(function () {
     updateDocumentRequired();
 
 });
-
 </script>
 
 @endsection

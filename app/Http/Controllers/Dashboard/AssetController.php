@@ -13,6 +13,7 @@ use App\Models\Vendor;
 use App\Models\User;
 use App\Models\Maintenance;
 use App\Models\ImportHistory;
+use App\Models\AssetAssignment;
 
 use App\Helpers\CodeHelper;
 use App\Helpers\PlanLimitHelper;
@@ -336,44 +337,56 @@ class AssetController extends Controller
             })
 
             ->addColumn('action', function ($asset) {
-                $encryptedId = encryptId($asset->id);
-                return '
-                    <div class="d-flex gap-1">
 
-                        <a
-                            href="' . route(
-                                'assets.show',
-                                $encryptedId
-                            ) . '"
-                            class="btn btn-sm btn-info"
-                            title="View"
-                        >
-                            <i class="fa fa-eye"></i>
-                        </a>
+            $encryptedId = encryptId($asset->id);
 
-                        <a
-                            href="' . route(
-                                'assets.edit',
-                                $encryptedId
-                            ) . '"
-                            class="btn btn-sm btn-warning"
-                            title="Edit"
-                        >
-                            <i class="fa fa-edit"></i>
-                        </a>
+            return '
+                <div class="d-flex gap-1">
+                    <a
+                        href="' . route(
+                            'assets.show',
+                            $encryptedId
+                        ) . '"
+                        class="btn btn-sm btn-info"
+                        title="View Asset"
+                    >
+                        <i class="fa fa-eye"></i>
+                    </a>
 
-                        <button
-                            type="button"
-                            class="btn btn-sm btn-danger btn-delete"
-                            data-id="' . $encryptedId . '"
-                            title="Delete"
-                        >
-                            <i class="fa fa-trash"></i>
-                        </button>
+                    <a
+                        href="' . route(
+                            'assets.assignment.index',
+                            $encryptedId
+                        ) . '"
+                        class="btn btn-sm btn-primary"
+                        title="Manage Assignment"
+                    >
+                        <i class="fa-solid fa-users-gear"></i>
+                    </a>
 
-                    </div>
-                ';
-            })
+                    <a
+                        href="' . route(
+                            'assets.edit',
+                            $encryptedId
+                        ) . '"
+                        class="btn btn-sm btn-warning"
+                        title="Edit Asset"
+                    >
+                        <i class="fa fa-edit"></i>
+                    </a>
+
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-danger btn-delete"
+                        data-id="' . $encryptedId . '"
+                        title="Delete Asset"
+                    >
+                        <i class="fa fa-trash"></i>
+                    </button>
+
+                </div>
+            ';
+        })
 
             ->rawColumns([
                 'checkbox',
@@ -1193,6 +1206,49 @@ class AssetController extends Controller
                 'qr_generated_at' =>
                     now(),
             ]);
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | INITIAL ASSIGNMENT HISTORY
+            |--------------------------------------------------------------------------
+            |
+            | Jika asset dibuat dan langsung diberikan kepada user,
+            | buat record history assignment pertama.
+            |
+            | Jika responsible_user_id kosong, tidak membuat history.
+            |
+            */
+
+            if ($request->filled('responsible_user_id')) {
+
+                AssetAssignment::create([
+
+                    'asset_id' =>
+                        $asset->id,
+
+                    'user_id' =>
+                        $request->responsible_user_id,
+
+                    'start_at' =>
+                        now(),
+
+                    'end_at' =>
+                        null,
+
+                    'assignment_type' =>
+                        'initial',
+
+                    'reason' =>
+                        'Initial assignment',
+
+                    'notes' =>
+                        null,
+
+                    'created_by' =>
+                        Auth::id(),
+                ]);
+            }
 
 
             /*
