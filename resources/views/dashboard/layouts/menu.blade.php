@@ -468,7 +468,44 @@
                                 </li>
 
                             @endif
+                            {{-- =================================================
+                                 MY ASSETS
+                            ================================================== --}}
+                            @if(auth()->user()->hasPermission('maintenance.create'))
 
+                                <li class="nav-item">
+
+                                    <a class="nav-link {{ request()->routeIs('my-assets.*') ? 'active' : '' }}"
+                                       href="{{ route('my-assets.index') }}">
+
+                                        <i class="icon">
+
+                                            <svg class="icon-10"
+                                                 xmlns="http://www.w3.org/2000/svg"
+                                                 width="10"
+                                                 viewBox="0 0 24 24"
+                                                 fill="currentColor">
+
+                                                <circle cx="12"
+                                                        cy="12"
+                                                        r="8"
+                                                        fill="currentColor"/>
+
+                                            </svg>
+
+                                        </i>
+
+                                        <i class="sidenav-mini-icon">A</i>
+
+                                        <span class="item-name">
+                                            My Assets
+                                        </span>
+
+                                    </a>
+
+                                </li>
+
+                            @endif
                         </ul>
 
                     </li>
@@ -488,7 +525,6 @@
                     @php
                         $maintenanceActive =
                             request()->routeIs('maintenance.requests.*') ||
-                            request()->routeIs('my-assets.*') ||
                             request()->routeIs('maintenance.history');
                     @endphp
 
@@ -588,47 +624,6 @@
                                 </li>
 
                             @endif
-
-
-                            {{-- =================================================
-                                 MY ASSETS
-                            ================================================== --}}
-                            @if(auth()->user()->hasPermission('maintenance.create'))
-
-                                <li class="nav-item">
-
-                                    <a class="nav-link {{ request()->routeIs('my-assets.*') ? 'active' : '' }}"
-                                       href="{{ route('my-assets.index') }}">
-
-                                        <i class="icon">
-
-                                            <svg class="icon-10"
-                                                 xmlns="http://www.w3.org/2000/svg"
-                                                 width="10"
-                                                 viewBox="0 0 24 24"
-                                                 fill="currentColor">
-
-                                                <circle cx="12"
-                                                        cy="12"
-                                                        r="8"
-                                                        fill="currentColor"/>
-
-                                            </svg>
-
-                                        </i>
-
-                                        <i class="sidenav-mini-icon">A</i>
-
-                                        <span class="item-name">
-                                            My Assets
-                                        </span>
-
-                                    </a>
-
-                                </li>
-
-                            @endif
-
 
                             {{-- =================================================
                                  MAINTENANCE HISTORY
