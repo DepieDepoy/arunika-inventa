@@ -61,19 +61,14 @@
 
 
                             @if(auth()->user()->hasPermission('users.create'))
-
                                 <button
                                     type="button"
                                     class="btn btn-primary"
                                     data-bs-toggle="modal"
                                     data-bs-target="#modalAddUser">
-
                                     <i class="fa-solid fa-plus"></i>
-
                                     Add Users
-
                                 </button>
-
                             @endif
 
                         </div>
@@ -157,11 +152,7 @@
 {{-- =========================================================
      MODAL ADD USER
 ========================================================= --}}
-<div
-    class="modal fade"
-    id="modalAddUser"
-    tabindex="-1"
-    aria-hidden="true">
+<div class="modal fade" id="modalAddUser" tabindex="-1" aria-hidden="true">
 
     <div class="modal-dialog modal-lg">
 
@@ -171,6 +162,7 @@
 
             <div class="modal-content">
 
+                {{-- HEADER --}}
                 <div class="modal-header">
 
                     <h5 class="modal-title">
@@ -186,6 +178,7 @@
                 </div>
 
 
+                {{-- BODY --}}
                 <div class="modal-body">
 
                     <div class="row">
@@ -294,7 +287,8 @@
                             <select
                                 name="status"
                                 id="add_status"
-                                class="form-select">
+                                class="form-select"
+                                required>
 
                                 <option value="1">
                                     Active
@@ -308,11 +302,48 @@
 
                         </div>
 
+
+                        {{-- SEND VERIFICATION EMAIL --}}
+                        <div class="col-12 mt-2">
+
+                            <div class="form-check form-switch">
+
+                                <input
+                                    class="form-check-input"
+                                    type="checkbox"
+                                    role="switch"
+                                    name="send_verification_email"
+                                    id="send_verification_email"
+                                    value="1"
+                                    checked>
+
+                                <label
+                                    class="form-check-label"
+                                    for="send_verification_email">
+
+                                    <strong>
+                                        Send Verification Email
+                                    </strong>
+
+                                    <div class="text-muted small mt-1">
+
+                                        Send an email to the user to verify
+                                        their email address.
+
+                                    </div>
+
+                                </label>
+
+                            </div>
+
+                        </div>
+
                     </div>
 
                 </div>
 
 
+                {{-- FOOTER --}}
                 <div class="modal-footer">
 
                     <button
@@ -334,8 +365,7 @@
                             Save User
                         </span>
 
-                        <span
-                            class="btn-save-loading d-none">
+                        <span class="btn-save-loading d-none">
 
                             <span
                                 class="spinner-border spinner-border-sm me-1"
@@ -357,6 +387,7 @@
     </div>
 
 </div>
+
 
 
 {{-- =========================================================

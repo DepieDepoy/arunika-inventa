@@ -1,3 +1,56 @@
+<style>
+
+/* =====================================================
+   VASETRA SIDEBAR - FIX VERTICAL SCROLL
+===================================================== */
+
+.sidebar.sidebar-default {
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.sidebar.sidebar-default .sidebar-header {
+    flex: 0 0 auto;
+}
+
+.sidebar.sidebar-default .sidebar-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Pastikan daftar menu tidak membatasi tinggi scroll */
+.sidebar.sidebar-default .sidebar-list {
+    min-height: min-content;
+    height: auto;
+}
+
+/* Scrollbar */
+.sidebar.sidebar-default .sidebar-body::-webkit-scrollbar {
+    width: 5px;
+}
+
+.sidebar.sidebar-default .sidebar-body::-webkit-scrollbar-thumb {
+    background: rgba(120, 120, 120, 0.4);
+    border-radius: 10px;
+}
+
+.sidebar.sidebar-default .sidebar-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* Footer tidak ikut menyusut atau menutupi menu */
+.sidebar.sidebar-default .sidebar-footer {
+    flex: 0 0 auto;
+}
+</style>
 <aside class="sidebar sidebar-default sidebar-white sidebar-base navs-rounded-all">
 
     {{-- =====================================================
@@ -126,6 +179,58 @@
                     <hr class="hr-horizontal">
                 </li>
 
+                
+                {{-- =================================================
+                     CALENDAR
+                ================================================== --}}
+                <li class="nav-item">
+
+                    <a class="nav-link {{ request()->routeIs('calendar.*') ? 'active' : '' }}"
+                       aria-current="{{ request()->routeIs('calendar.*') ? 'page' : 'false' }}"
+                       href="{{ route('calendar.index') }}">
+
+                        <i class="icon">
+
+                            <svg class="icon-20"
+                                 width="20"
+                                 viewBox="0 0 24 24"
+                                 fill="none"
+                                 xmlns="http://www.w3.org/2000/svg">
+
+                                <path opacity="0.4"
+                                      d="M17 3V5M7 3V5M3.5 9H20.5"
+                                      stroke="currentColor"
+                                      stroke-width="1.5"
+                                      stroke-linecap="round"
+                                      stroke-linejoin="round"/>
+
+                                <path fill-rule="evenodd"
+                                      clip-rule="evenodd"
+                                      d="M5.5 4H18.5C19.8807 4 21 5.11929 21 6.5V18.5C21 19.8807 19.8807 21 18.5 21H5.5C4.11929 21 3 19.8807 3 18.5V6.5C3 5.11929 4.11929 4 5.5 4Z"
+                                      stroke="currentColor"
+                                      stroke-width="1.5"
+                                      stroke-linecap="round"
+                                      stroke-linejoin="round"/>
+
+                                <path d="M7 13H9M11 13H13M15 13H17M7 17H9M11 17H13M15 17H17"
+                                      stroke="currentColor"
+                                      stroke-width="1.5"
+                                      stroke-linecap="round"/>
+
+                            </svg>
+
+                        </i>
+
+                        <span class="item-name">Calendar</span>
+
+                    </a>
+
+                </li>
+
+
+                <li>
+                    <hr class="hr-horizontal">
+                </li>
 
                 {{-- =================================================
                      PAGES

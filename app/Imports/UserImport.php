@@ -6,6 +6,7 @@ use App\Models\ImportError;
 use App\Models\ImportHistory;
 use App\Models\Role;
 use App\Models\User;
+use App\Notifications\UserImportedNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Collection;
@@ -22,16 +23,25 @@ class UserImport implements
 
     protected int $staffRoleId;
 
+    protected string $defaultPassword;
+
     protected string $defaultPasswordHash;
 
     protected ImportHistory $history;
 
+    protected bool $sendVerificationEmail;
+
     public function __construct(
-        ImportHistory $history
+        ImportHistory $history,
+        bool $sendVerificationEmail = false
     ) {
         $this->history = $history;
 
-        $this->companyId = $history->company_id;
+        $this->sendVerificationEmail =
+            $sendVerificationEmail;
+
+        $this->companyId =
+            $history->company_id;
 
         $staffRole = Role::where(
             'company_id',
@@ -43,18 +53,34 @@ class UserImport implements
             )
             ->firstOrFail();
 
-        $this->staffRoleId = $staffRole->id;
+        $this->staffRoleId =
+            $staffRole->id;
+
+        /*
+         * =====================================================
+         * DEFAULT PASSWORD
+         * =====================================================
+         *
+         * Password plain disimpan di memory hanya untuk
+         * kebutuhan email verification.
+         *
+         * Database tetap menyimpan password hash.
+         */
+
+        $this->defaultPassword =
+            env(
+                'DEFAULT_USER_PASSWORD',
+                'Vasetra@123'
+            );
 
         /*
          * Hash password SATU KALI saja.
          */
-        $defaultPassword = env(
-            'DEFAULT_USER_PASSWORD',
-            'Inventa@123'
-        );
 
         $this->defaultPasswordHash =
-            Hash::make($defaultPassword);
+            Hash::make(
+                $this->defaultPassword
+            );
     }
 
     /**
@@ -103,6 +129,7 @@ class UserImport implements
             /*
              * Abaikan baris kosong.
              */
+
             if (
                 $nik === '' &&
                 $name === '' &&
@@ -113,14 +140,22 @@ class UserImport implements
             }
 
             $preparedRows[] = [
-                'nik' => $nik,
-                'name' => $name,
-                'email' => $email !== ''
-                    ? strtolower($email)
-                    : null,
-                'phone' => $phone !== ''
-                    ? $phone
-                    : null,
+                'nik' =>
+                    $nik,
+
+                'name' =>
+                    $name,
+
+                'email' =>
+                    $email !== ''
+                        ? strtolower($email)
+                        : null,
+
+                'phone' =>
+                    $phone !== ''
+                        ? $phone
+                        : null,
+
                 'original_data' =>
                     $row->toArray(),
             ];
@@ -143,11 +178,13 @@ class UserImport implements
         foreach ($preparedRows as $row) {
 
             if ($row['nik'] !== '') {
-                $niks[] = $row['nik'];
+                $niks[] =
+                    $row['nik'];
             }
 
             if (!empty($row['email'])) {
-                $emails[] = $row['email'];
+                $emails[] =
+                    $row['email'];
             }
         }
 
@@ -179,7 +216,8 @@ class UserImport implements
                 )
                 ->pluck('nik')
                 ->map(
-                    fn ($value) => (string) $value
+                    fn ($value) =>
+                        (string) $value
                 )
                 ->flip()
                 ->toArray();
@@ -205,9 +243,10 @@ class UserImport implements
                 )
                 ->pluck('email')
                 ->map(
-                    fn ($value) => strtolower(
-                        (string) $value
-                    )
+                    fn ($value) =>
+                        strtolower(
+                            (string) $value
+                        )
                 )
                 ->flip()
                 ->toArray();
@@ -231,13 +270,16 @@ class UserImport implements
 
             $errors = [];
 
-            $nik = $row['nik'];
+            $nik =
+                $row['nik'];
 
-            $email = $row['email'];
+            $email =
+                $row['email'];
 
             /*
              * NIK wajib.
              */
+
             if ($nik === '') {
 
                 $errors[] =
@@ -247,6 +289,7 @@ class UserImport implements
             /*
              * Nama wajib.
              */
+
             if ($row['name'] === '') {
 
                 $errors[] =
@@ -256,6 +299,7 @@ class UserImport implements
             /*
              * Validasi email.
              */
+
             if (
                 $email !== null &&
                 !filter_var(
@@ -271,9 +315,12 @@ class UserImport implements
             /*
              * Cek NIK database.
              */
+
             if (
                 $nik !== '' &&
-                isset($existingNiks[$nik])
+                isset(
+                    $existingNiks[$nik]
+                )
             ) {
 
                 $errors[] =
@@ -283,9 +330,12 @@ class UserImport implements
             /*
              * Cek duplicate NIK dalam file.
              */
+
             if (
                 $nik !== '' &&
-                isset($seenNiks[$nik])
+                isset(
+                    $seenNiks[$nik]
+                )
             ) {
 
                 $errors[] =
@@ -295,9 +345,12 @@ class UserImport implements
             /*
              * Cek email database.
              */
+
             if (
                 $email !== null &&
-                isset($existingEmails[$email])
+                isset(
+                    $existingEmails[$email]
+                )
             ) {
 
                 $errors[] =
@@ -307,9 +360,12 @@ class UserImport implements
             /*
              * Cek duplicate email dalam file.
              */
+
             if (
                 $email !== null &&
-                isset($seenEmails[$email])
+                isset(
+                    $seenEmails[$email]
+                )
             ) {
 
                 $errors[] =
@@ -319,6 +375,7 @@ class UserImport implements
             /*
              * Tandai sebagai sudah pernah ditemukan.
              */
+
             if ($nik !== '') {
                 $seenNiks[$nik] = true;
             }
@@ -398,6 +455,19 @@ class UserImport implements
                 'must_change_password' =>
                     1,
 
+                /*
+                 * ON:
+                 * email_verified_at = NULL
+                 *
+                 * OFF:
+                 * email_verified_at = NOW
+                 */
+
+                'email_verified_at' =>
+                    $this->sendVerificationEmail
+                        ? null
+                        : now(),
+
                 'created_at' =>
                     now(),
 
@@ -417,6 +487,74 @@ class UserImport implements
             DB::table('users')->insert(
                 $insertRows
             );
+
+            /*
+             * =================================================
+             * SEND VERIFICATION EMAIL
+             * =================================================
+             *
+             * Hanya dijalankan jika toggle ON.
+             *
+             * User yang gagal validasi tidak berada di
+             * $insertRows sehingga tidak akan mendapatkan email.
+             */
+
+            if (
+                $this->sendVerificationEmail
+            ) {
+
+                $insertedNiks =
+                    collect($insertRows)
+                        ->pluck('nik')
+                        ->filter()
+                        ->values()
+                        ->all();
+
+                if (!empty($insertedNiks)) {
+
+                    $insertedUsers =
+                        User::where(
+                            'company_id',
+                            $this->companyId
+                        )
+                            ->whereIn(
+                                'nik',
+                                $insertedNiks
+                            )
+                            ->get();
+
+                    foreach (
+                        $insertedUsers
+                        as $user
+                    ) {
+
+                        /*
+                         * Jika email kosong,
+                         * tidak ada email yang dikirim.
+                         */
+
+                        if (
+                            empty(
+                                $user->email
+                            )
+                        ) {
+                            continue;
+                        }
+
+                        /*
+                         * Email masuk QUEUE.
+                         *
+                         * Tidak menghambat proses import.
+                         */
+
+                        $user->notify(
+                            new UserImportedNotification(
+                                $this->defaultPassword
+                            )
+                        );
+                    }
+                }
+            }
         }
 
         /*
@@ -427,7 +565,9 @@ class UserImport implements
 
         if (!empty($errorRows)) {
 
-            DB::table('import_errors')->insert(
+            DB::table(
+                'import_errors'
+            )->insert(
                 $errorRows
             );
         }

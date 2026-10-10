@@ -33,13 +33,16 @@ class ProcessUserImport implements ShouldQueue
     protected int $importHistoryId;
 
     protected string $filePath;
+    protected bool $sendVerificationEmail;
 
     public function __construct(
         int $importHistoryId,
-        string $filePath
+        string $filePath,
+        bool $sendVerificationEmail = false
     ) {
         $this->importHistoryId = $importHistoryId;
         $this->filePath = $filePath;
+        $this->sendVerificationEmail = $sendVerificationEmail;
     }
 
     public function handle(): void
@@ -88,7 +91,10 @@ class ProcessUserImport implements ShouldQueue
             */
 
             Excel::import(
-                new UserImport($history),
+                new UserImport(
+                    $history,
+                    $this->sendVerificationEmail
+                ),
                 $fullPath
             );
 
