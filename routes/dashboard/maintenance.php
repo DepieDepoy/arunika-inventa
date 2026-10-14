@@ -218,4 +218,19 @@ Route::prefix('dashboard')
             ->middleware('permission:maintenance.history')
             ->name('maintenance.history');
 
+        /*
+        |--------------------------------------------------------------------------
+        | Cancel Maintenance / Repair Request
+        |--------------------------------------------------------------------------
+        |
+        | Pemohon boleh membatalkan request miliknya sendiri selama pending.
+        |
+        */
+
+        Route::post(
+            '/maintenance-requests/{maintenanceRequest}/cancel',
+            [MaintenanceRequestController::class, 'cancel']
+        )
+            ->name('maintenance.requests.cancel');
+
     });

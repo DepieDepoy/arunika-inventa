@@ -197,29 +197,26 @@
 </style>
 
 <div class="content-wrapper">
-
 <div class="container-xxl flex-grow-1 container-p-y">
+    <div class="row">
+        <div class="col-xxl-12 mb-4">
 
+            <div class="card">
 
-<!-- ========================================================= -->
-<!-- HEADER -->
-<!-- ========================================================= -->
+                <!-- ===================================================== -->
+                <!-- HEADER -->
+                <!-- ===================================================== -->
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0">
+                            Asset Detail
+                        </h5>
+                        <small class="text-muted">
+                            View asset information
+                        </small>
+                    </div>
+                   <div class="d-flex gap-2">
 
-<div class="asset-page-header">
-
-    <div class="d-flex justify-content-between align-items-center">
-
-        <div>
-
-            <h4 class="fw-bold mb-1">
-                Asset Detail
-            </h4>
-
-            <p class="text-muted mb-0">
-                View asset information
-            </p>
-
-        </div>
 
         <div class="d-flex gap-2">
 
@@ -232,7 +229,7 @@
             </a>
 
             <a
-                href="{{ route('assets.edit', $asset->id) }}"
+                href="{{ route('assets.edit', encryptId($asset->id)) }}"
                 class="btn btn-warning"
             >
                 <i class="fa-solid fa-edit me-1"></i>
@@ -991,7 +988,7 @@
 
 
     <a
-        href="{{ route('assets.edit', $asset->id) }}"
+        href="{{ route('assets.edit', encryptId($asset->id)) }}"
         class="btn btn-warning"
     >
 

@@ -26,8 +26,11 @@ Route::prefix('dashboard')
             ->name('subscription.expired');
 
         // Proses perpanjangan / pilih paket
-        Route::post('/subscription/renew', [SubscriptionController::class, 'renew'])
-            ->name('subscription.renew');
+        Route::post('/subscription/renewmidtrans', [SubscriptionController::class, 'renewmidtrans'])
+            ->name('subscription.renewmidtrans');
+                
+            Route::post('/subscription/renewdoku', [SubscriptionController::class, 'renewdoku'])
+                ->name('subscription.renewdoku');
 
         // Halaman setelah pembayaran selesai
         Route::get('/subscription/payment/finish', [SubscriptionController::class, 'paymentFinish'])

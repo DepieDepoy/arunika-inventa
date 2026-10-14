@@ -596,3 +596,49 @@ table.dataTable tbody tr:hover{
     max-width: 34px !important;
     max-height: 34px !important;
 }
+/* Fix scroll menu sidebar Vasetra */
+.sidebar.sidebar-default {
+    height: 100vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.sidebar.sidebar-default > .sidebar-header {
+    flex: 0 0 auto !important;
+}
+
+.sidebar.sidebar-default > .sidebar-body {
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+/* Jangan ubah desain tombol minimize */
+.sidebar.sidebar-default .sidebar-header .sidebar-toggle {
+    position: relative;
+    transform: none;
+}
+
+/* Posisi tombol minimize kembali di samping logo */
+.sidebar.sidebar-default > .sidebar-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    position: relative;
+}
+
+.sidebar.sidebar-default > .sidebar-header .navbar-brand {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.sidebar.sidebar-default > .sidebar-header .sidebar-toggle {
+    position: relative !important;
+    top: auto !important;
+    right: auto !important;
+    transform: none !important;
+    margin-left: 8px !important;
+    flex: 0 0 28px !important;
+}

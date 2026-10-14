@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Models\Asset;
 use App\Models\CalendarEvent;
 use App\Models\CalendarEventAttendee;
+use App\Models\MaintenanceRequest;
 use App\Models\User;
-use App\Notifications\CalendarMeetingInvitation;
 use App\Notifications\CalendarMeetingCancellation;
+use App\Notifications\CalendarMeetingInvitation;
 use App\Notifications\GlobalNotification;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -21,11 +24,22 @@ use Throwable;
 class CalendarController extends Controller
 {
     /**
-     * Tampilkan agenda perusahaan yang boleh dilihat user.
+     * Tampilkan agenda kalender perusahaan:
+     * - Meeting
+     * - Company Announcement
+     * - Jadwal Maintenance Aset
+     * - Permintaan Maintenance
+     * - Permintaan Repair
      */
     public function index()
     {
         $user = Auth::user();
+
+        /*
+        |--------------------------------------------------------------------------
+        | 1. Meeting dan Company Announcement
+        |--------------------------------------------------------------------------
+        */
 
         $events = CalendarEvent::query()
             ->where('company_id', $user->company_id)
@@ -43,7 +57,7 @@ class CalendarController extends Controller
             ->map(function ($event) {
                 $attendees = $event->attendees;
 
-                // Pastikan pembuat selalu terlihat dalam daftar peserta.
+                // Pastikan pembuat meeting ikut ditampilkan sebagai peserta.
                 $creator = User::query()
                     ->where('company_id', $event->company_id)
                     ->find($event->created_by);
@@ -58,8 +72,10 @@ class CalendarController extends Controller
                 return [
                     'id' => $event->id,
                     'title' => $event->title,
-                    'start' => $event->start_at->format('Y-m-d\TH:i'),
-                    'end' => $event->end_at->format('Y-m-d\TH:i'),
+                    'start' => Carbon::parse($event->start_at)
+                        ->format('Y-m-d\TH:i'),
+                    'end' => Carbon::parse($event->end_at)
+                        ->format('Y-m-d\TH:i'),
                     'type' => $event->event_type,
                     'description' => $event->description,
                     'location' => $event->location,
@@ -77,13 +93,236 @@ class CalendarController extends Controller
                         ->unique()
                         ->values()
                         ->all(),
+
+                    // Agenda yang dibuat manual oleh pengguna.
+                    'is_system' => false,
+                    'source_url' => null,
                 ];
             })
             ->values();
 
+        /*
+        |--------------------------------------------------------------------------
+        | 2. Jadwal Maintenance Aset
+        |--------------------------------------------------------------------------
+        |
+        | Menggunakan next_maintenance_date dari tabel assets.
+        | Tidak membuat atau menggandakan data maintenance.
+        |
+        */
+
+        $maintenanceEvents = Asset::query()
+            ->where('company_id', $user->company_id)
+            ->where('maintenance_required', 1)
+            ->whereNotNull('next_maintenance_date')
+            ->get([
+                'id',
+                'company_id',
+                'asset_code',
+                'asset_name',
+                'location',
+                'maintenance_type',
+                'maintenance_trigger',
+                'maintenance_interval',
+                'maintenance_interval_unit',
+                'next_maintenance_date',
+            ])
+            ->map(function ($asset) {
+                $date = Carbon::parse($asset->next_maintenance_date);
+
+                return [
+                    'id' => 'asset-' . $asset->id,
+
+                    'title' => 'Scheduled Maintenance - '
+                        . $asset->asset_name,
+
+                    // Jam 09.00–10.00 hanya penanda tampilan kalender,
+                    // bukan jadwal pengerjaan yang telah dikonfirmasi.
+                    'start' => $date->copy()
+                        ->setTime(9, 0)
+                        ->format('Y-m-d\TH:i'),
+
+                    'end' => $date->copy()
+                        ->setTime(18, 0)
+                        ->format('Y-m-d\TH:i'),
+
+                    'type' => 'maintenance',
+
+                    'description' => implode("\n", array_filter([
+                        'Kode aset: ' . $asset->asset_code,
+                        'Nama aset: ' . $asset->asset_name,
+                        $asset->maintenance_type
+                            ? 'Tipe maintenance: ' . $asset->maintenance_type
+                            : null,
+                        $asset->maintenance_trigger
+                            ? 'Pemicu maintenance: ' . $asset->maintenance_trigger
+                            : null,
+                        $asset->maintenance_interval
+                            ? 'Interval: ' . $asset->maintenance_interval
+                                . ' '
+                                . ($asset->maintenance_interval_unit ?? '')
+                            : null,
+                    ])),
+
+                    'location' => $asset->location,
+                    'created_by' => null,
+                    'status' => 'scheduled',
+                    'attendee_ids' => [],
+                    'attendees' => [],
+
+                    'is_system' => true,
+                    'source_url' => route('maintenance.index'),
+                ];
+            })
+            ->values();
+
+        /*
+        |--------------------------------------------------------------------------
+        | 3. Permintaan Maintenance dan Repair
+        |--------------------------------------------------------------------------
+        |
+        | Karena model MaintenanceRequest belum memiliki kolom tanggal
+        | pengerjaan terjadwal, kalender menggunakan created_at sebagai
+        | tanggal permintaan dibuat, bukan tanggal janji pengerjaan.
+        |
+        */
+
+        $requestEvents = MaintenanceRequest::query()
+            ->where('company_id', $user->company_id)
+            ->with([
+                'asset:id,asset_code,asset_name,location',
+            ])
+            ->latest('created_at')
+            ->get()
+            ->map(function ($maintenanceRequest) {
+                $createdAt = Carbon::parse(
+                    $maintenanceRequest->created_at
+                );
+
+                $asset = $maintenanceRequest->asset;
+
+                $requestType = strtolower(trim(
+    (string) $maintenanceRequest->request_type
+));
+
+$type = match ($requestType) {
+    'repair' => 'repair_request',
+    'maintenance' => 'maintenance_request',
+    default => 'maintenance_request',
+};
+
+$title = match ($requestType) {
+    'repair' => 'Repair Request',
+    'maintenance' => 'Maintenance Request',
+    default => 'Other Request',
+};
+
+if ($asset) {
+    $title .= ' - ' . $asset->asset_name;
+}
+
+$status = strtolower(trim(
+    (string) $maintenanceRequest->status
+));
+
+$statusNormalized = str_replace(
+    [' ', '-'],
+    '_',
+    $status
+);
+
+// Request yang dibatalkan tidak ditampilkan,
+// apa pun jenis request-nya.
+if (in_array(
+    $statusNormalized,
+    ['cancelled', 'canceled'],
+    true
+)) {
+    return null;
+}
+
+// Tampilkan status untuk semua jenis request.
+$statusLabel = match ($statusNormalized) {
+    'pending' => 'Menunggu',
+    'approved' => 'Disetujui',
+    'in_progress', 'inprogress' => 'In Progress',
+    'completed', 'complete' => 'Selesai',
+    'rejected' => 'Ditolak',
+    default => null,
+};
+
+if ($statusLabel) {
+    $title .= ' — ' . $statusLabel;
+}
+
+
+                $descriptionParts = [
+                    'Nomor permintaan: #' . $maintenanceRequest->id,
+                    'Jenis: ' . ucfirst($requestType),
+                    'Status: ' . $status,
+                ];
+
+                if ($asset) {
+                    $descriptionParts[] = 'Kode aset: '
+                        . $asset->asset_code;
+
+                    $descriptionParts[] = 'Nama aset: '
+                        . $asset->asset_name;
+                }
+
+                if ($maintenanceRequest->description) {
+                    $descriptionParts[] = 'Keterangan: '
+                        . $maintenanceRequest->description;
+                }
+
+                return [
+                    'id' => 'request-' . $maintenanceRequest->id,
+                    'title' => $title,
+
+                    'start' => $createdAt->format('Y-m-d\TH:i'),
+                    'end' => $createdAt->copy()
+                        ->addMinutes(30)
+                        ->format('Y-m-d\TH:i'),
+
+                    'type' => $type,
+                    'description' => implode("\n", $descriptionParts),
+                    'location' => $asset?->location,
+                    'created_by' => $maintenanceRequest->requested_by,
+                    'status' => $status,
+
+                    'attendee_ids' => [],
+                    'attendees' => [],
+
+                    'is_system' => true,
+                    'source_url' => route(
+                        'maintenance.requests.show',
+                        $maintenanceRequest->id
+                    ),
+                ];
+            })
+            ->filter()
+            ->values();
+
+        /*
+        |--------------------------------------------------------------------------
+        | 4. Gabungkan seluruh agenda
+        |--------------------------------------------------------------------------
+        */
+
+        $events = $events
+            ->concat($maintenanceEvents)
+            ->concat($requestEvents)
+            ->sortBy('start')
+            ->values();
+
+        /*
+        |--------------------------------------------------------------------------
+        | 5. Daftar peserta untuk form Meeting
+        |--------------------------------------------------------------------------
+        */
+
         $users = User::query()
             ->where('company_id', $user->company_id)
-            //->where('id', '!=', $user->id)
             ->orderBy('name')
             ->get(['id', 'name', 'email']);
 
@@ -113,7 +352,6 @@ class CalendarController extends Controller
             $user
         );
 
-        // Proses simpan tetap sederhana seperti controller lama.
         $event = DB::transaction(function () use (
             $validated,
             $attendeeIds,
@@ -138,18 +376,19 @@ class CalendarController extends Controller
                     ->values();
 
                 foreach ($participants as $participantId) {
+                    $isOrganizer =
+                        (int) $participantId === (int) $user->id;
+
                     CalendarEventAttendee::create([
                         'calendar_event_id' => $event->id,
                         'user_id' => $participantId,
                         'invited_by' => $user->id,
-                        'response_status' =>
-                            (int) $participantId === (int) $user->id
-                                ? 'accepted'
-                                : 'pending',
-                        'responded_at' =>
-                            (int) $participantId === (int) $user->id
-                                ? now()
-                                : null,
+                        'response_status' => $isOrganizer
+                            ? 'accepted'
+                            : 'pending',
+                        'responded_at' => $isOrganizer
+                            ? now()
+                            : null,
                     ]);
                 }
             }
@@ -157,10 +396,8 @@ class CalendarController extends Controller
             return $event;
         });
 
-        // Notifikasi dijalankan setelah transaksi simpan berhasil.
-        // Kegagalan notifikasi tidak membuat proses simpan dilaporkan gagal.
         $this->notifyEventRecipients(
-            $event->id,
+            (int) $event->id,
             $attendeeIds->all(),
             (int) $user->id,
             $validated['event_type'],
@@ -216,7 +453,7 @@ class CalendarController extends Controller
                 'end_at' => $validated['end_at'],
             ]);
 
-            // Sinkronisasi peserta hanya untuk meeting.
+            // Pertahankan perilaku sinkronisasi peserta yang lama.
             $event->attendees()->detach();
 
             if ($validated['event_type'] === 'meeting') {
@@ -226,26 +463,26 @@ class CalendarController extends Controller
                     ->values();
 
                 foreach ($participants as $participantId) {
+                    $isOrganizer =
+                        (int) $participantId === (int) $user->id;
+
                     CalendarEventAttendee::create([
                         'calendar_event_id' => $event->id,
                         'user_id' => $participantId,
                         'invited_by' => $user->id,
-                        'response_status' =>
-                            (int) $participantId === (int) $user->id
-                                ? 'accepted'
-                                : 'pending',
-                        'responded_at' =>
-                            (int) $participantId === (int) $user->id
-                                ? now()
-                                : null,
+                        'response_status' => $isOrganizer
+                            ? 'accepted'
+                            : 'pending',
+                        'responded_at' => $isOrganizer
+                            ? now()
+                            : null,
                     ]);
                 }
             }
         });
 
-        // Notifikasi dilakukan sesudah transaksi berhasil.
         $this->notifyEventRecipients(
-            $event->id,
+            (int) $event->id,
             $attendeeIds->all(),
             (int) $user->id,
             $validated['event_type'],
@@ -272,7 +509,6 @@ class CalendarController extends Controller
             ->with('attendees:id,name,email')
             ->findOrFail($id);
 
-        // Simpan daftar peserta sebelum mengubah status.
         $recipientIds = $event->attendees
             ->pluck('id')
             ->map(fn ($id) => (int) $id)
@@ -284,9 +520,8 @@ class CalendarController extends Controller
             'status' => 'cancelled',
         ]);
 
-        // Email pembatalan dikirim terpisah dari proses update status.
         $this->notifyEventRecipients(
-            $event->id,
+            (int) $event->id,
             $recipientIds,
             (int) $user->id,
             $event->event_type,
@@ -300,8 +535,10 @@ class CalendarController extends Controller
     }
 
     /**
-     * Kirim notifikasi tanpa membiarkan error notifikasi
-     * membatalkan respons proses simpan/update.
+     * Kirim notifikasi kalender.
+     *
+     * Menggunakan Eloquent User agar method notify() tersedia.
+     * Kegagalan pengiriman notifikasi tidak membatalkan penyimpanan agenda.
      */
     private function notifyEventRecipients(
         int $eventId,
@@ -311,14 +548,19 @@ class CalendarController extends Controller
         string $action
     ): void {
         try {
+            $currentUser = Auth::user();
+
+            if (!$currentUser) {
+                return;
+            }
+
             $event = CalendarEvent::query()
-                ->where('company_id', Auth::user()->company_id)
+                ->where('company_id', $currentUser->company_id)
                 ->find($eventId);
 
             $organizer = User::query()
-                ->where('id', $organizerId)
-                ->where('company_id', Auth::user()->company_id)
-                ->first();
+                ->where('company_id', $currentUser->company_id)
+                ->find($organizerId);
 
             if (!$event || !$organizer) {
                 return;
@@ -330,8 +572,15 @@ class CalendarController extends Controller
                 ->reject(fn ($id) => $id === $organizerId)
                 ->values();
 
-            // Pengumuman perusahaan: notifikasi database ke pengguna lain.
+            /*
+            |--------------------------------------------------------------------------
+            | Company Announcement
+            |--------------------------------------------------------------------------
+            */
+
             if ($eventType === 'announcement') {
+                // Perilaku lama: pembatalan pengumuman tidak mengirim
+                // notifikasi tambahan melalui mekanisme ini.
                 if ($action === 'cancelled') {
                     return;
                 }
@@ -340,26 +589,28 @@ class CalendarController extends Controller
                     ->where('company_id', $event->company_id)
                     ->where('id', '!=', $organizerId)
                     ->get()
-                    ->each(function ($recipient) use (
+                    ->each(function (User $recipient) use (
                         $event,
                         $organizer,
                         $action
                     ) {
                         try {
-                            $recipient->notify(new GlobalNotification(
-                                type: 'company_announcement',
-                                title: $action === 'updated'
-                                    ? 'Info Perusahaan Diperbarui'
-                                    : 'Info Perusahaan',
-                                message: $organizer->name
-                                    . ' membuat pengumuman: '
-                                    . $event->title,
-                                url: '/dashboard/calendar',
-                                extra: [
-                                    'event_id' => $event->id,
-                                    'event_title' => $event->title,
-                                ]
-                            ));
+                            $recipient->notify(
+                                new GlobalNotification(
+                                    type: 'company_announcement',
+                                    title: $action === 'updated'
+                                        ? 'Info Perusahaan Diperbarui'
+                                        : 'Info Perusahaan',
+                                    message: $organizer->name
+                                        . ' membuat pengumuman: '
+                                        . $event->title,
+                                    url: '/dashboard/calendar',
+                                    extra: [
+                                        'event_id' => $event->id,
+                                        'event_title' => $event->title,
+                                    ]
+                                )
+                            );
                         } catch (Throwable $e) {
                             Log::error(
                                 'Gagal membuat notifikasi pengumuman kalender.',
@@ -375,8 +626,12 @@ class CalendarController extends Controller
                 return;
             }
 
-            // Meeting: peserta yang dipilih, email tetap diproses
-            // menggunakan notifikasi undangan yang sudah ada.
+            /*
+            |--------------------------------------------------------------------------
+            | Meeting
+            |--------------------------------------------------------------------------
+            */
+
             $recipients = User::query()
                 ->where('company_id', $event->company_id)
                 ->whereIn('id', $recipientIds)
@@ -394,42 +649,50 @@ class CalendarController extends Controller
                             );
                         }
 
-                        $recipient->notify(new GlobalNotification(
+                        $recipient->notify(
+                            new GlobalNotification(
+                                type: 'calendar_invitation',
+                                title: 'Meeting Dibatalkan',
+                                message: $organizer->name
+                                    . ' membatalkan meeting: '
+                                    . $event->title,
+                                url: '/dashboard/calendar',
+                                extra: [
+                                    'event_id' => $event->id,
+                                    'event_title' => $event->title,
+                                ]
+                            )
+                        );
+
+                        continue;
+                    }
+
+                    $recipient->notify(
+                        new GlobalNotification(
                             type: 'calendar_invitation',
-                            title: 'Meeting Dibatalkan',
+                            title: $action === 'updated'
+                                ? 'Meeting Diperbarui'
+                                : 'Undangan Meeting',
                             message: $organizer->name
-                                . ' membatalkan meeting: '
+                                . (
+                                    $action === 'updated'
+                                        ? ' memperbarui meeting: '
+                                        : ' mengundang Anda ke meeting: '
+                                )
                                 . $event->title,
                             url: '/dashboard/calendar',
                             extra: [
                                 'event_id' => $event->id,
                                 'event_title' => $event->title,
+                                'start_at' => Carbon::parse(
+                                    $event->start_at
+                                )->toDateTimeString(),
+                                'end_at' => Carbon::parse(
+                                    $event->end_at
+                                )->toDateTimeString(),
                             ]
-                        ));
-
-                        continue;
-                    }
-
-                    $recipient->notify(new GlobalNotification(
-                        type: 'calendar_invitation',
-                        title: $action === 'updated'
-                            ? 'Meeting Diperbarui'
-                            : 'Undangan Meeting',
-                        message: $organizer->name
-                            . (
-                                $action === 'updated'
-                                    ? ' memperbarui meeting: '
-                                    : ' mengundang Anda ke meeting: '
-                            )
-                            . $event->title,
-                        url: '/dashboard/calendar',
-                        extra: [
-                            'event_id' => $event->id,
-                            'event_title' => $event->title,
-                            'start_at' => $event->start_at->toDateTimeString(),
-                            'end_at' => $event->end_at->toDateTimeString(),
-                        ]
-                    ));
+                        )
+                    );
 
                     if ($recipient->email) {
                         $recipient->notify(
@@ -461,7 +724,7 @@ class CalendarController extends Controller
     }
 
     /**
-     * Validasi agenda.
+     * Validasi data agenda.
      */
     private function validateEvent(Request $request): array
     {
@@ -469,13 +732,17 @@ class CalendarController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:5000'],
             'location' => ['nullable', 'string', 'max:255'],
+
             'event_type' => [
                 'required',
                 Rule::in(['meeting', 'announcement']),
             ],
+
             'start_at' => ['required', 'date'],
             'end_at' => ['required', 'date', 'after:start_at'],
+
             'attendees' => ['nullable', 'array'],
+
             'attendees.*' => [
                 'integer',
                 'distinct',
@@ -497,11 +764,13 @@ class CalendarController extends Controller
 
     /**
      * Pastikan peserta meeting berasal dari perusahaan yang sama.
+     *
+     * @param \Illuminate\Support\Collection<int, int> $attendeeIds
      */
     private function validateCompanyAttendees(
         string $eventType,
-        $attendeeIds,
-        $user
+        \Illuminate\Support\Collection $attendeeIds,
+        User $user
     ): void {
         if ($eventType !== 'meeting' || $attendeeIds->isEmpty()) {
             return;

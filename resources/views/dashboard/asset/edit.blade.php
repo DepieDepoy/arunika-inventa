@@ -245,28 +245,27 @@
 
 
 <div class="content-wrapper">
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="row">
+        <div class="col-xxl-12 mb-4">
 
-    <div class="container-xxl flex-grow-1 container-p-y">
+            <div class="card">
 
-        <!-- ===================================================== -->
-        <!-- HEADER -->
-        <!-- ===================================================== -->
+                <!-- ===================================================== -->
+                <!-- HEADER -->
+                <!-- ===================================================== -->
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0">
+                            Edit Detail
+                        </h5>
+                        <small class="text-muted">
+                            Update company asset information
+                        </small>
+                    </div>
+                   <div class="d-flex gap-2">
 
-        <div class="asset-page-header">
-
-            <div class="d-flex justify-content-between align-items-center">
-
-                <div>
-                    <h4 class="fw-bold mb-1">
-                        Edit Asset
-                    </h4>
-
-                    <p class="text-muted mb-0">
-                        Update company asset information
-                    </p>
-                </div>
-
-                <div>
+        <div class="d-flex gap-2">
                     <a
                         href="{{ route('assets.index') }}"
                         class="btn btn-label-secondary"
@@ -987,7 +986,7 @@
 
                     <div
                         id="maintenance_config"
-                        style="{{ old('maintenance_required', $asset->maintenance_required) ? '' : 'display: none;' }}"
+                        class="{{ old('maintenance_required', $asset->maintenance_required) ? '' : 'd-none' }}"
                     >
 
                         <div class="row">
@@ -1183,7 +1182,7 @@
                                     type="date"
                                     name="next_maintenance_date"
                                     id="next_maintenance_date"
-                                    class="form-control"
+                                    class="form-control" readonly
                                     value="{{ old('next_maintenance_date', $asset->next_maintenance_date ? \Carbon\Carbon::parse($asset->next_maintenance_date)->format('Y-m-d') : '') }}"
                                 >
 

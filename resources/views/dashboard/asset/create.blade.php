@@ -195,30 +195,27 @@
 
 
 <div class="content-wrapper">
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="row">
+        <div class="col-xxl-12 mb-4">
 
-    <div class="container-xxl flex-grow-1 container-p-y">
+            <div class="card">
 
-        <!-- ===================================================== -->
-        <!-- PAGE HEADER -->
-        <!-- ===================================================== -->
+                <!-- ===================================================== -->
+                <!-- HEADER -->
+                <!-- ===================================================== -->
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0">
+                            Add Detail
+                        </h5>
+                        <small class="text-muted">
+                            Add new company asset information
+                        </small>
+                    </div>
+                   <div class="d-flex gap-2">
 
-        <div class="asset-page-header">
-
-            <div class="d-flex justify-content-between align-items-center">
-
-                <div>
-
-                    <h4 class="fw-bold mb-1">
-                        Add Asset
-                    </h4>
-
-                    <p class="text-muted mb-0">
-                        Add new company asset information
-                    </p>
-
-                </div>
-
-                <div>
+        <div class="d-flex gap-2">
 
                     <a
                         href="{{ route('assets.index') }}"

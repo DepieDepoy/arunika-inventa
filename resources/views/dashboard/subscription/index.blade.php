@@ -421,7 +421,7 @@
                             </span>
 
                             <div class="small text-white opacity-75 mt-2">
-                                Powered by Midtrans
+                                Powered by DOKU
                             </div>
 
                         </div>
@@ -822,7 +822,7 @@
 
 
                 <form
-                    action="{{ route('subscription.renew') }}"
+                    action="{{ route('subscription.renewdoku') }}"
                     method="POST"
                     id="subscriptionForm"
                 >
@@ -1069,7 +1069,7 @@
 
                             <i class="bi bi-lock-fill me-1"></i>
 
-                            Pembayaran aman melalui Midtrans
+                            Pembayaran aman melalui DOKU
 
                             <br>
 
@@ -1102,6 +1102,31 @@
     </div>
 
 </div>
+
+
+
+<script src="https://sandbox.doku.com/jokul-checkout-js/v1/jokul-checkout-1.0.0.js"></script>
+
+@if (session('doku_checkout_url'))
+    <div
+        id="dokuCheckoutConfig"
+        data-payment-url="{{ session('doku_checkout_url') }}"
+        hidden
+    ></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const config = document.getElementById('dokuCheckoutConfig');
+            const paymentUrl = config
+                ? config.dataset.paymentUrl
+                : null;
+
+            if (paymentUrl && typeof loadJokulCheckout === 'function') {
+                loadJokulCheckout(paymentUrl);
+            }
+        });
+    </script>
+@endif
 
 
 {{-- =========================================================
