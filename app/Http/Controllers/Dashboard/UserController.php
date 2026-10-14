@@ -14,6 +14,7 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Str;
+use App\Notifications\UserCreatedNotification;
 
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Storage;
@@ -71,8 +72,9 @@ class UserController extends Controller
                 'email'   => 'required|email',
                 'phone'   => 'required',
                 'role_id' => 'required',
-                //'password' => 'required|min:8|confirmed',
                 'status'  => 'required',
+
+                'send_verification_email' => 'nullable|boolean',
             ],
             [
                 'name.required'     => 'Nama wajib diisi',
@@ -81,9 +83,6 @@ class UserController extends Controller
                 'email.email'       => 'Format email tidak valid',
                 'phone.required'    => 'No. Telepon wajib diisi',
                 'role_id.required'  => 'Role wajib dipilih',
-                //'password.required' => 'Password wajib diisi',
-                //'password.min'      => 'Password minimal 8 karakter',
-                //'password.confirmed'=> 'Konfirmasi password tidak sesuai',
                 'status.required'   => 'Status wajib dipilih',
             ]
         );
@@ -205,11 +204,28 @@ class UserController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $passwordPlain = Str::password(
+        /*$passwordPlain = Str::password(
             length: 10
-        );
+        );*/
 
-        User::create([
+        $passwordPlain = 'Vasetra@' . now()->format('Y');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Verification
+        |--------------------------------------------------------------------------
+        |
+        | ON  -> email_verified_at NULL
+        |       User wajib melakukan verifikasi email.
+        |
+        | OFF -> email_verified_at NOW()
+        |       User langsung bisa login.
+        |
+        */
+
+        $sendVerificationEmail = $request->boolean('send_verification_email');
+        $user = User::create([
             'company_id' => Auth::user()->company_id,
             'role_id'    => $request->role_id,
             'name'       => $request->name,
@@ -217,14 +233,81 @@ class UserController extends Controller
             'phone'      => $request->phone,
             'email'      => $request->email,
             'password'   => Hash::make($passwordPlain),
-            'status'     => $request->status,
+            'status'     => $request->status
         ]);
 
+        if (!$sendVerificationEmail) {
+            $user->email_verified_at = now();
+            $user->save();
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | SEND VERIFICATION EMAIL
+        |--------------------------------------------------------------------------
+        */
+
+        if ($sendVerificationEmail) {
+
+            try {
+
+                $user->notify(
+                    new UserCreatedNotification($passwordPlain)
+                );
+
+            } catch (\Throwable $e) {
+
+                report($e);
+
+                return response()->json([
+                    'success'  => true,
+                    'message'  =>
+                        'User berhasil ditambahkan, tetapi email verifikasi gagal dikirim.',
+                    'password' =>
+                        $passwordPlain,
+                    'email_sent' =>
+                        false,
+                ]);
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | EMAIL BERHASIL DIKIRIM
+            |--------------------------------------------------------------------------
+            */
+
+            return response()->json([
+                'success'  => true,
+                'message'  =>
+                    'User berhasil ditambahkan. Email verifikasi berhasil dikirim.',
+                'password'  =>
+                    $passwordPlain,
+                'email_sent' =>
+                    true,
+            ]);
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | SEND VERIFICATION EMAIL = OFF
+        |--------------------------------------------------------------------------
+        |
+        | email_verified_at sudah diisi NOW()
+        | sehingga user dapat langsung login.
+        |
+        */
 
         return response()->json([
             'success'  => true,
-            'message'  => 'User berhasil ditambahkan',
-            'password' => $passwordPlain
+            'message'  =>
+                'User berhasil ditambahkan dan dapat langsung login.',
+            'password'  =>
+                $passwordPlain,
+            'email_sent' =>
+                false,
         ]);
     }
 
@@ -813,6 +896,10 @@ class UserController extends Controller
                 'mimes:xlsx,xls',
                 'max:10240',
             ],
+            'send_verification_email' => [
+                'nullable',
+                'boolean',
+            ],
         ]);
 
 
@@ -937,6 +1024,9 @@ class UserController extends Controller
 
                 'user_import_total_rows' =>
                     $preview['totalRows'],
+
+                'user_import_send_verification_email' =>
+                    $request->boolean('send_verification_email'),
             ]);
 
 
@@ -1010,6 +1100,11 @@ class UserController extends Controller
             session(
                 'user_import_total_rows',
                 0
+            );
+        $sendVerificationEmail =
+            session(
+                'user_import_send_verification_email',
+                false
             );
 
 
@@ -1091,6 +1186,7 @@ class UserController extends Controller
                 session()->forget([
                     'user_import_file',
                     'user_import_total_rows',
+                    'user_import_send_verification_email',
                 ]);
 
 
@@ -1161,7 +1257,8 @@ class UserController extends Controller
 
             ProcessUserImport::dispatch(
                 $history->id,
-                $filePath
+                $filePath,
+                $sendVerificationEmail
             );
 
 
@@ -1174,6 +1271,7 @@ class UserController extends Controller
             session()->forget([
                 'user_import_file',
                 'user_import_total_rows',
+                'user_import_send_verification_email',
             ]);
 
 

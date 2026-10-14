@@ -5,1290 +5,1008 @@
 @section('content')
 
 <style>
+    /* =========================================================
+       SCREEN
+    ========================================================= */
 
-    /*
-    |--------------------------------------------------------------------------
-    | PAGE
-    |--------------------------------------------------------------------------
-    */
-
-    .qr-print-page {
-        padding-bottom: 40px;
+    .qr-print-wrapper {
+        width: 100%;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | HEADER
-    |--------------------------------------------------------------------------
-    */
-
-    .qr-page-header {
-        margin-bottom: 1.5rem;
-    }
-
-    .qr-page-title {
-        font-size: 24px;
-        font-weight: 700;
-        color: #566a7f;
-        margin-bottom: 4px;
-    }
-
-    .qr-page-description {
-        color: #8592a3;
-        font-size: 13px;
-        margin: 0;
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | SETTINGS CARD
-    |--------------------------------------------------------------------------
-    */
-
-    .qr-settings-card {
-        border: 0;
-        box-shadow: 0 4px 18px rgba(0,0,0,.05);
-        border-radius: 12px;
-        margin-bottom: 1.5rem;
-    }
-
-    .qr-settings-title {
-        font-size: 15px;
-        font-weight: 600;
-        color: #566a7f;
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | OPTION BUTTON
-    |--------------------------------------------------------------------------
-    */
-
-    .qr-option {
-        cursor: pointer;
-    }
-
-    .qr-option .btn {
-        min-height: 65px;
-        border-radius: 10px;
-        font-size: 13px;
-    }
-
-    .qr-option small {
-        font-size: 11px;
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | PREVIEW CARD
-    |--------------------------------------------------------------------------
-    */
-
-    .qr-preview-card {
-        border: 0;
-        border-radius: 12px;
-        box-shadow: 0 4px 18px rgba(0,0,0,.05);
-    }
-
-    .qr-preview-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding-bottom: 15px;
-        border-bottom: 1px solid #e9ecef;
-        margin-bottom: 20px;
-    }
-
-    .qr-preview-title {
-        font-size: 15px;
-        font-weight: 600;
-        color: #566a7f;
-        margin: 0;
-    }
-
-    .qr-count-badge {
-        background: #f0f0ff;
-        color: #696cff;
-        padding: 5px 10px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 600;
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | QR GRID
-    |--------------------------------------------------------------------------
-    */
-
-    #qrPreviewGrid {
-        display: grid;
-        gap: 20px;
-        justify-content: center;
-        align-items: start;
-    }
-
-    /*
-    | Layout
-    */
-
-    #qrPreviewGrid.layout-1 {
-        grid-template-columns: repeat(1, minmax(0, 1fr));
-    }
-
-    #qrPreviewGrid.layout-2 {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    #qrPreviewGrid.layout-4 {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    #qrPreviewGrid.layout-6 {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    #qrPreviewGrid.layout-8 {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | QR LABEL
-    |--------------------------------------------------------------------------
-    */
-
-    .qr-label {
+    .qr-toolbar {
         background: #fff;
         border: 1px solid #e5e7eb;
         border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
 
-        padding: 18px;
+    .qr-toolbar-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 4px;
+    }
+
+    .qr-toolbar-subtitle {
+        font-size: 13px;
+        color: #6b7280;
+        margin-bottom: 15px;
+    }
+
+    .qr-settings {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: end;
+        gap: 12px;
+    }
+
+    .qr-setting-item {
+        min-width: 150px;
+    }
+
+    .qr-setting-item label {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        color: #4b5563;
+        margin-bottom: 5px;
+    }
+
+    .qr-setting-item select {
+        width: 100%;
+        height: 38px;
+        border: 1px solid #d1d5db;
+        border-radius: 7px;
+        padding: 0 10px;
+        background: #fff;
+        font-size: 13px;
+    }
+
+    .qr-actions {
+        display: flex;
+        gap: 8px;
+        margin-left: auto;
+    }
+
+    .qr-actions .btn {
+        height: 38px;
+    }
+
+    /* =========================================================
+       QR GRID
+    ========================================================= */
+
+    .qr-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    .qr-label {
+        background: #fff;
+        border: 1px solid #dfe3e8;
+        border-radius: 10px;
+        padding: 14px;
+        min-height: 220px;
+
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
 
         text-align: center;
-
-        box-shadow: 0 3px 12px rgba(0,0,0,.04);
 
         break-inside: avoid;
         page-break-inside: avoid;
-
-        transition: .2s ease;
     }
-
-    .qr-label:hover {
-        box-shadow: 0 6px 20px rgba(0,0,0,.08);
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | COMPANY
-    |--------------------------------------------------------------------------
-    */
-
-    .qr-company {
-        font-size: 12px;
-        font-weight: 600;
-        color: #566a7f;
-        margin-bottom: 10px;
-        text-transform: uppercase;
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | QR CONTAINER
-    |--------------------------------------------------------------------------
-    */
 
     .qr-code-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
+        width: 150px;
+        height: 150px;
 
-        margin: 0 auto 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        margin-bottom: 10px;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | ASSET CODE
-    |--------------------------------------------------------------------------
-    */
+    .qr-code-container img,
+    .qr-code-container canvas {
+        display: block;
+        max-width: 100%;
+        max-height: 100%;
+    }
 
     .qr-asset-code {
-        font-size: 15px;
+        font-size: 14px;
         font-weight: 700;
-        color: #696cff;
-
-        margin-top: 8px;
+        color: #111827;
+        line-height: 1.25;
+        word-break: break-word;
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | ASSET NAME
-    |--------------------------------------------------------------------------
-    */
 
     .qr-asset-name {
-        font-size: 12px;
-        color: #566a7f;
-
+        font-size: 11px;
+        color: #6b7280;
+        line-height: 1.3;
         margin-top: 3px;
-
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        max-width: 95%;
+        word-break: break-word;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | EMPTY
-    |--------------------------------------------------------------------------
-    */
+    .qr-loading {
+        font-size: 12px;
+        color: #9ca3af;
+    }
 
     .qr-empty {
-        padding: 70px 20px;
+        background: #fff;
+        border: 1px dashed #d1d5db;
+        border-radius: 10px;
+        padding: 40px 20px;
         text-align: center;
-        color: #8592a3;
+        color: #6b7280;
     }
 
-    .qr-empty i {
-        font-size: 50px;
-        margin-bottom: 15px;
-        opacity: .5;
+    /* =========================================================
+       RESPONSIVE
+    ========================================================= */
+
+    @media (max-width: 1200px) {
+        .qr-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | ACTION
-    |--------------------------------------------------------------------------
-    */
+    @media (max-width: 900px) {
+        .qr-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
 
-    .qr-action-bar {
-        position: sticky;
-        bottom: 15px;
-
-        z-index: 100;
-
-        background: rgba(255,255,255,.95);
-
-        backdrop-filter: blur(8px);
-
-        border: 1px solid #e5e7eb;
-
-        border-radius: 12px;
-
-        padding: 12px 15px;
-
-        box-shadow: 0 5px 25px rgba(0,0,0,.08);
+        .qr-actions {
+            width: 100%;
+            margin-left: 0;
+        }
     }
 
+    @media (max-width: 576px) {
+        .qr-grid {
+            grid-template-columns: 1fr;
+        }
 
-    /*
-    |--------------------------------------------------------------------------
-    | PRINT
-    |--------------------------------------------------------------------------
-    */
+        .qr-settings {
+            display: block;
+        }
+
+        .qr-setting-item {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .qr-actions {
+            display: flex;
+        }
+
+        .qr-actions .btn {
+            flex: 1;
+        }
+    }
+
+    /* =========================================================
+       PRINT
+    ========================================================= */
 
     @media print {
 
+        @page {
+            margin: 8mm;
+        }
+
+        html,
         body {
             background: #fff !important;
         }
 
-        .content-wrapper {
-            padding: 0 !important;
+        body {
             margin: 0 !important;
-        }
-
-        .qr-page-header,
-        .qr-settings-card,
-        .qr-preview-header,
-        .qr-action-bar {
-            display: none !important;
-        }
-
-        .qr-preview-card {
-            box-shadow: none !important;
-            border: 0 !important;
-        }
-
-        .card-body {
             padding: 0 !important;
-        }
-
-        #qrPreviewGrid {
-            display: grid !important;
-            gap: 10mm !important;
-        }
-
-        .qr-label {
-            box-shadow: none !important;
-            border: 1px solid #ddd !important;
         }
 
         /*
-        |----------------------------------------------------------------------
-        | PRINT LAYOUT
-        |----------------------------------------------------------------------
-        */
-
-        #qrPreviewGrid.layout-1 {
-            grid-template-columns: repeat(1, 1fr);
+         * Sembunyikan semua elemen dashboard.
+         */
+        body > * {
+            visibility: hidden !important;
         }
 
-        #qrPreviewGrid.layout-2 {
-            grid-template-columns: repeat(2, 1fr);
+        .qr-print-wrapper,
+        .qr-print-wrapper * {
+            visibility: visible !important;
         }
 
-        #qrPreviewGrid.layout-4 {
-            grid-template-columns: repeat(2, 1fr);
+        .qr-print-wrapper {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
         }
 
-        #qrPreviewGrid.layout-6 {
-            grid-template-columns: repeat(3, 1fr);
+        .qr-toolbar {
+            display: none !important;
         }
 
-        #qrPreviewGrid.layout-8 {
-            grid-template-columns: repeat(4, 1fr);
+        .qr-grid {
+            display: grid !important;
+            gap: 5mm !important;
         }
 
         .qr-label {
-            break-inside: avoid;
-            page-break-inside: avoid;
+            border: 1px solid #000 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            background: #fff !important;
+
+            padding: 4mm !important;
+
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
         }
 
-    }
+        .qr-code-container {
+            margin-bottom: 2mm !important;
+        }
 
+        .qr-asset-code {
+            color: #000 !important;
+        }
+
+        .qr-asset-name {
+            color: #000 !important;
+        }
+
+        /*
+         * Page break antar halaman.
+         */
+        .qr-page-break {
+            page-break-after: always;
+            break-after: page;
+        }
+    }
 </style>
 
+<div class="qr-print-wrapper">
 
-<div class="content-wrapper">
+    {{-- =====================================================
+         HIDDEN CONFIG
+         Blade hanya digunakan di HTML attribute.
+         Tidak ada Blade expression di dalam JavaScript.
+    ====================================================== --}}
 
-    <div class="container-xxl flex-grow-1 container-p-y qr-print-page">
+    <div
+        id="qrPrintConfig"
+        data-qr-base-url="{{ e(url('/assets/qr')) }}"
+        style="display:none;"
+    ></div>
 
+    {{-- =====================================================
+         TOOLBAR
+    ====================================================== --}}
 
-        <!-- ========================================================= -->
-        <!-- HEADER -->
-        <!-- ========================================================= -->
+    <div class="qr-toolbar">
 
-        <div class="qr-page-header">
+        <div class="qr-toolbar-title">
+            Print QR Asset
+        </div>
 
-            <div class="d-flex justify-content-between align-items-center">
+        <div class="qr-toolbar-subtitle">
+            Total {{ $assets->count() }} asset dipilih untuk dicetak.
+        </div>
 
-                <div>
+        <div class="qr-settings">
 
-                    <h4 class="qr-page-title">
-                        <i class="fa-solid fa-qrcode text-primary me-2"></i>
-                        Print QR Asset
-                    </h4>
+            {{-- Ukuran QR --}}
+            <div class="qr-setting-item">
 
-                    <p class="qr-page-description">
-                        Configure QR label and print multiple assets at once.
-                    </p>
+                <label for="qrSize">
+                    Ukuran QR
+                </label>
 
-                </div>
+                <select id="qrSize">
+                    <option value="40">
+                        Kecil
+                    </option>
 
+                    <option value="50" selected>
+                        Sedang
+                    </option>
 
-                <div>
+                    <option value="60">
+                        Besar
+                    </option>
+                </select>
 
-                    <a
-                        href="{{ route('assets.index') }}"
-                        class="btn btn-label-secondary"
-                    >
+            </div>
 
-                        <i class="fa-solid fa-arrow-left me-1"></i>
+            {{-- Jumlah kolom --}}
+            <div class="qr-setting-item">
 
-                        Back to Assets
+                <label for="qrColumns">
+                    Kolom
+                </label>
 
-                    </a>
+                <select id="qrColumns">
 
-                </div>
+                    <option value="2">
+                        2 Kolom
+                    </option>
+
+                    <option value="3">
+                        3 Kolom
+                    </option>
+
+                    <option value="4" selected>
+                        4 Kolom
+                    </option>
+
+                </select>
+
+            </div>
+
+            {{-- Tampilkan nama --}}
+            <div class="qr-setting-item">
+
+                <label for="showAssetName">
+                    Nama Asset
+                </label>
+
+                <select id="showAssetName">
+
+                    <option value="yes" selected>
+                        Tampilkan
+                    </option>
+
+                    <option value="no">
+                        Sembunyikan
+                    </option>
+
+                </select>
+
+            </div>
+
+            {{-- Action --}}
+            <div class="qr-actions">
+
+                <button
+                    type="button"
+                    class="btn btn-primary"
+                    id="btnPrintQr"
+                >
+                    <i class="fa fa-print me-1"></i>
+                    Print QR
+                </button>
+
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    id="btnBack"
+                >
+                    <i class="fa fa-arrow-left me-1"></i>
+                    Kembali
+                </button>
 
             </div>
 
         </div>
 
+    </div>
 
-        <!-- ========================================================= -->
-        <!-- SETTINGS -->
-        <!-- ========================================================= -->
-        <div class="card qr-settings-card">
-            <div class="card-body">
-                <div class="row g-4">
-                    <!-- ================================================= -->
-                    <!-- QR SIZE -->
-                    <!-- ================================================= -->
-                    <div class="col-lg-6">
-                        <div class="qr-settings-title mb-3">
-                            <i class="fa-solid fa-expand me-2 text-primary"></i>
-                            QR Size
-                        </div>
-                        <div class="row g-2">
-                            <!-- SMALL -->
-                            <div class="col-3 qr-option">
-                                <input
-                                    type="radio"
-                                    class="btn-check"
-                                    name="qrSize"
-                                    id="qrSizeSmall"
-                                    value="40"
-                                >
-                                <label
-                                    class="btn btn-outline-primary w-100"
-                                    for="qrSizeSmall"
-                                >
-                                    <strong>
-                                        Small
-                                    </strong>
-                                    <small class="d-block">
-                                        1 × 1 cm
-                                    </small>
-                                </label>
-                            </div>
-                            <!-- MEDIUM -->
-                            <div class="col-3 qr-option">
-                                <input
-                                    type="radio"
-                                    class="btn-check"
-                                    name="qrSize"
-                                    id="qrSizeMedium"
-                                    value="50"
-                                    checked
-                                >
-                                <label
-                                    class="btn btn-outline-primary w-100"
-                                    for="qrSizeMedium"
-                                >
-                                    <strong>
-                                        Medium
-                                    </strong>
-                                    <small class="d-block">
-                                        1.3 × 1.3 cm
-                                    </small>
-                                </label>
-                            </div>
-                            <!-- LARGE -->
-                            <div class="col-3 qr-option">
-                                <input
-                                    type="radio"
-                                    class="btn-check"
-                                    name="qrSize"
-                                    id="qrSizeLarge"
-                                    value="60"
-                                >
-                                <label
-                                    class="btn btn-outline-primary w-100"
-                                    for="qrSizeLarge"
-                                >
-                                    <strong>
-                                        Large
-                                    </strong>
-                                    <small class="d-block">
-                                        1.6 × 1.6 cm
-                                    </small>
-                                </label>
-                            </div>
-                            <!-- XLARGE -->
-                            <div class="col-3 qr-option">
-                                <input
-                                    type="radio"
-                                    class="btn-check"
-                                    name="qrSize"
-                                    id="qrSizeXL"
-                                    value="80"
-                                >
-                                <label
-                                    class="btn btn-outline-primary w-100"
-                                    for="qrSizeXL"
-                                >
-                                    <strong>
-                                        XL
-                                    </strong>
-                                    <small class="d-block">
-                                        2.1 × 2.1 cm
-                                    </small>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- ================================================= -->
-                    <!-- LAYOUT -->
-                    <!-- ================================================= -->
-                    <div class="col-lg-6">
-                        <div class="qr-settings-title mb-3">
-                            <i class="fa-solid fa-table-cells me-2 text-primary"></i>
-                            Print Layout
-                        </div>
-                        <div class="row g-2">
-                            <!-- 1 -->
-                            <div class="col">
-                                <input
-                                    type="radio"
-                                    class="btn-check"
-                                    name="qrLayout"
-                                    id="layout1"
-                                    value="1"
-                                >
-                                <label
-                                    class="btn btn-outline-primary w-100"
-                                    for="layout1"
-                                >
-                                    <strong>1</strong>
-                                    <small class="d-block">
-                                        / Page
-                                    </small>
-                                </label>
-                            </div>
-                            <!-- 2 -->
-                            <div class="col">
-                                <input
-                                    type="radio"
-                                    class="btn-check"
-                                    name="qrLayout"
-                                    id="layout2"
-                                    value="2"
-                                >
-                                <label
-                                    class="btn btn-outline-primary w-100"
-                                    for="layout2"
-                                >
-                                    <strong>2</strong>
-                                    <small class="d-block">
-                                        / Page
-                                    </small>
-                                </label>
-                            </div>
-                            <!-- 4 -->
-                            <div class="col">
-                                <input
-                                    type="radio"
-                                    class="btn-check"
-                                    name="qrLayout"
-                                    id="layout4"
-                                    value="4"
-                                    checked
-                                >
-                                <label
-                                    class="btn btn-outline-primary w-100"
-                                    for="layout4"
-                                >
-                                    <strong>4</strong>
-                                    <small class="d-block">
-                                        / Page
-                                    </small>
-                                </label>
-                            </div>
-                            <!-- 6 -->
-                            <div class="col">
-                                <input
-                                    type="radio"
-                                    class="btn-check"
-                                    name="qrLayout"
-                                    id="layout6"
-                                    value="6"
-                                >
-                                <label
-                                    class="btn btn-outline-primary w-100"
-                                    for="layout6"
-                                >
-                                    <strong>6</strong>
-                                    <small class="d-block">
-                                        / Page
-                                    </small>
-                                </label>
-                            </div>
-                            <!-- 8 -->
-                            <div class="col">
-                                <input
-                                    type="radio"
-                                    class="btn-check"
-                                    name="qrLayout"
-                                    id="layout8"
-                                    value="8"
-                                >
-                                <label
-                                    class="btn btn-outline-primary w-100"
-                                    for="layout8"
-                                >
-                                    <strong>8</strong>
-                                    <small class="d-block">
-                                        / Page
-                                    </small>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- ========================================================= -->
-        <!-- PREVIEW -->
-        <!-- ========================================================= -->
+    {{-- =====================================================
+         QR GRID
+    ====================================================== --}}
 
-        <div class="card qr-preview-card">
+    @if($assets->count() > 0)
 
-            <div class="card-body">
+        <div
+            class="qr-grid"
+            id="qrGrid"
+        >
 
+            @foreach($assets as $asset)
 
-                <!-- PREVIEW HEADER -->
+                <div
+                    class="qr-label"
+                    data-asset-id="{{ $asset->id }}"
+                    data-qr-token="{{ e($asset->qr_token) }}"
+                >
 
-                <div class="qr-preview-header">
+                    <div class="qr-code-container">
 
-                    <div>
-
-                        <h6 class="qr-preview-title">
-
-                            <i class="fa-solid fa-eye me-2 text-primary"></i>
-
-                            QR Preview
-
-                        </h6>
-
-                    </div>
-
-
-                    <div>
-
-                        <span class="qr-count-badge">
-
-                            <span id="qrAssetCount">
-                                {{ $assets->count() }}
-                            </span>
-
-                            Asset
-
+                        <span class="qr-loading">
+                            Generating...
                         </span>
 
                     </div>
 
-                </div>
+                    <div class="qr-asset-code">
+                        {{ $asset->asset_code }}
+                    </div>
 
-
-                <!-- GRID -->
-
-                <div
-                    id="qrPreviewGrid"
-                    class="layout-4"
-                >
-
-                    @forelse($assets as $asset)
-
-                        <div
-                            class="qr-label"
-                            data-asset-id="{{ $asset->id }}"
-                        >
-
-                            <!-- COMPANY -->
-
-                            <div class="qr-company">
-
-                                {{ $asset->company->company_name ?? 'COMPANY' }}
-
-                            </div>
-
-
-                            <!-- QR -->
-
-                            <div
-                                class="qr-code-container"
-                                id="qr-{{ $asset->id }}"
-                            >
-
-                                <div class="text-muted">
-
-                                    <i class="fa-solid fa-qrcode fa-2x"></i>
-
-                                </div>
-
-                            </div>
-
-
-                            <!-- ASSET CODE -->
-
-                            <div class="qr-asset-code">
-
-                                {{ $asset->asset_code }}
-
-                            </div>
-
-
-                            <!-- ASSET NAME -->
-
-                            <div
-                                class="qr-asset-name"
-                                title="{{ $asset->asset_name }}"
-                            >
-
-                                {{ $asset->asset_name }}
-
-                            </div>
-
-                        </div>
-
-                    @empty
-
-                        <div class="qr-empty">
-
-                            <i class="fa-solid fa-qrcode d-block"></i>
-
-                            <strong>
-                                No asset selected
-                            </strong>
-
-                            <div class="mt-1">
-                                Please select asset from Asset List.
-                            </div>
-
-                        </div>
-
-                    @endforelse
+                    <div class="qr-asset-name">
+                        {{ $asset->asset_name }}
+                    </div>
 
                 </div>
 
+            @endforeach
+
+        </div>
+
+    @else
+
+        <div class="qr-empty">
+
+            <i
+                class="fa fa-qrcode"
+                style="font-size:40px;margin-bottom:10px;"
+            ></i>
+
+            <div>
+                Tidak ada asset yang dipilih.
             </div>
 
         </div>
 
-
-        <!-- ========================================================= -->
-        <!-- ACTION BAR -->
-        <!-- ========================================================= -->
-
-        <div class="qr-action-bar mt-3">
-
-            <div class="d-flex justify-content-between align-items-center">
-
-
-                <div class="text-muted small">
-
-                    <i class="fa-solid fa-circle-info me-1"></i>
-
-                    <span id="printInfo">
-                        {{ $assets->count() }} asset
-                        will be printed.
-                    </span>
-
-                </div>
-
-
-                <div class="d-flex gap-2">
-
-
-                    <button
-                        type="button"
-                        class="btn btn-label-secondary"
-                        onclick="window.history.back()"
-                    >
-
-                        <i class="fa-solid fa-arrow-left me-1"></i>
-
-                        Back
-
-                    </button>
-
-
-                    <button
-                        type="button"
-                        class="btn btn-primary"
-                        onclick="printAllQr()"
-                    >
-
-                        <i class="fa-solid fa-print me-1"></i>
-
-                        Print QR
-
-                    </button>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-    </div>
+    @endif
 
 </div>
 
-
-<!-- =========================================================
+{{-- =========================================================
      QR CODE LIBRARY
-========================================================= -->
+========================================================= --}}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-
 <script>
+(function () {
 
-document.addEventListener(
-    'DOMContentLoaded',
-    function () {
+    'use strict';
 
-        generateAllQr();
+    /*
+     * ========================================================
+     * ELEMENT
+     * ========================================================
+     */
+
+    var qrConfigElement = document.getElementById('qrPrintConfig');
+    var qrGrid = document.getElementById('qrGrid');
+
+    var qrSizeElement = document.getElementById('qrSize');
+    var qrColumnsElement = document.getElementById('qrColumns');
+    var showAssetNameElement = document.getElementById('showAssetName');
+
+    var btnPrintQr = document.getElementById('btnPrintQr');
+    var btnBack = document.getElementById('btnBack');
+
+
+    /*
+     * ========================================================
+     * QR BASE URL
+     * ========================================================
+     *
+     * Contoh:
+     *
+     * http://10.241.240.135:8001/assets/qr
+     *
+     * atau production:
+     *
+     * https://vasetra.arunikasolusiinovasi.co.id/assets/qr
+     *
+     */
+
+    var qrBaseUrl = '';
+
+    if (qrConfigElement) {
+
+        qrBaseUrl =
+            qrConfigElement.getAttribute('data-qr-base-url') || '';
 
     }
-);
 
 
-/*
-|--------------------------------------------------------------------------
-| GENERATE ALL QR
-|--------------------------------------------------------------------------
-*/
+    /*
+     * ========================================================
+     * GET QR SIZE
+     * ========================================================
+     */
 
-function generateAllQr() {
+    function getQrSize() {
 
-    const size =
-        parseInt(
-            document.querySelector(
-                'input[name="qrSize"]:checked'
-            ).value
-        );
+        if (!qrSizeElement) {
+            return 50;
+        }
 
+        var value =
+            parseInt(qrSizeElement.value, 10);
 
-    const containers =
-        document.querySelectorAll(
-            '.qr-code-container'
-        );
+        if (isNaN(value)) {
+            return 50;
+        }
 
-
-    containers.forEach(
-        function (container) {
-
-            const assetId =
-                container
-                    .closest('.qr-label')
-                    .dataset
-                    .assetId;
+        return value;
+    }
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | CLEAR
-            |--------------------------------------------------------------------------
-            */
+    /*
+     * ========================================================
+     * GET COLUMNS
+     * ========================================================
+     */
 
-            container.innerHTML = '';
+    function getColumns() {
+
+        if (!qrColumnsElement) {
+            return 4;
+        }
+
+        var value =
+            parseInt(qrColumnsElement.value, 10);
+
+        if (isNaN(value)) {
+            return 4;
+        }
+
+        return value;
+    }
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | QR URL
-            |--------------------------------------------------------------------------
-            */
+    /*
+     * ========================================================
+     * GET FONT SIZE
+     * ========================================================
+     */
 
-            const qrUrl =
-                "{{ url('/assets/qr') }}/" +
-                assetId;
+    function getFontSizes() {
+
+        var qrSize = getQrSize();
+
+        var result = {
+            code: 14,
+            name: 11
+        };
+
+        if (qrSize === 40) {
+
+            result.code = 12;
+            result.name = 10;
+
+        } else if (qrSize === 50) {
+
+            result.code = 14;
+            result.name = 11;
+
+        } else if (qrSize === 60) {
+
+            result.code = 16;
+            result.name = 12;
+
+        }
+
+        return result;
+    }
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | GENERATE
-            |--------------------------------------------------------------------------
-            */
+    /*
+     * ========================================================
+     * UPDATE GRID
+     * ========================================================
+     */
+
+    function updateGrid() {
+
+        if (!qrGrid) {
+            return;
+        }
+
+        var columns = getColumns();
+
+        qrGrid.style.gridTemplateColumns =
+            'repeat(' +
+            columns +
+            ', minmax(0, 1fr))';
+
+    }
+
+
+    /*
+     * ========================================================
+     * UPDATE NAME
+     * ========================================================
+     */
+
+    function updateAssetNameVisibility() {
+
+        var labels =
+            document.querySelectorAll('.qr-label');
+
+        var showName = true;
+
+        if (showAssetNameElement) {
+
+            showName =
+                showAssetNameElement.value === 'yes';
+
+        }
+
+        labels.forEach(function (label) {
+
+            var nameElement =
+                label.querySelector('.qr-asset-name');
+
+            if (!nameElement) {
+                return;
+            }
+
+            if (showName) {
+
+                nameElement.style.display = 'block';
+
+            } else {
+
+                nameElement.style.display = 'none';
+
+            }
+
+        });
+
+    }
+
+
+    /*
+     * ========================================================
+     * UPDATE FONT
+     * ========================================================
+     */
+
+    function updateFontSizes() {
+
+        var sizes =
+            getFontSizes();
+
+        var codes =
+            document.querySelectorAll('.qr-asset-code');
+
+        var names =
+            document.querySelectorAll('.qr-asset-name');
+
+        codes.forEach(function (element) {
+
+            element.style.fontSize =
+                sizes.code + 'px';
+
+        });
+
+        names.forEach(function (element) {
+
+            element.style.fontSize =
+                sizes.name + 'px';
+
+        });
+
+    }
+
+
+    /*
+     * ========================================================
+     * GENERATE ONE QR
+     * ========================================================
+     */
+
+    function generateQr(label) {
+
+        if (!label) {
+            return;
+        }
+
+        var container =
+            label.querySelector('.qr-code-container');
+
+        if (!container) {
+            return;
+        }
+
+        /*
+         * PENTING:
+         *
+         * QR menggunakan qr_token.
+         * BUKAN asset ID.
+         */
+
+        var qrToken =
+            label.getAttribute('data-qr-token') || '';
+
+        if (!qrToken) {
+
+            container.innerHTML =
+                '<span class="qr-loading">QR token tidak tersedia</span>';
+
+            return;
+
+        }
+
+        if (!qrBaseUrl) {
+
+            container.innerHTML =
+                '<span class="qr-loading">QR URL tidak tersedia</span>';
+
+            return;
+
+        }
+
+        /*
+         * Bersihkan container.
+         */
+
+        container.innerHTML = '';
+
+        /*
+         * Bentuk URL QR.
+         *
+         * Tidak menggunakan template literal.
+         */
+
+        var qrUrl =
+            qrBaseUrl + '/' + qrToken;
+
+        /*
+         * Ukuran QR.
+         */
+
+        var size =
+            getQrSize();
+
+        /*
+         * Generate QR.
+         */
+
+        try {
 
             new QRCode(
                 container,
                 {
-
                     text: qrUrl,
-
                     width: size,
-
                     height: size,
-
-                    correctLevel:
-                        QRCode.CorrectLevel.H
-
+                    correctLevel: QRCode.CorrectLevel.H
                 }
             );
 
+        } catch (error) {
+
+            console.error(
+                'QR generation error:',
+                error
+            );
+
+            container.innerHTML =
+                '<span class="qr-loading">Gagal membuat QR</span>';
+
         }
-    );
 
-}
+    }
 
 
-/*
-|--------------------------------------------------------------------------
-| QR SIZE CHANGE
-|--------------------------------------------------------------------------
-*/
+    /*
+     * ========================================================
+     * GENERATE ALL QR
+     * ========================================================
+     */
 
-document
-    .querySelectorAll(
-        'input[name="qrSize"]'
-    )
-    .forEach(
-        function (radio) {
+    function generateAllQr() {
 
-            radio.addEventListener(
-                'change',
+        var labels =
+            document.querySelectorAll('.qr-label');
+
+        labels.forEach(function (label) {
+
+            generateQr(label);
+
+        });
+
+        updateGrid();
+        updateAssetNameVisibility();
+        updateFontSizes();
+
+    }
+
+
+    /*
+     * ========================================================
+     * REFRESH QR
+     * ========================================================
+     */
+
+    function refreshQr() {
+
+        var labels =
+            document.querySelectorAll('.qr-label');
+
+        labels.forEach(function (label) {
+
+            generateQr(label);
+
+        });
+
+        updateGrid();
+        updateAssetNameVisibility();
+        updateFontSizes();
+
+    }
+
+
+    /*
+     * ========================================================
+     * PRINT
+     * ========================================================
+     */
+
+    function printQr() {
+
+        /*
+         * Pastikan QR sudah dibuat.
+         */
+
+        generateAllQr();
+
+        /*
+         * Tunggu sebentar agar canvas QR selesai dirender.
+         */
+
+        setTimeout(function () {
+
+            window.print();
+
+        }, 500);
+
+    }
+
+
+    /*
+     * ========================================================
+     * BACK
+     * ========================================================
+     */
+
+    function goBack() {
+
+        if (
+            document.referrer &&
+            document.referrer !== window.location.href
+        ) {
+
+            window.history.back();
+
+            return;
+
+        }
+
+        window.location.href =
+            '/dashboard/assets';
+
+    }
+
+
+    /*
+     * ========================================================
+     * EVENT
+     * ========================================================
+     */
+
+    if (qrSizeElement) {
+
+        qrSizeElement.addEventListener(
+            'change',
+            function () {
+
+                refreshQr();
+
+            }
+        );
+
+    }
+
+
+    if (qrColumnsElement) {
+
+        qrColumnsElement.addEventListener(
+            'change',
+            function () {
+
+                updateGrid();
+
+            }
+        );
+
+    }
+
+
+    if (showAssetNameElement) {
+
+        showAssetNameElement.addEventListener(
+            'change',
+            function () {
+
+                updateAssetNameVisibility();
+
+            }
+        );
+
+    }
+
+
+    if (btnPrintQr) {
+
+        btnPrintQr.addEventListener(
+            'click',
+            function () {
+
+                printQr();
+
+            }
+        );
+
+    }
+
+
+    if (btnBack) {
+
+        btnBack.addEventListener(
+            'click',
+            function () {
+
+                goBack();
+
+            }
+        );
+
+    }
+
+
+    /*
+     * ========================================================
+     * INITIALIZE
+     * ========================================================
+     */
+
+    document.addEventListener(
+        'DOMContentLoaded',
+        function () {
+
+            updateGrid();
+            updateAssetNameVisibility();
+            updateFontSizes();
+
+            /*
+             * QRCode library mungkin belum selesai dimuat.
+             * Beri sedikit waktu sebelum generate.
+             */
+
+            setTimeout(
                 function () {
 
                     generateAllQr();
 
-                }
+                },
+                300
             );
 
         }
     );
 
-
-/*
-|--------------------------------------------------------------------------
-| LAYOUT CHANGE
-|--------------------------------------------------------------------------
-*/
-
-document
-    .querySelectorAll(
-        'input[name="qrLayout"]'
-    )
-    .forEach(
-        function (radio) {
-
-            radio.addEventListener(
-                'change',
-                function () {
-
-                    const layout =
-                        this.value;
-
-
-                    const grid =
-                        document.getElementById(
-                            'qrPreviewGrid'
-                        );
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | REMOVE OLD CLASS
-                    |--------------------------------------------------------------------------
-                    */
-
-                    grid.classList.remove(
-                        'layout-1',
-                        'layout-2',
-                        'layout-4',
-                        'layout-6',
-                        'layout-8'
-                    );
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | ADD NEW CLASS
-                    |--------------------------------------------------------------------------
-                    */
-
-                    grid.classList.add(
-                        'layout-' + layout
-                    );
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | INFO
-                    |--------------------------------------------------------------------------
-                    */
-
-                    updatePrintInfo();
-
-                }
-            );
-
-        }
-    );
-
-
-/*
-|--------------------------------------------------------------------------
-| UPDATE INFO
-|--------------------------------------------------------------------------
-*/
-
-function updatePrintInfo() {
-
-    const total =
-        document.querySelectorAll(
-            '.qr-label'
-        ).length;
-
-
-    const layout =
-        parseInt(
-            document.querySelector(
-                'input[name="qrLayout"]:checked'
-            ).value
-        );
-
-
-    const pages =
-        total > 0
-            ? Math.ceil(total / layout)
-            : 0;
-
-
-    document.getElementById(
-        'qrAssetCount'
-    ).innerText = total;
-
-
-    document.getElementById(
-        'printInfo'
-    ).innerText =
-        total +
-        ' asset • approximately ' +
-        pages +
-        ' page' +
-        (pages > 1 ? 's' : '') +
-        ' with ' +
-        layout +
-        ' QR / page';
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| PRINT
-|--------------------------------------------------------------------------
-*/
-
-function printAllQr() {
-
-    const labels = document.querySelectorAll('.qr-label');
-
-    if (labels.length === 0) {
-
-        Swal.fire({
-            icon: 'warning',
-            title: 'Tidak ada asset',
-            text: 'Silakan pilih asset terlebih dahulu.'
-        });
-
-        return;
-    }
-
-    const layout = parseInt(
-        document.querySelector(
-            'input[name="qrLayout"]:checked'
-        ).value
-    );
-
-    const size = parseInt(
-        document.querySelector(
-            'input[name="qrSize"]:checked'
-        ).value
-    );
-
-    /*
-    |--------------------------------------------------------------------------
-    | COLS
-    |--------------------------------------------------------------------------
-    */
-
-    let columns = 1;
-
-    if (layout === 2) {
-        columns = 2;
-    }
-
-    if (layout === 4) {
-        columns = 2;
-    }
-
-    if (layout === 6) {
-        columns = 3;
-    }
-
-    if (layout === 8) {
-        columns = 4;
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | CREATE PRINT WINDOW
-    |--------------------------------------------------------------------------
-    */
-
-    const printWindow = window.open(
-        '',
-        '_blank',
-        'width=1000,height=900'
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | BUILD QR HTML
-    |--------------------------------------------------------------------------
-    */
-
-    let qrHtml = '';
-
-    labels.forEach(function (label) {
-
-        qrHtml += `
-            <div class="qr-label">
-                ${label.innerHTML}
-            </div>
-        `;
-
-    });
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | PRINT DOCUMENT
-    |--------------------------------------------------------------------------
-    */
-    // Ukuran tulisan mengikuti ukuran QR
-    let companyFontSize = 14;
-    let assetCodeFontSize = 20;
-    let assetNameFontSize = 14;
-
-    if (qrSize = 40) {
-        companyFontSize = 6;
-        assetCodeFontSize = 8;
-        assetNameFontSize = 6;
-    } else if (qrSize = 50) {
-        companyFontSize = 7;
-        assetCodeFontSize = 10;
-        assetNameFontSize = 7;
-    } else if (qrSize = 60) {
-        companyFontSize = 9;
-        assetCodeFontSize = 12;
-        assetNameFontSize = 8;
-    } else {
-        companyFontSize = 11;
-        assetCodeFontSize = 15;
-        assetNameFontSize = 10;
-    }
-    printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>
-                Print Asset QR
-            </title>
-            <style>
-                @page {
-                    size: A4;
-                    margin: 10mm;
-                }
-                * {
-                    box-sizing: border-box;
-                }
-                html,
-                body {
-                    margin: 0;
-                    padding: 0;
-                    background: #fff;
-                    font-family:
-                        Arial,
-                        Helvetica,
-                        sans-serif;
-                }
-                .qr-grid {
-                    display: grid;
-                    grid-template-columns:
-                        repeat(${columns}, 1fr);
-                    gap: 8mm;
-                    width: 100%;
-                }
-                .qr-label {
-                    border: 1px solid #d9d9d9;
-                    border-radius: 8px;
-                    padding: 5mm;
-                    text-align: center;
-                    background: #fff;
-                    break-inside: avoid;
-                    page-break-inside: avoid;
-                    min-height: 50mm;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                }
-                .qr-company {
-                    font-size: ${companyFontSize}px;
-                    font-weight: 600;
-                    margin-bottom: 3mm;
-                    text-transform: uppercase;
-                }
-                .qr-code-container {
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    margin-bottom: 3mm;
-                }
-                .qr-code-container img,
-                .qr-code-container canvas {
-                    max-width: ${size}px;
-                    max-height: ${size}px;
-                }
-                .qr-asset-code {
-                    font-size: ${assetCodeFontSize}px;
-                    font-weight: bold;
-                    margin-top: 2mm;
-                }
-                .qr-asset-name {
-                    font-size: ${assetNameFontSize}px;
-                    margin-top: 1mm;
-                    max-width: 100%;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    white-space: nowrap;
-                }
-                /*
-                |--------------------------------------------------------------------------
-                | PAGE BREAK
-                |--------------------------------------------------------------------------
-                */
-                .qr-label:nth-child(${layout}n) {
-                    page-break-after: always;
-                }
-                /*
-                |--------------------------------------------------------------------------
-                | SPECIAL CASE
-                |--------------------------------------------------------------------------
-                */
-                .qr-grid {
-                    page-break-inside: auto;
-                }
-            </style>
-        </head>
-        <body>
-            <div class="qr-grid">
-                ${qrHtml}
-            </div>
-            <script>
-                window.onload = function () {
-                    setTimeout(function () {
-                        window.print();
-                    }, 500);
-                };
-            <\/script>
-        </body>
-        </html>
-    `);
-    printWindow.document.close();
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| INITIAL INFO
-|--------------------------------------------------------------------------
-*/
-
-updatePrintInfo();
-
+})();
 </script>
 
 @endsection
+

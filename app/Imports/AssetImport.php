@@ -4,6 +4,7 @@ namespace App\Imports;
 
 use App\Helpers\CodeHelper;
 use App\Models\Asset;
+use App\Models\AssetAssignment;
 use App\Models\Category;
 use App\Models\ImportHistory;
 use App\Models\Maintenance;
@@ -51,7 +52,6 @@ class AssetImport implements
 
     protected int $importRowNumber = 1;
 
-
     /**
      * ============================================================
      * CONSTRUCTOR
@@ -65,7 +65,6 @@ class AssetImport implements
 
         $this->initializeUserCache();
     }
-
 
     /**
      * ============================================================
@@ -86,7 +85,6 @@ class AssetImport implements
          * --------------------------------------------------------
          */
         foreach ($rows as $row) {
-
             $rowArray = $row->toArray();
 
             $assetName = trim(
@@ -100,7 +98,6 @@ class AssetImport implements
             $isEmpty = true;
 
             foreach ($rowArray as $value) {
-
                 if (
                     $value !== null &&
                     trim((string) $value) !== ''
@@ -128,7 +125,6 @@ class AssetImport implements
             return;
         }
 
-
         /**
          * --------------------------------------------------------
          * CHECK SERIAL NUMBER
@@ -137,7 +133,6 @@ class AssetImport implements
         $serialNumbersToCheck = [];
 
         foreach ($preparedRows as $prepared) {
-
             $serialNumber = $this->cleanString(
                 $prepared['data']['serial_number'] ?? null
             );
@@ -150,7 +145,6 @@ class AssetImport implements
         $existingSerialNumbers = [];
 
         if (!empty($serialNumbersToCheck)) {
-
             $existingAssets = Asset::where(
                 'company_id',
                 $this->companyId
@@ -165,7 +159,6 @@ class AssetImport implements
                 ->pluck('serial_number');
 
             foreach ($existingAssets as $serialNumber) {
-
                 $key = $this->normalizeSerialNumber(
                     $serialNumber
                 );
@@ -176,11 +169,9 @@ class AssetImport implements
             }
         }
 
-
         $insertRows = [];
 
         $errorRows = [];
-
 
         /**
          * ========================================================
@@ -188,7 +179,6 @@ class AssetImport implements
          * ========================================================
          */
         foreach ($preparedRows as $prepared) {
-
             $row = $prepared['data'];
 
             $rowNumber = $prepared['row_number'];
@@ -197,24 +187,18 @@ class AssetImport implements
 
             $errors = [];
 
-
             /**
              * ----------------------------------------------------
              * REQUIRED FIELD
              * ----------------------------------------------------
              */
             if ($assetName === '') {
-
-                $errors[] =
-                    'Asset Name wajib diisi.';
+                $errors[] = 'Asset Name wajib diisi.';
             }
 
             if ($prepared['category_name'] === '') {
-
-                $errors[] =
-                    'Category wajib diisi.';
+                $errors[] = 'Category wajib diisi.';
             }
-
 
             /**
              * ----------------------------------------------------
@@ -226,13 +210,11 @@ class AssetImport implements
             );
 
             if ($serialNumber !== null) {
-
                 $serialKey = $this->normalizeSerialNumber(
                     $serialNumber
                 );
 
                 if (isset($existingSerialNumbers[$serialKey])) {
-
                     $errors[] =
                         'Serial Number "' .
                         $serialNumber .
@@ -240,14 +222,12 @@ class AssetImport implements
                 }
 
                 if (isset($this->importSerialNumbers[$serialKey])) {
-
                     $errors[] =
                         'Serial Number "' .
                         $serialNumber .
                         '" duplicate pada file import.';
                 }
             }
-
 
             /**
              * ----------------------------------------------------
@@ -257,21 +237,16 @@ class AssetImport implements
             $category = null;
 
             if ($prepared['category_name'] !== '') {
-
                 try {
-
                     $category = $this->resolveCategory(
                         $prepared['category_name']
                     );
-
                 } catch (\Throwable $e) {
-
                     $errors[] =
                         'Category gagal diproses: ' .
                         $e->getMessage();
                 }
             }
-
 
             /**
              * ----------------------------------------------------
@@ -281,22 +256,17 @@ class AssetImport implements
             $subCategory = null;
 
             if ($category) {
-
                 try {
-
                     $subCategory = $this->resolveSubCategory(
                         $category,
                         $row['sub_category'] ?? null
                     );
-
                 } catch (\Throwable $e) {
-
                     $errors[] =
                         'Sub Category gagal diproses: ' .
                         $e->getMessage();
                 }
             }
-
 
             /**
              * ----------------------------------------------------
@@ -306,19 +276,15 @@ class AssetImport implements
             $vendor = null;
 
             try {
-
                 $vendor = $this->resolveVendor(
                     $row['vendor'] ?? null,
                     $row['vendor_address'] ?? null
                 );
-
             } catch (\Throwable $e) {
-
                 $errors[] =
                     'Vendor gagal diproses: ' .
                     $e->getMessage();
             }
-
 
             /**
              * ----------------------------------------------------
@@ -328,17 +294,13 @@ class AssetImport implements
             $responsibleUserId = null;
 
             try {
-
                 $responsibleUserId =
                     $this->resolveResponsibleUserId(
                         $row['id_person_nik'] ?? null
                     );
-
             } catch (\Throwable $e) {
-
                 $errors[] = $e->getMessage();
             }
-
 
             /**
              * ====================================================
@@ -346,7 +308,6 @@ class AssetImport implements
              * ====================================================
              */
             $parseDate = function ($value) use ($assetName) {
-
                 if (
                     $value === null ||
                     trim((string) $value) === ''
@@ -355,9 +316,7 @@ class AssetImport implements
                 }
 
                 try {
-
                     if (is_numeric($value)) {
-
                         return Carbon::createFromTimestamp(
                             \PhpOffice\PhpSpreadsheet\Shared\Date::excelToTimestamp(
                                 $value
@@ -367,9 +326,7 @@ class AssetImport implements
 
                     return Carbon::parse($value)
                         ->format('Y-m-d');
-
                 } catch (\Throwable $e) {
-
                     throw new \Exception(
                         'Format tanggal tidak valid: ' .
                         $value .
@@ -379,7 +336,6 @@ class AssetImport implements
                     );
                 }
             };
-
 
             /**
              * ====================================================
@@ -395,7 +351,6 @@ class AssetImport implements
             $warrantyEnd = null;
 
             try {
-
                 $purchaseDate = $parseDate(
                     $row['purchase_date'] ?? null
                 );
@@ -411,12 +366,9 @@ class AssetImport implements
                 $warrantyEnd = $parseDate(
                     $row['warranty_end'] ?? null
                 );
-
             } catch (\Throwable $e) {
-
                 $errors[] = $e->getMessage();
             }
-
 
             /**
              * ====================================================
@@ -433,7 +385,6 @@ class AssetImport implements
                     )
                 ) === 'yes';
 
-
             $maintenanceType = null;
 
             $maintenanceTrigger = null;
@@ -444,9 +395,7 @@ class AssetImport implements
 
             $maintenanceStartDate = null;
 
-
             if ($maintenanceRequired) {
-
                 $maintenanceType =
                     $this->cleanString(
                         $row['maintenance_type'] ?? null
@@ -467,59 +416,44 @@ class AssetImport implements
                         $row['maintenance_interval_unit'] ?? null
                     );
 
-
                 try {
-
                     $maintenanceStartDate =
                         $parseDate(
                             $row['maintenance_start_date']
                             ?? null
                         );
-
                 } catch (\Throwable $e) {
-
                     $errors[] = $e->getMessage();
                 }
 
-
                 if (!$maintenanceType) {
-
                     $errors[] =
                         'Maintenance Type wajib diisi jika Maintenance Required = yes.';
                 }
 
-
                 if (!$maintenanceTrigger) {
-
                     $errors[] =
                         'Maintenance Trigger wajib diisi jika Maintenance Required = yes.';
                 }
-
 
                 if (
                     $maintenanceInterval === null ||
                     (int) $maintenanceInterval <= 0
                 ) {
-
                     $errors[] =
                         'Maintenance Interval wajib diisi dan harus lebih dari 0 jika Maintenance Required = yes.';
                 }
 
-
                 if (!$maintenanceIntervalUnit) {
-
                     $errors[] =
                         'Maintenance Interval Unit wajib diisi jika Maintenance Required = yes.';
                 }
 
-
                 if (!$maintenanceStartDate) {
-
                     $errors[] =
                         'Maintenance Start Date wajib diisi jika Maintenance Required = yes.';
                 }
             }
-
 
             /**
              * ----------------------------------------------------
@@ -533,7 +467,6 @@ class AssetImport implements
                     $maintenanceInterval,
                     $maintenanceIntervalUnit
                 );
-
 
             /**
              * ====================================================
@@ -550,7 +483,6 @@ class AssetImport implements
                     )
                 );
 
-
             if (
                 !in_array(
                     $condition,
@@ -558,11 +490,9 @@ class AssetImport implements
                     true
                 )
             ) {
-
                 $errors[] =
                     'Condition harus new atau used.';
             }
-
 
             /**
              * ====================================================
@@ -575,16 +505,13 @@ class AssetImport implements
                     ?? 'straight_line'
                 );
 
-
             if (
                 $depreciationMethod !== null &&
                 $depreciationMethod !== 'straight_line'
             ) {
-
                 $errors[] =
                     'Depreciation Method tidak valid.';
             }
-
 
             /**
              * ====================================================
@@ -592,9 +519,7 @@ class AssetImport implements
              * ====================================================
              */
             if (!empty($errors)) {
-
                 $errorRows[] = [
-
                     'import_history_id' =>
                         $this->history->id,
 
@@ -624,14 +549,12 @@ class AssetImport implements
                 continue;
             }
 
-
             /**
              * ====================================================
              * MARK SERIAL AS USED IN THIS IMPORT
              * ====================================================
              */
             if ($serialNumber !== null) {
-
                 $serialKey =
                     $this->normalizeSerialNumber(
                         $serialNumber
@@ -642,7 +565,6 @@ class AssetImport implements
                 ] = true;
             }
 
-
             /**
              * ====================================================
              * GENERATE ASSET CODE
@@ -651,14 +573,12 @@ class AssetImport implements
             $assetCode =
                 $this->generateAssetCode();
 
-
             /**
              * ====================================================
              * PREPARE ASSET INSERT
              * ====================================================
              */
             $insertRows[] = [
-
                 'company_id' =>
                     $this->companyId,
 
@@ -787,38 +707,32 @@ class AssetImport implements
             ];
         }
 
-
         /**
          * ========================================================
          * INSERT ASSETS
          * ========================================================
          */
         if (!empty($insertRows)) {
-
             DB::table('assets')->insert(
                 $insertRows
             );
         }
 
-
         /**
          * ========================================================
-         * CREATE MAINTENANCE SCHEDULE
+         * GET INSERTED ASSETS
          *
-         * Hanya asset yang:
-         *
-         * maintenance_required = yes
-         * dan memiliki next_maintenance_date
+         * Digunakan untuk:
+         * - Maintenance
+         * - Assignment History
          * ========================================================
          */
         if (!empty($insertRows)) {
-
             $assetCodes =
                 array_column(
                     $insertRows,
                     'asset_code'
                 );
-
 
             $insertedAssets =
                 Asset::where(
@@ -833,18 +747,90 @@ class AssetImport implements
                         'id',
                         'company_id',
                         'asset_code',
+                        'responsible_user_id',
                         'vendor_id',
                         'maintenance_required',
                         'maintenance_type',
                         'next_maintenance_date',
                     ]);
 
-
-            $maintenanceRows = [];
-
+            /**
+             * ====================================================
+             * CREATE INITIAL ASSIGNMENT HISTORY
+             *
+             * Hanya dibuat jika asset mempunyai
+             * responsible_user_id.
+             *
+             * Jika responsible_user_id NULL:
+             * asset dianggap belum di-assign / stock.
+             * ====================================================
+             */
+            $assignmentRows = [];
 
             foreach ($insertedAssets as $asset) {
+                if (
+                    !empty(
+                        $asset->responsible_user_id
+                    )
+                ) {
+                    $assignmentRows[] = [
+                        'asset_id' =>
+                            $asset->id,
 
+                        'user_id' =>
+                            $asset->responsible_user_id,
+
+                        'start_at' =>
+                            now(),
+
+                        'end_at' =>
+                            null,
+
+                        'assignment_type' =>
+                            'initial',
+
+                        'reason' =>
+                            'Initial assignment from asset import',
+
+                        'notes' =>
+                            null,
+
+                        'created_by' =>
+                            $this->history->user_id,
+
+                        'created_at' =>
+                            now(),
+
+                        'updated_at' =>
+                            now(),
+                    ];
+                }
+            }
+
+            /**
+             * ----------------------------------------------------
+             * INSERT ASSIGNMENT HISTORY
+             * ----------------------------------------------------
+             */
+            if (!empty($assignmentRows)) {
+                DB::table('asset_assignments')->insert(
+                    $assignmentRows
+                );
+            }
+
+            /**
+             * ====================================================
+             * CREATE MAINTENANCE SCHEDULE
+             *
+             * Hanya asset yang:
+             *
+             * maintenance_required = yes
+             * dan memiliki next_maintenance_date
+             * ====================================================
+             */
+            $maintenanceRows = [];
+
+            foreach ($insertedAssets as $asset) {
                 /**
                  * -----------------------------------------------
                  * SKIP JIKA MAINTENANCE TIDAK DIPERLUKAN
@@ -855,7 +841,6 @@ class AssetImport implements
                 ) {
                     continue;
                 }
-
 
                 /**
                  * -----------------------------------------------
@@ -869,7 +854,6 @@ class AssetImport implements
                 ) {
                     continue;
                 }
-
 
                 /**
                  * -----------------------------------------------
@@ -886,14 +870,12 @@ class AssetImport implements
                 $maintenanceCode =
                     $this->generateMaintenanceCode();
 
-
                 /**
                  * -----------------------------------------------
                  * PREPARE MAINTENANCE
                  * -----------------------------------------------
                  */
                 $maintenanceRows[] = [
-
                     'company_id' =>
                         $this->companyId,
 
@@ -944,20 +926,17 @@ class AssetImport implements
                 ];
             }
 
-
             /**
              * ----------------------------------------------------
              * INSERT MAINTENANCE
              * ----------------------------------------------------
              */
             if (!empty($maintenanceRows)) {
-
                 DB::table('maintenances')->insert(
                     $maintenanceRows
                 );
             }
         }
-
 
         /**
          * ========================================================
@@ -965,12 +944,10 @@ class AssetImport implements
          * ========================================================
          */
         if (!empty($errorRows)) {
-
             DB::table('import_errors')->insert(
                 $errorRows
             );
         }
-
 
         /**
          * ========================================================
@@ -983,25 +960,20 @@ class AssetImport implements
         $failedCount =
             count($errorRows);
 
-
         if ($successCount > 0) {
-
             $this->history->increment(
                 'success_rows',
                 $successCount
             );
         }
 
-
         if ($failedCount > 0) {
-
             $this->history->increment(
                 'failed_rows',
                 $failedCount
             );
         }
     }
-
 
     /**
      * ============================================================
@@ -1011,7 +983,6 @@ class AssetImport implements
     protected function normalizeSerialNumber(
         $value
     ): string {
-
         return strtoupper(
             trim(
                 preg_replace(
@@ -1023,7 +994,6 @@ class AssetImport implements
         );
     }
 
-
     /**
      * ============================================================
      * RESOLVE CATEGORY
@@ -1032,26 +1002,21 @@ class AssetImport implements
     protected function resolveCategory(
         string $categoryName
     ): Category {
-
         $name =
             strtoupper(
                 trim($categoryName)
             );
 
-
         $key =
             mb_strtolower($name);
-
 
         if (
             isset(
                 $this->categoryCache[$key]
             )
         ) {
-
             return $this->categoryCache[$key];
         }
-
 
         $category =
             Category::where(
@@ -1064,9 +1029,7 @@ class AssetImport implements
                 )
                 ->first();
 
-
         if (!$category) {
-
             $category = new Category();
 
             $category->company_id =
@@ -1089,14 +1052,11 @@ class AssetImport implements
             $category->save();
         }
 
-
         $this->categoryCache[$key] =
             $category;
 
-
         return $category;
     }
-
 
     /**
      * ============================================================
@@ -1107,37 +1067,30 @@ class AssetImport implements
         Category $category,
         $subCategoryName
     ): ?SubCategory {
-
         $name =
             $this->cleanString(
                 $subCategoryName
             );
 
-
         if (!$name) {
             return null;
         }
 
-
         $name =
             strtoupper($name);
-
 
         $key =
             $category->id .
             '|' .
             mb_strtolower($name);
 
-
         if (
             isset(
                 $this->subCategoryCache[$key]
             )
         ) {
-
             return $this->subCategoryCache[$key];
         }
-
 
         $subCategory =
             SubCategory::where(
@@ -1156,9 +1109,7 @@ class AssetImport implements
                 )
                 ->first();
 
-
         if (!$subCategory) {
-
             $subCategory =
                 new SubCategory();
 
@@ -1185,14 +1136,11 @@ class AssetImport implements
             $subCategory->save();
         }
 
-
         $this->subCategoryCache[$key] =
             $subCategory;
 
-
         return $subCategory;
     }
-
 
     /**
      * ============================================================
@@ -1203,7 +1151,6 @@ class AssetImport implements
         $vendorName,
         $vendorAddress
     ): ?Vendor {
-
         $name =
             $this->cleanString(
                 $vendorName
@@ -1214,25 +1161,20 @@ class AssetImport implements
                 $vendorAddress
             );
 
-
         if (!$name) {
             return null;
         }
 
-
         $key =
             mb_strtolower($name);
-
 
         if (
             isset(
                 $this->vendorCache[$key]
             )
         ) {
-
             return $this->vendorCache[$key];
         }
-
 
         $vendor =
             Vendor::where(
@@ -1245,9 +1187,7 @@ class AssetImport implements
                 )
                 ->first();
 
-
         if (!$vendor) {
-
             $vendor =
                 new Vendor();
 
@@ -1272,23 +1212,18 @@ class AssetImport implements
                 1;
 
             $vendor->save();
-
         } else {
-
             /**
              * Jangan menimpa address vendor existing
              * jika data vendor sudah ada.
              */
         }
 
-
         $this->vendorCache[$key] =
             $vendor;
 
-
         return $vendor;
     }
-
 
     /**
      * ============================================================
@@ -1301,9 +1236,7 @@ class AssetImport implements
             return;
         }
 
-
         $this->userCache = [];
-
 
         User::where(
             'company_id',
@@ -1315,33 +1248,27 @@ class AssetImport implements
                 'nik',
             ])
             ->each(function ($user) {
-
                 $nik =
                     trim(
                         (string) $user->nik
                     );
 
-
                 if ($nik === '') {
                     return;
                 }
-
 
                 $key =
                     mb_strtolower(
                         $nik
                     );
 
-
                 $this->userCache[$key] =
                     $user->id;
             });
 
-
         $this->userCacheInitialized =
             true;
     }
-
 
     /**
      * ============================================================
@@ -1351,34 +1278,28 @@ class AssetImport implements
     protected function resolveResponsibleUserId(
         $nik
     ): ?int {
-
         $nik =
             $this->cleanString(
                 $nik
             );
 
-
         if (!$nik) {
             return null;
         }
-
 
         $key =
             mb_strtolower(
                 $nik
             );
 
-
         if (
             isset(
                 $this->userCache[$key]
             )
         ) {
-
             return (int)
                 $this->userCache[$key];
         }
-
 
         throw new \Exception(
             'NIK "' .
@@ -1386,7 +1307,6 @@ class AssetImport implements
             '" tidak ditemukan pada User perusahaan.'
         );
     }
-
 
     /**
      * ============================================================
@@ -1399,7 +1319,6 @@ class AssetImport implements
         $interval,
         $intervalUnit
     ): ?string {
-
         if (
             !$maintenanceRequired ||
             !$startDate ||
@@ -1409,15 +1328,12 @@ class AssetImport implements
             return null;
         }
 
-
         $interval =
             (int) $interval;
-
 
         if ($interval <= 0) {
             return null;
         }
-
 
         $unit =
             strtolower(
@@ -1426,56 +1342,41 @@ class AssetImport implements
                 )
             );
 
-
         $date =
             Carbon::parse(
                 $startDate
             );
 
-
         switch ($unit) {
-
             case 'day':
             case 'days':
-
                 $date->addDays(
                     $interval
                 );
-
                 break;
-
 
             case 'month':
             case 'months':
-
                 $date->addMonths(
                     $interval
                 );
-
                 break;
-
 
             case 'year':
             case 'years':
-
                 $date->addYears(
                     $interval
                 );
-
                 break;
 
-
             default:
-
                 return null;
         }
-
 
         return $date->format(
             'Y-m-d'
         );
     }
-
 
     /**
      * ============================================================
@@ -1485,7 +1386,6 @@ class AssetImport implements
     protected function generateAssetCode(): string
     {
         if (!$this->assetCodeInitialized) {
-
             $lastAssetCode =
                 Asset::withTrashed()
                     ->where(
@@ -1502,36 +1402,27 @@ class AssetImport implements
                         'asset_code'
                     );
 
-
             if ($lastAssetCode) {
-
                 preg_match(
                     '/AST-(\d+)/',
                     $lastAssetCode,
                     $matches
                 );
 
-
                 $this->assetCodeCounter =
                     isset($matches[1])
                     ? (int) $matches[1]
                     : 0;
-
             } else {
-
                 $this->assetCodeCounter = 0;
             }
-
 
             $this->assetCodeInitialized =
                 true;
         }
 
-
         do {
-
             $this->assetCodeCounter++;
-
 
             $code =
                 'AST-' .
@@ -1541,7 +1432,6 @@ class AssetImport implements
                     '0',
                     STR_PAD_LEFT
                 );
-
 
             $exists =
                 Asset::withTrashed()
@@ -1554,20 +1444,16 @@ class AssetImport implements
                         $code
                     )
                     ->exists();
-
         } while ($exists);
-
 
         return $code;
     }
-
 
     /**
      * ============================================================
      * GENERATE MAINTENANCE CODE
      *
      * FIX DUPLICATE MNT-00
-     *
      * ============================================================
      */
     protected function generateMaintenanceCode(): string
@@ -1577,7 +1463,6 @@ class AssetImport implements
          * untuk satu instance import.
          */
         if (!$this->maintenanceCodeInitialized) {
-
             $lastMaintenanceCode =
                 Maintenance::withTrashed()
                     ->where(
@@ -1594,40 +1479,31 @@ class AssetImport implements
                         'maintenance_code'
                     );
 
-
             if ($lastMaintenanceCode) {
-
                 preg_match(
                     '/MNT-(\d+)/',
                     $lastMaintenanceCode,
                     $matches
                 );
 
-
                 $this->maintenanceCodeCounter =
                     isset($matches[1])
                     ? (int) $matches[1]
                     : 0;
-
             } else {
-
                 $this->maintenanceCodeCounter = 0;
             }
-
 
             $this->maintenanceCodeInitialized =
                 true;
         }
-
 
         /**
          * Naikkan nomor sampai mendapatkan kode
          * yang belum dipakai.
          */
         do {
-
             $this->maintenanceCodeCounter++;
-
 
             $code =
                 'MNT-' .
@@ -1637,7 +1513,6 @@ class AssetImport implements
                     '0',
                     STR_PAD_LEFT
                 );
-
 
             /**
              * Cek ke database.
@@ -1654,7 +1529,6 @@ class AssetImport implements
                     )
                     ->exists();
 
-
             /**
              * Cek juga kode yang sudah dibuat
              * di batch/chunk ini tetapi belum diinsert.
@@ -1664,12 +1538,10 @@ class AssetImport implements
                     $this->generatedMaintenanceCodes[$code]
                 );
 
-
         } while (
             $existsInDatabase ||
             $existsInBatch
         );
-
 
         /**
          * Simpan ke memory supaya tidak
@@ -1678,10 +1550,8 @@ class AssetImport implements
         $this->generatedMaintenanceCodes[$code] =
             true;
 
-
         return $code;
     }
-
 
     /**
      * ============================================================
@@ -1691,26 +1561,21 @@ class AssetImport implements
     protected function cleanString(
         $value
     ): ?string {
-
         if ($value === null) {
             return null;
         }
-
 
         $value =
             trim(
                 (string) $value
             );
 
-
         if ($value === '') {
             return null;
         }
 
-
         return $value;
     }
-
 
     /**
      * ============================================================
@@ -1726,11 +1591,9 @@ class AssetImport implements
             return null;
         }
 
-
         if (is_numeric($value)) {
             return $value;
         }
-
 
         $value =
             str_replace(
@@ -1739,12 +1602,10 @@ class AssetImport implements
                 trim((string) $value)
             );
 
-
         return is_numeric($value)
             ? $value
             : null;
     }
-
 
     /**
      * ============================================================

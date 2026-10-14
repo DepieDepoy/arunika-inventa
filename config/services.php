@@ -35,4 +35,14 @@ return [
         ],
     ],
 
+    //doku
+    'doku' => [
+        'client_id' => env('DOKU_CLIENT_ID'),
+        'secret_key' => env('DOKU_SECRET_KEY'),
+        'base_url' => env('DOKU_BASE_URL', 'https://api-sandbox.doku.com'),
+        'checkout_js' => env(
+            'DOKU_CHECKOUT_JS',
+            'https://sandbox.doku.com/jokul-checkout-js/v1/jokul-checkout-1.0.0.js'
+        ),
+    ],
 ];

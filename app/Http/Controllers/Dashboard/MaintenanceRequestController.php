@@ -1329,4 +1329,66 @@ class MaintenanceRequestController extends Controller
             )
         );
     }
+
+    /**
+     * Batalkan maintenance/repair request dari kalender.
+     *
+     * Hanya pemohon sendiri yang boleh membatalkan request pending.
+     */
+    public function cancel(
+        MaintenanceRequest $maintenanceRequest
+    ): \Illuminate\Http\JsonResponse {
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sesi login telah berakhir. Silakan login kembali.',
+            ], 401);
+        }
+
+        $result = DB::transaction(function () use (
+            $maintenanceRequest,
+            $user
+        ) {
+            $request = MaintenanceRequest::query()
+                ->where('company_id', $user->company_id)
+                ->whereKey($maintenanceRequest->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ((int) $request->requested_by !== (int) $user->id) {
+                return [
+                    'success' => false,
+                    'status' => 403,
+                    'message' => 'Anda hanya dapat membatalkan permintaan milik sendiri.',
+                ];
+            }
+
+            $status = strtolower(trim((string) $request->status));
+
+            if ($status !== 'pending') {
+                return [
+                    'success' => false,
+                    'status' => 422,
+                    'message' => 'Hanya permintaan berstatus Menunggu yang dapat dibatalkan.',
+                ];
+            }
+
+            $request->status = 'cancelled';
+            $request->save();
+
+            return [
+                'success' => true,
+                'status' => 200,
+                'message' => 'Permintaan berhasil dibatalkan.',
+            ];
+        });
+
+        return response()->json([
+            'success' => $result['success'],
+            'message' => $result['message'],
+        ], $result['status']);
+    }
+        
 }

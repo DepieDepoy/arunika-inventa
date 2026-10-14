@@ -3,6 +3,7 @@
 @section('title', 'Role Permission')
 
 @section('content')
+
 <style>
     .permission-page {
         padding-bottom: 30px;
@@ -143,203 +144,27 @@
 </style>
 
 <div class="content-wrapper">
+
+```
 <!-- Content -->
 <div class="container-xxl flex-grow-1 container-p-y">
+
     <div class="row">
-    <div class="col-xxl-12 mb-12 order-0">
-    <div class="card">
 
-    <div class="card-header d-flex justify-content-between align-items-center">
+        <div class="col-xxl-12 mb-12 order-0">
 
-        <div>
-            <h5 class="mb-0">Role Permission</h5>
-            <small class="text-muted">
-                Atur hak akses untuk role
-                    <strong>{{ $role->role_name }}</strong>
-            </small>
-        </div>
+            <div class="card">
 
-        <div class="d-flex gap-2">
-
-            <a href="{{ route('roles.index') }}" class="btn btn-light">
-                    <i class="fa-solid fa-arrow-left me-1"></i>
-                    Back
-                </a>
-        </div>
-    </div>
-    <div class="card-body">
-        {{-- ROLE INFORMATION --}}
-        <div class="card permission-role-card">
-
-            <div class="card-body">
-
-                <div class="row">
-
-                    <div class="col-md-4">
-                        <div class="role-info-label">
-                            Role Name
-                        </div>
-
-                        <div class="role-info-value">
-                            {{ $role->role_name }}
-                        </div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <div class="role-info-label">
-                            Role Code
-                        </div>
-
-                        <div class="role-info-value">
-                            {{ $role->role_code }}
-                        </div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <div class="role-info-label">
-                            Status
-                        </div>
-
-                        <div class="role-info-value">
-
-                            @if($role->status == 1)
-
-                                <span class="badge rounded-pill bg-success-subtle text-success px-3 py-2">
-                                    <i class="fa-solid fa-circle-check me-1"></i>
-                                    Active
-                                </span>
-
-                            @else
-
-                                <span class="badge rounded-pill bg-danger-subtle text-danger px-3 py-2">
-                                    <i class="fa-solid fa-circle-xmark me-1"></i>
-                                    Inactive
-                                </span>
-
-                            @endif
-
-                        </div>
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        {{-- PERMISSION FORM --}}
-        <form
-            method="POST"
-            action="{{ route('roles.permission.save', $role->id) }}"
-            id="permissionForm"
-        >
-
-            @csrf
-
-
-            @foreach($permissions as $module => $modulePermissions)
-
-                <div class="card permission-card">
-
-                    {{-- MODULE HEADER --}}
-                    <div class="permission-card-header">
-
-                        <div class="permission-module-title">
-
-                            <i class="fa-solid fa-folder-open"></i>
-
-                            <span>
-                                {{ ucwords(str_replace('_', ' ', $module)) }}
-                            </span>
-
-                        </div>
-
-
-                        <div class="form-check">
-
-                            <input
-                                type="checkbox"
-                                class="form-check-input select-all-module"
-                                data-module="{{ $module }}"
-                                id="selectAll_{{ $module }}"
-                            >
-
-                            <label
-                                class="form-check-label select-all-label"
-                                for="selectAll_{{ $module }}"
-                            >
-                                Select All
-                            </label>
-
-                        </div>
-
-                    </div>
-
-
-                    {{-- PERMISSION LIST --}}
-                    <div class="permission-list">
-
-                        @foreach($modulePermissions as $permission)
-
-                            <div class="permission-item">
-
-                                <div class="form-check d-flex align-items-start gap-2">
-
-                                    <input
-                                        type="checkbox"
-                                        class="form-check-input permission-checkbox permission-{{ $module }}"
-                                        name="permissions[]"
-                                        value="{{ $permission->id }}"
-                                        id="permission_{{ $permission->id }}"
-                                        {{ in_array($permission->id, $rolePermissions) ? 'checked' : '' }}
-                                    >
-
-                                    <label
-                                        class="form-check-label flex-grow-1"
-                                        for="permission_{{ $permission->id }}"
-                                    >
-
-                                        <span class="permission-name">
-                                            {{ $permission->permission_name }}
-                                        </span>
-
-                                        <span class="permission-code">
-                                            {{ $permission->permission_code }}
-                                        </span>
-
-                                        @if($permission->description)
-
-                                            <div class="permission-description">
-                                                {{ $permission->description }}
-                                            </div>
-
-                                        @endif
-
-                                    </label>
-
-                                </div>
-
-                            </div>
-
-                        @endforeach
-
-                    </div>
-
-                </div>
-
-            @endforeach
-
-
-            {{-- FOOTER --}}
-            <div class="permission-footer">
-
-                <div class="d-flex justify-content-between align-items-center">
+                <div class="card-header d-flex justify-content-between align-items-center">
 
                     <div>
+                        <h5 class="mb-0">
+                            Role Permission
+                        </h5>
+
                         <small class="text-muted">
-                            <i class="fa-solid fa-circle-info me-1"></i>
-                            Permission akan langsung berlaku untuk seluruh user dengan role ini.
+                            Atur hak akses untuk role
+                            <strong>{{ $role->role_name }}</strong>
                         </small>
                     </div>
 
@@ -349,32 +174,250 @@
                             href="{{ route('roles.index') }}"
                             class="btn btn-light"
                         >
-                            Cancel
+                            <i class="fa-solid fa-arrow-left me-1"></i>
+                            Back
                         </a>
-
-                        <button
-                            type="submit"
-                            class="btn btn-primary"
-                        >
-                            <i class="fa-solid fa-floppy-disk me-1"></i>
-                            Save Permission
-                        </button>
 
                     </div>
 
                 </div>
 
+
+                <div class="card-body">
+
+                    {{-- =====================================================
+                         ROLE INFORMATION
+                    ====================================================== --}}
+
+                    <div class="card permission-role-card">
+
+                        <div class="card-body">
+
+                            <div class="row">
+
+                                <div class="col-md-4">
+
+                                    <div class="role-info-label">
+                                        Role Name
+                                    </div>
+
+                                    <div class="role-info-value">
+                                        {{ $role->role_name }}
+                                    </div>
+
+                                </div>
+
+
+                                <div class="col-md-4">
+
+                                    <div class="role-info-label">
+                                        Role Code
+                                    </div>
+
+                                    <div class="role-info-value">
+                                        {{ $role->role_code }}
+                                    </div>
+
+                                </div>
+
+
+                                <div class="col-md-4">
+
+                                    <div class="role-info-label">
+                                        Status
+                                    </div>
+
+                                    <div class="role-info-value">
+
+                                        @if($role->status == 1)
+
+                                            <span class="badge rounded-pill bg-success-subtle text-success px-3 py-2">
+                                                <i class="fa-solid fa-circle-check me-1"></i>
+                                                Active
+                                            </span>
+
+                                        @else
+
+                                            <span class="badge rounded-pill bg-danger-subtle text-danger px-3 py-2">
+                                                <i class="fa-solid fa-circle-xmark me-1"></i>
+                                                Inactive
+                                            </span>
+
+                                        @endif
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    {{-- =====================================================
+                         PERMISSION FORM
+                    ====================================================== --}}
+
+                    <form
+                        method="POST"
+                        action="{{ route('roles.permission.save', encryptId($role->id)) }}"
+                        id="permissionForm"
+                    >
+
+                        @csrf
+
+
+                        @foreach($permissions as $module => $modulePermissions)
+
+                            <div class="card permission-card">
+
+                                {{-- MODULE HEADER --}}
+                                <div class="permission-card-header">
+
+                                    <div class="permission-module-title">
+
+                                        <i class="fa-solid fa-folder-open"></i>
+
+                                        <span>
+                                            {{ ucwords(str_replace('_', ' ', $module)) }}
+                                        </span>
+
+                                    </div>
+
+
+                                    <div class="form-check">
+
+                                        <input
+                                            type="checkbox"
+                                            class="form-check-input select-all-module"
+                                            data-module="{{ $module }}"
+                                            id="selectAll_{{ $module }}"
+                                        >
+
+                                        <label
+                                            class="form-check-label select-all-label"
+                                            for="selectAll_{{ $module }}"
+                                        >
+                                            Select All
+                                        </label>
+
+                                    </div>
+
+                                </div>
+
+
+                                {{-- PERMISSION LIST --}}
+                                <div class="permission-list">
+
+                                    @foreach($modulePermissions as $permission)
+
+                                        <div class="permission-item">
+
+                                            <div class="form-check d-flex align-items-start gap-2">
+
+                                                <input
+                                                    type="checkbox"
+                                                    class="form-check-input permission-checkbox permission-{{ $module }}"
+                                                    name="permissions[]"
+                                                    value="{{ $permission->id }}"
+                                                    id="permission_{{ $permission->id }}"
+                                                    {{ in_array($permission->id, $rolePermissions) ? 'checked' : '' }}
+                                                >
+
+                                                <label
+                                                    class="form-check-label flex-grow-1"
+                                                    for="permission_{{ $permission->id }}"
+                                                >
+
+                                                    <span class="permission-name">
+                                                        {{ $permission->permission_name }}
+                                                    </span>
+
+                                                    <span class="permission-code">
+                                                        {{ $permission->permission_code }}
+                                                    </span>
+
+                                                    @if($permission->description)
+
+                                                        <div class="permission-description">
+                                                            {{ $permission->description }}
+                                                        </div>
+
+                                                    @endif
+
+                                                </label>
+
+                                            </div>
+
+                                        </div>
+
+                                    @endforeach
+
+                                </div>
+
+                            </div>
+
+                        @endforeach
+
+
+                        {{-- =====================================================
+                             FOOTER
+                        ====================================================== --}}
+
+                        <div class="permission-footer">
+
+                            <div class="d-flex justify-content-between align-items-center">
+
+                                <div>
+
+                                    <small class="text-muted">
+                                        <i class="fa-solid fa-circle-info me-1"></i>
+                                        Permission akan langsung berlaku untuk seluruh user dengan role ini.
+                                    </small>
+
+                                </div>
+
+
+                                <div class="d-flex gap-2">
+
+                                    <a
+                                        href="{{ route('roles.index') }}"
+                                        class="btn btn-light"
+                                    >
+                                        Cancel
+                                    </a>
+
+
+                                    <button
+                                        type="submit"
+                                        class="btn btn-primary"
+                                    >
+                                        <i class="fa-solid fa-floppy-disk me-1"></i>
+                                        Save Permission
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
             </div>
 
-        </form>
+        </div>
 
     </div>
-    </div>
-</div>
-    </div>
-</div>
-</div>
 
+</div>
+```
+
+</div>
 
 <script>
 
@@ -416,8 +459,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 const classes = Array.from(this.classList);
 
                 const moduleClass = classes.find(function (className) {
+
                     return className.startsWith('permission-')
                         && className !== 'permission-checkbox';
+
                 });
 
                 if (!moduleClass) {

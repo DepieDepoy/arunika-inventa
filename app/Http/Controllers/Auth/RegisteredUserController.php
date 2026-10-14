@@ -18,24 +18,15 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
 {
-    /**
-     * Display the registration view.
-     */
     public function create(): View
     {
         return view('auth.register.index');
     }
 
-    /**
-     * Handle an incoming registration request.
-     *
-     * @throws ValidationException
-     */
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
@@ -43,7 +34,14 @@ class RegisteredUserController extends Controller
             'nik' => ['required', 'string', 'max:255'],
             'company_name' => ['required', 'string', 'max:255'],
             'phone' => ['required', 'digits_between:10,15', 'unique:users,phone'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
+            'email' => [
+                'required',
+                'string',
+                'lowercase',
+                'email',
+                'max:255',
+                'unique:users,email'
+            ],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'password_confirmation' => ['required'],
         ], [
@@ -62,20 +60,9 @@ class RegisteredUserController extends Controller
             'password_confirmation.required' => 'Please confirm your password.',
         ]);
 
-        // =====================================================
-        // GENERATE COMPANY CODE
-        // =====================================================
-
-        $companyCode = CompanyHelper::generateCode(
-            $request->company_name
-        );
-
-        // =====================================================
-        // CEK APAKAH PERUSAHAAN SUDAH TERDAFTAR
-        // =====================================================
+        $companyCode = CompanyHelper::generateCode($request->company_name);
 
         if (Company::where('company_code', $companyCode)->exists()) {
-
             return back()
                 ->withErrors([
                     'company_name' => 'Perusahaan sudah terdaftar.'
@@ -89,7 +76,7 @@ class RegisteredUserController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | AMBIL PLAN FREE
+            | FREE PLAN
             |--------------------------------------------------------------------------
             */
 
@@ -103,63 +90,48 @@ class RegisteredUserController extends Controller
                 );
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | TANGGAL SUBSCRIPTION FREE
-            |--------------------------------------------------------------------------
-            |
-            | trial_days diambil dari tabel plans.
-            | Jadi kalau nanti FREE diubah dari 14 hari menjadi 7/30 hari,
-            | controller tidak perlu diubah.
-            |
-            */
-
             $startDate = today();
 
-            $endDate = $startDate->copy()
+            $endDate = $startDate
+                ->copy()
                 ->addDays($freePlan->trial_days);
 
             /*
             |--------------------------------------------------------------------------
-            | SIMPAN PERUSAHAAN
+            | COMPANY
             |--------------------------------------------------------------------------
             */
 
             $company = Company::create([
                 'company_name' => trim($request->company_name),
                 'company_code' => $companyCode,
-                'status'       => 1,
-
-                // Snapshot subscription aktif
-                'subscription_plan'   => $freePlan->plan_code,
+                'status' => 1,
+                'subscription_plan' => $freePlan->plan_code,
                 'subscription_status' => 'active',
-                'started_at'          => $startDate,
-                'expired_at'          => $endDate,
+                'started_at' => $startDate,
+                'expired_at' => $endDate,
             ]);
 
             /*
             |--------------------------------------------------------------------------
-            | BUAT SUBSCRIPTION FREE TRIAL
+            | SUBSCRIPTION
             |--------------------------------------------------------------------------
             */
 
             Subscription::create([
                 'company_id' => $company->id,
                 'plan_id' => $freePlan->id,
-
                 'billing_cycle' => 'trial',
                 'price' => 0,
-
                 'start_date' => $startDate,
                 'end_date' => $endDate,
-
                 'status' => 'active',
                 'payment_status' => 'paid',
             ]);
 
             /*
             |--------------------------------------------------------------------------
-            | GENERATE DEFAULT ROLE
+            | DEFAULT ROLES
             |--------------------------------------------------------------------------
             */
 
@@ -171,7 +143,6 @@ class RegisteredUserController extends Controller
             ];
 
             foreach ($defaultRoles as $role) {
-
                 Role::create([
                     'company_id' => $company->id,
                     'role_name' => $role,
@@ -182,7 +153,7 @@ class RegisteredUserController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | AMBIL ROLE ADMINISTRATOR
+            | ADMIN ROLE
             |--------------------------------------------------------------------------
             */
 
@@ -198,25 +169,25 @@ class RegisteredUserController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | SIMPAN USER ADMINISTRATOR
+            | USER
             |--------------------------------------------------------------------------
             */
 
             $user = User::create([
                 'company_id' => $company->id,
                 'role_id' => $adminRole->id,
-
                 'name' => $request->name,
                 'nik' => $request->nik,
                 'phone' => $request->phone,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
                 'status' => 1,
+                'email_verified_at' => null,
             ]);
 
             /*
             |--------------------------------------------------------------------------
-            | ADMINISTRATOR MENDAPATKAN SEMUA PERMISSION
+            | ADMIN PERMISSIONS
             |--------------------------------------------------------------------------
             */
 
@@ -226,20 +197,11 @@ class RegisteredUserController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | COMMIT TRANSACTION
+            | COMMIT DATABASE
             |--------------------------------------------------------------------------
             */
 
             DB::commit();
-
-            event(new Registered($user));
-
-            return redirect()
-                ->route('login')
-                ->with(
-                    'success',
-                    'Registration successful. Please login.'
-                );
 
         } catch (\Exception $e) {
 
@@ -251,5 +213,61 @@ class RegisteredUserController extends Controller
                 ])
                 ->withInput();
         }
+
+        /*
+        |--------------------------------------------------------------------------
+        | SEND VERIFICATION EMAIL
+        |--------------------------------------------------------------------------
+        |
+        | Dilakukan setelah database berhasil commit.
+        |
+        */
+
+        try {
+
+            event(new Registered($user));
+
+        } catch (\Throwable $e) {
+
+            report($e);
+
+            /*
+            |--------------------------------------------------------------------------
+            | User tetap dibuat.
+            | User masih bisa melakukan resend verification.
+            |--------------------------------------------------------------------------
+            */
+
+            return redirect()
+                ->route('login')
+                ->with(
+                    'warning',
+                    'Registrasi berhasil, tetapi email verifikasi gagal dikirim. Silakan gunakan fitur kirim ulang verifikasi.'
+                );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | SIMPAN DATA UNTUK RESEND VERIFICATION
+        |--------------------------------------------------------------------------
+        */
+
+        session([
+            'verification_user_id' => $user->id,
+            'verification_email' => $user->email,
+        ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | REDIRECT LOGIN
+        |--------------------------------------------------------------------------
+        */
+
+        return redirect()
+            ->route('login')
+            ->with(
+                'success',
+                'Registrasi berhasil! Silakan cek email Anda untuk melakukan verifikasi sebelum login.'
+            );
     }
 }

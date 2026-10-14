@@ -183,6 +183,7 @@
                 </div>
 
             </div>
+            
 
 
             {{-- =================================================
@@ -192,9 +193,36 @@
                   method="POST"
                   enctype="multipart/form-data"
                   id="userImportForm">
-
                 @csrf
 
+                {{-- =================================================
+            EMAIL VERIFICATION OPTION
+            ================================================== --}}
+            <div class="border rounded-3 p-4 mb-4">
+            <div class="form-check form-switch">
+                <input
+                    class="form-check-input"
+                    type="checkbox"
+                    role="switch"
+                    name="send_verification_email"
+                    id="send_verification_email"
+                    value="1"
+                    checked>
+                <label
+                    class="form-check-label"
+                    for="send_verification_email">
+                    <strong>
+                        Send Verification Email
+                    </strong>
+                    <div class="text-muted small mt-1">
+                        Kirim email verifikasi kepada user yang berhasil
+                        diimport. User yang gagal diimport tidak akan menerima
+                        email.
+                    </div>
+                </label>
+            </div>
+            </div>
+            
                 <div class="mb-3">
 
                     <label for="excel_file"

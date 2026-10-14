@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Dashboard\AssetController;
+use App\Http\Controllers\Dashboard\AssetAssignmentController;
 
 Route::prefix('dashboard')
     ->middleware(['auth', 'subscription.access'])
@@ -168,5 +169,45 @@ Route::prefix('dashboard')
                 'subscription.active'
             ])
             ->name('assets.import.history.progress');
+
+        
+        /*
+        |--------------------------------------------------------------------------
+        | Asset Assignment
+        |--------------------------------------------------------------------------
+        */
+
+        Route::prefix('assets/{id}/assignment')
+            ->name('assets.assignment.')
+            ->group(function () {
+
+                // Assignment Page
+                Route::get('/', [
+                    AssetAssignmentController::class,
+                    'index'
+                ])->name('index');
+
+
+                // AJAX User Autocomplete
+                Route::get('/users', [
+                    AssetAssignmentController::class,
+                    'users'
+                ])->name('users');
+
+
+                // Assign / Transfer Asset
+                Route::post('/assign', [
+                    AssetAssignmentController::class,
+                    'assign'
+                ])->name('assign');
+
+
+                // Return Asset
+                Route::post('/return', [
+                    AssetAssignmentController::class,
+                    'returnAsset'
+                ])->name('return');
+
+            });
 
     });

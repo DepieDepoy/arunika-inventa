@@ -67,6 +67,7 @@ class PermissionSeeder extends Seeder
                 'description'     => 'Mencetak QR asset',
             ],
 
+
             // =====================================================
             // CATEGORY
             // =====================================================
@@ -106,6 +107,7 @@ class PermissionSeeder extends Seeder
                 'description'     => 'Export data category',
             ],
 
+
             // =====================================================
             // SUB CATEGORY
             // =====================================================
@@ -142,8 +144,9 @@ class PermissionSeeder extends Seeder
                 'permission_code' => 'subcategory.export',
                 'module'          => 'subcategory',
                 'action'          => 'export',
-                'description'     => 'Export data category',
+                'description'     => 'Export data sub category',
             ],
+
 
             // =====================================================
             // VENDOR
@@ -183,6 +186,7 @@ class PermissionSeeder extends Seeder
                 'action'          => 'export',
                 'description'     => 'Export data vendor',
             ],
+
 
             // =====================================================
             // USER
@@ -230,6 +234,7 @@ class PermissionSeeder extends Seeder
                 'description'     => 'Import data user',
             ],
 
+
             // =====================================================
             // ROLE
             // =====================================================
@@ -269,62 +274,88 @@ class PermissionSeeder extends Seeder
                 'description'     => 'Mengatur permission role',
             ],
 
+
             // =====================================================
-            // IMPORT HISTORY
+            // HISTORY
             // =====================================================
             [
-                'permission_name' => 'View Import History',
-                'permission_code' => 'import_history.view',
-                'module'          => 'import_history',
+                'permission_name' => 'View History',
+                'permission_code' => 'history.view',
+                'module'          => 'history',
                 'action'          => 'view',
                 'description'     => 'Melihat riwayat import',
             ],
 
+
             // =====================================================
-            // MAINTENANCE REQUEST
+            // MAINTENANCE
             // =====================================================
             [
-                'permission_name' => 'View Maintenance Requests',
-                'permission_code' => 'maintenance.request.view',
-                'module'          => 'maintenance_request',
+                'permission_name' => 'View Maintenance',
+                'permission_code' => 'maintenance.view',
+                'module'          => 'maintenance',
                 'action'          => 'view',
                 'description'     => 'Melihat daftar permintaan maintenance',
             ],
             [
-                'permission_name' => 'Create Maintenance Request',
-                'permission_code' => 'maintenance.request.create',
-                'module'          => 'maintenance_request',
+                'permission_name' => 'Create Maintenance',
+                'permission_code' => 'maintenance.create',
+                'module'          => 'maintenance',
                 'action'          => 'create',
-                'description'     => 'Membuat permintaan maintenance dari aset yang menjadi tanggung jawabnya',
+                'description'     => 'Membuat permintaan maintenance dari asset yang menjadi tanggung jawabnya',
             ],
             [
-                'permission_name' => 'Edit Maintenance Request',
-                'permission_code' => 'maintenance.request.edit',
-                'module'          => 'maintenance_request',
+                'permission_name' => 'Edit Maintenance',
+                'permission_code' => 'maintenance.edit',
+                'module'          => 'maintenance',
                 'action'          => 'edit',
-                'description'     => 'Mengambil, mengerjakan, menambahkan progres, dan menyelesaikan permintaan maintenance',
+                'description'     => 'Mengambil, mengerjakan, menambahkan progres, dan menyelesaikan maintenance',
             ],
             [
-                'permission_name' => 'Delete Maintenance Request',
-                'permission_code' => 'maintenance.request.delete',
-                'module'          => 'maintenance_request',
+                'permission_name' => 'Delete Maintenance',
+                'permission_code' => 'maintenance.delete',
+                'module'          => 'maintenance',
                 'action'          => 'delete',
                 'description'     => 'Menghapus permintaan maintenance',
             ],
-
-            // =====================================================
-            // MAINTENANCE HISTORY
-            // =====================================================
             [
                 'permission_name' => 'View Maintenance History',
-                'permission_code' => 'maintenance.history.view',
-                'module'          => 'maintenance_history',
-                'action'          => 'view',
+                'permission_code' => 'maintenance.history',
+                'module'          => 'maintenance',
+                'action'          => 'history',
                 'description'     => 'Melihat riwayat maintenance yang telah selesai',
             ],
+
+
+            // =====================================================
+            // SUBSCRIPTION
+            // =====================================================
+            [
+                'permission_name' => 'View Subscription',
+                'permission_code' => 'subscription.view',
+                'module'          => 'subscription',
+                'action'          => 'view',
+                'description'     => 'Melihat informasi subscription',
+            ],
+            [
+                'permission_name' => 'Subscribe',
+                'permission_code' => 'subscription.create',
+                'module'          => 'subscription',
+                'action'          => 'create',
+                'description'     => 'Melakukan subscribe atau perpanjangan subscription',
+            ],
+            [
+                'permission_name' => 'View Subscription History',
+                'permission_code' => 'subscription.history',
+                'module'          => 'subscription',
+                'action'          => 'history',
+                'description'     => 'Melihat riwayat subscription',
+            ],
+
         ];
 
         foreach ($permissions as $permission) {
+
             DB::table('permissions')->updateOrInsert(
                 [
                     'permission_code' => $permission['permission_code'],
@@ -338,6 +369,7 @@ class PermissionSeeder extends Seeder
                     'created_at'      => now(),
                 ]
             );
+
         }
     }
 }
