@@ -827,82 +827,73 @@
 
 
                 {{-- =================================================
-                     SUBSCRIPTION
+                    SUBSCRIPTION
                 ================================================== --}}
                 @if(
                     auth()->user()->hasPermission('subscription.view') ||
                     auth()->user()->hasPermission('subscription.create') ||
-                    auth()->user()->hasPermission('subscription.history')
+                    auth()->user()->hasPermission('subscription.history') ||
+                    auth()->user()->hasPermission('subscription.usage')
                 )
 
                     @php
-                        $subscriptionActive =
-                            request()->routeIs('subscription.*');
+                        $subscriptionActive = request()->routeIs('subscription.*');
                     @endphp
 
                     <li class="nav-item">
 
                         <a class="nav-link {{ $subscriptionActive ? 'active' : '' }}"
-                           data-bs-toggle="collapse"
-                           href="#sidebar-subscription"
-                           role="button"
-                           aria-expanded="{{ $subscriptionActive ? 'true' : 'false' }}"
-                           aria-controls="sidebar-subscription">
+                        data-bs-toggle="collapse"
+                        href="#sidebar-subscription"
+                        role="button"
+                        aria-expanded="{{ $subscriptionActive ? 'true' : 'false' }}"
+                        aria-controls="sidebar-subscription">
 
                             <i class="icon">
-
                                 <svg class="icon-20"
-                                     width="20"
-                                     viewBox="0 0 24 24"
-                                     fill="none"
-                                     xmlns="http://www.w3.org/2000/svg">
+                                    width="20"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
 
                                     <path d="M3 7.5C3 6.67157 3.67157 6 4.5 6H19.5C20.3284 6 21 6.67157 21 7.5V18.5C21 19.3284 20.3284 20 19.5 20H4.5C3.67157 20 3 19.3284 3 18.5V7.5Z"
-                                          fill="currentColor"/>
+                                        fill="currentColor"/>
 
                                     <path opacity="0.4"
-                                          d="M3 8V5.5C3 4.67157 3.67157 4 4.5 4H17.5C18.3284 4 19 4.67157 19 4.5V6H4.5C3.67157 6 3 6.67157 3 7.5V8Z"
-                                          fill="currentColor"/>
+                                        d="M3 8V5.5C3 4.67157 3.67157 4 4.5 4H17.5C18.3284 4 19 4.67157 19 4.5V6H4.5C3.67157 6 3 6.67157 3 7.5V8Z"
+                                        fill="currentColor"/>
 
                                     <path d="M16 13C16 12.4477 16.4477 12 17 12H21V16H17C16.4477 16 16 15.5523 16 15V13Z"
-                                          fill="currentColor"/>
+                                        fill="currentColor"/>
 
                                 </svg>
-
                             </i>
 
-                            <span class="item-name">
-                                Subscription
-                            </span>
+                            <span class="item-name">Subscription</span>
 
                             <i class="right-icon">
-
                                 <svg class="icon-18"
-                                     xmlns="http://www.w3.org/2000/svg"
-                                     width="18"
-                                     fill="none"
-                                     viewBox="0 0 24 24"
-                                     stroke="currentColor">
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="18"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor">
 
                                     <path stroke-linecap="round"
-                                          stroke-linejoin="round"
-                                          stroke-width="2"
-                                          d="M9 5l7 7-7 7"/>
-
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M9 5l7 7-7 7"/>
                                 </svg>
-
                             </i>
 
                         </a>
-
 
                         <ul class="sub-nav collapse {{ $subscriptionActive ? 'show' : '' }}"
                             id="sidebar-subscription"
                             data-bs-parent="#sidebar-menu">
 
-
                             {{-- =================================================
-                                 SUBSCRIBE
+                                SUBSCRIBE
                             ================================================== --}}
                             @if(
                                 auth()->user()->hasPermission('subscription.view') ||
@@ -912,30 +903,21 @@
                                 <li class="nav-item">
 
                                     <a class="nav-link {{ request()->routeIs('subscription.index') ? 'active' : '' }}"
-                                       href="{{ route('subscription.index') }}">
+                                    href="{{ route('subscription.index') }}">
 
                                         <i class="icon">
-
                                             <svg class="icon-10"
-                                                 xmlns="http://www.w3.org/2000/svg"
-                                                 width="10"
-                                                 viewBox="0 0 24 24"
-                                                 fill="currentColor">
-
-                                                <circle cx="12"
-                                                        cy="12"
-                                                        r="8"
-                                                        fill="currentColor"/>
-
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                width="10"
+                                                viewBox="0 0 24 24"
+                                                fill="currentColor">
+                                                <circle cx="12" cy="12" r="8"/>
                                             </svg>
-
                                         </i>
 
                                         <i class="sidenav-mini-icon">S</i>
 
-                                        <span class="item-name">
-                                            Subscribe
-                                        </span>
+                                        <span class="item-name">Subscribe</span>
 
                                     </a>
 
@@ -943,39 +925,59 @@
 
                             @endif
 
+                            {{-- =================================================
+                                USAGE & LIMITS
+                            ================================================== --}}
+                            @if(auth()->user()->hasPermission('subscription.usage'))
+
+                                <li class="nav-item">
+
+                                    <a class="nav-link {{ request()->routeIs('subscription.usage') ? 'active' : '' }}"
+                                    href="{{ route('subscription.usage') }}">
+
+                                        <i class="icon">
+                                            <svg class="icon-10"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                width="10"
+                                                viewBox="0 0 24 24"
+                                                fill="currentColor">
+                                                <circle cx="12" cy="12" r="8"/>
+                                            </svg>
+                                        </i>
+
+                                        <i class="sidenav-mini-icon">U</i>
+
+                                        <span class="item-name">Usage &amp; Limits</span>
+
+                                    </a>
+
+                                </li>
+
+                            @endif
 
                             {{-- =================================================
-                                 SUBSCRIPTION HISTORY
+                                SUBSCRIPTION HISTORY
                             ================================================== --}}
                             @if(auth()->user()->hasPermission('subscription.history'))
 
                                 <li class="nav-item">
 
                                     <a class="nav-link {{ request()->routeIs('subscription.history') ? 'active' : '' }}"
-                                       href="{{ route('subscription.history') }}">
+                                    href="{{ route('subscription.history') }}">
 
                                         <i class="icon">
-
                                             <svg class="icon-10"
-                                                 xmlns="http://www.w3.org/2000/svg"
-                                                 width="10"
-                                                 viewBox="0 0 24 24"
-                                                 fill="currentColor">
-
-                                                <circle cx="12"
-                                                        cy="12"
-                                                        r="8"
-                                                        fill="currentColor"/>
-
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                width="10"
+                                                viewBox="0 0 24 24"
+                                                fill="currentColor">
+                                                <circle cx="12" cy="12" r="8"/>
                                             </svg>
-
                                         </i>
 
                                         <i class="sidenav-mini-icon">H</i>
 
-                                        <span class="item-name">
-                                            History
-                                        </span>
+                                        <span class="item-name">History & Billing</span>
 
                                     </a>
 
@@ -983,12 +985,12 @@
 
                             @endif
 
-
                         </ul>
 
                     </li>
 
                 @endif
+
 
 
                 <li>

@@ -25,7 +25,7 @@ class DatabaseSeeder extends Seeder
             PermissionSeeder::class,
             PlanSeeder::class,
             AiProviderSeeder::class,
-
+            StorageAddonRateSeeder::class,
         ]);
     }
 }

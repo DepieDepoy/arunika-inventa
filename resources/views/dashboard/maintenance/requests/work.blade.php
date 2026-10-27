@@ -1601,130 +1601,88 @@ $(function () {
             );
 
 
-            $.ajax({
+            
+$.ajax({
+    url: "{{ url('/dashboard/maintenance-requests') }}/{{ $maintenanceRequest->id }}/complete",
+    type: 'POST',
+    data: formData,
+    processData: false,
+    contentType: false,
+    dataType: 'json',
 
-                url:
-                    "{{ url('/dashboard/maintenance-requests') }}/{{ $maintenanceRequest->id }}/complete",
+    success: function (response) {
 
-                type: 'POST',
-
-                data: formData,
-
-                processData: false,
-
-                contentType: false,
-
-
-                success: function (response) {
-
-                    $('#completeRequestModal')
-                        .modal('hide');
-
-
-                    Swal.fire({
-
-                        icon: 'success',
-
-                        title: 'Success',
-
-                        text:
-                            response.message ||
-                            'Maintenance berhasil diselesaikan.',
-
-                        timer: 1800,
-
-                        showConfirmButton: false
-
-                    }).then(function () {
-
-                        window.location.href =
-                            "{{ route('maintenance.requests.index') }}";
-
-                    });
-
-                },
-
-
-                error: function (xhr) {
-
-                    let message =
-                        'Maintenance gagal diselesaikan.';
-
-
-                    if (
-                        xhr.responseJSON &&
-                        xhr.responseJSON.message
-                    ) {
-
-                        message =
-                            xhr.responseJSON.message;
-
-                    }
-
-
-                    if (
-                        xhr.status === 422 &&
-                        xhr.responseJSON &&
-                        xhr.responseJSON.errors
-                    ) {
-
-                        let errors =
-                            xhr.responseJSON.errors;
-
-                        let errorMessages = [];
-
-
-                        $.each(
-                            errors,
-                            function (field, messages) {
-
-                                $.each(
-                                    messages,
-                                    function (index, text) {
-
-                                        errorMessages.push(text);
-
-                                    }
-                                );
-
-                            }
-                        );
-
-
-                        if (errorMessages.length) {
-
-                            message =
-                                errorMessages.join('<br>');
-
-                        }
-
-                    }
-
-
-                    Swal.fire({
-
-                        icon: 'error',
-
-                        title: 'Failed',
-
-                        html: message
-
-                    });
-
-                },
-
-
-                complete: function () {
-
-                    submitButton
-                        .prop('disabled', false)
-                        .html(
-                            '<i class="fa-solid fa-check me-1"></i> Complete Maintenance'
-                        );
-
-                }
-
+        // Jangan anggap sukses jika backend tidak mengonfirmasi.
+        if (
+            !response ||
+            response.success !== true ||
+            !response.data ||
+            !response.data.maintenance_id
+        ) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Belum Berhasil',
+                text: response?.message ||
+                    'Server belum mengonfirmasi penyimpanan maintenance.'
             });
+            return;
+        }
+        $('#completeRequestModal').modal('hide');
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: response.message || 'Maintenance berhasil diselesaikan.',
+            timer: 1800,
+            showConfirmButton: false
+        }).then(function () {
+            window.location.href =
+                "{{ route('maintenance.requests.index') }}";
+        });
+    },
+
+    error: function (xhr) {
+
+        let message = 'Maintenance gagal diselesaikan.';
+
+        if (xhr.responseJSON && xhr.responseJSON.message) {
+            message = xhr.responseJSON.message;
+        }
+
+        if (
+            xhr.status === 422 &&
+            xhr.responseJSON &&
+            xhr.responseJSON.errors
+        ) {
+            let errorMessages = [];
+
+            $.each(xhr.responseJSON.errors, function (field, messages) {
+                $.each(messages, function (index, text) {
+                    errorMessages.push(text);
+                });
+            });
+
+            if (errorMessages.length) {
+                message = errorMessages.join('<br>');
+            }
+        }
+
+        Swal.fire({
+            icon: 'error',
+            title: 'Failed',
+            html: message
+        });
+    },
+
+    complete: function () {
+        submitButton
+            .prop('disabled', false)
+            .html(
+                '<i class="fa-solid fa-check me-1"></i> Complete Maintenance'
+            );
+    }
+});
+
 
         });
 

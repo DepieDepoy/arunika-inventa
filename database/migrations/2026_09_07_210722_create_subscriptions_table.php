@@ -1,3 +1,4 @@
+
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -29,10 +30,33 @@ return new class extends Migration
             $table->string('billing_cycle', 20)
                 ->default('monthly');
 
-            // Harga yang digunakan saat subscription dibuat.
-            // Disimpan sebagai snapshot agar histori tidak berubah
-            // jika harga pada tabel plans berubah di kemudian hari.
+            // Harga paket saja saat subscription dibuat.
+            // Snapshot agar histori harga paket tidak berubah.
             $table->decimal('price', 15, 2)
+                ->default(0);
+
+            // =====================================================
+            // STORAGE ADD-ON
+            // =====================================================
+
+            // Kapasitas storage tambahan dalam GB
+            $table->decimal('storage_addon_gb', 8, 2)
+                ->default(0);
+
+            // Harga storage tambahan sesuai billing cycle
+            $table->decimal('storage_addon_price', 15, 2)
+                ->default(0);
+
+            // =====================================================
+            // DISCOUNT & TOTAL
+            // =====================================================
+
+            // Potongan harga subscription
+            $table->decimal('discount_amount', 15, 2)
+                ->default(0);
+
+            // Total = harga paket + storage - diskon
+            $table->decimal('total_price', 15, 2)
                 ->default(0);
 
             // =====================================================
@@ -43,10 +67,11 @@ return new class extends Migration
 
             // =====================================================
             // SUBSCRIPTION STATUS
-            // active   = sedang digunakan
-            // expired  = sudah berakhir
-            // replaced = digantikan subscription baru
+            // active    = sedang digunakan
+            // expired   = sudah berakhir
+            // replaced  = digantikan subscription baru
             // cancelled = dibatalkan
+            // pending   = menunggu pembayaran
             // =====================================================
             $table->string('status', 20)
                 ->default('active');

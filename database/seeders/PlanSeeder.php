@@ -9,6 +9,9 @@ class PlanSeeder extends Seeder
 {
     public function run(): void
     {
+        $MB = 1024 * 1024;
+        $GB = 1024 * 1024 * 1024;
+
         $plans = [
             [
                 'plan_code' => 'FREE',
@@ -21,6 +24,7 @@ class PlanSeeder extends Seeder
 
                 'max_users' => 5,
                 'max_assets' => 5,
+                'max_storage_bytes' => 500 * $MB,
 
                 'status' => 1,
             ],
@@ -36,6 +40,7 @@ class PlanSeeder extends Seeder
 
                 'max_users' => 10,
                 'max_assets' => 50,
+                'max_storage_bytes' => 1 * $GB,
 
                 'status' => 1,
             ],
@@ -51,6 +56,7 @@ class PlanSeeder extends Seeder
 
                 'max_users' => 50,
                 'max_assets' => 200,
+                'max_storage_bytes' => 5 * $GB,
 
                 'status' => 1,
             ],
@@ -66,6 +72,7 @@ class PlanSeeder extends Seeder
 
                 'max_users' => null,
                 'max_assets' => null,
+                'max_storage_bytes' => 20 * $GB,
 
                 'status' => 1,
             ],

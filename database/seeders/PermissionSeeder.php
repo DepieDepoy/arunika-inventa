@@ -351,6 +351,13 @@ class PermissionSeeder extends Seeder
                 'action'          => 'history',
                 'description'     => 'Melihat riwayat subscription',
             ],
+            [
+                'permission_name' => 'View Subscription Usage & Limits',
+                'permission_code' => 'subscription.usage',
+                'module'          => 'subscription',
+                'action'          => 'usage',
+                'description'     => 'Melihat penggunaan resource dan batas paket subscription company',
+            ],
 
         ];
 

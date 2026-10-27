@@ -36,4 +36,11 @@ Route::prefix('dashboard')
         Route::get('/subscription/payment/finish', [SubscriptionController::class, 'paymentFinish'])
             ->name('subscription.payment.finish');
 
+        // Usage & Limits
+        Route::get('/subscription/usage', [SubscriptionController::class,'usage'])
+            ->name('subscription.usage');
+        
+        Route::get('/subscription/billing/{paymentTransaction}',[SubscriptionController::class, 'printBilling'])
+            ->name('subscription.billing.print');
+
     });

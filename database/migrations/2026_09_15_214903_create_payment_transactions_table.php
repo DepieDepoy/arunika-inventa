@@ -1,3 +1,4 @@
+
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -31,67 +32,94 @@ return new class extends Migration
 
             /*
             |--------------------------------------------------------------------------
-            | TRANSACTION
+            | TRANSACTION IDENTITY
             |--------------------------------------------------------------------------
             */
             $table->string('order_id')->unique();
 
+            // Snapshot nama paket saat transaksi dibuat
+            $table->string('plan_name');
+
+            $table->string('billing_cycle', 20)
+                ->default('monthly');
+
+            /*
+            |--------------------------------------------------------------------------
+            | PRICE BREAKDOWN
+            |--------------------------------------------------------------------------
+            */
+            // Harga paket saja
+            $table->decimal('package_price', 15, 2)->default(0);
+
+            // Jumlah storage tambahan dalam GB
+            $table->decimal('storage_addon_gb', 8, 2)->default(0);
+
+            // Harga storage tambahan
+            $table->decimal('storage_addon_price', 15, 2)->default(0);
+
+            // Diskon transaksi
+            $table->decimal('discount_amount', 15, 2)->default(0);
+
+            // Total akhir yang ditagihkan ke pelanggan
+            $table->decimal('gross_amount', 15, 2);
+
+            /*
+            |--------------------------------------------------------------------------
+            | PAYMENT STATUS
+            |--------------------------------------------------------------------------
+            */
+            $table->string('transaction_status', 30)
+                ->default('pending')
+                ->index();
+
+            $table->string('payment_type')->nullable();
+
+            $table->string('fraud_status')->nullable();
+
+            // ID transaksi dari payment gateway, jika tersedia
             $table->string('midtrans_transaction_id')
                 ->nullable()
                 ->index();
 
-            $table->string('payment_type')
-                ->nullable();
-
-            $table->string('transaction_status')
-                ->default('pending')
-                ->index();
-
-            $table->string('fraud_status')
-                ->nullable();
+            /*
+            |--------------------------------------------------------------------------
+            | PAYMENT DETAILS
+            |--------------------------------------------------------------------------
+            */
+            $table->string('va_number')->nullable();
+            $table->string('bank')->nullable();
+            $table->text('qr_string')->nullable();
+            $table->string('payment_url')->nullable();
 
             /*
             |--------------------------------------------------------------------------
-            | PAYMENT DETAIL
+            | PAYMENT TIMESTAMPS
             |--------------------------------------------------------------------------
             */
-            $table->decimal('gross_amount', 15, 2);
-
-            $table->string('va_number')
-                ->nullable();
-
-            $table->string('bank')
-                ->nullable();
-
-            $table->text('qr_string')
-                ->nullable();
-
-            $table->string('payment_url')
-                ->nullable();
+            $table->timestamp('transaction_time')->nullable();
+            $table->timestamp('settlement_time')->nullable();
+            $table->timestamp('expiry_time')->nullable();
 
             /*
             |--------------------------------------------------------------------------
-            | TIMESTAMP PAYMENT
+            | GATEWAY RESPONSE
             |--------------------------------------------------------------------------
+            |
+            | Tetap menyimpan respons asli gateway sebagai JSON.
+            | Rincian invoice sendiri disimpan di kolom-kolom satuan.
+            |
             */
-            $table->timestamp('transaction_time')
-                ->nullable();
-
-            $table->timestamp('settlement_time')
-                ->nullable();
-
-            $table->timestamp('expiry_time')
-                ->nullable();
-
-            /*
-            |--------------------------------------------------------------------------
-            | RAW RESPONSE
-            |--------------------------------------------------------------------------
-            */
-            $table->json('midtrans_response')
-                ->nullable();
+            $table->json('midtrans_response')->nullable();
 
             $table->timestamps();
+
+            /*
+            |--------------------------------------------------------------------------
+            | INDEX
+            |--------------------------------------------------------------------------
+            */
+            $table->index(['company_id', 'transaction_status']);
+            $table->index(['company_id', 'created_at']);
         });
     }
 

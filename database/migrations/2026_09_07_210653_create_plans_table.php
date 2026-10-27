@@ -1,3 +1,4 @@
+
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -35,6 +36,11 @@ return new class extends Migration
             // =====================================================
             $table->unsignedInteger('max_users')->nullable();
             $table->unsignedInteger('max_assets')->nullable();
+
+            // Storage limit dalam byte.
+            // Contoh: 1073741824 = 1 GiB.
+            // NULL = unlimited storage.
+            $table->unsignedBigInteger('max_storage_bytes')->nullable();
 
             // =====================================================
             // STATUS

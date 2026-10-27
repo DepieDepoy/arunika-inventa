@@ -12,7 +12,13 @@ class Subscription extends Model
         'company_id',
         'plan_id',
         'billing_cycle',
+
         'price',
+        'storage_addon_gb',
+        'storage_addon_price',
+        'discount_amount',
+        'total_price',
+
         'start_date',
         'end_date',
         'status',
@@ -23,6 +29,11 @@ class Subscription extends Model
     {
         return [
             'price' => 'decimal:2',
+            'storage_addon_gb' => 'decimal:2',
+            'storage_addon_price' => 'decimal:2',
+            'discount_amount' => 'decimal:2',
+            'total_price' => 'decimal:2',
+
             'start_date' => 'date',
             'end_date' => 'date',
         ];
@@ -54,6 +65,4 @@ class Subscription extends Model
     {
         return $this->hasMany(PaymentTransaction::class);
     }
-
-
 }

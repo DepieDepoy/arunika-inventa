@@ -11,14 +11,17 @@ use App\Models\Role;
 use App\Models\Permission;
 use App\Models\Plan;
 use App\Models\Subscription;
-use Illuminate\Support\Str;
 
+use Illuminate\Support\Str;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
+use Throwable;
 
 class RegisteredUserController extends Controller
 {
@@ -33,16 +36,25 @@ class RegisteredUserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'nik' => ['required', 'string', 'max:255'],
             'company_name' => ['required', 'string', 'max:255'],
-            'phone' => ['required', 'digits_between:10,15', 'unique:users,phone'],
+            'phone' => [
+                'required',
+                'digits_between:10,15',
+                'unique:users,phone',
+            ],
             'email' => [
                 'required',
                 'string',
                 'lowercase',
                 'email',
                 'max:255',
-                'unique:users,email'
+                'unique:users,email',
             ],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+            ],
             'password_confirmation' => ['required'],
         ], [
             'name.required' => 'Full name is required.',
@@ -60,20 +72,38 @@ class RegisteredUserController extends Controller
             'password_confirmation.required' => 'Please confirm your password.',
         ]);
 
-        $companyCode = CompanyHelper::generateCode($request->company_name);
+        $companyCode = CompanyHelper::generateCode(
+            trim($request->company_name)
+        );
 
-        if (Company::where('company_code', $companyCode)->exists()) {
+        // Pastikan kode perusahaan aman digunakan sebagai nama folder.
+        if (
+            ! is_string($companyCode) ||
+            ! preg_match('/\A[a-zA-Z0-9_-]+\z/', $companyCode)
+        ) {
             return back()
                 ->withErrors([
-                    'company_name' => 'Perusahaan sudah terdaftar.'
+                    'company_name' => 'Kode perusahaan tidak valid.',
                 ])
                 ->withInput();
         }
 
+        if (
+            Company::where('company_code', $companyCode)->exists()
+        ) {
+            return back()
+                ->withErrors([
+                    'company_name' => 'Perusahaan sudah terdaftar.',
+                ])
+                ->withInput();
+        }
+
+        $user = null;
+        $company = null;
+
         DB::beginTransaction();
 
         try {
-
             /*
             |--------------------------------------------------------------------------
             | FREE PLAN
@@ -84,8 +114,8 @@ class RegisteredUserController extends Controller
                 ->where('status', 1)
                 ->first();
 
-            if (!$freePlan) {
-                throw new \Exception(
+            if (! $freePlan) {
+                throw new \RuntimeException(
                     'Plan FREE belum tersedia. Silakan hubungi administrator.'
                 );
             }
@@ -142,11 +172,11 @@ class RegisteredUserController extends Controller
                 'Staff',
             ];
 
-            foreach ($defaultRoles as $role) {
+            foreach ($defaultRoles as $roleName) {
                 Role::create([
                     'company_id' => $company->id,
-                    'role_name' => $role,
-                    'role_code' => Str::slug($role, '_'),
+                    'role_name' => $roleName,
+                    'role_code' => Str::slug($roleName, '_'),
                     'status' => 1,
                 ]);
             }
@@ -161,15 +191,15 @@ class RegisteredUserController extends Controller
                 ->where('role_code', 'administrator')
                 ->first();
 
-            if (!$adminRole) {
-                throw new \Exception(
+            if (! $adminRole) {
+                throw new \RuntimeException(
                     'Role Administrator gagal dibuat.'
                 );
             }
 
             /*
             |--------------------------------------------------------------------------
-            | USER
+            | FIRST USER
             |--------------------------------------------------------------------------
             */
 
@@ -203,40 +233,75 @@ class RegisteredUserController extends Controller
 
             DB::commit();
 
-        } catch (\Exception $e) {
-
+        } catch (Throwable $e) {
             DB::rollBack();
+
+            report($e);
 
             return back()
                 ->withErrors([
-                    'company_name' => $e->getMessage()
+                    'company_name' => app()->isLocal()
+                        ? $e->getMessage()
+                        : 'Registrasi gagal diproses. Silakan coba kembali.',
                 ])
                 ->withInput();
         }
 
         /*
         |--------------------------------------------------------------------------
-        | SEND VERIFICATION EMAIL
+        | CREATE COMPANY STORAGE FOLDERS
         |--------------------------------------------------------------------------
         |
-        | Dilakukan setelah database berhasil commit.
+        | Dibuat setelah transaksi database berhasil.
+        | Kegagalan folder tidak membatalkan registrasi yang sudah tersimpan.
         |
         */
 
         try {
+            $companyRoot = storage_path(
+                'app/public/documents/' . $company->company_code
+            );
 
+            $companyFolders = [
+                $companyRoot . '/assets/img',
+                $companyRoot . '/assets/inv',
+                $companyRoot . '/maintenance/progress',
+                $companyRoot . '/maintenance/result',
+            ];
+
+            foreach ($companyFolders as $folderPath) {
+                File::ensureDirectoryExists(
+                    $folderPath,
+                    0755,
+                    true
+                );
+            }
+
+            Log::info('Company storage folders initialized.', [
+                'company_id' => $company->id,
+                'company_code' => $company->company_code,
+            ]);
+
+        } catch (Throwable $e) {
+            // Registrasi tetap berhasil; error dapat diperiksa di log.
+            Log::error('Failed to initialize company storage folders.', [
+                'company_id' => $company->id,
+                'company_code' => $company->company_code,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | SEND VERIFICATION EMAIL
+        |--------------------------------------------------------------------------
+        */
+
+        try {
             event(new Registered($user));
 
-        } catch (\Throwable $e) {
-
+        } catch (Throwable $e) {
             report($e);
-
-            /*
-            |--------------------------------------------------------------------------
-            | User tetap dibuat.
-            | User masih bisa melakukan resend verification.
-            |--------------------------------------------------------------------------
-            */
 
             return redirect()
                 ->route('login')
@@ -248,7 +313,7 @@ class RegisteredUserController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | SIMPAN DATA UNTUK RESEND VERIFICATION
+        | RESEND VERIFICATION SESSION
         |--------------------------------------------------------------------------
         */
 
