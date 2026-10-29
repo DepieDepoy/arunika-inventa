@@ -1,169 +1,73 @@
+
 @extends('dashboard.layouts.wrapper')
 
 @section('title', 'Import History')
 
 @section('content')
-
 <div class="content-wrapper">
-<!-- Content -->
-<div class="container-xxl flex-grow-1 container-p-y">
-    <div class="row">
-    <div class="col-xxl-12 mb-12 order-0">
-    <div class="card">
+    <div class="container-xxl flex-grow-1 container-p-y">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-0">Import History</h5>
+                            <small class="text-muted">
+                                Riwayat proses import data ke sistem.
+                            </small>
+                        </div>
 
-    <div class="card-header d-flex justify-content-between align-items-center">
+                        <a href="{{ url()->previous() }}" class="btn btn-light">
+                            <i class="fas fa-arrow-left me-1"></i>
+                            Kembali
+                        </a>
+                    </div>
 
-        <div>
-            <h5 class="mb-0">
-                Import History
-            </h5>
-            <small class="text-muted">
-                Riwayat proses import data ke sistem.
-            </small>
-        </div>
+                    <div class="card-body">
+                        <div class="alert alert-info d-flex align-items-start mb-4">
+                            <i class="fas fa-info-circle me-2 mt-1"></i>
+                            <div>
+                                <strong>Import History</strong>
+                                <div class="small mt-1">
+                                    Riwayat import User, Asset, dan modul lainnya.
+                                    Data ditampilkan menggunakan server-side pagination.
+                                </div>
+                            </div>
+                        </div>
 
-        <div class="d-flex gap-2">
-             <a
-                href="{{ url()->previous() }}"
-                class="btn btn-light"
-            >
-                <i class="fas fa-arrow-left me-1"></i>
-                Kembali
-            </a>
-        </div>
-        
-    </div>
-    
-    <div class="card-body">
-        {{-- =========================================================
-         INFO
-        ========================================================== --}}
-        <div class="alert alert-info d-flex align-items-start mb-4">
-
-            <i class="fas fa-info-circle me-2 mt-1"></i>
-
-            <div>
-                <strong>Import History</strong>
-
-                <div class="small mt-1">
-                    Halaman ini menampilkan seluruh riwayat import
-                    User, Asset dan modul lainnya.
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle"
+                                   id="table-import-history"
+                                   width="100%">
+                                <thead>
+                                    <tr>
+                                        <th width="5%">No</th>
+                                        <th>Module</th>
+                                        <th>File</th>
+                                        <th width="180">Progress</th>
+                                        <th>Total</th>
+                                        <th>Berhasil</th>
+                                        <th>Gagal</th>
+                                        <th>Status</th>
+                                        <th>Waktu</th>
+                                        <th width="80">Action</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
-
         </div>
-        <div class="card permission-role-card">
-            <div class="card-body">
-                <div class="row">
-                    <h5 class="mb-0">
-                    Riwayat Import
-                </h5>
-                <div class="table-responsive">
-
-                <table
-                    class="table table-hover align-middle"
-                    id="importHistoryTable"
-                >
-
-                    <thead>
-
-                        <tr>
-
-                            <th width="50">
-                                #
-                            </th>
-
-                            <th width="100">
-                                Module
-                            </th>
-
-                            <th>
-                                File
-                            </th>
-
-                            <th width="180">
-                                Progress
-                            </th>
-
-                            <th width="80"
-                                class="text-center">
-                                Total
-                            </th>
-
-                            <th width="90"
-                                class="text-center">
-                                Berhasil
-                            </th>
-
-                            <th width="80"
-                                class="text-center">
-                                Gagal
-                            </th>
-
-                            <th width="150">
-                                Status
-                            </th>
-
-                            <th width="170">
-                                Waktu
-                            </th>
-
-                            <th width="80">
-                                Action
-                            </th>
-
-                        </tr>
-
-                    </thead>
-
-                    <tbody>
-
-                        <tr>
-
-                            <td
-                                colspan="10"
-                                class="text-center text-muted py-5"
-                            >
-                                <i class="fas fa-spinner fa-spin me-1"></i>
-                                Memuat data...
-                            </td>
-
-                        </tr>
-
-                    </tbody>
-
-                </table>
-
-            </div>
-    </div>
-
-</div>
-
-            </div>
-            </div>
-            </div>
-
-        </div>
-
-
-    </div>
     </div>
 </div>
-    </div>
-</div>
-</div>
+@endsection
 
-
-{{-- =========================================================
-     SCRIPT
-========================================================= --}}
+@section('js')
 <script>
-
+$(function () {
     function escapeHtml(value) {
-
-        if (value === null ||
-            value === undefined) {
-
+        if (value === null || value === undefined) {
             return '';
         }
 
@@ -175,438 +79,289 @@
             .replace(/'/g, '&#039;');
     }
 
+    function formatNumber(value) {
+        return Number(value || 0).toLocaleString('id-ID');
+    }
 
-    function getModuleBadge(module) {
+    function moduleBadge(module) {
+        const value = String(module || '').toLowerCase();
 
-        const value =
-            String(module || '')
-                .toLowerCase();
+        const icons = {
+            user: 'fa-users',
+            asset: 'fa-boxes',
+            vendor: 'fa-building',
+            category: 'fa-tags',
+            maintenance: 'fa-tools'
+        };
 
-        let label =
-            value
-                ? value.charAt(0).toUpperCase() +
-                  value.slice(1)
-                : '-';
-
-        let icon =
-            'fa-file-import';
-
-        if (value === 'user') {
-
-            icon =
-                'fa-users';
-
-        } else if (value === 'asset') {
-
-            icon =
-                'fa-boxes';
-
-        } else if (value === 'vendor') {
-
-            icon =
-                'fa-building';
-
-        } else if (
-            value === 'category'
-        ) {
-
-            icon =
-                'fa-tags';
-        }
+        const label = value
+            ? value.charAt(0).toUpperCase() + value.slice(1)
+            : '-';
 
         return `
             <span class="badge bg-light text-dark border">
-                <i class="fas ${icon} me-1"></i>
+                <i class="fas ${icons[value] || 'fa-file-import'} me-1"></i>
                 ${escapeHtml(label)}
             </span>
         `;
     }
 
+    function statusBadge(status) {
+        const config = {
+            processing: {
+                label: 'Processing',
+                css: 'bg-warning text-dark',
+                icon: 'fa-spinner fa-spin'
+            },
+            completed: {
+                label: 'Completed',
+                css: 'bg-success',
+                icon: 'fa-check'
+            },
+            completed_with_errors: {
+                label: 'Completed with Errors',
+                css: 'bg-warning text-dark',
+                icon: 'fa-exclamation-triangle'
+            },
+            failed: {
+                label: 'Failed',
+                css: 'bg-danger',
+                icon: 'fa-times'
+            }
+        };
 
-    function getStatusBadge(status) {
-
-        const value =
-            String(status || '')
-                .toLowerCase();
-
-        let label =
-            status || '-';
-
-        let className =
-            'bg-secondary';
-
-        let icon =
-            'fa-clock';
-
-        switch (value) {
-
-            case 'processing':
-
-                label =
-                    'Processing';
-
-                className =
-                    'bg-warning text-dark';
-
-                icon =
-                    'fa-spinner fa-spin';
-
-                break;
-
-
-            case 'completed':
-
-                label =
-                    'Completed';
-
-                className =
-                    'bg-success';
-
-                icon =
-                    'fa-check';
-
-                break;
-
-
-            case 'completed_with_errors':
-
-                label =
-                    'Completed with Errors';
-
-                className =
-                    'bg-warning text-dark';
-
-                icon =
-                    'fa-exclamation-triangle';
-
-                break;
-
-
-            case 'failed':
-
-                label =
-                    'Failed';
-
-                className =
-                    'bg-danger';
-
-                icon =
-                    'fa-times';
-
-                break;
-        }
+        const value = String(status || '').toLowerCase();
+        const item = config[value] || {
+            label: status || '-',
+            css: 'bg-secondary',
+            icon: 'fa-clock'
+        };
 
         return `
-            <span class="badge ${className}">
-                <i class="fas ${icon} me-1"></i>
-                ${escapeHtml(label)}
+            <span class="badge ${item.css}">
+                <i class="fas ${item.icon} me-1"></i>
+                ${escapeHtml(item.label)}
             </span>
         `;
     }
 
-
-    function getProgressBar(item) {
-
-        const progress =
-            Number(item.progress || 0);
-
-        const processed =
-            Number(item.processed_rows || 0);
-
-        const total =
-            Number(item.total_rows || 0);
+    function progressBar(row) {
+        const progress = Math.max(
+            0,
+            Math.min(100, Number(row.progress || 0))
+        );
 
         return `
             <div class="d-flex align-items-center gap-2">
-
-                <div
-                    class="progress flex-grow-1"
-                    style="height: 8px;"
-                >
-                    <div
-                        class="progress-bar"
-                        role="progressbar"
-                        style="width: ${progress}%"
-                        aria-valuenow="${progress}"
-                        aria-valuemin="0"
-                        aria-valuemax="100"
-                    ></div>
+                <div class="progress flex-grow-1" style="height:8px">
+                    <div class="progress-bar"
+                         role="progressbar"
+                         style="width:${progress}%"
+                         aria-valuenow="${progress}"
+                         aria-valuemin="0"
+                         aria-valuemax="100">
+                    </div>
                 </div>
-
-                <small
-                    class="text-muted"
-                    style="min-width: 42px;"
-                >
-                    ${progress}%
-                </small>
-
+                <small class="text-muted">${progress}%</small>
             </div>
-
             <small class="text-muted">
-                ${processed.toLocaleString('id-ID')}
+                ${formatNumber(row.processed_rows)}
                 /
-                ${total.toLocaleString('id-ID')}
+                ${formatNumber(row.total_rows)}
             </small>
         `;
     }
 
+    const detailUrlTemplate =
+        "{{ route('import.history.detail', ['id' => '__ID__']) }}";
 
-    function loadImportHistory() {
+    const table = $('#table-import-history').DataTable({
+        processing: true,
+        serverSide: true,
+        responsive: true,
+        autoWidth: false,
+        searchDelay: 400,
+        pageLength: 10,
+        lengthMenu: [
+            [10, 25, 50, 100],
+            [10, 25, 50, 100]
+        ],
+        ajax: "{{ route('import.history.progress') }}",
 
-        fetch(
-            "{{ route('import.history.progress') }}",
+        columns: [
             {
-                headers: {
-                    'Accept':
-                        'application/json'
+                data: 'DT_RowIndex',
+                name: 'DT_RowIndex',
+                orderable: false,
+                searchable: false
+            },
+            {
+                data: 'module',
+                name: 'module',
+                render: function (data, type) {
+                    return type === 'display'
+                        ? moduleBadge(data)
+                        : (data || '');
+                }
+            },
+            {
+                data: 'file_name',
+                name: 'file_name',
+                render: function (data, type) {
+                    if (type !== 'display') {
+                        return data || '';
+                    }
+
+                    return `
+                        <div class="fw-semibold text-truncate"
+                             style="max-width:280px"
+                             title="${escapeHtml(data || '')}">
+                            ${escapeHtml(data || '-')}
+                        </div>
+                    `;
+                }
+            },
+            {
+                data: 'progress',
+                name: 'progress',
+                orderable: false,
+                searchable: false,
+                render: function (data, type, row) {
+                    return type === 'display'
+                        ? progressBar(row)
+                        : Number(data || 0);
+                }
+            },
+            {
+                data: 'total_rows',
+                name: 'total_rows',
+                className: 'text-center',
+                render: function (data, type) {
+                    return type === 'display'
+                        ? formatNumber(data)
+                        : Number(data || 0);
+                }
+            },
+            {
+                data: 'success_rows',
+                name: 'success_rows',
+                className: 'text-center text-success fw-semibold',
+                render: function (data, type) {
+                    return type === 'display'
+                        ? formatNumber(data)
+                        : Number(data || 0);
+                }
+            },
+            {
+                data: 'failed_rows',
+                name: 'failed_rows',
+                className: 'text-center text-danger fw-semibold',
+                render: function (data, type) {
+                    return type === 'display'
+                        ? formatNumber(data)
+                        : Number(data || 0);
+                }
+            },
+            {
+                data: 'status',
+                name: 'status',
+                render: function (data, type) {
+                    return type === 'display'
+                        ? statusBadge(data)
+                        : (data || '');
+                }
+            },
+            {
+                data: 'started_at',
+                name: 'started_at',
+                render: function (data, type, row) {
+                    if (type !== 'display') {
+                        return data || '';
+                    }
+
+                    return `
+                        <div>${escapeHtml(data || '-')}</div>
+                        ${row.duration
+                            ? `<small class="text-muted">
+                                   ${escapeHtml(row.duration)}
+                               </small>`
+                            : ''}
+                    `;
+                }
+            },
+            {
+                data: 'encrypted_id',
+                name: 'encrypted_id',
+                orderable: false,
+                searchable: false,
+                className: 'text-center',
+                render: function (data, type) {
+                    if (type !== 'display') {
+                        return '';
+                    }
+
+                    if (!data) {
+                        return '-';
+                    }
+
+                    return `
+                        <button type="button"
+                                class="btn btn-sm btn-outline-primary btn-import-detail"
+                                data-id="${escapeHtml(data)}"
+                                title="Lihat Detail Import">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    `;
                 }
             }
-        )
+        ],
 
-        .then(function(response) {
+        order: [[8, 'desc']],
 
-            if (!response.ok) {
-
-                throw new Error(
-                    'HTTP ' +
-                    response.status
-                );
+        /*language: {
+            processing: 'Memuat data...',
+            search: 'Cari:',
+            lengthMenu: 'Tampilkan _MENU_ data',
+            info: 'Menampilkan _START_ sampai _END_ dari _TOTAL_ data',
+            infoEmpty: 'Tidak ada data',
+            infoFiltered: '(difilter dari _MAX_ total data)',
+            zeroRecords: 'Data tidak ditemukan',
+            emptyTable: 'Belum ada riwayat import',
+            paginate: {
+                first: 'Pertama',
+                last: 'Terakhir',
+                next: 'Berikutnya',
+                previous: 'Sebelumnya'
             }
+        }*/
+    });
 
-            return response.json();
-        })
+    $('#table-import-history').on(
+        'click',
+        '.btn-import-detail',
+        function () {
+            const encryptedId = $(this).attr('data-id');
 
-        .then(function(data) {
-
-            const tbody =
-                document.querySelector(
-                    '#importHistoryTable tbody'
-                );
-
-            if (!data.length) {
-
-                tbody.innerHTML = `
-                    <tr>
-                        <td
-                            colspan="10"
-                            class="text-center text-muted py-5"
-                        >
-                            <i class="fas fa-inbox fa-2x mb-2"></i>
-
-                            <div>
-                                Belum ada riwayat import.
-                            </div>
-                        </td>
-                    </tr>
-                `;
-
+            if (!encryptedId) {
                 return;
             }
 
-
-            tbody.innerHTML =
-                data.map(function(item, index) {
-
-                    const isFinished =
-                        [
-                            'completed',
-                            'completed_with_errors',
-                            'failed'
-                        ].includes(
-                            String(
-                                item.status || ''
-                            ).toLowerCase()
-                        );
-
-
-                    return `
-                        <tr>
-
-                            <td>
-                                ${index + 1}
-                            </td>
-
-
-                            <td>
-                                ${getModuleBadge(
-                                    item.module
-                                )}
-                            </td>
-
-
-                            <td>
-
-                                <div
-                                    class="fw-semibold text-truncate"
-                                    style="max-width: 280px;"
-                                    title="${escapeHtml(
-                                        item.file_name
-                                    )}"
-                                >
-                                    ${escapeHtml(
-                                        item.file_name
-                                    )}
-                                </div>
-
-                            </td>
-
-
-                            <td>
-                                ${getProgressBar(item)}
-                            </td>
-
-
-                            <td class="text-center">
-                                ${Number(
-                                    item.total_rows || 0
-                                ).toLocaleString('id-ID')}
-                            </td>
-
-
-                            <td
-                                class="text-center text-success fw-semibold"
-                            >
-                                ${Number(
-                                    item.success_rows || 0
-                                ).toLocaleString('id-ID')}
-                            </td>
-
-
-                            <td
-                                class="text-center text-danger fw-semibold"
-                            >
-                                ${Number(
-                                    item.failed_rows || 0
-                                ).toLocaleString('id-ID')}
-                            </td>
-
-
-                            <td>
-                                ${getStatusBadge(
-                                    item.status
-                                )}
-                            </td>
-
-
-                            <td>
-
-                                <div>
-                                    ${
-                                        item.started_at
-                                            ? escapeHtml(
-                                                item.started_at
-                                            )
-                                            : '-'
-                                    }
-                                </div>
-
-                                ${
-                                    item.duration
-                                        ? `
-                                            <small class="text-muted">
-                                                ${escapeHtml(
-                                                    item.duration
-                                                )}
-                                            </small>
-                                          `
-                                        : ''
-                                }
-
-                            </td>
-
-
-                            <td class="text-center">
-
-                                ${
-                                    isFinished
-                                        ? `
-                                            <button
-                                                type="button"
-                                                class="btn btn-sm btn-outline-primary"
-                                                onclick="showImportDetail(${item.id})"
-                                                title="Lihat Detail Import"
-                                            >
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                        `
-                                        : `
-                                            <span
-                                                class="text-muted"
-                                                title="Import masih berjalan"
-                                            >
-                                                <i class="fas fa-spinner fa-spin"></i>
-                                            </span>
-                                        `
-                                }
-
-                            </td>
-
-                        </tr>
-                    `;
-
-                }).join('');
-
-        })
-
-        .catch(function(error) {
-
-            console.error(
-                'Import history error:',
-                error
+            window.location.href = detailUrlTemplate.replace(
+                '__ID__',
+                encodeURIComponent(encryptedId)
             );
-
-            const tbody =
-                document.querySelector(
-                    '#importHistoryTable tbody'
-                );
-
-            tbody.innerHTML = `
-                <tr>
-                    <td
-                        colspan="10"
-                        class="text-center text-danger py-5"
-                    >
-                        <i class="fas fa-exclamation-circle me-1"></i>
-
-                        Gagal memuat import history.
-                    </td>
-                </tr>
-            `;
-        });
-    }
-
-
-    function showImportDetail(id) {
-
-        if (!id) {
-            return;
         }
-
-        window.location.href =
-            "{{ url('/dashboard/import-history-detail') }}/" + id;
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Load pertama
-    |--------------------------------------------------------------------------
-    */
-
-    loadImportHistory();
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Auto refresh setiap 2 detik
-    |--------------------------------------------------------------------------
-    */
-
-    setInterval(
-        loadImportHistory,
-        2000
     );
 
-</script>
+    // Refresh progress tanpa kembali ke halaman pertama.
+    const refreshTimer = setInterval(function () {
+        if (document.visibilityState === 'visible') {
+            table.ajax.reload(null, false);
+        }
+    }, 5000);
 
+    // Tidak perlu menghentikan timer secara manual;
+    // browser men-throttle tab yang tidak aktif.
+});
+</script>
 @endsection

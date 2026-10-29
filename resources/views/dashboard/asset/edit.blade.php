@@ -1322,7 +1322,7 @@
                             </h6>
 
                             <p class="asset-section-description">
-                                Maximum 3 photos total
+                                Maximum 6 photos total
                             </p>
 
                         </div>
@@ -1427,7 +1427,7 @@
 
                         <div class="text-muted small mt-1">
 
-                            Maximum 3 photos total
+                            Maximum 6 photos total
 
                             <br>
 
@@ -1715,7 +1715,7 @@ $(function () {
     // CONFIGURATION
     // ============================================================
 
-    const MAX_PHOTOS = 3;
+    const MAX_PHOTOS = 6;
 
     const MAX_DOCUMENTS = 5;
 
@@ -2370,10 +2370,10 @@ $(function () {
                             icon: 'warning',
 
                             title:
-                                'Maximum 3 Photos',
+                                'Maximum 6 Photos',
 
                             text:
-                                'Asset hanya dapat memiliki maksimal 3 foto.'
+                                'Asset hanya dapat memiliki maksimal 6 foto.'
 
                         });
 
@@ -3236,10 +3236,10 @@ $(function () {
                     icon: 'warning',
 
                     title:
-                        'Maximum 3 Photos',
+                        'Maximum 6 Photos',
 
                     text:
-                        'Asset hanya dapat memiliki maksimal 3 foto.'
+                        'Asset hanya dapat memiliki maksimal 6 foto.'
 
                 });
 

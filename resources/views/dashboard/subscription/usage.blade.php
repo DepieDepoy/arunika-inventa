@@ -9,7 +9,6 @@
     $planName = $planName ?? 'Subscription';
     $subscriptionStatus = $subscriptionStatus ?? 'unknown';
     $subscriptionEndsAt = $subscriptionEndsAt ?? null;
-
     $usage = $usage ?? [];
 
     $metrics = [
@@ -21,7 +20,7 @@
             'limit' => $usage['users']['limit'] ?? null,
             'icon' => 'bi-people-fill',
             'icon_style' => 'users',
-            'accent' => 'primary',
+            'accent' => '#696cff',
         ],
         [
             'key' => 'assets',
@@ -31,7 +30,7 @@
             'limit' => $usage['assets']['limit'] ?? null,
             'icon' => 'bi-buildings-fill',
             'icon_style' => 'assets',
-            'accent' => 'success',
+            'accent' => '#198754',
         ],
         [
             'key' => 'storage',
@@ -41,7 +40,7 @@
             'limit' => $usage['storage']['limit'] ?? null,
             'icon' => 'bi-database-fill',
             'icon_style' => 'storage',
-            'accent' => 'warning',
+            'accent' => '#f0ad32',
         ],
     ];
 
@@ -65,8 +64,8 @@
 
     $formatMetric = function ($key, $value) use ($formatBytes) {
         return $key === 'storage'
-            ? $formatBytes($value)
-            : number_format((float) $value, 0, ',', '.');
+            ? $formatBytes($value ?? 0)
+            : number_format((float) ($value ?? 0), 0, ',', '.');
     };
 
     $getPercentage = function ($used, $limit) {
@@ -74,7 +73,9 @@
             return null;
         }
 
-        return min(100, (int) round(((float) $used / (float) $limit) * 100));
+        return min(100, max(0, (int) round(
+            ((float) $used / (float) $limit) * 100
+        )));
     };
 
     $statusConfig = match (strtolower((string) $subscriptionStatus)) {
@@ -160,7 +161,7 @@
     }
 
     .usage-summary-card.assets-card {
-        --usage-accent: #28a745;
+        --usage-accent: #198754;
     }
 
     .usage-summary-card.storage-card {
@@ -223,16 +224,43 @@
         color: #8592a3;
     }
 
+    /* Progress bar */
     .usage-progress {
-        height: 9px;
-        border-radius: 20px;
-        overflow: hidden;
-        background: #edf0f5;
+        display: block !important;
+        width: 100%;
+        height: 10px !important;
+        padding: 0 !important;
+        margin-top: 4px;
+        border: 0;
+        border-radius: 999px !important;
+        overflow: hidden !important;
+        background-color: #e9edf3 !important;
+        box-shadow: inset 0 1px 2px rgba(15, 23, 42, .06);
     }
 
-    .usage-progress .progress-bar {
-        border-radius: 20px;
+    .usage-progress-fill {
+        display: block !important;
+        width: 0;
+        height: 100% !important;
+        min-width: 0;
+        max-width: 100%;
+        padding: 0 !important;
+        border: 0 !important;
+        border-radius: 999px !important;
+        opacity: 1 !important;
         transition: width .45s ease;
+    }
+
+    .usage-fill-success {
+        background-color: #16a34a !important;
+    }
+
+    .usage-fill-warning {
+        background-color: #f59e0b !important;
+    }
+
+    .usage-fill-danger {
+        background-color: #dc2626 !important;
     }
 
     .usage-status {
@@ -317,13 +345,10 @@
                 <div class="card usage-page-header">
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center usage-page-header">
-
                             <div>
                                 <div class="d-flex align-items-center gap-2 mb-2">
                                     <i class="bi bi-speedometer2 text-primary fs-4"></i>
-                                    <h5 class="usage-page-title mb-0">
-                                        Usage &amp; Limits
-                                    </h5>
+                                    <h5 class="usage-page-title mb-0">Usage &amp; Limits</h5>
                                 </div>
 
                                 <p class="usage-page-subtitle text-muted mb-0">
@@ -332,13 +357,11 @@
                             </div>
 
                             <div class="usage-header-action">
-                                <a href="{{ route('subscription.index') }}"
-                                   class="btn btn-primary">
+                                <a href="{{ route('subscription.index') }}" class="btn btn-primary">
                                     <i class="bi bi-box-seam me-1"></i>
                                     Lihat Paket
                                 </a>
                             </div>
-
                         </div>
                     </div>
                 </div>
@@ -351,10 +374,8 @@
                 <div class="card usage-plan-card">
                     <div class="card-body p-4">
                         <div class="row align-items-center">
-
                             <div class="col-md-8">
                                 <div class="d-flex align-items-center mb-3">
-
                                     <div class="usage-icon plan me-3">
                                         <i class="bi bi-award-fill"></i>
                                     </div>
@@ -363,16 +384,11 @@
                                         <div class="text-muted small mb-1">
                                             Paket Subscription Saat Ini
                                         </div>
-
-                                        <h4 class="usage-plan-name mb-0">
-                                            {{ $planName }}
-                                        </h4>
+                                        <h4 class="usage-plan-name mb-0">{{ $planName }}</h4>
                                     </div>
-
                                 </div>
 
                                 <div class="d-flex flex-wrap align-items-center gap-2">
-
                                     <span class="usage-status {{ $statusConfig['class'] }}">
                                         <i class="bi {{ $statusConfig['icon'] }}"></i>
                                         {{ $statusConfig['label'] }}
@@ -385,19 +401,16 @@
                                             {{ \Carbon\Carbon::parse($subscriptionEndsAt)->format('d M Y') }}
                                         </span>
                                     @endif
-
                                 </div>
                             </div>
 
                             <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                                <a href="{{ route('subscription.index') }}"
-                                   class="btn btn-outline-primary">
+                                <a href="{{ route('subscription.index') }}" class="btn btn-outline-primary">
                                     <i class="bi bi-gear me-1"></i>
                                     Kelola Subscription
                                     <i class="bi bi-arrow-right ms-1"></i>
                                 </a>
                             </div>
-
                         </div>
                     </div>
                 </div>
@@ -406,9 +419,7 @@
 
         {{-- USAGE METRICS --}}
         <div class="row">
-
             @foreach($metrics as $metric)
-
                 @php
                     $used = max(0, (float) $metric['used']);
                     $limit = $metric['limit'];
@@ -425,35 +436,29 @@
                         && $percentage !== null
                         && $percentage >= 80;
 
-                    $barColor = $isExceeded
-                        ? 'bg-danger'
-                        : ($isNearLimit
-                            ? 'bg-warning'
-                            : match ($metric['accent']) {
-                                'success' => 'bg-success',
-                                'warning' => 'bg-warning',
-                                default => 'bg-primary',
-                            });
-
                     $remaining = !$isUnlimited && (float) $limit > 0
                         ? max(0, (float) $limit - $used)
                         : null;
+
+                    if ($isExceeded || ($percentage !== null && $percentage >= 95)) {
+                        $barClass = 'usage-fill-danger';
+                    } elseif ($percentage !== null && $percentage >= 80) {
+                        $barClass = 'usage-fill-warning';
+                    } else {
+                        $barClass = 'usage-fill-success';
+                    }
                 @endphp
 
                 <div class="col-xl-4 col-md-6 mb-4">
-
                     <div class="card usage-summary-card h-100 {{ $metric['key'] }}-card">
-
                         <div class="card-body p-4">
 
                             {{-- CARD TITLE + ICON --}}
                             <div class="d-flex align-items-start justify-content-between mb-4">
-
                                 <div class="pe-2">
                                     <h5 class="usage-metric-label mb-2">
                                         {{ $metric['title'] }}
                                     </h5>
-
                                     <small class="text-muted">
                                         {{ $metric['description'] }}
                                     </small>
@@ -462,14 +467,11 @@
                                 <div class="usage-icon {{ $metric['icon_style'] }}">
                                     <i class="bi {{ $metric['icon'] }}"></i>
                                 </div>
-
                             </div>
 
                             {{-- USAGE NUMBER --}}
                             <div class="mb-3">
-
                                 <div class="d-flex align-items-baseline flex-wrap gap-2">
-
                                     <span class="usage-metric-value">
                                         {{ $formatMetric($metric['key'], $used) }}
                                     </span>
@@ -484,7 +486,6 @@
                                             Tidak tersedia
                                         @endif
                                     </span>
-
                                 </div>
 
                                 <small class="text-muted">
@@ -496,12 +497,10 @@
                                         Batas paket belum valid
                                     @endif
                                 </small>
-
                             </div>
 
                             {{-- PROGRESS BAR --}}
                             @if($isUnlimited)
-
                                 <div class="d-flex align-items-center gap-2 mt-4">
                                     <i class="bi bi-infinity text-success fs-4"></i>
                                     <small class="text-success fw-semibold">
@@ -510,109 +509,136 @@
                                 </div>
 
                             @elseif($percentage !== null)
-
-                                <div class="progress usage-progress mb-3"
-                                     aria-label="{{ $metric['title'] }} usage">
-
+                                <div
+                                    class="usage-progress mb-3"
+                                    role="progressbar"
+                                    aria-label="{{ $metric['title'] }} usage"
+                                    aria-valuenow="{{ $percentage }}"
+                                    aria-valuemin="0"
+                                    aria-valuemax="100"
+                                >
                                     <div
-                                        class="progress-bar {{ $barColor }}"
-                                        role="progressbar"
-                                        @style(['width' => ((int) $percentage) . '%'])
-                                        aria-valuenow="{{ (int) $percentage }}"
-                                        aria-valuemin="0"
-                                        aria-valuemax="100">
-                                    </div>
-
+                                        class="usage-progress-fill {{ $barClass }}"
+                                        data-width="{{ $percentage }}"
+                                    ></div>
                                 </div>
 
                                 <div class="d-flex justify-content-between align-items-start gap-2">
-
                                     @if($isExceeded)
-
                                         <small class="text-danger fw-semibold">
                                             <i class="bi bi-exclamation-circle-fill me-1"></i>
                                             Melebihi batas
                                         </small>
-
-                                    @elseif($isNearLimit)
-
-                                        <small class="text-warning fw-semibold">
+                                    @elseif($percentage == 100)
+                                        <small class="text-danger fw-semibold">
+                                            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                                            Batas tercapai
+                                        </small>
+                                    @elseif($percentage >= 95)
+                                        <small class="text-danger fw-semibold">
                                             <i class="bi bi-exclamation-triangle-fill me-1"></i>
                                             Hampir mencapai batas
                                         </small>
-
+                                    @elseif($isNearLimit)
+                                        <small class="fw-semibold" style="color: #b77908;">
+                                            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                                            Hampir mencapai batas
+                                        </small>
                                     @else
-
-                                        <small class="text-muted">
+                                        <small class="text-success fw-semibold">
                                             <i class="bi bi-check-circle me-1"></i>
                                             Masih tersedia
                                         </small>
-
                                     @endif
 
                                     <small class="text-muted text-end">
                                         Sisa:
-                                        <strong>
-                                            {{ $formatMetric($metric['key'], $remaining) }}
-                                        </strong>
+                                        <strong>{{ $formatMetric($metric['key'], $remaining) }}</strong>
                                     </small>
-
                                 </div>
 
-                            @else
+                                @if($metric['key'] === 'storage' && $percentage >= 95)
+                                    <div class="alert alert-danger py-2 px-3 mt-3 mb-0 small">
+                                        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                                        Penyimpanan hampir penuh. Kelola file atau tingkatkan paket.
+                                    </div>
+                                @elseif($metric['key'] === 'storage' && $percentage >= 80)
+                                    <div class="alert alert-warning py-2 px-3 mt-3 mb-0 small">
+                                        <i class="bi bi-exclamation-circle-fill me-1"></i>
+                                        Penggunaan storage sudah mencapai {{ $percentage }}%.
+                                        Pertimbangkan untuk mengelola file atau meningkatkan paket.
+                                    </div>
+                                @endif
 
+                            @else
                                 <div class="mt-4">
                                     <small class="text-muted">
                                         <i class="bi bi-info-circle me-1"></i>
                                         Batas paket tidak tersedia untuk ditampilkan.
                                     </small>
                                 </div>
-
                             @endif
 
                         </div>
                     </div>
                 </div>
-
             @endforeach
-
         </div>
 
         {{-- INFORMATION --}}
         <div class="row">
             <div class="col-12 mb-4">
-
                 <div class="card usage-info-card">
                     <div class="card-body p-4">
-
                         <div class="d-flex align-items-start">
-
                             <div class="usage-icon info me-3">
                                 <i class="bi bi-lightbulb-fill"></i>
                             </div>
 
                             <div>
-                                <h6 class="fw-bold mb-2">
-                                    Informasi Penggunaan
-                                </h6>
-
+                                <h6 class="fw-bold mb-2">Informasi Penggunaan</h6>
                                 <p class="text-muted mb-0" style="line-height: 1.8;">
                                     Data pemakaian mengikuti resource perusahaan Anda.
                                     Batas Users, Assets, dan Storage bergantung pada konfigurasi
-                                    paket subscription. Jika pemakaian mendekati kapasitas maksimum,
-                                    Anda dapat meninjau paket yang tersedia melalui menu Subscribe.
+                                    paket subscription. Peringatan akan ditampilkan ketika storage
+                                    mencapai 80% dan 95% dari kapasitas paket. Jika pemakaian
+                                    mendekati kapasitas maksimum, Anda dapat meninjau paket yang
+                                    tersedia melalui menu Subscribe.
                                 </p>
                             </div>
-
                         </div>
-
                     </div>
                 </div>
-
             </div>
         </div>
 
     </div>
 </div>
+
+{{-- SET PROGRESS WIDTH FROM ACTUAL PERCENTAGE --}}
+<script>
+(function () {
+    function updateUsageProgressBars() {
+        document.querySelectorAll('.usage-progress-fill[data-width]').forEach(function (bar) {
+            var percentage = parseFloat(bar.getAttribute('data-width'));
+
+            if (!Number.isFinite(percentage)) {
+                percentage = 0;
+            }
+
+            percentage = Math.max(0, Math.min(100, percentage));
+
+            // Set lebar sesuai persentase pemakaian, bukan selalu 100%.
+            bar.style.width = percentage + '%';
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', updateUsageProgressBars);
+    } else {
+        updateUsageProgressBars();
+    }
+})();
+</script>
 
 @endsection

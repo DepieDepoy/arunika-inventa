@@ -117,7 +117,7 @@
                                 <strong>Active</strong>.
                             </li>
                             <li>
-                                User hasil import akan menggunakan password default
+                                User hasil import akan menggunakan password default (Vasetra@2026)
                                 dan diwajibkan mengganti password saat login pertama.
                             </li>
                         </ul>

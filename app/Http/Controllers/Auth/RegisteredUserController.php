@@ -149,14 +149,24 @@ class RegisteredUserController extends Controller
             */
 
             Subscription::create([
-                'company_id' => $company->id,
-                'plan_id' => $freePlan->id,
-                'billing_cycle' => 'trial',
-                'price' => 0,
-                'start_date' => $startDate,
-                'end_date' => $endDate,
-                'status' => 'active',
-                'payment_status' => 'paid',
+                'company_id'          => $company->id,
+                'plan_id'              => $freePlan->id,
+                'billing_cycle'        => 'trial',
+                'price'                => 0,
+
+                'base_storage_bytes'   => $freePlan->max_storage_bytes,
+                'storage_addon_bytes'  => 0,
+                'total_storage_bytes'  => $freePlan->max_storage_bytes,
+
+                'storage_addon_gb'     => 0,
+                'storage_addon_price'  => 0,
+                'discount_amount'      => 0,
+                'total_price'          => 0,
+
+                'start_date'           => $startDate,
+                'end_date'             => $endDate,
+                'status'               => 'active',
+                'payment_status'       => 'paid',
             ]);
 
             /*

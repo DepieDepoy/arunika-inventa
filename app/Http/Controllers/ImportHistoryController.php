@@ -27,182 +27,143 @@ class ImportHistoryController extends Controller
      * IMPORT HISTORY PROGRESS
      * =========================================================
      */
+    
     public function progress()
     {
-        $histories = ImportHistory::where(
-            'company_id',
-            Auth::user()->company_id
-        )
-            ->latest()
-            ->get();
+        $query = ImportHistory::query()
+            ->where('company_id', Auth::user()->company_id)
+            ->select([
+                'id',
+                'company_id',
+                'module',
+                'file_name',
+                'total_rows',
+                'success_rows',
+                'failed_rows',
+                'status',
+                'started_at',
+                'finished_at',
+                'created_at',
+            ]);
 
-        $data = $histories->map(function ($history) {
+        return DataTables::of($query)
 
-            $total = (int) $history->total_rows;
-            $success = (int) $history->success_rows;
-            $failed = (int) $history->failed_rows;
+            ->addIndexColumn()
 
-            $processed = $success + $failed;
+            ->addColumn('encrypted_id', function ($history) {
+                return encryptId((string) $history->id);
+            })
 
-            $progress = $total > 0
-                ? min(
-                    round(
-                        ($processed / $total) * 100
-                    ),
+            ->addColumn('processed_rows', function ($history) {
+                return (int) $history->success_rows
+                    + (int) $history->failed_rows;
+            })
+
+            ->addColumn('progress', function ($history) {
+                $total = (int) $history->total_rows;
+
+                if ($total <= 0) {
+                    return 0;
+                }
+
+                $processed = (int) $history->success_rows
+                    + (int) $history->failed_rows;
+
+                return min(
+                    (int) round(($processed / $total) * 100),
                     100
-                )
-                : 0;
+                );
+            })
 
-            $duration = null;
+            ->addColumn('duration', function ($history) {
+                if (!$history->started_at) {
+                    return null;
+                }
 
-            if ($history->started_at) {
+                $endTime = $history->finished_at ?? now();
 
-                $endTime =
-                    $history->finished_at ?? now();
+                $seconds = (int) $history->started_at
+                    ->diffInSeconds($endTime);
 
-                $seconds =
-                    $history->started_at
-                        ->diffInSeconds($endTime);
+                $hours = intdiv($seconds, 3600);
+                $minutes = intdiv($seconds % 3600, 60);
+                $remainingSeconds = $seconds % 60;
 
-                $hours =
-                    intdiv(
-                        $seconds,
-                        3600
-                    );
-
-                $minutes =
-                    intdiv(
-                        $seconds % 3600,
-                        60
-                    );
-
-                $remainingSeconds =
-                    $seconds % 60;
+                $parts = [];
 
                 if ($hours > 0) {
-
-                    $duration =
-                        $hours . ' jam';
-
-                    if ($minutes > 0) {
-
-                        $duration .=
-                            ' ' .
-                            $minutes .
-                            ' menit';
-                    }
-
-                    if ($remainingSeconds > 0) {
-
-                        $duration .=
-                            ' ' .
-                            $remainingSeconds .
-                            ' detik';
-                    }
-
-                } elseif ($minutes > 0) {
-
-                    $duration =
-                        $minutes . ' menit';
-
-                    if ($remainingSeconds > 0) {
-
-                        $duration .=
-                            ' ' .
-                            $remainingSeconds .
-                            ' detik';
-                    }
-
-                } else {
-
-                    $duration =
-                        $remainingSeconds .
-                        ' detik';
+                    $parts[] = $hours . ' jam';
                 }
 
-                if (
-                    $history->status ===
-                    'processing'
-                ) {
-
-                    $duration .=
-                        ' (berjalan)';
+                if ($minutes > 0) {
+                    $parts[] = $minutes . ' menit';
                 }
-            }
 
-            return [
-                'id' =>
-                    $history->id,
+                if ($remainingSeconds > 0 || empty($parts)) {
+                    $parts[] = $remainingSeconds . ' detik';
+                }
 
-                'module' =>
-                    $history->module,
+                $duration = implode(' ', $parts);
 
-                'file_name' =>
-                    $history->file_name,
+                if ($history->status === 'processing') {
+                    $duration .= ' (berjalan)';
+                }
 
-                'total_rows' =>
-                    $total,
+                return $duration;
+            })
 
-                'success_rows' =>
-                    $success,
+            ->editColumn('started_at', function ($history) {
+                return $history->started_at
+                    ? $history->started_at->format('d M Y H:i:s')
+                    : null;
+            })
 
-                'failed_rows' =>
-                    $failed,
+            ->orderColumn('started_at', 'started_at $1')
 
-                'processed_rows' =>
-                    $processed,
+            ->orderColumn('module', 'module $1')
 
-                'progress' =>
-                    $progress,
+            ->orderColumn('file_name', 'file_name $1')
 
-                'status' =>
-                    $history->status,
+            ->orderColumn('status', 'status $1')
 
-                'started_at' =>
-                    $history->started_at
-                        ? $history->started_at
-                            ->format(
-                                'd M Y H:i:s'
-                            )
-                        : null,
+            ->orderColumn('total_rows', 'total_rows $1')
 
-                'finished_at' =>
-                    $history->finished_at
-                        ? $history->finished_at
-                            ->format(
-                                'd M Y H:i:s'
-                            )
-                        : null,
+            ->orderColumn('success_rows', 'success_rows $1')
 
-                'duration' =>
-                    $duration,
-            ];
-        });
+            ->orderColumn('failed_rows', 'failed_rows $1')
 
-        return response()->json(
-            $data
-        );
+            ->toJson();
     }
-
 
     /**
      * =========================================================
      * IMPORT HISTORY DETAIL
      * =========================================================
      */
-    public function detail(int $id)
+    
+    public function detail(string $id)
     {
+        try {
+            $id = decryptId($id);
+        } catch (\Throwable $e) {
+            abort(404);
+        }
+
+        if (!is_numeric($id)) {
+            abort(404);
+        }
+
         $history = ImportHistory::where(
             'company_id',
             Auth::user()->company_id
-        )
-            ->findOrFail($id);
+        )->findOrFail((int) $id);
 
         return view(
             'dashboard.import-history.detail',
             compact('history')
         );
     }
+
 
 
     /**

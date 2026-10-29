@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Subscription extends Model
 {
+    
     protected $fillable = [
         'company_id',
         'plan_id',
@@ -16,6 +17,12 @@ class Subscription extends Model
         'price',
         'storage_addon_gb',
         'storage_addon_price',
+
+        // STORAGE QUOTA
+        'base_storage_bytes',
+        'storage_addon_bytes',
+        'total_storage_bytes',
+
         'discount_amount',
         'total_price',
 
@@ -24,6 +31,7 @@ class Subscription extends Model
         'status',
         'payment_status',
     ];
+
 
     protected function casts(): array
     {

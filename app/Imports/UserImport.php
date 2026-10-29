@@ -2,90 +2,69 @@
 
 namespace App\Imports;
 
-use App\Models\ImportError;
 use App\Models\ImportHistory;
 use App\Models\Role;
 use App\Models\User;
 use App\Notifications\UserImportedNotification;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
-class UserImport implements
-    ToCollection,
-    WithHeadingRow,
-    WithChunkReading
+class UserImport implements ToCollection, WithHeadingRow, WithChunkReading
 {
     protected int $companyId;
-
     protected int $staffRoleId;
-
     protected string $defaultPassword;
-
     protected string $defaultPasswordHash;
-
     protected ImportHistory $history;
-
     protected bool $sendVerificationEmail;
+
+    /*
+     * Cache lintas chunk agar duplikat dalam satu file
+     * tetap terdeteksi meskipun barisnya berjauhan.
+     */
+    protected array $seenNiks = [];
+    protected array $seenEmails = [];
+    protected array $seenPhones = [];
 
     public function __construct(
         ImportHistory $history,
         bool $sendVerificationEmail = false
     ) {
         $this->history = $history;
+        $this->sendVerificationEmail = $sendVerificationEmail;
+        $this->companyId = (int) $history->company_id;
 
-        $this->sendVerificationEmail =
-            $sendVerificationEmail;
-
-        $this->companyId =
-            $history->company_id;
-
-        $staffRole = Role::where(
-            'company_id',
-            $this->companyId
-        )
-            ->where(
-                'role_name',
-                'Staff'
-            )
+        $staffRole = Role::where('company_id', $this->companyId)
+            ->where('role_name', 'Staff')
             ->firstOrFail();
 
-        $this->staffRoleId =
-            $staffRole->id;
+        $this->staffRoleId = (int) $staffRole->id;
 
-        /*
-         * =====================================================
-         * DEFAULT PASSWORD
-         * =====================================================
-         *
-         * Password plain disimpan di memory hanya untuk
-         * kebutuhan email verification.
-         *
-         * Database tetap menyimpan password hash.
-         */
+        $this->defaultPassword = env(
+            'DEFAULT_USER_PASSWORD',
+            'Vasetra@123'
+        );
 
-        $this->defaultPassword =
-            env(
-                'DEFAULT_USER_PASSWORD',
-                'Vasetra@123'
-            );
-
-        /*
-         * Hash password SATU KALI saja.
-         */
-
-        $this->defaultPasswordHash =
-            Hash::make(
-                $this->defaultPassword
-            );
+        $this->defaultPasswordHash = Hash::make(
+            $this->defaultPassword
+        );
     }
 
     /**
-     * Process setiap chunk Excel.
+     * Normalisasi nomor telepon untuk perbandingan.
+     * Spasi dan tanda pemisah diabaikan, tetapi + dan angka
+     * tetap dipertahankan agar format internasional tidak
+     * diubah secara sembarangan.
      */
+    protected function normalizePhone(string $phone): string
+    {
+        return preg_replace('/[\s().-]+/', '', trim($phone)) ?? trim($phone);
+    }
+
     public function collection(Collection $rows): void
     {
         if ($rows->isEmpty()) {
@@ -93,42 +72,15 @@ class UserImport implements
         }
 
         /*
-         * =====================================================
          * 1. NORMALISASI DATA CHUNK
-         * =====================================================
          */
-
         $preparedRows = [];
 
         foreach ($rows as $row) {
-
-            $nik = trim(
-                (string) (
-                    $row['id_person_nik'] ?? ''
-                )
-            );
-
-            $name = trim(
-                (string) (
-                    $row['name'] ?? ''
-                )
-            );
-
-            $email = trim(
-                (string) (
-                    $row['email'] ?? ''
-                )
-            );
-
-            $phone = trim(
-                (string) (
-                    $row['phone'] ?? ''
-                )
-            );
-
-            /*
-             * Abaikan baris kosong.
-             */
+            $nik = trim((string) ($row['id_person_nik'] ?? ''));
+            $name = trim((string) ($row['name'] ?? ''));
+            $email = trim((string) ($row['email'] ?? ''));
+            $phone = trim((string) ($row['phone'] ?? ''));
 
             if (
                 $nik === '' &&
@@ -140,24 +92,14 @@ class UserImport implements
             }
 
             $preparedRows[] = [
-                'nik' =>
-                    $nik,
-
-                'name' =>
-                    $name,
-
-                'email' =>
-                    $email !== ''
-                        ? strtolower($email)
-                        : null,
-
-                'phone' =>
-                    $phone !== ''
-                        ? $phone
-                        : null,
-
-                'original_data' =>
-                    $row->toArray(),
+                'nik' => $nik,
+                'name' => $name,
+                'email' => $email !== '' ? strtolower($email) : null,
+                'phone' => $phone !== '' ? $phone : null,
+                'phone_key' => $phone !== ''
+                    ? $this->normalizePhone($phone)
+                    : null,
+                'original_data' => $row->toArray(),
             ];
         }
 
@@ -166,386 +108,247 @@ class UserImport implements
         }
 
         /*
-         * =====================================================
-         * 2. KUMPULKAN NIK & EMAIL
-         * =====================================================
+         * 2. AMBIL DATA UNTUK PENGECEKAN DATABASE
          */
-
         $niks = [];
-
         $emails = [];
+        $phones = [];
 
         foreach ($preparedRows as $row) {
-
             if ($row['nik'] !== '') {
-                $niks[] =
-                    $row['nik'];
+                $niks[] = $row['nik'];
             }
 
-            if (!empty($row['email'])) {
-                $emails[] =
-                    $row['email'];
+            if ($row['email'] !== null) {
+                $emails[] = $row['email'];
+            }
+
+            if ($row['phone'] !== null) {
+                $phones[] = $row['phone'];
             }
         }
 
-        $niks = array_values(
-            array_unique($niks)
-        );
-
-        $emails = array_values(
-            array_unique($emails)
-        );
+        $niks = array_values(array_unique($niks));
+        $emails = array_values(array_unique($emails));
+        $phones = array_values(array_unique($phones));
 
         /*
-         * =====================================================
-         * 3. CEK NIK EXISTING SEKALIGUS
-         * =====================================================
+         * 3. CEK NIK EXISTING
          */
-
         $existingNiks = [];
 
-        if (!empty($niks)) {
-
-            $existingNiks = User::where(
-                'company_id',
-                $this->companyId
-            )
-                ->whereIn(
-                    'nik',
-                    $niks
-                )
+        if ($niks !== []) {
+            $existingNiks = User::query()
+                ->where('company_id', $this->companyId)
+                ->whereIn('nik', $niks)
                 ->pluck('nik')
-                ->map(
-                    fn ($value) =>
-                        (string) $value
-                )
+                ->map(fn ($value) => trim((string) $value))
                 ->flip()
                 ->toArray();
         }
 
         /*
-         * =====================================================
-         * 4. CEK EMAIL EXISTING SEKALIGUS
-         * =====================================================
+         * 4. CEK EMAIL EXISTING
          */
-
         $existingEmails = [];
 
-        if (!empty($emails)) {
-
-            $existingEmails = User::where(
-                'company_id',
-                $this->companyId
-            )
-                ->whereIn(
-                    'email',
-                    $emails
-                )
+        if ($emails !== []) {
+            $existingEmails = User::query()
+                ->where('company_id', $this->companyId)
+                ->whereIn('email', $emails)
                 ->pluck('email')
-                ->map(
-                    fn ($value) =>
-                        strtolower(
-                            (string) $value
-                        )
-                )
+                ->map(fn ($value) => strtolower(trim((string) $value)))
                 ->flip()
                 ->toArray();
         }
 
         /*
-         * =====================================================
-         * 5. CEK DUPLICATE DI DALAM FILE
-         * =====================================================
+         * 5. CEK TELEPON EXISTING
+         *
+         * Unique index users_phone_unique berlaku global.
+         * Ambil semua nomor yang cocok dengan nilai Excel.
          */
+        $existingPhones = [];
 
-        $seenNiks = [];
+        if ($phones !== []) {
+            $existingPhoneValues = User::query()
+                ->whereIn('phone', $phones)
+                ->pluck('phone');
 
-        $seenEmails = [];
+            foreach ($existingPhoneValues as $existingPhone) {
+                $key = $this->normalizePhone((string) $existingPhone);
 
+                if ($key !== '') {
+                    $existingPhones[$key] = true;
+                }
+            }
+        }
+
+        /*
+         * 6. VALIDASI PER BARIS
+         */
         $insertRows = [];
-
         $errorRows = [];
 
         foreach ($preparedRows as $row) {
-
             $errors = [];
 
-            $nik =
-                $row['nik'];
-
-            $email =
-                $row['email'];
-
-            /*
-             * NIK wajib.
-             */
+            $nik = $row['nik'];
+            $email = $row['email'];
+            $phone = $row['phone'];
+            $phoneKey = $row['phone_key'];
 
             if ($nik === '') {
-
-                $errors[] =
-                    'NIK wajib diisi.';
+                $errors[] = 'NIK wajib diisi.';
             }
-
-            /*
-             * Nama wajib.
-             */
 
             if ($row['name'] === '') {
-
-                $errors[] =
-                    'Nama wajib diisi.';
+                $errors[] = 'Nama wajib diisi.';
             }
-
-            /*
-             * Validasi email.
-             */
 
             if (
                 $email !== null &&
-                !filter_var(
-                    $email,
-                    FILTER_VALIDATE_EMAIL
-                )
+                !filter_var($email, FILTER_VALIDATE_EMAIL)
             ) {
-
-                $errors[] =
-                    'Format email tidak valid.';
+                $errors[] = 'Format email tidak valid.';
             }
 
             /*
-             * Cek NIK database.
+             * NIK: file Excel lebih dahulu, lalu database.
              */
-
-            if (
-                $nik !== '' &&
-                isset(
-                    $existingNiks[$nik]
-                )
-            ) {
-
-                $errors[] =
-                    'NIK sudah terdaftar di perusahaan ini.';
-            }
-
-            /*
-             * Cek duplicate NIK dalam file.
-             */
-
-            if (
-                $nik !== '' &&
-                isset(
-                    $seenNiks[$nik]
-                )
-            ) {
-
-                $errors[] =
-                    'NIK duplicate di dalam file Excel.';
-            }
-
-            /*
-             * Cek email database.
-             */
-
-            if (
-                $email !== null &&
-                isset(
-                    $existingEmails[$email]
-                )
-            ) {
-
-                $errors[] =
-                    'Email sudah terdaftar di perusahaan ini.';
-            }
-
-            /*
-             * Cek duplicate email dalam file.
-             */
-
-            if (
-                $email !== null &&
-                isset(
-                    $seenEmails[$email]
-                )
-            ) {
-
-                $errors[] =
-                    'Email duplicate di dalam file Excel.';
-            }
-
-            /*
-             * Tandai sebagai sudah pernah ditemukan.
-             */
-
             if ($nik !== '') {
-                $seenNiks[$nik] = true;
+                if (isset($this->seenNiks[$nik])) {
+                    $errors[] = 'NIK duplikat di dalam file Excel.';
+                } elseif (isset($existingNiks[$nik])) {
+                    $errors[] = 'NIK sudah terdaftar di perusahaan ini.';
+                }
+            }
+
+            /*
+             * Email: file Excel lebih dahulu, lalu database.
+             */
+            if ($email !== null) {
+                if (isset($this->seenEmails[$email])) {
+                    $errors[] = 'Email duplikat di dalam file Excel.';
+                } elseif (isset($existingEmails[$email])) {
+                    $errors[] = 'Email sudah terdaftar di perusahaan ini.';
+                }
+            }
+
+            /*
+             * TELEPON:
+             * Periksa duplikat di Excel menggunakan nilai normalisasi.
+             */
+            if ($phoneKey !== null && $phoneKey !== '') {
+                if (isset($this->seenPhones[$phoneKey])) {
+                    $errors[] = 'Nomor telepon duplikat di dalam file Excel.';
+                } elseif (isset($existingPhones[$phoneKey])) {
+                    $errors[] = 'Nomor telepon sudah terdaftar di database.';
+                }
+            }
+
+            /*
+             * Tandai nilai yang sudah ditemukan agar baris berikutnya
+             * terdeteksi sebagai duplikat, termasuk antar-chunk.
+             */
+            if ($nik !== '') {
+                $this->seenNiks[$nik] = true;
             }
 
             if ($email !== null) {
-                $seenEmails[$email] = true;
+                $this->seenEmails[$email] = true;
+            }
+
+            if ($phoneKey !== null && $phoneKey !== '') {
+                $this->seenPhones[$phoneKey] = true;
             }
 
             /*
-             * =================================================
-             * ERROR
-             * =================================================
+             * Baris gagal: catat ke tabel import_errors.
              */
-
-            if (!empty($errors)) {
-
+            if ($errors !== []) {
                 $errorRows[] = [
-                    'import_history_id' =>
-                        $this->history->id,
-
-                    'row_number' =>
-                        0,
-
-                    'data' =>
-                        json_encode(
-                            $row['original_data'],
-                            JSON_UNESCAPED_UNICODE
-                        ),
-
-                    'error_message' =>
-                        implode(
-                            ' ',
-                            $errors
-                        ),
-
-                    'created_at' =>
-                        now(),
-
-                    'updated_at' =>
-                        now(),
+                    'import_history_id' => $this->history->id,
+                    'row_number' => 0,
+                    'data' => json_encode(
+                        $row['original_data'],
+                        JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+                    ),
+                    'error_message' => implode(' ', $errors),
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ];
 
                 continue;
             }
 
             /*
-             * =================================================
-             * VALID → SIAP BULK INSERT
-             * =================================================
+             * Baris valid: masukkan ke batch insert.
              */
-
             $insertRows[] = [
-                'company_id' =>
-                    $this->companyId,
-
-                'role_id' =>
-                    $this->staffRoleId,
-
-                'name' =>
-                    $row['name'],
-
-                'nik' =>
-                    $nik,
-
-                'email' =>
-                    $email,
-
-                'phone' =>
-                    $row['phone'],
-
-                'password' =>
-                    $this->defaultPasswordHash,
-
-                'status' =>
-                    1,
-
-                'must_change_password' =>
-                    1,
-
-                /*
-                 * ON:
-                 * email_verified_at = NULL
-                 *
-                 * OFF:
-                 * email_verified_at = NOW
-                 */
-
-                'email_verified_at' =>
-                    $this->sendVerificationEmail
-                        ? null
-                        : now(),
-
-                'created_at' =>
-                    now(),
-
-                'updated_at' =>
-                    now(),
+                'company_id' => $this->companyId,
+                'role_id' => $this->staffRoleId,
+                'name' => $row['name'],
+                'nik' => $nik,
+                'email' => $email,
+                'phone' => $phone,
+                'password' => $this->defaultPasswordHash,
+                'status' => 1,
+                'must_change_password' => 1,
+                'email_verified_at' => $this->sendVerificationEmail
+                    ? null
+                    : now(),
+                'created_at' => now(),
+                'updated_at' => now(),
             ];
         }
 
         /*
-         * =====================================================
-         * 6. BULK INSERT USER
-         * =====================================================
+         * 7. SIMPAN ERROR VALIDASI TERLEBIH DAHULU
+         *
+         * Supaya detail error sudah tercatat sebelum proses insert.
          */
+        if ($errorRows !== []) {
+            DB::table('import_errors')->insert($errorRows);
 
-        if (!empty($insertRows)) {
+            $this->history->increment(
+                'failed_rows',
+                count($errorRows)
+            );
+        }
 
-            DB::table('users')->insert(
-                $insertRows
+        /*
+         * 8. BULK INSERT USER VALID
+         */
+        if ($insertRows !== []) {
+            DB::table('users')->insert($insertRows);
+
+            $this->history->increment(
+                'success_rows',
+                count($insertRows)
             );
 
             /*
-             * =================================================
-             * SEND VERIFICATION EMAIL
-             * =================================================
-             *
-             * Hanya dijalankan jika toggle ON.
-             *
-             * User yang gagal validasi tidak berada di
-             * $insertRows sehingga tidak akan mendapatkan email.
+             * 9. KIRIM NOTIFIKASI JIKA DIMINTA
              */
+            if ($this->sendVerificationEmail) {
+                $insertedNiks = collect($insertRows)
+                    ->pluck('nik')
+                    ->filter()
+                    ->unique()
+                    ->values()
+                    ->all();
 
-            if (
-                $this->sendVerificationEmail
-            ) {
+                if ($insertedNiks !== []) {
+                    $insertedUsers = User::query()
+                        ->where('company_id', $this->companyId)
+                        ->whereIn('nik', $insertedNiks)
+                        ->get();
 
-                $insertedNiks =
-                    collect($insertRows)
-                        ->pluck('nik')
-                        ->filter()
-                        ->values()
-                        ->all();
-
-                if (!empty($insertedNiks)) {
-
-                    $insertedUsers =
-                        User::where(
-                            'company_id',
-                            $this->companyId
-                        )
-                            ->whereIn(
-                                'nik',
-                                $insertedNiks
-                            )
-                            ->get();
-
-                    foreach (
-                        $insertedUsers
-                        as $user
-                    ) {
-
-                        /*
-                         * Jika email kosong,
-                         * tidak ada email yang dikirim.
-                         */
-
-                        if (
-                            empty(
-                                $user->email
-                            )
-                        ) {
+                    foreach ($insertedUsers as $user) {
+                        if (empty($user->email)) {
                             continue;
                         }
-
-                        /*
-                         * Email masuk QUEUE.
-                         *
-                         * Tidak menghambat proses import.
-                         */
 
                         $user->notify(
                             new UserImportedNotification(
@@ -556,48 +359,8 @@ class UserImport implements
                 }
             }
         }
-
-        /*
-         * =====================================================
-         * 7. BULK INSERT ERROR
-         * =====================================================
-         */
-
-        if (!empty($errorRows)) {
-
-            DB::table(
-                'import_errors'
-            )->insert(
-                $errorRows
-            );
-        }
-
-        /*
-         * =====================================================
-         * 8. UPDATE COUNTER HISTORY
-         * =====================================================
-         */
-
-        $successCount =
-            count($insertRows);
-
-        $failedCount =
-            count($errorRows);
-
-        $this->history->increment(
-            'success_rows',
-            $successCount
-        );
-
-        $this->history->increment(
-            'failed_rows',
-            $failedCount
-        );
     }
 
-    /**
-     * Ukuran chunk.
-     */
     public function chunkSize(): int
     {
         return 1000;

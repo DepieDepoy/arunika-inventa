@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use App\Services\CompanyStorage;
 
 class MaintenanceRequestController extends Controller
 {
@@ -561,6 +562,82 @@ class MaintenanceRequestController extends Controller
 
         /*
         |--------------------------------------------------------------------------
+        | STORAGE LIMIT - MAINTENANCE PROGRESS PHOTOS
+        |--------------------------------------------------------------------------
+        | Progress boleh ditambahkan tanpa foto.
+        | Jika ada foto, periksa kuota sebelum membuat log
+        | atau menyimpan file fisik.
+        |--------------------------------------------------------------------------
+        */
+
+        $storageFiles = $request->file('photos', []);
+
+        if (!is_array($storageFiles)) {
+            $storageFiles = $storageFiles ? [$storageFiles] : [];
+        }
+
+        $storageFiles = array_values(array_filter($storageFiles));
+
+        $storageUsedBytes = CompanyStorage::usedBytes(
+            $user->company_id
+        );
+
+        $storageLimitBytes = CompanyStorage::limitBytes(
+            $user->company_id
+        );
+
+        $storageIncomingBytes = CompanyStorage::uploadBytes(
+            $storageFiles
+        );
+
+        $storageProjectedBytes =
+            $storageUsedBytes + $storageIncomingBytes;
+
+        if (
+            $storageIncomingBytes > 0
+            && $storageProjectedBytes > $storageLimitBytes
+        ) {
+            $storageRemainingBytes = max(
+                0,
+                $storageLimitBytes - $storageUsedBytes
+            );
+
+            $storageExcessBytes = max(
+                0,
+                $storageProjectedBytes - $storageLimitBytes
+            );
+
+            $message = sprintf(
+                'Kapasitas storage tidak mencukupi. Terpakai: %s, kuota: %s, foto progress baru: %s, sisa kuota: %s, perkiraan pemakaian setelah upload: %s, kelebihan kuota: %s. Hapus file yang tidak diperlukan atau upgrade paket.',
+                CompanyStorage::formatBytes($storageUsedBytes),
+                CompanyStorage::formatBytes($storageLimitBytes),
+                CompanyStorage::formatBytes($storageIncomingBytes),
+                CompanyStorage::formatBytes($storageRemainingBytes),
+                CompanyStorage::formatBytes($storageProjectedBytes),
+                CompanyStorage::formatBytes($storageExcessBytes)
+            );
+
+            return response()->json([
+                'success' => false,
+                'message' => $message,
+                'errors' => [
+                    'storage_limit' => [$message],
+                ],
+                'storage' => [
+                    'used_bytes' => $storageUsedBytes,
+                    'limit_bytes' => $storageLimitBytes,
+                    'incoming_bytes' => $storageIncomingBytes,
+                    'remaining_bytes' => $storageRemainingBytes,
+                    'projected_bytes' => $storageProjectedBytes,
+                    'excess_bytes' => $storageExcessBytes,
+                ],
+            ], 422);
+        }
+
+        // Tutup pengecekan storage progress
+
+        /*
+        |--------------------------------------------------------------------------
         | DATE PATH
         |--------------------------------------------------------------------------
         */
@@ -917,6 +994,81 @@ class MaintenanceRequestController extends Controller
             ?? Str::slug(
                 $company->company_name ?? 'company'
             );
+        
+        /*
+        |--------------------------------------------------------------------------
+        | STORAGE LIMIT - MAINTENANCE RESULT PHOTOS
+        |--------------------------------------------------------------------------
+        | Hitung seluruh foto hasil maintenance sebelum membuat
+        | riwayat maintenance dan menyimpan file fisik.
+        |--------------------------------------------------------------------------
+        */
+
+        $storageFiles = $request->file('after_photos', []);
+
+        if (!is_array($storageFiles)) {
+            $storageFiles = $storageFiles ? [$storageFiles] : [];
+        }
+
+        $storageFiles = array_values(array_filter($storageFiles));
+
+        $storageUsedBytes = CompanyStorage::usedBytes(
+            $user->company_id
+        );
+
+        $storageLimitBytes = CompanyStorage::limitBytes(
+            $user->company_id
+        );
+
+        $storageIncomingBytes = CompanyStorage::uploadBytes(
+            $storageFiles
+        );
+
+        $storageProjectedBytes =
+            $storageUsedBytes + $storageIncomingBytes;
+
+        if (
+            $storageIncomingBytes > 0
+            && $storageProjectedBytes > $storageLimitBytes
+        ) {
+            $storageRemainingBytes = max(
+                0,
+                $storageLimitBytes - $storageUsedBytes
+            );
+
+            $storageExcessBytes = max(
+                0,
+                $storageProjectedBytes - $storageLimitBytes
+            );
+
+            $message = sprintf(
+                'Kapasitas storage tidak mencukupi. Terpakai: %s, kuota: %s, foto maintenance baru: %s, sisa kuota: %s, perkiraan pemakaian setelah upload: %s, kelebihan kuota: %s. Hapus file yang tidak diperlukan atau upgrade paket.',
+                CompanyStorage::formatBytes($storageUsedBytes),
+                CompanyStorage::formatBytes($storageLimitBytes),
+                CompanyStorage::formatBytes($storageIncomingBytes),
+                CompanyStorage::formatBytes($storageRemainingBytes),
+                CompanyStorage::formatBytes($storageProjectedBytes),
+                CompanyStorage::formatBytes($storageExcessBytes)
+            );
+
+            return response()->json([
+                'success' => false,
+                'message' => $message,
+                'errors' => [
+                    'storage_limit' => [$message],
+                ],
+                'storage' => [
+                    'used_bytes' => $storageUsedBytes,
+                    'limit_bytes' => $storageLimitBytes,
+                    'incoming_bytes' => $storageIncomingBytes,
+                    'remaining_bytes' => $storageRemainingBytes,
+                    'projected_bytes' => $storageProjectedBytes,
+                    'excess_bytes' => $storageExcessBytes,
+                ],
+            ], 422);
+        }
+
+        // Tutup pengecekan storage maintenance
 
         /*
         |--------------------------------------------------------------------------

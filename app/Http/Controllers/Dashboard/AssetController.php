@@ -33,6 +33,7 @@ use App\Exports\AssetImportTemplateExport;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Services\ExcelPreviewService;
 use App\Jobs\ProcessAssetImport;
+use App\Services\CompanyStorage;
 
 Carbon::setLocale('id');
 
@@ -706,6 +707,77 @@ class AssetController extends Controller
             ], 422);
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | STORAGE LIMIT - MANUAL ASSET
+        |--------------------------------------------------------------------------
+        | Hitung foto dan dokumen baru sebelum membuat asset atau
+        | menyimpan file fisik.
+        */
+
+        $storageFiles = [];
+
+        $photos = $request->file('asset_photos', []);
+        $invoices = $request->file('invoice_documents', []);
+
+        if (is_array($photos)) {
+            $storageFiles = array_merge($storageFiles, $photos);
+        }
+
+        if (is_array($invoices)) {
+            $storageFiles = array_merge($storageFiles, $invoices);
+        }
+
+        $storageUsedBytes = CompanyStorage::usedBytes($companyId);
+        $storageLimitBytes = CompanyStorage::limitBytes($companyId);
+        $storageIncomingBytes = CompanyStorage::uploadBytes($storageFiles);
+        $storageProjectedBytes = $storageUsedBytes + $storageIncomingBytes;
+        
+        if (
+            $storageIncomingBytes > 0
+            && $storageProjectedBytes > $storageLimitBytes
+        ) {
+            $storageRemainingBytes = max(
+                0,
+                $storageLimitBytes - $storageUsedBytes
+            );
+
+            $storageExcessBytes = max(
+                0,
+                $storageProjectedBytes - $storageLimitBytes
+            );
+
+            return response()->json([
+                'success' => false,
+                'errors' => [
+                    'storage_limit' => [
+                        'Kapasitas storage tidak mencukupi. '
+                        . 'Terpakai: '
+                        . CompanyStorage::formatBytes($storageUsedBytes)
+                        . ', kuota: '
+                        . CompanyStorage::formatBytes($storageLimitBytes)
+                        . ', file baru: '
+                        . CompanyStorage::formatBytes($storageIncomingBytes)
+                        . ', sisa kuota: '
+                        . CompanyStorage::formatBytes($storageRemainingBytes)
+                        . ', perkiraan pemakaian setelah upload: '
+                        . CompanyStorage::formatBytes($storageProjectedBytes)
+                        . ', kelebihan kuota: '
+                        . CompanyStorage::formatBytes($storageExcessBytes)
+                        . '. Hapus file yang tidak diperlukan atau upgrade paket.'
+                    ]
+                ],
+                'storage' => [
+                    'used_bytes' => $storageUsedBytes,
+                    'limit_bytes' => $storageLimitBytes,
+                    'incoming_bytes' => $storageIncomingBytes,
+                    'remaining_bytes' => $storageRemainingBytes,
+                    'projected_bytes' => $storageProjectedBytes,
+                    'excess_bytes' => $storageExcessBytes,
+                ],
+            ], 422);
+        }
+        //tutup pengecekan storage
 
         DB::beginTransaction();
 
@@ -1841,6 +1913,97 @@ public function update(Request $request)
         ], 404);
     }
 
+    
+    /*
+    |--------------------------------------------------------------------------
+    | CHECK STORAGE QUOTA
+    |--------------------------------------------------------------------------
+    | Update aset yang sudah ada tetap diperbolehkan meskipun
+    | jumlah aset sudah mencapai limit paket.
+    |
+    | Yang dicek hanya penambahan/pengurangan kapasitas storage.
+    |--------------------------------------------------------------------------
+    */
+
+    $storage = app(CompanyStorage::class);
+
+    // Ambil ID file yang akan dihapus.
+    $deleteImageIds = array_values(array_unique(array_filter(
+        (array) $request->input('delete_images', []),
+        fn ($id) => is_numeric($id)
+    )));
+
+    $deleteInvoiceIds = array_values(array_unique(array_filter(
+        (array) $request->input('delete_invoice_documents', []),
+        fn ($id) => is_numeric($id)
+    )));
+
+    // Pastikan file yang dihitung memang milik aset ini.
+    $photosToDelete = AssetPhoto::where('asset_id', $asset->id)
+        ->whereIn('id', $deleteImageIds)
+        ->get();
+
+    $invoicesToDelete = AssetDocument::where('asset_id', $asset->id)
+        ->where('document_type', 'invoice')
+        ->whereIn('id', $deleteInvoiceIds)
+        ->get();
+
+    // Hitung ukuran file lama yang benar-benar akan dihapus.
+    $deletedPaths = $photosToDelete
+        ->pluck('file_path')
+        ->merge($invoicesToDelete->pluck('file_path'))
+        ->all();
+
+    $deletedBytes = $storage->deletedBytes($deletedPaths);
+
+    // Hitung ukuran seluruh file baru yang akan diunggah.
+    $newPhotoFiles = array_values(array_filter(
+        (array) $request->file('asset_photos', [])
+    ));
+
+    $newInvoiceFiles = array_values(array_filter(
+        (array) $request->file('invoice_documents', [])
+    ));
+
+    $incomingFiles = array_merge(
+        $newPhotoFiles,
+        $newInvoiceFiles
+    );
+
+    $incomingBytes = $storage->uploadBytes($incomingFiles);
+
+    // Tolak hanya jika proyeksi penggunaan storage melampaui kuota.
+    if (!$storage->canFit(
+        $companyId,
+        $incomingBytes,
+        $deletedBytes
+    )) {
+        $usedBytes = $storage->usedBytes($companyId);
+        $limitBytes = $storage->limitBytes($companyId);
+
+        return response()->json([
+            'success' => false,
+            'message' => sprintf(
+                'Kapasitas storage tidak mencukupi. Terpakai %s MB dari %s MB. File baru: %s MB. File yang dihapus: %s MB. Perkiraan pemakaian setelah update: %s MB. Hapus file lama atau upgrade paket.',
+                number_format($usedBytes / 1048576, 2),
+                number_format($limitBytes / 1048576, 2),
+                number_format($incomingBytes / 1048576, 2),
+                number_format($deletedBytes / 1048576, 2),
+                number_format(
+                    ($usedBytes + $incomingBytes - $deletedBytes) / 1048576,
+                    2
+                )
+            ),
+            'storage' => [
+                'used_bytes' => $usedBytes,
+                'limit_bytes' => $limitBytes,
+                'incoming_bytes' => $incomingBytes,
+                'deleted_bytes' => $deletedBytes,
+            ],
+        ], 422);
+    }
+    //close check storage quota
+
     DB::beginTransaction();
 
     $uploadedImagePaths = [];
@@ -2072,12 +2235,12 @@ public function update(Request $request)
         $newPhotoFiles = array_values(array_filter($newPhotoFiles));
         $newPhotoCount = count($newPhotoFiles);
 
-        if ($remainingPhotoCount + $newPhotoCount > 3) {
+        if ($remainingPhotoCount + $newPhotoCount > 6) {
             DB::rollBack();
 
             return response()->json([
                 'success' => false,
-                'message' => 'Total foto asset maksimal 3 file.',
+                'message' => 'Total foto asset maksimal 6 file.',
             ], 422);
         }
 

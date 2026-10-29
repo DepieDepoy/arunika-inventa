@@ -140,4 +140,77 @@ class DokuService
         ];
 
     }
+
+    public function checkStatus(string $invoiceNumber): array
+    {
+        $clientId = config('services.doku.client_id');
+        $secretKey = config('services.doku.secret_key');
+
+        $baseUrl = rtrim(
+            config('services.doku.base_url'),
+            '/'
+        );
+
+        if (!$clientId || !$secretKey || !$baseUrl) {
+            throw new \RuntimeException(
+                'Konfigurasi DOKU belum lengkap.'
+            );
+        }
+
+        $requestId = (string) \Illuminate\Support\Str::uuid();
+        $timestamp = now('UTC')->format('Y-m-d\TH:i:s\Z');
+
+        $requestTarget = '/orders/v1/status/'
+            . rawurlencode($invoiceNumber);
+
+        // GET tidak memakai Digest.
+        $signatureComponents =
+            "Client-Id:{$clientId}\n" .
+            "Request-Id:{$requestId}\n" .
+            "Request-Timestamp:{$timestamp}\n" .
+            "Request-Target:{$requestTarget}";
+
+        $signature = base64_encode(
+            hash_hmac(
+                'sha256',
+                $signatureComponents,
+                $secretKey,
+                true
+            )
+        );
+
+        $response = \Illuminate\Support\Facades\Http::acceptJson()
+            ->withHeaders([
+                'Client-Id' => $clientId,
+                'Request-Id' => $requestId,
+                'Request-Timestamp' => $timestamp,
+                'Signature' => 'HMACSHA256=' . $signature,
+            ])
+            ->timeout(30)
+            ->get($baseUrl . $requestTarget);
+
+        if (!$response->successful()) {
+            report(new \RuntimeException(
+                'DOKU Check Status gagal: HTTP '
+                . $response->status()
+                . ' - '
+                . $response->body()
+            ));
+
+            throw new \RuntimeException(
+                'Status pembayaran belum dapat diverifikasi ke DOKU.'
+            );
+        }
+
+        $result = $response->json();
+
+        if (!is_array($result)) {
+            throw new \RuntimeException(
+                'Respons Check Status DOKU tidak valid.'
+            );
+        }
+
+        return $result;
+    }
+
 }

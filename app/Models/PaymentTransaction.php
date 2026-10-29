@@ -100,11 +100,11 @@ class PaymentTransaction extends Model
 
     public function isPaid(): bool
     {
-        return in_array($this->transaction_status, [
-            'settlement',
-            'capture',
-            'paid',
-        ], true);
+        return in_array(
+            strtolower((string) $this->transaction_status),
+            ['success', 'settlement', 'capture', 'paid'],
+            true
+        );
     }
 
     public function isFailed(): bool
