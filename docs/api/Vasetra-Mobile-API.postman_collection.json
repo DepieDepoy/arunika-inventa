@@ -864,80 +864,6 @@
                     }
                 },
                 {
-                    "name": "POST /assets/{assetId}/maintenance-request",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/assets/:assetId/maintenance-request",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "assets",
-                                ":assetId",
-                                "maintenance-request"
-                            ],
-                            "variable": [
-                                {
-                                    "key": "assetId",
-                                    "value": "1"
-                                }
-                            ]
-                        },
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n    \"description\": \"AC kurang dingin sejak kemarin\"\n}"
-                        }
-                    }
-                },
-                {
-                    "name": "POST /assets/{assetId}/repair-request",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/assets/:assetId/repair-request",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "assets",
-                                ":assetId",
-                                "repair-request"
-                            ],
-                            "variable": [
-                                {
-                                    "key": "assetId",
-                                    "value": "1"
-                                }
-                            ]
-                        },
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n    \"description\": \"Layar laptop berkedip\"\n}"
-                        }
-                    }
-                },
-                {
                     "name": "POST /assets/{id}/assign",
                     "request": {
                         "method": "POST",
@@ -1239,6 +1165,146 @@
                     }
                 },
                 {
+                    "name": "POST /assets/{assetId}/maintenance-request",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/assets/:assetId/maintenance-request",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "assets",
+                                ":assetId",
+                                "maintenance-request"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "assetId",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"description\": \"AC kurang dingin sejak kemarin\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "POST /assets/{assetId}/repair-request",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/assets/:assetId/repair-request",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "assets",
+                                ":assetId",
+                                "repair-request"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "assetId",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"description\": \"Layar laptop berkedip\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "POST /assets/{assetId}/requests",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/assets/:assetId/requests",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "assets",
+                                ":assetId",
+                                "requests"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "assetId",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"request_type\": \"problem\",\n    \"description\": \"Laptop tidak bisa menyala\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "POST /maintenance-requests/{id}/cancel",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/maintenance-requests/:id/cancel",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "maintenance-requests",
+                                ":id",
+                                "cancel"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
                     "name": "POST /maintenance/team/requests/{id}/complete",
                     "request": {
                         "method": "POST",
@@ -1368,6 +1434,42 @@
                                     "value": "1"
                                 }
                             ]
+                        }
+                    }
+                },
+                {
+                    "name": "PUT /maintenance-requests/{id}",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/maintenance-requests/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "maintenance-requests",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"request_type\": \"repair\",\n    \"description\": \"Laptop tidak bisa menyala, sudah dicoba charger lain\"\n}"
                         }
                     }
                 }
@@ -1625,8 +1727,458 @@
             ]
         },
         {
-            "name": "User & Admin",
+            "name": "Master Data",
             "item": [
+                {
+                    "name": "DELETE /categories/{id}",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/categories/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "categories",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "DELETE /sub-categories/{id}",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/sub-categories/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "sub-categories",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "DELETE /vendors/{id}",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/vendors/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "vendors",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "GET /categories",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/categories",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "categories"
+                            ],
+                            "variable": []
+                        }
+                    }
+                },
+                {
+                    "name": "GET /categories/{id}",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/categories/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "categories",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "GET /vendors",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/vendors",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "vendors"
+                            ],
+                            "variable": []
+                        }
+                    }
+                },
+                {
+                    "name": "GET /vendors/{id}",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/vendors/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "vendors",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "POST /categories",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/categories",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "categories"
+                            ],
+                            "variable": []
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"category_name\": \"Kendaraan\",\n    \"status\": 1,\n    \"description\": \"Mobil & motor operasional\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "POST /categories/{id}/sub-categories",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/categories/:id/sub-categories",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "categories",
+                                ":id",
+                                "sub-categories"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"sub_category_name\": \"Motor\",\n    \"status\": 1\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "POST /vendors",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/vendors",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "vendors"
+                            ],
+                            "variable": []
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"vendor_name\": \"CV Servis Jaya\",\n    \"address\": \"Jl. Merdeka 10, Bandung\",\n    \"email\": \"servis@jaya.co.id\",\n    \"phone\": \"0221234567\",\n    \"pic_name\": \"Andi\",\n    \"status\": 1\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "PUT /categories/{id}",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/categories/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "categories",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"category_name\": \"Kendaraan\",\n    \"status\": 1,\n    \"description\": \"Mobil & motor operasional\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "PUT /sub-categories/{id}",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/sub-categories/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "sub-categories",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"sub_category_name\": \"Motor Listrik\",\n    \"status\": 1\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "PUT /vendors/{id}",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/vendors/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "vendors",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"vendor_name\": \"CV Servis Jaya\",\n    \"address\": \"Jl. Merdeka 10, Bandung\",\n    \"email\": \"servis@jaya.co.id\",\n    \"phone\": \"0221234567\",\n    \"pic_name\": \"Andi\",\n    \"status\": 1\n}"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "User, Role & Admin",
+            "item": [
+                {
+                    "name": "DELETE /roles/{id}",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/roles/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "roles",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "DELETE /users/{id}",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/users/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "users",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    }
+                },
                 {
                     "name": "GET /admin/audit-logs",
                     "request": {
@@ -1751,6 +2303,79 @@
                     }
                 },
                 {
+                    "name": "GET /roles",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/roles",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "roles"
+                            ],
+                            "variable": []
+                        }
+                    }
+                },
+                {
+                    "name": "GET /roles/permissions",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/roles/permissions",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "roles",
+                                "permissions"
+                            ],
+                            "variable": []
+                        }
+                    }
+                },
+                {
+                    "name": "GET /roles/{id}",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/roles/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "roles",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
                     "name": "GET /users",
                     "request": {
                         "method": "GET",
@@ -1767,6 +2392,29 @@
                             ],
                             "path": [
                                 "users"
+                            ],
+                            "variable": []
+                        }
+                    }
+                },
+                {
+                    "name": "GET /users/roles",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/users/roles",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "users",
+                                "roles"
                             ],
                             "variable": []
                         }
@@ -1797,6 +2445,242 @@
                                     "value": "1"
                                 }
                             ]
+                        }
+                    }
+                },
+                {
+                    "name": "POST /roles",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/roles",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "roles"
+                            ],
+                            "variable": []
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"role_name\": \"Teknisi\",\n    \"status\": 1\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "POST /users",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/users",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "users"
+                            ],
+                            "variable": []
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Budi Teknisi\",\n    \"nik\": \"3201000000000001\",\n    \"email\": \"budi@perusahaan.com\",\n    \"phone\": \"081234500001\",\n    \"role_id\": 2,\n    \"status\": 1,\n    \"send_verification_email\": true\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "PUT /roles/{id}",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/roles/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "roles",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"role_name\": \"Teknisi Lapangan\",\n    \"status\": 1\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "PUT /roles/{id}/permissions",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/roles/:id/permissions",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "roles",
+                                ":id",
+                                "permissions"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"permission_ids\": [\n        1,\n        2,\n        3\n    ]\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "PUT /users/{id}",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/users/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "users",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Budi Teknisi\",\n    \"nik\": \"3201000000000001\",\n    \"email\": \"budi@perusahaan.com\",\n    \"phone\": \"081234500001\",\n    \"role_id\": 2,\n    \"status\": 1\n}"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Vasetra AI",
+            "item": [
+                {
+                    "name": "POST /ai/ask",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/ai/ask",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "ai",
+                                "ask"
+                            ],
+                            "variable": []
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"question\": \"Aset apa saja yang maintenance-nya terlambat?\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "POST /ai/confirm",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/ai/confirm",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "ai",
+                                "confirm"
+                            ],
+                            "variable": []
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"token\": \"TOKEN_64_KARAKTER_DARI_RESPONS_ASK\"\n}"
                         }
                     }
                 }

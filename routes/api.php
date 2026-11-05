@@ -88,7 +88,7 @@ Route::prefix('v1')->group(function () {
             */
 
             Route::middleware(
-                'permission:asset.view'
+                'permission:asset.view|maintenance.create'
             )->group(function () {
 
                 /*
@@ -100,7 +100,7 @@ Route::prefix('v1')->group(function () {
                 Route::get(
                     '/assets/qr/{qrToken}',
                     [AssetController::class, 'scanQr']
-                )->name(
+                )->middleware('permission:asset.view')->name(
                     'api.v1.assets.scan-qr'
                 );
 
@@ -187,7 +187,7 @@ Route::prefix('v1')->group(function () {
                 Route::get(
                     '/assets/{id}/maintenances',
                     [AssetController::class, 'maintenances']
-                )->name(
+                )->middleware('permission:asset.view')->name(
                     'api.v1.assets.maintenances'
                 );
 
@@ -201,7 +201,7 @@ Route::prefix('v1')->group(function () {
                 Route::get(
                     '/assets',
                     [AssetController::class, 'index']
-                )->name(
+                )->middleware('permission:asset.view')->name(
                     'api.v1.assets.index'
                 );
 
@@ -215,7 +215,7 @@ Route::prefix('v1')->group(function () {
                 Route::get(
                     '/assets/{id}',
                     [AssetController::class, 'show']
-                )->name(
+                )->middleware('permission:asset.view')->name(
                     'api.v1.assets.show'
                 );
             });
@@ -286,7 +286,7 @@ Route::prefix('v1')->group(function () {
             */
 
             Route::middleware(
-                'permission:asset.view'
+                'permission:asset.view|maintenance.create'
             )->group(function () {
 
                 /*

@@ -303,6 +303,11 @@ class AssetController extends Controller
                 'company_id',
                 $user->company_id
             )
+            // Tanpa asset.view (mis. Karyawan) hanya foto aset yang dipegangnya.
+            ->when(
+                !$user->hasPermission('asset.view'),
+                fn ($query) => $query->where('responsible_user_id', $user->id)
+            )
             ->whereHas(
                 'photos',
                 function ($query) use ($photoId) {

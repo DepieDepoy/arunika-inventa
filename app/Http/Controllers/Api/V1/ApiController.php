@@ -85,6 +85,16 @@ abstract class ApiController extends Controller
     }
 
     /**
+     * Apakah respons hasil delegate() sukses (beberapa controller web
+     * memakai kunci `status` alih-alih `success`).
+     */
+    protected function succeeded(JsonResponse $response): bool
+    {
+        return $response->getStatusCode() < 400
+            && (($response->getData(true)['success'] ?? true) !== false);
+    }
+
+    /**
      * Menjalankan aksi controller dashboard (yang sudah mengembalikan JSON)
      * agar aturan bisnis web & mobile tetap satu sumber.
      *

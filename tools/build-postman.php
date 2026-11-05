@@ -22,6 +22,21 @@ $bodies = [
     'POST v1/assets/{id}/return' => ['reason' => 'Resign'],
     'POST v1/assets/{assetId}/maintenance-request' => ['description' => 'AC kurang dingin sejak kemarin'],
     'POST v1/assets/{assetId}/repair-request' => ['description' => 'Layar laptop berkedip'],
+    'POST v1/assets/{assetId}/requests' => ['request_type' => 'problem', 'description' => 'Laptop tidak bisa menyala'],
+    'PUT v1/maintenance-requests/{id}' => ['request_type' => 'repair', 'description' => 'Laptop tidak bisa menyala, sudah dicoba charger lain'],
+    'POST v1/users' => ['name' => 'Budi Teknisi', 'nik' => '3201000000000001', 'email' => 'budi@perusahaan.com', 'phone' => '081234500001', 'role_id' => 2, 'status' => 1, 'send_verification_email' => true],
+    'PUT v1/users/{id}' => ['name' => 'Budi Teknisi', 'nik' => '3201000000000001', 'email' => 'budi@perusahaan.com', 'phone' => '081234500001', 'role_id' => 2, 'status' => 1],
+    'POST v1/roles' => ['role_name' => 'Teknisi', 'status' => 1],
+    'PUT v1/roles/{id}' => ['role_name' => 'Teknisi Lapangan', 'status' => 1],
+    'PUT v1/roles/{id}/permissions' => ['permission_ids' => [1, 2, 3]],
+    'POST v1/categories' => ['category_name' => 'Kendaraan', 'status' => 1, 'description' => 'Mobil & motor operasional'],
+    'PUT v1/categories/{id}' => ['category_name' => 'Kendaraan', 'status' => 1, 'description' => 'Mobil & motor operasional'],
+    'POST v1/categories/{id}/sub-categories' => ['sub_category_name' => 'Motor', 'status' => 1],
+    'PUT v1/sub-categories/{id}' => ['sub_category_name' => 'Motor Listrik', 'status' => 1],
+    'POST v1/vendors' => ['vendor_name' => 'CV Servis Jaya', 'address' => 'Jl. Merdeka 10, Bandung', 'email' => 'servis@jaya.co.id', 'phone' => '0221234567', 'pic_name' => 'Andi', 'status' => 1],
+    'PUT v1/vendors/{id}' => ['vendor_name' => 'CV Servis Jaya', 'address' => 'Jl. Merdeka 10, Bandung', 'email' => 'servis@jaya.co.id', 'phone' => '0221234567', 'pic_name' => 'Andi', 'status' => 1],
+    'POST v1/ai/ask' => ['question' => 'Aset apa saja yang maintenance-nya terlambat?'],
+    'POST v1/ai/confirm' => ['token' => 'TOKEN_64_KARAKTER_DARI_RESPONS_ASK'],
 ];
 
 $multipart = [
@@ -66,7 +81,9 @@ $folders = [
     'Maintenance' => ['maintenances', 'maintenance-requests', 'maintenance'],
     'Kalender' => ['calendar'],
     'Lookups' => ['lookups'],
-    'User & Admin' => ['users', 'admin'],
+    'Master Data' => ['categories', 'sub-categories', 'vendors'],
+    'User, Role & Admin' => ['users', 'roles', 'admin'],
+    'Vasetra AI' => ['ai'],
 ];
 
 $items = [];
@@ -125,6 +142,8 @@ foreach (app('router')->getRoutes() as $route) {
         foreach ($folders as $name => $prefixes) {
             if (in_array($first, $prefixes, true)) { $folder = $name; break; }
         }
+        // Request maintenance yang berawal /assets/... tetap dikelompokkan ke Maintenance.
+        if (str_contains($path, "request")) { $folder = "Maintenance"; }
         $items[$folder][] = $item;
     }
 }

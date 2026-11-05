@@ -175,21 +175,8 @@ class RegisteredUserController extends Controller
             |--------------------------------------------------------------------------
             */
 
-            $defaultRoles = [
-                'Administrator',
-                'Manager',
-                'Supervisor',
-                'Staff',
-            ];
-
-            foreach ($defaultRoles as $roleName) {
-                Role::create([
-                    'company_id' => $company->id,
-                    'role_name' => $roleName,
-                    'role_code' => Str::slug($roleName, '_'),
-                    'status' => 1,
-                ]);
-            }
+            // Administrator, Teknisi, Karyawan + permission bawaannya.
+            \App\Support\DefaultRoles::provision($company->id);
 
             /*
             |--------------------------------------------------------------------------

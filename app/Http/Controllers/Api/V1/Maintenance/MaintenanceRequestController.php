@@ -11,6 +11,7 @@ use App\Models\MaintenanceRequestLog;
 use App\Models\MaintenanceRequestLogPhoto;
 use App\Models\Vendor;
 use App\Services\CompanyStorage;
+use App\Services\Maintenance\MaintenanceRequestNotifier;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +19,77 @@ use Illuminate\Support\Str;
 
 class MaintenanceRequestController extends Controller
 {
+    public const REQUEST_TYPES = ['maintenance', 'repair', 'problem', 'other'];
+
+    public function __construct(
+        protected MaintenanceRequestNotifier $notifier
+    ) {
+    }
+
+    protected function error(string $message, string $code, int $status = 422, array $extra = []): JsonResponse
+    {
+        return response()->json(array_merge([
+            'success' => false,
+            'message' => $message,
+            'code' => $code,
+        ], $extra), $status);
+    }
+
+    /**
+     * 409 saat request sudah tidak bisa diambil, menyebutkan siapa
+     * yang sedang mengerjakannya.
+     */
+    protected function alreadyTaken(?MaintenanceRequest $maintenanceRequest): JsonResponse
+    {
+        $maintenanceRequest?->loadMissing('handler:id,name');
+        $handler = $maintenanceRequest?->handler;
+
+        $message = match ($maintenanceRequest?->status) {
+            'in_progress' => 'Request ini sudah diambil dan sedang dikerjakan oleh ' . ($handler?->name ?? 'teknisi lain') . '.',
+            'completed' => 'Request ini sudah selesai dikerjakan.',
+            'cancelled' => 'Request ini sudah dibatalkan oleh pemohon.',
+            default => 'Request ini sudah diambil atau sudah selesai diproses.',
+        };
+
+        return $this->error($message, 'ALREADY_TAKEN', 409, [
+            'data' => [
+                'status' => $maintenanceRequest?->status,
+                'handler' => $handler ? ['id' => $handler->id, 'name' => $handler->name] : null,
+            ],
+        ]);
+    }
+
+    /**
+     * Penanda tampilan untuk Flutter: siapa yang mengerjakan,
+     * apakah bisa diambil / dikerjakan oleh user login.
+     */
+    protected function workflowFlags(MaintenanceRequest $maintenanceRequest): array
+    {
+        $userId = (int) auth()->id();
+        $isMine = $maintenanceRequest->status === 'in_progress'
+            && (int) $maintenanceRequest->handled_by === $userId;
+
+        $label = match ($maintenanceRequest->status) {
+            'pending' => 'Menunggu diambil',
+            'in_progress' => $isMine
+                ? 'Sedang dikerjakan oleh Anda'
+                : 'Sedang dikerjakan oleh ' . ($maintenanceRequest->handler?->name ?? 'teknisi'),
+            'completed' => 'Selesai',
+            'cancelled' => 'Dibatalkan',
+            default => ucfirst(str_replace('_', ' ', (string) $maintenanceRequest->status)),
+        };
+
+        return [
+            'request_type_label' => $this->notifier->typeLabel($maintenanceRequest),
+            'status_label' => $label,
+            'is_mine' => $isMine,
+            'can_take' => $maintenanceRequest->status === 'pending',
+            'can_work' => $isMine,
+            'can_edit' => $maintenanceRequest->status === 'pending'
+                && (int) $maintenanceRequest->requested_by === $userId,
+        ];
+    }
+
     /**
      * Respons standar saat kuota storage perusahaan tidak mencukupi.
      */
@@ -185,6 +257,140 @@ class MaintenanceRequestController extends Controller
 
     /*
     |--------------------------------------------------------------------------
+    | USER - CREATE REQUEST (SEMUA JENIS)
+    |--------------------------------------------------------------------------
+    |
+    | request_type: maintenance | repair | problem | other
+    |
+    */
+
+    public function storeRequest(
+        Request $request,
+        int $assetId
+    ): JsonResponse {
+        $validated = $request->validate([
+            'request_type' => [
+                'required',
+                'in:' . implode(',', self::REQUEST_TYPES),
+            ],
+        ]);
+
+        return $this->createRequest(
+            $request,
+            $assetId,
+            $validated['request_type']
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | USER - EDIT REQUEST (selama masih menunggu diambil)
+    |--------------------------------------------------------------------------
+    */
+
+    public function update(
+        Request $request,
+        int $id
+    ): JsonResponse {
+        $user = $request->user();
+
+        $maintenanceRequest = MaintenanceRequest::query()
+            ->where('company_id', $user->company_id)
+            ->where('requested_by', $user->id)
+            ->findOrFail($id);
+
+        if ($maintenanceRequest->status !== 'pending') {
+            return $this->error(
+                'Request sudah diproses sehingga tidak dapat diubah.',
+                'INVALID_STATUS'
+            );
+        }
+
+        $validated = $request->validate([
+            'request_type' => [
+                'sometimes',
+                'in:' . implode(',', self::REQUEST_TYPES),
+            ],
+            'description' => [
+                'required',
+                'string',
+                'min:5',
+                'max:5000',
+            ],
+        ]);
+
+        $maintenanceRequest->update($validated);
+
+        $maintenanceRequest->load([
+            'asset:id,asset_code,asset_name',
+            'handler:id,name',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Request berhasil diperbarui.',
+            'data' => [
+                'request' => $this->formatRequest($maintenanceRequest),
+            ],
+        ]);
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | USER - BATALKAN REQUEST (selama masih menunggu diambil)
+    |--------------------------------------------------------------------------
+    */
+
+    public function cancel(
+        Request $request,
+        int $id
+    ): JsonResponse {
+        $user = $request->user();
+
+        $result = DB::transaction(function () use ($user, $id) {
+            $maintenanceRequest = MaintenanceRequest::query()
+                ->where('company_id', $user->company_id)
+                ->where('requested_by', $user->id)
+                ->lockForUpdate()
+                ->findOrFail($id);
+
+            if ($maintenanceRequest->status !== 'pending') {
+                return null;
+            }
+
+            $maintenanceRequest->update(['status' => 'cancelled']);
+
+            return $maintenanceRequest;
+        });
+
+        if (!$result) {
+            return $this->error(
+                'Request sudah diambil teknisi sehingga tidak dapat dibatalkan.',
+                'INVALID_STATUS'
+            );
+        }
+
+        $this->notifier->cancelled($result);
+
+        $result->load([
+            'asset:id,asset_code,asset_name',
+            'handler:id,name',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Request berhasil dibatalkan.',
+            'data' => [
+                'request' => $this->formatRequest($result),
+            ],
+        ]);
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
     | USER - CREATE REQUEST CORE
     |--------------------------------------------------------------------------
     */
@@ -221,11 +427,11 @@ class MaintenanceRequestController extends Controller
             ->first();
 
         if (!$asset) {
-            return response()->json([
-                'success' => false,
-                'message' =>
-                    'Asset tidak ditemukan atau Anda bukan responsible user asset ini.',
-            ], 404);
+            return $this->error(
+                'Asset tidak ditemukan atau Anda bukan penanggung jawab asset ini.',
+                'NOT_FOUND',
+                404
+            );
         }
 
         /*
@@ -259,6 +465,8 @@ class MaintenanceRequestController extends Controller
 
                 'message' =>
                     'Asset ini masih memiliki request yang sedang diproses.',
+
+                'code' => 'ACTIVE_REQUEST_EXISTS',
 
                 'data' => [
                     'request' => [
@@ -323,13 +531,15 @@ class MaintenanceRequestController extends Controller
             'asset:id,asset_code,asset_name',
         ]);
 
+        // Tim maintenance diberi tahu ada request yang menunggu diambil.
+        $this->notifier->created($maintenanceRequest);
+
         return response()->json([
             'success' => true,
 
             'message' =>
-                $requestType === 'repair'
-                    ? 'Repair request berhasil dibuat.'
-                    : 'Maintenance request berhasil dibuat.',
+                'Request ' . strtolower($this->notifier->typeLabel($maintenanceRequest))
+                . ' berhasil dibuat. Tim maintenance sudah diberi tahu.',
 
             'data' => [
                 'request' =>
@@ -386,7 +596,24 @@ class MaintenanceRequestController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        if (!$request->filled('status')) {
+        /*
+        | scope (opsional, diutamakan di atas status):
+        |   available   : menunggu diambil (pending)
+        |   in_progress : sedang dikerjakan siapa pun
+        |   mine        : sedang saya kerjakan
+        |   history     : sudah selesai / dibatalkan
+        */
+        $scope = (string) $request->query('scope', '');
+
+        if ($scope === 'available') {
+            $query->where('status', 'pending');
+        } elseif ($scope === 'in_progress') {
+            $query->where('status', 'in_progress');
+        } elseif ($scope === 'mine') {
+            $query->where('status', 'in_progress')->where('handled_by', $user->id);
+        } elseif ($scope === 'history') {
+            $query->whereIn('status', ['completed', 'cancelled']);
+        } elseif (!$request->filled('status')) {
             $query->whereIn(
                 'status',
                 [
@@ -471,11 +698,26 @@ class MaintenanceRequestController extends Controller
             })
             ->values();
 
+        $counts = MaintenanceRequest::query()
+            ->where('company_id', $user->company_id)
+            ->whereIn('status', ['pending', 'in_progress'])
+            ->selectRaw("SUM(status = 'pending') AS available")
+            ->selectRaw("SUM(status = 'in_progress') AS in_progress")
+            ->selectRaw('SUM(status = ? AND handled_by = ?) AS mine', ['in_progress', $user->id])
+            ->first();
+
         return response()->json([
             'success' => true,
 
             'data' => [
                 'requests' => $data,
+
+                // Angka badge untuk tab di aplikasi.
+                'summary' => [
+                    'available' => (int) ($counts->available ?? 0),
+                    'in_progress' => (int) ($counts->in_progress ?? 0),
+                    'mine' => (int) ($counts->mine ?? 0),
+                ],
             ],
 
             'pagination' => [
@@ -584,12 +826,7 @@ class MaintenanceRequestController extends Controller
             $maintenanceRequest->status !==
             'pending'
         ) {
-            return response()->json([
-                'success' => false,
-
-                'message' =>
-                    'Request ini sudah diambil atau sudah selesai diproses.',
-            ], 422);
+            return $this->alreadyTaken($maintenanceRequest);
         }
 
         /*
@@ -630,12 +867,7 @@ class MaintenanceRequestController extends Controller
             ]);
 
         if ($updated !== 1) {
-            return response()->json([
-                'success' => false,
-
-                'message' =>
-                    'Request sudah lebih dahulu diambil oleh teknisi lain.',
-            ], 409);
+            return $this->alreadyTaken($maintenanceRequest->fresh());
         }
 
         $maintenanceRequest->refresh();
@@ -645,6 +877,8 @@ class MaintenanceRequestController extends Controller
             'requester:id,name',
             'handler:id,name',
         ]);
+
+        $this->notifier->taken($maintenanceRequest, $user);
 
         return response()->json([
             'success' => true,
@@ -698,12 +932,10 @@ class MaintenanceRequestController extends Controller
             $maintenanceRequest->status !==
             'in_progress'
         ) {
-            return response()->json([
-                'success' => false,
-
-                'message' =>
-                    'Progress hanya dapat ditambahkan pada request In Progress.',
-            ], 422);
+            return $this->error(
+                'Progress hanya dapat ditambahkan pada request yang sedang dikerjakan.',
+                'INVALID_STATUS'
+            );
         }
 
         /*
@@ -716,12 +948,11 @@ class MaintenanceRequestController extends Controller
             (int) $maintenanceRequest->handled_by !==
             (int) $user->id
         ) {
-            return response()->json([
-                'success' => false,
-
-                'message' =>
-                    'Anda bukan teknisi yang menangani request ini.',
-            ], 403);
+            return $this->error(
+                'Anda bukan teknisi yang menangani request ini.',
+                'NOT_HANDLER',
+                403
+            );
         }
 
         /*
@@ -931,6 +1162,8 @@ class MaintenanceRequestController extends Controller
             'photos',
         ]);
 
+        $this->notifier->progress($maintenanceRequest, $user, $validated['note']);
+
         return response()->json([
             'success' => true,
 
@@ -986,12 +1219,10 @@ class MaintenanceRequestController extends Controller
             $maintenanceRequest->status !==
             'in_progress'
         ) {
-            return response()->json([
-                'success' => false,
-
-                'message' =>
-                    'Request harus berstatus In Progress terlebih dahulu.',
-            ], 422);
+            return $this->error(
+                'Request harus diambil (sedang dikerjakan) terlebih dahulu.',
+                'INVALID_STATUS'
+            );
         }
 
         /*
@@ -1004,12 +1235,11 @@ class MaintenanceRequestController extends Controller
             (int) $maintenanceRequest->handled_by !==
             (int) $user->id
         ) {
-            return response()->json([
-                'success' => false,
-
-                'message' =>
-                    'Request ini sedang ditangani oleh user lain.',
-            ], 403);
+            return $this->error(
+                'Request ini sedang ditangani oleh user lain.',
+                'NOT_HANDLER',
+                403
+            );
         }
 
         /*
@@ -1403,6 +1633,8 @@ class MaintenanceRequestController extends Controller
             'photos',
         ]);
 
+        $this->notifier->completed($maintenanceRequest, $user, $maintenance);
+
         return response()->json([
             'success' => true,
 
@@ -1489,7 +1721,7 @@ class MaintenanceRequestController extends Controller
     private function formatRequest(
         MaintenanceRequest $maintenanceRequest
     ): array {
-        return [
+        return $this->workflowFlags($maintenanceRequest) + [
             'id' =>
                 $maintenanceRequest->id,
 
@@ -1561,7 +1793,7 @@ class MaintenanceRequestController extends Controller
     private function formatTeamRequest(
         MaintenanceRequest $maintenanceRequest
     ): array {
-        return [
+        return $this->workflowFlags($maintenanceRequest) + [
             'id' =>
                 $maintenanceRequest->id,
 
@@ -1667,7 +1899,7 @@ class MaintenanceRequestController extends Controller
     private function formatRequestDetail(
         MaintenanceRequest $maintenanceRequest
     ): array {
-        return [
+        return $this->workflowFlags($maintenanceRequest) + [
             'id' =>
                 $maintenanceRequest->id,
 
@@ -1739,7 +1971,7 @@ class MaintenanceRequestController extends Controller
     private function formatTeamRequestDetail(
         MaintenanceRequest $maintenanceRequest
     ): array {
-        return [
+        return $this->workflowFlags($maintenanceRequest) + [
             'id' =>
                 $maintenanceRequest->id,
 

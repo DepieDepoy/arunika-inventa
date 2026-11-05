@@ -52,6 +52,13 @@ Tampilkan `message` ke user. Pakai `code` untuk logika aplikasi. `errors` hanya 
 | 422 | `VALIDATION_ERROR` dan kode khusus modul | Tampilkan `errors` di field form |
 | 422 | `PLAN_LIMIT_REACHED` | Kuota aset/user paket penuh → info hubungi admin |
 | 422 | `STORAGE_QUOTA_EXCEEDED` | Kuota penyimpanan penuh |
+| 409 | `ALREADY_TAKEN` | Request sudah diambil teknisi lain (`message` menyebut namanya) → muat ulang daftar |
+| 403 | `NOT_HANDLER` | Request sedang ditangani teknisi lain |
+| 422 | `INVALID_STATUS` | Status request tidak sesuai (mis. ubah/batal setelah diambil) |
+| 422 | `ACTIVE_REQUEST_EXISTS` | Aset masih punya request aktif (`data.request` berisi request tersebut) |
+| 403 | `CANNOT_MODIFY_SELF` | Tidak boleh menonaktifkan/menghapus/mengganti role akun sendiri |
+| 403 | `SYSTEM_ROLE` | Role Administrator tidak dapat diubah |
+| 422 | `ROLE_IN_USE`, `IN_USE`, `USER_HAS_ASSETS` | Data masih dipakai, tidak bisa dihapus |
 | 429 | `TOO_MANY_LOGIN_ATTEMPTS` | Login dikunci; tampilkan hitung mundur dari `retry_after` (detik) |
 | 429 | `RATE_LIMITED` | Terlalu banyak request; coba lagi nanti |
 | 500 | `SERVER_ERROR` | Tampilkan pesan umum + tombol coba lagi |
@@ -73,17 +80,32 @@ Untuk endpoint `PUT` yang membawa file, kirim **POST** dengan field tambahan `_m
 
 | Fitur | Permission |
 |---|---|
-| Lihat aset, scan QR, aset saya, request saya | `asset.view` |
+| Lihat semua aset, scan QR | `asset.view` |
+| Aset saya, request saya, foto aset yang dipegang | `asset.view` **atau** `maintenance.create` |
 | Tambah aset | `asset.create` |
 | Ubah aset, assign/transfer/return | `asset.edit` |
 | Hapus aset | `asset.delete` |
-| Buat request maintenance/repair | `maintenance.create` |
+| Buat / ubah / batalkan request maintenance | `maintenance.create` |
 | Lihat jadwal maintenance & request tim | `maintenance.view` |
 | Ambil/progres/selesaikan request (teknisi) | `maintenance.edit` |
-| Daftar user | `user.view` |
+| Daftar user / tambah / ubah / hapus | `user.view` / `user.create` / `user.edit` / `user.delete` |
+| Role: lihat / tambah / ubah / hapus / atur permission | `role.view` / `role.create` / `role.edit` / `role.delete` / `role.permission` |
+| Kategori & subkategori | `category.*`, `subcategory.*` (`view`/`create`/`edit`/`delete`) |
+| Vendor | `vendor.*` (`view`/`create`/`edit`/`delete`) |
 | Audit trail, status langganan | hanya `user.is_administrator = true` |
 
 Server tetap memeriksa izin; aplikasi hanya menyesuaikan tampilan.
+
+**Role bawaan** setiap perusahaan (role = hak akses, bukan jabatan):
+
+| Role (`role_code`) | Untuk | Permission bawaan |
+|---|---|---|
+| Administrator (`administrator`) | Pengelola aplikasi | Semua (tidak dapat diubah) |
+| Teknisi (`teknisi`) | Mengambil & mengerjakan request | `asset.view`, `maintenance.view`, `maintenance.create`, `maintenance.edit`, `maintenance.history` |
+| Karyawan (`karyawan`) | Memegang aset & membuat request | `maintenance.create` |
+
+Admin dapat mengubah permission Teknisi/Karyawan atau menambah role sendiri. Karena itu aplikasi harus selalu
+membaca `permissions`, bukan menebak dari nama role.
 
 ---
 
@@ -239,19 +261,67 @@ Respons tambah/ubah berisi detail aset (format sama dengan `GET /assets/{id}`).
 | GET | `/maintenances` | `scope` = `open`/`overdue`/`today`/`week`, `status` (pisah koma), `from`, `to`, `asset_id`, `search` |
 | GET | `/maintenances/{id}` | detail + foto + tindakan |
 
-**Request maintenance/repair** (alur pengguna → teknisi)
+**Request maintenance — alur kerja**
 
-| Method | Path | Izin | Body |
+```
+Pemohon (maintenance.create)           Tim maintenance (maintenance.edit)
+────────────────────────────           ─────────────────────────────────
+buat request ──── notifikasi ────────▶ semua anggota tim
+(ubah / batal selama pending)          "Ambil" (siapa cepat dia dapat)
+                                         ├─ yang berhasil → status in_progress
+◀── notifikasi "dikerjakan oleh A" ──────┤
+                                         └─ anggota lain: hilang dari antrean,
+                                            notifikasinya berubah menjadi
+                                            "sudah diambil — dikerjakan oleh A"
+◀── notifikasi tiap progress ─────────── A menambah progress (+ foto)
+◀── notifikasi "selesai" ─────────────── A menyelesaikan (+ foto hasil)
+```
+
+Tim maintenance = user dengan role aktif yang memiliki `maintenance.edit` (selain Administrator).
+Bila perusahaan belum punya role teknisi, notifikasi request baru dikirim ke Administrator.
+
+| Method | Path | Izin | Body / Query |
 |---|---|---|---|
-| POST | `/assets/{assetId}/maintenance-request` | maintenance.create | `description` (5–5000) |
-| POST | `/assets/{assetId}/repair-request` | maintenance.create | `description` (5–5000) |
-| GET | `/maintenance-requests?status=` | asset.view | Request milik user |
-| GET | `/maintenance-requests/{id}` | asset.view | |
-| GET | `/maintenance/team/requests?status=&request_type=` | maintenance.view | Default: `pending` + `in_progress` |
+| POST | `/assets/{assetId}/requests` | maintenance.create | `request_type` (`maintenance`/`repair`/`problem`/`other`), `description` (5–5000) |
+| POST | `/assets/{assetId}/maintenance-request` | maintenance.create | `description` (pintasan jenis `maintenance`) |
+| POST | `/assets/{assetId}/repair-request` | maintenance.create | `description` (pintasan jenis `repair`) |
+| PUT | `/maintenance-requests/{id}` | maintenance.create | `description`, `request_type`? — hanya pemohon & selama `pending` |
+| POST | `/maintenance-requests/{id}/cancel` | maintenance.create | Batalkan — hanya pemohon & selama `pending` |
+| GET | `/maintenance-requests?status=&request_type=` | asset.view | Request milik user |
+| GET | `/maintenance-requests/{id}` | asset.view | Detail + progress + hasil |
+| GET | `/maintenance/team/requests?scope=&search=&request_type=` | maintenance.view | Lihat `scope` di bawah. Respons memuat `summary` |
 | GET | `/maintenance/team/requests/{id}` | maintenance.view | |
-| POST | `/maintenance/team/requests/{id}/take` | maintenance.edit | pending → in_progress |
+| POST | `/maintenance/team/requests/{id}/take` | maintenance.edit | pending → in_progress. Gagal: 409 `ALREADY_TAKEN` |
 | POST | `/maintenance/team/requests/{id}/progress` | maintenance.edit | `note` (5–5000), `photos[]` (maks. 10, ≤ 10 MB) |
 | POST | `/maintenance/team/requests/{id}/complete` | maintenance.edit | `action_taken`, `maintenance_date`, `after_photos[]` (1–10), `technician_name`?, `vendor_id`?, `cost`?, `next_maintenance_date`?, `notes`? |
+
+`scope` untuk daftar tim (cocok untuk tab di aplikasi):
+
+| scope | Isi |
+|---|---|
+| `available` | Menunggu diambil (`pending`) |
+| `in_progress` | Sedang dikerjakan siapa pun |
+| `mine` | Sedang saya kerjakan |
+| `history` | Selesai / dibatalkan |
+| *(kosong)* | `pending` + `in_progress` (atau filter `status=`) |
+
+`summary` = `{ "available": 3, "in_progress": 2, "mine": 1 }` untuk angka badge tab.
+
+Setiap item request memuat penanda tampilan, jadi aplikasi tidak perlu menghitung sendiri:
+
+```json
+{
+  "id": 21, "request_type": "repair", "request_type_label": "Perbaikan",
+  "status": "in_progress", "status_label": "Sedang dikerjakan oleh Budi",
+  "is_mine": false, "can_take": false, "can_work": false, "can_edit": false,
+  "handler": { "id": 8, "name": "Budi" }, "...": "..."
+}
+```
+
+- `can_take` → tampilkan tombol **Ambil**.
+- `can_work` → tampilkan tombol **Progress** & **Selesaikan** (hanya teknisi yang mengambil).
+- `can_edit` → pemohon boleh ubah / batalkan.
+- Notifikasi request memiliki `target.screen = "maintenance_request"` dan `data.action` (`created`, `taken`, `progress`, `completed`, `closed`).
 
 ### 3.7 Kalender 🔐💳
 
@@ -287,6 +357,10 @@ Simpan `/lookups/options` di cache. Data ini jarang berubah.
 |---|---|---|---|
 | GET | `/users?search=&status=&role_id=` | 💳 user.view | Daftar user + jumlah aset |
 | GET | `/users/{id}` | 💳 user.view | Detail + aset yang dipegang |
+| GET | `/users/roles` | 💳 user.view | Pilihan role untuk form user (non-admin tidak melihat Administrator) |
+| POST | `/users` | 💳 user.create | `name`, `nik`, `email`, `phone`, `role_id`, `status`, `send_verification_email` (bool) |
+| PUT | `/users/{id}` | 💳 user.edit | Sama dengan POST; `password` + `password_confirmation` opsional |
+| DELETE | `/users/{id}` | 💳 user.delete | Gagal `USER_HAS_ASSETS` bila masih memegang aset |
 | GET | `/admin/subscription` | 👑 | Paket berjalan, paket dasar (saat upgrade), antrean, add-on, kuota & pemakaian, `manage_url` |
 | GET | `/admin/subscription/payments` | 👑 | Riwayat pembayaran |
 | GET | `/admin/audit-logs?module=&event=&user_id=&from=&to=&search=` | 💳👑 | Audit trail |
@@ -294,6 +368,59 @@ Simpan `/lookups/options` di cache. Data ini jarang berubah.
 | GET | `/admin/audit-logs/filters` | 💳👑 | Daftar modul & jenis aktivitas |
 
 `/admin/subscription` tetap bisa diakses walau langganan sudah berakhir.
+
+**Tambah user**: respons `data` = `user`, `default_password`, `email_sent`. Bila `email_sent = false`, tampilkan
+`default_password` sekali ke admin agar bisa diinformasikan ke user (user wajib mengganti password saat login).
+Kuota paket berlaku (`PLAN_LIMIT_REACHED`).
+
+Pengaman yang berlaku untuk akses mobile:
+- Hanya Administrator yang dapat memberi role Administrator atau mengubah/menghapus akun Administrator.
+- User tidak dapat menonaktifkan, menghapus, atau mengganti role akunnya sendiri (`CANNOT_MODIFY_SELF`).
+
+### 3.10 Role & permission 💳
+
+| Method | Path | Izin | Keterangan |
+|---|---|---|---|
+| GET | `/roles?search=&status=` | role.view | Daftar role + `users_count`, `permissions_count`, `is_system` |
+| GET | `/roles/permissions` | role.view | Katalog permission per modul (untuk layar checklist) |
+| GET | `/roles/{id}` | role.view | Detail + `permission_ids` |
+| POST | `/roles` | role.create | `role_name`, `status` |
+| PUT | `/roles/{id}` | role.edit | `role_name`, `status` |
+| DELETE | `/roles/{id}` | role.delete | Gagal `ROLE_IN_USE` bila masih dipakai user |
+| PUT | `/roles/{id}/permissions` | role.permission | `permission_ids: [..]` — daftar **lengkap**; yang tidak dikirim dicabut |
+
+Role Administrator (`is_system: true`) tidak dapat diubah (`SYSTEM_ROLE`). Selain Administrator, user tidak dapat
+mengubah role yang sedang dipakainya sendiri.
+
+### 3.11 Kategori, subkategori & vendor 💳
+
+| Method | Path | Izin | Body / Query |
+|---|---|---|---|
+| GET | `/categories?search=&status=` | category.view | Ber-halaman, + jumlah subkategori & aset |
+| GET | `/categories/{id}` | category.view | Detail + `sub_categories` |
+| POST | `/categories` | category.create | `category_name`, `status`, `description`? — kode `CAT-01` dibuat otomatis |
+| PUT | `/categories/{id}` | category.edit | sama dengan POST |
+| DELETE | `/categories/{id}` | category.delete | Gagal `IN_USE` bila masih dipakai aset |
+| POST | `/categories/{id}/sub-categories` | subcategory.create | `sub_category_name`, `status`, `description`? |
+| PUT | `/sub-categories/{id}` | subcategory.edit | sama + `category_id`? (pindah kategori) |
+| DELETE | `/sub-categories/{id}` | subcategory.delete | Gagal `IN_USE` bila masih dipakai aset |
+| GET | `/vendors?search=&status=` | vendor.view | Ber-halaman |
+| GET | `/vendors/{id}` | vendor.view | |
+| POST | `/vendors` | vendor.create | `vendor_name`, `address`, `email`, `status`, `phone`?, `pic_name`?, `description`? |
+| PUT | `/vendors/{id}` | vendor.edit | sama dengan POST |
+| DELETE | `/vendors/{id}` | vendor.delete | |
+
+Untuk dropdown di form aset tetap gunakan `/lookups/*` (lebih ringan, hanya data aktif).
+
+### 3.12 Vasetra AI 💳
+
+| Method | Path | Body |
+|---|---|---|
+| POST | `/ai/ask` | `question` (maks. 500) |
+| POST | `/ai/confirm` | `token` (64 karakter) |
+
+Respons `ask` sama dengan panel AI di web. Bila jawaban berisi aksi yang perlu persetujuan (mis. membuat jadwal),
+tampilkan ringkasannya lalu kirim `token`-nya ke `/ai/confirm` jika user setuju. Dibatasi 20 permintaan/menit.
 
 ---
 
@@ -324,6 +451,5 @@ Cron server wajib aktif: `* * * * * php artisan schedule:run` (pengingat langgan
 
 ## 6. Belum tersedia (rencana berikutnya)
 
-- **Pengiriman push notification (FCM)**: token perangkat sudah disimpan (`device_tokens`), pengirimnya belum dibuat. Saat ini notifikasi dibaca lewat `GET /notifications` (polling / pull-to-refresh).
-- **Notifikasi untuk alur request maintenance**: request baru → teknisi, dan diambil/selesai → pemohon.
-- Tambah/ubah user, role, kategori, dan vendor dari mobile (masih lewat web).
+- **Pengiriman push notification (FCM)**: token perangkat sudah disimpan (`device_tokens`), pengirimnya belum dibuat. Saat ini notifikasi (termasuk alur request maintenance) dibaca lewat `GET /notifications` (polling / pull-to-refresh). Setelah FCM aktif, notifikasi yang sama akan dikirim sebagai push tanpa perubahan format.
+- Fitur khusus web: import/export Excel, cetak label QR, dan pembelian/upgrade paket.

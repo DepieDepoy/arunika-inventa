@@ -69,7 +69,7 @@ Route::prefix('dashboard')
             '/maintenance-requests/{maintenanceRequest}',
             [MaintenanceRequestController::class, 'update']
         )
-            ->middleware('permission:maintenance.edit')
+            ->middleware('permission:maintenance.create')
             ->name('maintenance.requests.update');
 
 

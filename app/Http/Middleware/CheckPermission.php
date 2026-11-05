@@ -22,7 +22,11 @@ class CheckPermission
             abort(403, 'Anda tidak memiliki akses.');
         }
 
-        if (!$user->hasPermission($permission)) {
+        // Mendukung beberapa permission alternatif: permission:asset.view|maintenance.create
+        $allowed = collect(explode('|', $permission))
+            ->contains(fn (string $code) => $user->hasPermission(trim($code)));
+
+        if (!$allowed) {
             abort(
                 403,
                 'Anda tidak memiliki permission untuk melakukan tindakan ini.'

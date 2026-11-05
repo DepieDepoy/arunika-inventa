@@ -52,7 +52,8 @@ class RoleController extends Controller
         );
 
         // Cek duplicate
-        if (Role::where('role_code', $roleCode)->exists()) {
+        // Unik per perusahaan (termasuk role yang sudah dihapus, sesuai index DB).
+        if (Role::withTrashed()->where('company_id', Auth::user()->company_id)->where('role_code', $roleCode)->exists()) {
 
             return response()->json([
                 'success' => false,

@@ -17,9 +17,15 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use App\Services\CompanyStorage;
+use App\Services\Maintenance\MaintenanceRequestNotifier;
 
 class MaintenanceRequestController extends Controller
 {
+    public function __construct(
+        protected MaintenanceRequestNotifier $notifier
+    ) {
+    }
+
     /**
      * ========================================================================
      * MAINTENANCE REQUESTS
@@ -209,6 +215,9 @@ class MaintenanceRequestController extends Controller
             }
         );
 
+        // Beri tahu tim maintenance bahwa ada request yang menunggu diambil.
+        $this->notifier->created($maintenanceRequest);
+
         return response()->json([
             'success' => true,
 
@@ -371,36 +380,82 @@ class MaintenanceRequestController extends Controller
         */
 
         if ($maintenanceRequest->status !== 'pending') {
-            return response()->json([
-                'success' => false,
-                'message' =>
-                    'Request ini sudah diambil atau sudah selesai diproses.',
-            ], 422);
+            return $this->alreadyTakenResponse($maintenanceRequest);
         }
 
         /*
         |--------------------------------------------------------------------------
         | TAKE REQUEST
         |--------------------------------------------------------------------------
+        |
+        | Update bersyarat (status masih pending) supaya dua teknisi yang
+        | menekan Take hampir bersamaan tidak sama-sama berhasil.
+        |
         */
 
-        $maintenanceRequest->update([
-            'handled_by' =>
-                $user->id,
+        $taken = DB::transaction(function () use ($maintenanceRequest, $user) {
+            $locked = MaintenanceRequest::query()
+                ->whereKey($maintenanceRequest->id)
+                ->where('company_id', $user->company_id)
+                ->lockForUpdate()
+                ->first();
 
-            'handled_at' =>
-                now(),
+            if (!$locked || $locked->status !== 'pending') {
+                return null;
+            }
 
-            'status' =>
-                'in_progress',
-        ]);
+            $locked->update([
+                'handled_by' => $user->id,
+                'handled_at' => now(),
+                'status' => 'in_progress',
+            ]);
+
+            return $locked;
+        });
+
+        if (!$taken) {
+            return $this->alreadyTakenResponse($maintenanceRequest->fresh());
+        }
+
+        $this->notifier->taken($taken, $user);
 
         return response()->json([
             'success' => true,
 
             'message' =>
                 'Request berhasil diambil dan sedang diproses.',
+
+            'redirect' =>
+                route('maintenance.requests.work', $taken->id),
         ]);
+    }
+
+
+    /**
+     * Respons saat request sudah tidak bisa diambil.
+     * Menyebutkan siapa yang sedang mengerjakan.
+     */
+    protected function alreadyTakenResponse(
+        ?MaintenanceRequest $maintenanceRequest
+    ): \Illuminate\Http\JsonResponse {
+        $maintenanceRequest?->loadMissing('handler');
+
+        $message = match ($maintenanceRequest?->status) {
+            'in_progress' => 'Request ini sudah diambil dan sedang dikerjakan oleh '
+                . ($maintenanceRequest->handler?->name ?? 'teknisi lain') . '.',
+            'completed' => 'Request ini sudah selesai dikerjakan.',
+            'cancelled' => 'Request ini sudah dibatalkan oleh pemohon.',
+            default => 'Request ini sudah diambil atau sudah selesai diproses.',
+        };
+
+        return response()->json([
+            'success' => false,
+            'code' => 'ALREADY_TAKEN',
+            'message' => $message,
+            'handler' => $maintenanceRequest?->handler
+                ? ['id' => $maintenanceRequest->handler->id, 'name' => $maintenanceRequest->handler->name]
+                : null,
+        ], 409);
     }
 
 
@@ -754,6 +809,8 @@ class MaintenanceRequestController extends Controller
                 return $log;
             }
         );
+
+        $this->notifier->progress($maintenanceRequest, $user, $validated['note']);
 
         /*
         |--------------------------------------------------------------------------
@@ -1294,6 +1351,8 @@ class MaintenanceRequestController extends Controller
             }
         );
 
+        $this->notifier->completed($maintenanceRequest, $user, $maintenance);
+
         /*
         |--------------------------------------------------------------------------
         | RESPONSE
@@ -1534,8 +1593,13 @@ class MaintenanceRequestController extends Controller
                 'success' => true,
                 'status' => 200,
                 'message' => 'Permintaan berhasil dibatalkan.',
+                'request' => $request,
             ];
         });
+
+        if ($result['success']) {
+            $this->notifier->cancelled($result['request']);
+        }
 
         return response()->json([
             'success' => $result['success'],

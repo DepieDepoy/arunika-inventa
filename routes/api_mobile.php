@@ -11,15 +11,21 @@
 */
 
 use App\Http\Controllers\Api\V1\Admin\AuditLogController as AdminAuditLogController;
+use App\Http\Controllers\Api\V1\Admin\RoleController as AdminRoleController;
 use App\Http\Controllers\Api\V1\Admin\SubscriptionController as AdminSubscriptionController;
 use App\Http\Controllers\Api\V1\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Api\V1\Admin\UserManageController;
 use App\Http\Controllers\Api\V1\Asset\AssetManageController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CalendarController;
 use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\DeviceController;
+use App\Http\Controllers\Api\V1\IntelligenceController;
 use App\Http\Controllers\Api\V1\LookupController;
 use App\Http\Controllers\Api\V1\Maintenance\MaintenanceScheduleController;
+use App\Http\Controllers\Api\V1\Maintenance\MaintenanceRequestController;
+use App\Http\Controllers\Api\V1\MasterData\CategoryController;
+use App\Http\Controllers\Api\V1\MasterData\VendorController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -148,10 +154,67 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                 Route::get('/maintenances/{id}', [MaintenanceScheduleController::class, 'show'])->whereNumber('id')->name('maintenances.show');
             });
 
+            // Request maintenance oleh pemohon (semua jenis, edit & batal selama menunggu).
+            Route::middleware('permission:maintenance.create')->group(function () {
+                Route::post('/assets/{assetId}/requests', [MaintenanceRequestController::class, 'storeRequest'])
+                    ->whereNumber('assetId')->name('assets.requests.store');
+                Route::put('/maintenance-requests/{id}', [MaintenanceRequestController::class, 'update'])
+                    ->whereNumber('id')->name('maintenance-requests.update');
+                Route::post('/maintenance-requests/{id}/cancel', [MaintenanceRequestController::class, 'cancel'])
+                    ->whereNumber('id')->name('maintenance-requests.cancel');
+            });
+
             // User perusahaan.
             Route::middleware('permission:user.view')->group(function () {
                 Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
+                Route::get('/users/roles', [UserManageController::class, 'roles'])->name('users.roles');
                 Route::get('/users/{id}', [AdminUserController::class, 'show'])->whereNumber('id')->name('users.show');
+            });
+            Route::post('/users', [UserManageController::class, 'store'])
+                ->middleware('permission:user.create')->name('users.store');
+            Route::put('/users/{id}', [UserManageController::class, 'update'])
+                ->whereNumber('id')->middleware('permission:user.edit')->name('users.update');
+            Route::delete('/users/{id}', [UserManageController::class, 'destroy'])
+                ->whereNumber('id')->middleware('permission:user.delete')->name('users.destroy');
+
+            // Role & permission.
+            Route::prefix('roles')->name('roles.')->group(function () {
+                Route::get('/', [AdminRoleController::class, 'index'])->middleware('permission:role.view')->name('index');
+                Route::get('/permissions', [AdminRoleController::class, 'permissions'])->middleware('permission:role.view')->name('permissions');
+                Route::get('/{id}', [AdminRoleController::class, 'show'])->whereNumber('id')->middleware('permission:role.view')->name('show');
+                Route::post('/', [AdminRoleController::class, 'store'])->middleware('permission:role.create')->name('store');
+                Route::put('/{id}', [AdminRoleController::class, 'update'])->whereNumber('id')->middleware('permission:role.edit')->name('update');
+                Route::delete('/{id}', [AdminRoleController::class, 'destroy'])->whereNumber('id')->middleware('permission:role.delete')->name('destroy');
+                Route::put('/{id}/permissions', [AdminRoleController::class, 'syncPermissions'])->whereNumber('id')->middleware('permission:role.permission')->name('permissions.sync');
+            });
+
+            // Kategori & subkategori.
+            Route::prefix('categories')->name('categories.')->group(function () {
+                Route::get('/', [CategoryController::class, 'index'])->middleware('permission:category.view')->name('index');
+                Route::get('/{id}', [CategoryController::class, 'show'])->whereNumber('id')->middleware('permission:category.view')->name('show');
+                Route::post('/', [CategoryController::class, 'store'])->middleware('permission:category.create')->name('store');
+                Route::put('/{id}', [CategoryController::class, 'update'])->whereNumber('id')->middleware('permission:category.edit')->name('update');
+                Route::delete('/{id}', [CategoryController::class, 'destroy'])->whereNumber('id')->middleware('permission:category.delete')->name('destroy');
+                Route::post('/{id}/sub-categories', [CategoryController::class, 'storeSub'])->whereNumber('id')->middleware('permission:subcategory.create')->name('sub.store');
+            });
+            Route::put('/sub-categories/{id}', [CategoryController::class, 'updateSub'])
+                ->whereNumber('id')->middleware('permission:subcategory.edit')->name('sub-categories.update');
+            Route::delete('/sub-categories/{id}', [CategoryController::class, 'destroySub'])
+                ->whereNumber('id')->middleware('permission:subcategory.delete')->name('sub-categories.destroy');
+
+            // Vendor.
+            Route::prefix('vendors')->name('vendors.')->group(function () {
+                Route::get('/', [VendorController::class, 'index'])->middleware('permission:vendor.view')->name('index');
+                Route::get('/{id}', [VendorController::class, 'show'])->whereNumber('id')->middleware('permission:vendor.view')->name('show');
+                Route::post('/', [VendorController::class, 'store'])->middleware('permission:vendor.create')->name('store');
+                Route::put('/{id}', [VendorController::class, 'update'])->whereNumber('id')->middleware('permission:vendor.edit')->name('update');
+                Route::delete('/{id}', [VendorController::class, 'destroy'])->whereNumber('id')->middleware('permission:vendor.delete')->name('destroy');
+            });
+
+            // Vasetra AI.
+            Route::prefix('ai')->name('ai.')->middleware('throttle:20,1')->group(function () {
+                Route::post('/ask', [IntelligenceController::class, 'ask'])->name('ask');
+                Route::post('/confirm', [IntelligenceController::class, 'confirm'])->name('confirm');
             });
 
             // Audit trail — khusus Administrator.
