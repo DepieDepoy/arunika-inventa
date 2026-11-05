@@ -21,6 +21,9 @@ class Subscription extends Model
     protected $fillable = [
         'company_id',
         'plan_id',
+        'kind',
+        'priority',
+        'parent_subscription_id',
         'billing_cycle',
 
         'price',
@@ -81,5 +84,23 @@ class Subscription extends Model
     public function paymentTransactions(): HasMany
     {
         return $this->hasMany(PaymentTransaction::class);
+    }
+
+    public function addons(): HasMany
+    {
+        return $this->hasMany(SubscriptionAddon::class);
+    }
+
+    /**
+     * Untuk upgrade: paket regular yang ditimpa sementara.
+     */
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(Subscription::class, 'parent_subscription_id');
+    }
+
+    public function isUpgrade(): bool
+    {
+        return $this->kind === 'upgrade';
     }
 }

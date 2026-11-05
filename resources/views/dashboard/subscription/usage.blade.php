@@ -402,6 +402,30 @@
                                         </span>
                                     @endif
                                 </div>
+
+                                @if(!empty($activeUpgrade))
+                                    <div class="small text-muted mt-2">
+                                        <i class="bi bi-arrow-up-circle text-primary me-1"></i>
+                                        Upgrade sementara dari
+                                        <strong>{{ $activeUpgrade->parent?->plan?->plan_name ?? '-' }}</strong>.
+                                        @if($activeUpgrade->parent && $activeUpgrade->end_date->lt($activeUpgrade->parent->end_date))
+                                            Kembali ke {{ $activeUpgrade->parent->plan?->plan_name }} mulai
+                                            <strong>{{ $activeUpgrade->end_date->copy()->addDay()->format('d M Y') }}</strong>.
+                                        @endif
+                                    </div>
+                                @endif
+
+                                @if(!empty($activeAddons) && count($activeAddons))
+                                    <div class="d-flex flex-wrap gap-2 mt-2">
+                                        @foreach($activeAddons as $addon)
+                                            <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">
+                                                <i class="bi bi-plus-lg me-1"></i>
+                                                {{ app(\App\Services\Subscription\SubscriptionService::class)->describeAddon($addon->type, (int) $addon->total_value) }}
+                                                s/d {{ $addon->end_date->format('d M Y') }}
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                @endif
                             </div>
 
                             <div class="col-md-4 text-md-end mt-3 mt-md-0">
@@ -439,6 +463,13 @@
                     $remaining = !$isUnlimited && (float) $limit > 0
                         ? max(0, (float) $limit - $used)
                         : null;
+
+                    // Persentase sebenarnya (bisa > 100% saat kuota turun).
+                    $realPercentage = !$isUnlimited && (float) $limit > 0
+                        ? (int) round(($used / (float) $limit) * 100)
+                        : null;
+
+                    $overBy = $isExceeded ? $used - (float) $limit : 0;
 
                     if ($isExceeded || ($percentage !== null && $percentage >= 95)) {
                         $barClass = 'usage-fill-danger';
@@ -491,6 +522,11 @@
                                 <small class="text-muted">
                                     @if($isUnlimited)
                                         Tanpa batas pemakaian
+                                    @elseif($isExceeded)
+                                        <span class="text-danger fw-semibold">
+                                            {{ $realPercentage }}% dari kapasitas — melebihi
+                                            {{ $formatMetric($metric['key'], $overBy) }}
+                                        </span>
                                     @elseif($percentage !== null)
                                         {{ $percentage }}% dari kapasitas paket
                                     @else
@@ -552,12 +588,35 @@
                                     @endif
 
                                     <small class="text-muted text-end">
-                                        Sisa:
-                                        <strong>{{ $formatMetric($metric['key'], $remaining) }}</strong>
+                                        @if($isExceeded)
+                                            Lebih:
+                                            <strong class="text-danger">{{ $formatMetric($metric['key'], $overBy) }}</strong>
+                                        @else
+                                            Sisa:
+                                            <strong>{{ $formatMetric($metric['key'], $remaining) }}</strong>
+                                        @endif
                                     </small>
                                 </div>
 
-                                @if($metric['key'] === 'storage' && $percentage >= 95)
+                                @if($isExceeded)
+                                    <div class="alert alert-danger py-2 px-3 mt-3 mb-0 small">
+                                        <i class="bi bi-exclamation-octagon-fill me-1"></i>
+                                        Kuota terlampaui. Data yang sudah ada <strong>tetap aman</strong>,
+                                        tetapi penambahan {{ strtolower($metric['title']) }} baru diblokir.
+                                        @if($canManage ?? false)
+                                            <div class="d-flex flex-wrap gap-2 mt-2">
+                                                <a href="{{ route('subscription.index') }}#addon-card" class="btn btn-sm btn-danger">
+                                                    <i class="bi bi-plus-circle me-1"></i> Tambah Kapasitas
+                                                </a>
+                                                <a href="{{ route('subscription.index') }}#upgrade-card" class="btn btn-sm btn-outline-danger">
+                                                    <i class="bi bi-arrow-up-circle me-1"></i> Upgrade Paket
+                                                </a>
+                                            </div>
+                                        @else
+                                            Hubungi Administrator untuk menambah kapasitas.
+                                        @endif
+                                    </div>
+                                @elseif($metric['key'] === 'storage' && $percentage >= 95)
                                     <div class="alert alert-danger py-2 px-3 mt-3 mb-0 small">
                                         <i class="bi bi-exclamation-triangle-fill me-1"></i>
                                         Penyimpanan hampir penuh. Kelola file atau tingkatkan paket.

@@ -520,6 +520,9 @@ class ProfileController extends Controller
                 $data['password']
             );
 
+            // Password default (mis. hasil import) sudah diganti user.
+            $user->must_change_password = false;
+
             $user->save();
 
 

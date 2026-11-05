@@ -457,3 +457,6 @@ Route::prefix('v1')->group(function () {
         });
     });
 });
+
+// Modul mobile tambahan (profil, dashboard, notifikasi, kalender, kelola aset, admin).
+require __DIR__ . '/api_mobile.php';

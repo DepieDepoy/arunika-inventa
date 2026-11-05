@@ -35,21 +35,27 @@
         href="{{ asset('assets/vendor/aos/dist/aos.css') }}"
     >
 
-    <!-- Hope UI -->
+    <!-- Font brand -->
+            <link
+        rel="stylesheet"
+        href="{{ asset('assets/vendor/fonts/plus-jakarta-sans/plus-jakarta-sans.css') }}"
+    >
+
+    <!-- Base UI (warna brand Vasetra; dibuat oleh tools/build-theme.php) -->
     <link
         rel="stylesheet"
-        href="{{ asset('assets/css/hope-ui.min.css') }}?v=4.0.0"
+        href="{{ asset('assets/css/vasetra/hope-ui.min.css') }}?v=1.0.0"
     >
 
     <link
         rel="stylesheet"
-        href="{{ asset('assets/css/custom.min.css') }}?v=4.0.0"
+        href="{{ asset('assets/css/vasetra/custom.min.css') }}?v=1.0.0"
     >
 
     <!-- Theme -->
     <link
         rel="stylesheet"
-        href="{{ asset('assets/css/dark.min.css') }}"
+        href="{{ asset('assets/css/vasetra/dark.min.css') }}?v=1.0.0"
     >
 
     <link
@@ -79,6 +85,12 @@
         href="{{ asset('assets/css/arunika-admin.css') }}"
     >
 
+    <!-- Vasetra Brand (identitas visual: font, sidebar, header, kartu) -->
+    <link
+        rel="stylesheet"
+        href="{{ asset('assets/css/vasetra-brand.css') }}?v=1.0.0"
+    >
+
     <!-- Icons -->
     <link
         rel="stylesheet"
@@ -92,7 +104,7 @@
 
     <link
         rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+        href="{{ asset('assets/vendor/bootstrap-icons/bootstrap-icons.min.css') }}"
     >
 
     @stack('styles')

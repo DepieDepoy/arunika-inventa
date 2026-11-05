@@ -38,12 +38,17 @@ class AuditTrailController extends Controller
         'login_locked' => 'Login Dikunci',
         'registered' => 'Registrasi',
         'password_reset' => 'Reset Password',
+        'password_changed' => 'Ganti Password',
         'email_verified' => 'Verifikasi Email',
         'permission_updated' => 'Ubah Permission',
         'exported' => 'Export',
         'printed' => 'Cetak',
         'import_started' => 'Import Dimulai',
         'import_finished' => 'Import Selesai',
+        'subscription_activated' => 'Paket Aktif',
+        'subscription_queued' => 'Paket Dijadwalkan',
+        'subscription_upgraded' => 'Upgrade Paket',
+        'addon_purchased' => 'Beli Add-on',
     ];
 
     protected function companyId(): int

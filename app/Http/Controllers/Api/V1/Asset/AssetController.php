@@ -4,7 +4,8 @@ namespace App\Http\Controllers\Api\V1\Asset;
 
 use App\Http\Controllers\Controller;
 use App\Models\Asset;
-use App\Models\AssetMaintenance;
+use App\Http\Controllers\Api\V1\Maintenance\MaintenanceScheduleController;
+use App\Models\Maintenance;
 use App\Models\MaintenanceRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -562,8 +563,12 @@ class AssetController extends Controller
         Request $request,
         Asset $asset
     ): JsonResponse {
+        /*
+         * Sumber data = tabel `maintenances` (sama dengan dashboard).
+         * Tabel lama `asset_maintenances` sudah tidak diisi lagi.
+         */
         $maintenances =
-            AssetMaintenance::query()
+            Maintenance::query()
                 ->where(
                     'company_id',
                     $asset->company_id
@@ -572,6 +577,11 @@ class AssetController extends Controller
                     'asset_id',
                     $asset->id
                 )
+                ->with([
+                    'vendor:id,vendor_name',
+                    'creator:id,name',
+                    'photos',
+                ])
                 ->orderByDesc(
                     'maintenance_date'
                 )
@@ -584,60 +594,11 @@ class AssetController extends Controller
             $maintenances->items()
         )
             ->map(
-                function (
-                    AssetMaintenance $maintenance
-                ) {
-                    return [
-                        'id' =>
-                            $maintenance->id,
-
-                        'maintenance_date' =>
-                            $maintenance
-                                ->maintenance_date,
-
-                        'maintenance_type' =>
-                            $maintenance
-                                ->maintenance_type,
-
-                        'maintenance_title' =>
-                            $maintenance
-                                ->maintenance_title,
-
-                        'description' =>
-                            $maintenance
-                                ->description,
-
-                        'technician_name' =>
-                            $maintenance
-                                ->technician_name,
-
-                        'technician_phone' =>
-                            $maintenance
-                                ->technician_phone,
-
-                        'cost' =>
-                            $maintenance->cost,
-
-                        'result' =>
-                            $maintenance->result,
-
-                        'notes' =>
-                            $maintenance->notes,
-
-                        'next_maintenance_date' =>
-                            $maintenance
-                                ->next_maintenance_date,
-
-                        'status' =>
-                            $maintenance->status,
-
-                        'documents' =>
-                            $maintenance->documents,
-
-                        'photos' =>
-                            $maintenance->photos,
-                    ];
-                }
+                fn (Maintenance $maintenance) =>
+                    MaintenanceScheduleController::format(
+                        $maintenance,
+                        true
+                    )
             )
             ->values();
 
@@ -907,66 +868,22 @@ class AssetController extends Controller
 
         $maintenanceHistory =
             $asset->maintenances()
+                ->with([
+                    'vendor:id,vendor_name',
+                    'creator:id,name',
+                    'photos',
+                ])
                 ->orderByDesc(
                     'maintenance_date'
                 )
                 ->orderByDesc('id')
                 ->get()
                 ->map(
-                    function (
-                        AssetMaintenance $maintenance
-                    ) {
-                        return [
-                            'id' =>
-                                $maintenance->id,
-
-                            'maintenance_date' =>
-                                $maintenance
-                                    ->maintenance_date,
-
-                            'maintenance_type' =>
-                                $maintenance
-                                    ->maintenance_type,
-
-                            'maintenance_title' =>
-                                $maintenance
-                                    ->maintenance_title,
-
-                            'description' =>
-                                $maintenance
-                                    ->description,
-
-                            'technician_name' =>
-                                $maintenance
-                                    ->technician_name,
-
-                            'technician_phone' =>
-                                $maintenance
-                                    ->technician_phone,
-
-                            'cost' =>
-                                $maintenance->cost,
-
-                            'result' =>
-                                $maintenance->result,
-
-                            'notes' =>
-                                $maintenance->notes,
-
-                            'next_maintenance_date' =>
-                                $maintenance
-                                    ->next_maintenance_date,
-
-                            'status' =>
-                                $maintenance->status,
-
-                            'documents' =>
-                                $maintenance->documents,
-
-                            'photos' =>
-                                $maintenance->photos,
-                        ];
-                    }
+                    fn (Maintenance $maintenance) =>
+                        MaintenanceScheduleController::format(
+                            $maintenance,
+                            true
+                        )
                 )
                 ->values();
 

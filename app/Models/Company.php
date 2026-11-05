@@ -53,13 +53,26 @@ class Company extends Model
         return $this->hasMany(Subscription::class);
     }
 
+    /**
+     * Paket yang berlaku hari ini.
+     *
+     * PENTING: filter status & tanggal harus berada di dalam closure ofMany()
+     * agar ikut diterapkan pada subquery pemilihan baris. Dengan
+     * ->where(...)->latestOfMany(), subquery memilih ID terbesar tanpa filter,
+     * sehingga paket pending / paket antrean yang lebih baru membuat
+     * hasilnya NULL (perusahaan dianggap expired).
+     */
     public function activeSubscription(): HasOne
     {
-        return $this->hasOne(Subscription::class)
-            ->where('status', 'active')
-            ->whereDate('start_date', '<=', today())
-            ->whereDate('end_date', '>=', today())
-            ->latestOfMany();
+        // priority: upgrade (1) menimpa paket regular (0) selama masa upgrade.
+        return $this->hasOne(Subscription::class)->ofMany(
+            ['priority' => 'max', 'id' => 'max'],
+            function ($query) {
+                $query->where('status', 'active')
+                    ->whereDate('start_date', '<=', today())
+                    ->whereDate('end_date', '>=', today());
+            }
+        );
     }
 
     public function paymentTransactions(): HasMany

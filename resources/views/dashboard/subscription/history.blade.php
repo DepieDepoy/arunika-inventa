@@ -573,6 +573,92 @@
             </div>
         </div>
 
+        {{-- ADD-ON HISTORY --}}
+        @if(isset($addonPurchases) && $addonPurchases->count())
+            @php
+                $addonSvc = app(\App\Services\Subscription\SubscriptionService::class);
+                $addonStatus = [
+                    'success' => ['Berhasil', 'bg-success'],
+                    'settlement' => ['Berhasil', 'bg-success'],
+                    'pending' => ['Menunggu', 'bg-warning text-dark'],
+                    'expired' => ['Kedaluwarsa', 'bg-secondary'],
+                    'cancel' => ['Dibatalkan', 'bg-secondary'],
+                    'failed' => ['Gagal', 'bg-danger'],
+                ];
+            @endphp
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card history-card">
+                        <div class="card-body">
+                            <h5 class="fw-bold mb-1">Riwayat Tambah Kapasitas</h5>
+                            <p class="text-muted small mb-3">Pembelian storage, asset, dan user tambahan.</p>
+
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Invoice</th>
+                                            <th>Tanggal</th>
+                                            <th>Item</th>
+                                            <th>Masa Berlaku</th>
+                                            <th class="text-end">Total</th>
+                                            <th>Status</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($addonPurchases as $purchase)
+                                            @php
+                                                [$statusLabel, $statusClass] = $addonStatus[strtolower((string) $purchase->transaction_status)]
+                                                    ?? [ucfirst((string) $purchase->transaction_status), 'bg-secondary'];
+                                                $firstAddon = $purchase->addons->first();
+                                            @endphp
+                                            <tr>
+                                                <td class="fw-semibold">{{ $purchase->order_id }}</td>
+                                                <td class="text-nowrap">{{ $purchase->created_at?->format('d M Y H:i') }}</td>
+                                                <td>
+                                                    @forelse($purchase->addons as $addon)
+                                                        <span class="badge bg-light text-dark border me-1">
+                                                            +{{ $addonSvc->describeAddon($addon->type, (int) $addon->total_value) }}
+                                                        </span>
+                                                    @empty
+                                                        <span class="badge bg-light text-dark border">
+                                                            +{{ $addonSvc->describeAddon('storage', (int) $purchase->storage_addon_bytes) }}
+                                                        </span>
+                                                    @endforelse
+                                                </td>
+                                                <td class="text-nowrap small">
+                                                    @if($firstAddon)
+                                                        {{ $firstAddon->start_date->format('d M Y') }} – {{ $firstAddon->end_date->format('d M Y') }}
+                                                    @elseif($purchase->prorated_days)
+                                                        {{ $purchase->prorated_days }} hari
+                                                    @else
+                                                        -
+                                                    @endif
+                                                </td>
+                                                <td class="text-end fw-semibold">
+                                                    Rp{{ number_format((float) $purchase->gross_amount, 0, ',', '.') }}
+                                                </td>
+                                                <td><span class="badge {{ $statusClass }}">{{ $statusLabel }}</span></td>
+                                                <td class="text-end">
+                                                    @if($purchase->isPaid())
+                                                        <a href="{{ route('subscription.billing.print', $purchase->id) }}"
+                                                           target="_blank" class="btn btn-sm btn-outline-secondary" title="Cetak billing">
+                                                            <i class="bi bi-printer"></i>
+                                                        </a>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
     </div>
 </div>
 

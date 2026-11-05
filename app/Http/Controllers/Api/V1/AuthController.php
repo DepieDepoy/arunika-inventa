@@ -6,9 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
 use App\Services\Auth\LoginThrottle;
+use App\Services\Mobile\AccountPresenter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -31,7 +34,7 @@ class AuthController extends Controller
         ], 429)->header('Retry-After', (string) $seconds);
     }
 
-    public function login(Request $request, LoginThrottle $throttle): JsonResponse
+    public function login(Request $request, LoginThrottle $throttle, AccountPresenter $presenter): JsonResponse
     {
         /*
         |--------------------------------------------------------------------------
@@ -183,8 +186,10 @@ class AuthController extends Controller
         */
 
         $token = $user->createToken(
-            'vasetra-mobile'
+            Str::limit((string) ($request->input('device_name') ?: 'vasetra-mobile'), 100, '')
         )->plainTextToken;
+
+        $expiration = config('sanctum.expiration');
 
         /*
         |--------------------------------------------------------------------------
@@ -195,8 +200,18 @@ class AuthController extends Controller
         $user->update([
             'last_login_at' => now(),
             'last_login_ip' => $request->ip(),
-            'last_login_device' => $request->userAgent(),
+            'last_login_device' => Str::limit((string) $request->userAgent(), 250, ''),
         ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Device Token (opsional, untuk push notification)
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->filled('fcm_token')) {
+            DeviceController::registerDevice($user, $request);
+        }
 
         AuditLogger::log(
             event: 'login',
@@ -215,56 +230,57 @@ class AuthController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Login successful.',
-            'data' => [
+            'data' => array_merge([
                 'token' => $token,
                 'token_type' => 'Bearer',
-
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'phone' => $user->phone,
-                    'nik' => $user->nik,
-                    'status' => $user->status,
-                    'role' => $user->role?->role_name,
-                ],
-
-                'company' => [
-                    'id' => $user->company?->id,
-                    'name' => $user->company?->company_name,
-                    'code' => $user->company?->company_code,
-                ],
-            ],
+                'expires_at' => $expiration
+                    ? now()->addMinutes((int) $expiration)->toIso8601String()
+                    : null,
+            ], $presenter->present($user)),
         ]);
     }
 
 
     /**
      * Current authenticated mobile user.
+     *
+     * Dipanggil saat aplikasi dibuka untuk menyegarkan profil,
+     * permission, dan status langganan.
      */
-    public function me(Request $request): JsonResponse
+    public function me(Request $request, AccountPresenter $presenter): JsonResponse
     {
-        $user = $request->user();
+        return response()->json([
+            'success' => true,
+            'data' => $presenter->present($request->user()),
+        ]);
+    }
+
+
+    /**
+     * Kirim link reset password ke email (halaman reset ada di web).
+     *
+     * Respons selalu sama agar tidak bisa dipakai menebak email terdaftar.
+     */
+    public function forgotPassword(Request $request): JsonResponse
+    {
+        $request->validate([
+            'email' => ['required', 'email', 'max:255'],
+        ], [
+            'email.required' => 'Email wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
+        ]);
+
+        try {
+            Password::sendResetLink([
+                'email' => strtolower(trim((string) $request->email)),
+            ]);
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         return response()->json([
             'success' => true,
-            'data' => [
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'phone' => $user->phone,
-                    'nik' => $user->nik,
-                    'status' => $user->status,
-                    'role' => $user->role?->role_name,
-                ],
-
-                'company' => [
-                    'id' => $user->company?->id,
-                    'name' => $user->company?->company_name,
-                    'code' => $user->company?->company_code,
-                ],
-            ],
+            'message' => 'Jika email terdaftar, link reset password telah dikirim. Silakan cek inbox atau folder spam.',
         ]);
     }
 
@@ -283,6 +299,14 @@ class AuthController extends Controller
         */
 
         $user->currentAccessToken()?->delete();
+
+        // Perangkat ini berhenti menerima push notification untuk akun ini.
+        if ($request->filled('fcm_token')) {
+            \App\Models\DeviceToken::query()
+                ->where('user_id', $user->id)
+                ->where('token_hash', \App\Models\DeviceToken::hashToken((string) $request->input('fcm_token')))
+                ->delete();
+        }
 
         AuditLogger::log(
             event: 'logout',

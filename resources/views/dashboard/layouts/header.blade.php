@@ -8,9 +8,32 @@
                 @php
                     $company = auth()->user()->company;
 
-                    $expiredAt = $company?->expired_at
-                        ? \Carbon\Carbon::parse($company->expired_at)
+                    /*
+                     * Masa aktif diambil dari paket yang benar-benar berlaku
+                     * (bukan companies.expired_at yang hanya diisi saat registrasi).
+                     * Bila tidak ada paket aktif, pakai paket terakhir yang sudah berakhir.
+                     */
+                    $headerSubscription = $company
+                        ? (app(\App\Services\Subscription\SubscriptionService::class)->current($company->id)
+                            ?? $company->subscriptions()
+                                ->whereIn('status', ['active', 'replaced'])
+                                ->whereDate('start_date', '<=', today())
+                                ->orderByDesc('end_date')
+                                ->first())
                         : null;
+
+                    // Jika ada paket berikutnya di antrean, masa aktif tersambung.
+                    $headerQueued = $company
+                        ? app(\App\Services\Subscription\SubscriptionService::class)->queued($company->id)
+                        : null;
+
+                    $expiredAt = $headerQueued?->end_date
+                        ?? ($headerSubscription?->isUpgrade()
+                            ? $headerSubscription->parent?->end_date
+                            : $headerSubscription?->end_date)
+                        ?? ($company?->expired_at ? \Carbon\Carbon::parse($company->expired_at) : null);
+
+                    $expiredAt = $expiredAt ? \Carbon\Carbon::parse($expiredAt) : null;
 
                     $daysLeft = $expiredAt
                         ? now()->startOfDay()->diffInDays(
@@ -21,11 +44,24 @@
 
                     $isAdministrator =
                         auth()->user()->role?->role_code === 'administrator';
+
+                    $hour = (int) now()->format('H');
+                    $greeting = match (true) {
+                        $hour < 11 => 'Selamat pagi',
+                        $hour < 15 => 'Selamat siang',
+                        $hour < 18 => 'Selamat sore',
+                        default => 'Selamat malam',
+                    };
+                    $firstName = \Illuminate\Support\Str::of(auth()->user()->name)->explode(' ')->first();
                 @endphp
 
                 <div class="flex-wrap d-flex justify-content-between align-items-center">
 
                     <div>
+
+                        <div class="vx-header-eyebrow">
+                            {{ now()->translatedFormat('l, d F Y') }} · {{ $company?->company_name }}
+                        </div>
 
                         {{-- =====================================================
                              SUBSCRIPTION EXPIRED
@@ -114,7 +150,7 @@
                         @elseif ($expiredAt && $daysLeft <= 7)
 
                             <h1>
-                                Selamat Datang di Assets Management System 👋
+                                {{ $greeting }}, {{ $firstName }} 👋
                             </h1>
 
                             <p class="mb-2">
@@ -142,7 +178,7 @@
 
                                 <a
                                     href="{{ route('subscription.index') }}"
-                                    class="btn btn-primary"
+                                    class="btn btn-light"
                                 >
                                     <i class="bi bi-arrow-repeat me-1"></i>
                                     Perpanjang Subscription
@@ -158,16 +194,16 @@
                         @else
 
                             <h1>
-                                Selamat Datang di Assets Management System 👋
+                                {{ $greeting }}, {{ $firstName }} 👋
                             </h1>
 
                             <p>
 
-                                Kelola kebutuhan
+                                Pantau aset, maintenance, dan kapasitas
                                 <strong>
                                     {{ $company->company_name }}
                                 </strong>
-                                dengan mudah dan terintegrasi.
+                                dalam satu tempat.
 
                                 @if ($expiredAt)
 

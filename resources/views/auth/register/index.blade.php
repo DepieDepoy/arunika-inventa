@@ -32,10 +32,10 @@
 
 <!-- Bootstrap Icons -->
 <link rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    href="{{ asset('assets/vendor/bootstrap-icons/bootstrap-icons.min.css') }}">
 
 <!-- SweetAlert2 -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ asset('assets/vendor/sweetalert2/sweetalert2.all.min.js') }}"></script>
 
 <style>
     /*

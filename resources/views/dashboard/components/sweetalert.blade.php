@@ -1,11 +1,16 @@
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ asset('assets/vendor/sweetalert2/sweetalert2.all.min.js') }}"></script>
+
+{{--
+    Semua teks dikirim ke JavaScript lewat @json agar aman dari XSS
+    (tanda kutip, backtick, atau tag HTML di dalam pesan tidak dieksekusi).
+--}}
 
 @if(session('success'))
 <script>
 Swal.fire({
     icon: 'success',
     title: 'Berhasil',
-    text: "{{ session('success') }}",
+    text: @json(session('success')),
     confirmButtonColor: '#3A57E8'
 });
 </script>
@@ -16,8 +21,20 @@ Swal.fire({
 Swal.fire({
     icon: 'error',
     title: 'Oops...',
-    text: "{{ session('error') }}",
+    text: @json(session('error')),
     confirmButtonColor: '#dc3545'
+});
+</script>
+@endif
+
+@if(session('payment_error'))
+<script>
+Swal.fire({
+    icon: 'error',
+    title: @json(session('payment_error')['title'] ?? 'Pembayaran Belum Dapat Diproses'),
+    text: @json(session('payment_error')['message'] ?? ''),
+    confirmButtonText: 'Mengerti',
+    confirmButtonColor: '#3A57E8'
 });
 </script>
 @endif
@@ -27,7 +44,7 @@ Swal.fire({
 Swal.fire({
     icon: 'warning',
     title: 'Perhatian',
-    text: "{{ session('warning') }}"
+    text: @json(session('warning'))
 });
 </script>
 @endif
@@ -37,7 +54,7 @@ Swal.fire({
 Swal.fire({
     icon: 'info',
     title: 'Informasi',
-    text: "{{ session('info') }}"
+    text: @json(session('info'))
 });
 </script>
 @endif
@@ -47,7 +64,7 @@ Swal.fire({
 Swal.fire({
     icon: 'error',
     title: 'Validasi Gagal',
-    html: `{!! implode('<br>', $errors->all()) !!}`
+    html: @json(implode('<br>', array_map('e', $errors->all())))
 });
 </script>
 @endif

@@ -6,32 +6,19 @@
 @section('content')
 
 @php
-    use App\Models\StorageAddonRate;
-
     /*
     |--------------------------------------------------------------------------
     | Storage Add-on Settings dari Database
     |--------------------------------------------------------------------------
+    |
+    | Diambil dari SubscriptionService::storageRate() (tabel storage_addon_rates),
+    | sumber yang sama dengan perhitungan harga di server.
+    |
     */
-    $storageRate = StorageAddonRate::query()
-        ->where('is_active', true)
-        ->first();
-
-    $storageAddonUnitBytes = (int) (
-        $storageRate?->unit_bytes ?? 536870912
-    );
-
-    $storageAddonPriceMonthly = (int) (
-        $storageRate?->price_monthly ?? 10000
-    );
-
-    $storageAddonPriceYearly = (int) (
-        $storageRate?->price_yearly ?? 120000
-    );
-
-    $storageAddonMaxSteps = (int) (
-        $storageRate?->max_units ?? 40
-    );
+    $storageAddonUnitBytes = (int) $storageRate['unit_bytes'];
+    $storageAddonPriceMonthly = (int) $storageRate['price_monthly'];
+    $storageAddonPriceYearly = (int) $storageRate['price_yearly'];
+    $storageAddonMaxSteps = (int) $storageRate['max_units'];
 
     $storageAddonMaxBytes =
         $storageAddonUnitBytes * $storageAddonMaxSteps;
@@ -326,6 +313,69 @@
         letter-spacing: -.5px;
     }
 
+    /* ---------- Upgrade & Add-on ---------- */
+    .sub-highlight-card { border-left: 4px solid var(--bs-primary) !important; }
+    .sub-highlight-icon {
+        width: 52px; height: 52px; border-radius: 14px; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
+        background: var(--bs-primary-bg-subtle, #e7efff); color: var(--bs-primary);
+    }
+    .sub-price-box {
+        background: var(--bs-tertiary-bg, #f8f9fb);
+        border: 1px solid var(--bs-border-color-translucent, rgba(0,0,0,.08));
+        border-radius: 14px; padding: 1.1rem 1.25rem;
+    }
+    .sub-timeline {
+        position: relative; padding: 1rem 1.25rem 1rem 2.25rem;
+        border: 1px dashed var(--bs-border-color, #dee2e6); border-radius: 14px;
+    }
+    .sub-timeline-item { position: relative; padding-bottom: 1rem; }
+    .sub-timeline-item:last-child { padding-bottom: 0; }
+    .sub-timeline-item::before {
+        content: ""; position: absolute; left: -1.05rem; top: 1.1rem; bottom: -.1rem;
+        width: 2px; background: var(--bs-border-color, #dee2e6);
+    }
+    .sub-timeline-item:last-child::before { display: none; }
+    .sub-timeline-dot {
+        position: absolute; left: -1.4rem; top: .3rem; width: 12px; height: 12px;
+        border-radius: 50%; background: var(--bs-secondary-bg, #e9ecef);
+        border: 2px solid var(--bs-secondary-color, #adb5bd);
+    }
+    .sub-timeline-item.active .sub-timeline-dot {
+        background: var(--bs-primary); border-color: var(--bs-primary);
+        box-shadow: 0 0 0 4px rgba(var(--bs-primary-rgb, 13,110,253), .15);
+    }
+    .upgrade-plan-btn, .upgrade-duration-btn { min-width: 120px; text-align: left; border-radius: 12px; }
+    .addon-tile {
+        border: 1px solid var(--bs-border-color-translucent, rgba(0,0,0,.08));
+        border-radius: 14px; padding: 1rem 1.1rem; transition: border-color .2s, box-shadow .2s;
+    }
+    .addon-tile.is-selected {
+        border-color: var(--bs-success);
+        box-shadow: 0 0 0 3px rgba(var(--bs-success-rgb, 25,135,84), .12);
+    }
+    .addon-tile-icon {
+        width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+        background: var(--bs-success-bg-subtle, #e8f5ee); color: var(--bs-success);
+    }
+
+    .queued-subscription-card {
+        border-left: 4px solid var(--bs-info) !important;
+    }
+
+    .queued-subscription-card .queued-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        background: var(--bs-info-bg-subtle, #e7f6fd);
+        color: var(--bs-info-text-emphasis, #087990);
+        flex-shrink: 0;
+    }
+
     .storage-summary-box {
         padding: 16px;
         height: 100%;
@@ -497,6 +547,45 @@
             </div>
         @endif
 
+        {{-- NEXT (QUEUED) SUBSCRIPTION --}}
+        @if($queuedSubscription)
+            <div class="card border-0 shadow-sm rounded-4 mb-4 queued-subscription-card">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-start gap-3 flex-wrap">
+                        <div class="queued-icon">
+                            <i class="bi bi-calendar2-week"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <span class="badge bg-info-subtle text-info-emphasis mb-2">
+                                <i class="bi bi-clock-history me-1"></i> Paket Berikutnya
+                            </span>
+                            <h5 class="fw-bold mb-1">
+                                {{ $queuedSubscription->plan->plan_name ?? '-' }}
+                                <small class="text-muted fw-normal">
+                                    ({{ $queuedSubscription->billing_cycle === 'yearly' ? 'Tahunan' : 'Bulanan' }})
+                                </small>
+                            </h5>
+                            <div class="text-muted small">
+                                Sudah dibayar. Aktif otomatis mulai
+                                <strong>{{ $queuedSubscription->start_date->translatedFormat('d F Y') }}</strong>
+                                s/d
+                                <strong>{{ $queuedSubscription->end_date->translatedFormat('d F Y') }}</strong>,
+                                setelah paket saat ini berakhir.
+                            </div>
+                        </div>
+                        <div class="text-md-end">
+                            <small class="text-muted d-block">Kapasitas storage</small>
+                            <strong>{{ $formatStorageServer($queuedSubscription->total_storage_bytes) }}</strong>
+                            @if($queuedSubscription->plan?->max_assets !== null)
+                                <small class="text-muted d-block mt-1">Maks. asset</small>
+                                <strong>{{ number_format($queuedSubscription->plan->max_assets, 0, ',', '.') }}</strong>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         {{-- PENDING PAYMENT --}}
         @if($pendingPayment)
             <div class="alert pending-payment-alert shadow-sm mb-4">
@@ -506,7 +595,10 @@
                         <h6 class="fw-bold mb-1">Pembayaran Belum Selesai</h6>
                         <div class="small mb-2">
                             Masih terdapat transaksi pembayaran yang belum selesai.
-                            @if($pendingPayment->plan)
+                            @if($pendingPayment->purchase_type === 'storage_addon')
+                                Tambah storage:
+                                <strong>{{ $formatStorageServer($pendingPayment->storage_addon_bytes) }}</strong>
+                            @elseif($pendingPayment->plan)
                                 Paket: <strong>{{ $pendingPayment->plan->plan_name }}</strong>
                             @endif
                             @if($pendingPayment->gross_amount)
@@ -521,6 +613,219 @@
                             </a>
                         @endif
                     </div>
+                </div>
+            </div>
+        @endif
+
+        @php
+            $svc = app(\App\Services\Subscription\SubscriptionService::class);
+            $addonIcons = ['storage' => 'bi-hdd-stack', 'asset' => 'bi-box-seam', 'user' => 'bi-people'];
+            $formatQuota = function ($type, $value) use ($formatStorageServer) {
+                if ($value === null) {
+                    return 'Unlimited';
+                }
+                return $type === 'storage'
+                    ? $formatStorageServer($value)
+                    : number_format((int) $value, 0, ',', '.');
+            };
+        @endphp
+
+        {{-- UPGRADE YANG SEDANG BERJALAN --}}
+        @if($activeUpgrade)
+            <div class="card border-0 shadow-sm rounded-4 mb-4 sub-highlight-card sub-highlight-primary">
+                <div class="card-body p-4 d-flex flex-wrap gap-3 align-items-center">
+                    <div class="sub-highlight-icon"><i class="bi bi-rocket-takeoff"></i></div>
+                    <div class="flex-grow-1">
+                        <span class="badge bg-primary-subtle text-primary mb-1">Upgrade Aktif</span>
+                        <h5 class="fw-bold mb-1">
+                            {{ $activeUpgrade->plan->plan_name ?? '-' }}
+                            <small class="text-muted fw-normal">
+                                s/d {{ $activeUpgrade->end_date->translatedFormat('d F Y') }}
+                            </small>
+                        </h5>
+                        <div class="small text-muted">
+                            @if($activeUpgrade->parent && $activeUpgrade->end_date->lt($activeUpgrade->parent->end_date))
+                                Otomatis kembali ke <strong>{{ $activeUpgrade->parent->plan?->plan_name }}</strong>
+                                mulai <strong>{{ $activeUpgrade->end_date->copy()->addDay()->translatedFormat('d F Y') }}</strong>
+                                s/d {{ $activeUpgrade->parent->end_date->translatedFormat('d F Y') }}.
+                                Data tetap aman; jika pemakaian melebihi kuota paket tersebut, penambahan data baru diblokir.
+                            @else
+                                Berlaku sampai akhir masa paket Anda.
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        {{-- UPGRADE SEKARANG --}}
+        @if($paidSubscription && count($upgradeOptions))
+            <div class="card border-0 shadow-sm rounded-4 mb-4" id="upgrade-card">
+                <div class="card-body p-4 p-lg-5">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+                        <div>
+                            <span class="badge bg-primary-subtle text-primary mb-2">
+                                <i class="bi bi-lightning-charge-fill me-1"></i> Upgrade Sekarang
+                            </span>
+                            <h5 class="fw-bold mb-1">Butuh kapasitas lebih besar sekarang?</h5>
+                            <p class="text-muted small mb-0">
+                                Upgrade langsung aktif hari ini. Anda hanya membayar <strong>selisih harga</strong>;
+                                sisa nilai paket <strong>{{ $paidSubscription->plan->plan_name ?? '' }}</strong>
+                                dihitung sebagai kredit.
+                            </p>
+                        </div>
+                        <div class="text-end small">
+                            <div class="text-muted">Paket saat ini</div>
+                            <strong>{{ $paidSubscription->plan->plan_name ?? '-' }}</strong>
+                            <div class="text-muted">s/d {{ $paidSubscription->end_date->translatedFormat('d M Y') }}</div>
+                        </div>
+                    </div>
+
+                    <form action="{{ route('subscription.upgrade') }}" method="POST" id="upgradeForm">
+                        @csrf
+                        <input type="hidden" name="plan_id" id="upgrade_plan_id">
+                        <input type="hidden" name="duration" id="upgrade_duration">
+
+                        <div class="mb-3">
+                            <div class="small fw-semibold text-muted mb-2">1. Pilih paket tujuan</div>
+                            <div class="d-flex flex-wrap gap-2" id="upgradePlanChoices"></div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="small fw-semibold text-muted mb-2">2. Pilih durasi upgrade</div>
+                            <div class="d-flex flex-wrap gap-2" id="upgradeDurationChoices"></div>
+                        </div>
+
+                        <div class="row g-3 align-items-stretch">
+                            <div class="col-lg-7">
+                                <div class="sub-timeline h-100" id="upgradeTimeline"></div>
+                            </div>
+                            <div class="col-lg-5">
+                                <div class="sub-price-box h-100">
+                                    <div class="d-flex justify-content-between small mb-1">
+                                        <span class="text-muted" id="upgradeNewLabel">Harga paket baru</span>
+                                        <strong id="upgradeNewPrice">Rp0</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between small mb-2">
+                                        <span class="text-muted">Kredit sisa paket saat ini</span>
+                                        <strong class="text-success" id="upgradeCredit">−Rp0</strong>
+                                    </div>
+                                    <hr class="my-2">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="fw-bold">Bayar selisih</span>
+                                        <span class="fs-4 fw-bold text-primary" id="upgradeTotal">Rp0</span>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary w-100 mt-3" id="btnUpgrade">
+                                        <i class="bi bi-arrow-up-circle me-1"></i> Upgrade Sekarang
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        @elseif($paidSubscription && $queuedSubscription && !$activeUpgrade)
+            <div class="alert alert-light border small mb-4" id="upgrade-card">
+                <i class="bi bi-info-circle me-1"></i>
+                Upgrade sekarang tidak tersedia karena sudah ada paket berikutnya di antrean.
+            </div>
+        @endif
+
+        {{-- TAMBAH KAPASITAS --}}
+        @if($addonOffer)
+            <div class="card border-0 shadow-sm rounded-4 mb-4" id="addon-card">
+                <div class="card-body p-4 p-lg-5">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+                        <div>
+                            <span class="badge bg-success-subtle text-success mb-2">
+                                <i class="bi bi-sliders me-1"></i> Tambah Kapasitas
+                            </span>
+                            <h5 class="fw-bold mb-1">Atur kapasitas sesuai kebutuhan</h5>
+                            <p class="text-muted small mb-0">
+                                Tanpa ganti paket. Langsung aktif setelah pembayaran, harga dihitung prorata.
+                            </p>
+                        </div>
+                        <div class="btn-group" role="group" aria-label="Durasi add-on" id="addonDurationGroup">
+                            <input type="radio" class="btn-check" name="addon_duration_display" id="addonDur1" value="1" checked>
+                            <label class="btn btn-outline-success btn-sm" for="addonDur1">1 bulan</label>
+                            <input type="radio" class="btn-check" name="addon_duration_display" id="addonDurEnd" value="end">
+                            <label class="btn btn-outline-success btn-sm" for="addonDurEnd">
+                                Sampai {{ $addonOffer['base']->end_date->translatedFormat('d M Y') }}
+                            </label>
+                        </div>
+                    </div>
+
+                    <form action="{{ route('subscription.addon') }}" method="POST" id="addonForm">
+                        @csrf
+                        <input type="hidden" name="duration" id="addon_duration" value="1">
+
+                        <div class="row g-3">
+                            @foreach($addonOffer['rates'] as $type => $rate)
+                                @php
+                                    $remainingUnits = $addonOffer['remaining_units'][$type] ?? 0;
+                                    $quotaKey = ['storage' => 'storage', 'asset' => 'assets', 'user' => 'users'][$type];
+                                    $currentLimit = $quota[$quotaKey] ?? null;
+                                    $currentUsed = $usage[$quotaKey] ?? 0;
+                                @endphp
+                                <div class="col-md-4">
+                                    <div class="addon-tile h-100" data-type="{{ $type }}">
+                                        <div class="d-flex align-items-center gap-2 mb-2">
+                                            <span class="addon-tile-icon"><i class="bi {{ $addonIcons[$type] ?? 'bi-plus' }}"></i></span>
+                                            <div>
+                                                <div class="fw-semibold">{{ $rate['name'] }}</div>
+                                                <small class="text-muted">per {{ $rate['unit_label'] }}</small>
+                                            </div>
+                                        </div>
+
+                                        <div class="small text-muted mb-2">
+                                            Terpakai {{ $formatQuota($type, $currentUsed) }}
+                                            / {{ $formatQuota($type, $currentLimit) }}
+                                        </div>
+
+                                        @if($currentLimit === null && $type !== 'storage')
+                                            <div class="small text-success"><i class="bi bi-infinity me-1"></i>Paket Anda sudah unlimited</div>
+                                        @elseif($remainingUnits > 0)
+                                            <input type="hidden" name="{{ $type }}_units" value="0" class="addon-units-input">
+                                            <input type="range" class="form-range addon-slider" min="0"
+                                                   max="{{ $remainingUnits }}" step="1" value="0"
+                                                   aria-label="Jumlah {{ $rate['name'] }}">
+                                            <div class="d-flex justify-content-between align-items-baseline">
+                                                <strong class="addon-amount">+0</strong>
+                                                <small class="text-muted addon-price">Rp0</small>
+                                            </div>
+                                        @else
+                                            <div class="small text-muted">Batas maksimal tambahan sudah tercapai.</div>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <div class="sub-price-box d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4">
+                            <div>
+                                <div class="small text-muted" id="addonPeriodLabel">-</div>
+                                <div class="fs-4 fw-bold text-success" id="addonTotal">Rp0</div>
+                            </div>
+                            <button type="submit" class="btn btn-success px-4" id="btnAddon" disabled>
+                                <i class="bi bi-plus-circle me-1"></i> Beli Kapasitas
+                            </button>
+                        </div>
+                    </form>
+
+                    @if(count($activeAddons))
+                        <div class="mt-4">
+                            <div class="small fw-semibold text-muted mb-2">Kapasitas tambahan aktif</div>
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach($activeAddons as $addon)
+                                    <span class="badge rounded-pill bg-light text-dark border px-3 py-2">
+                                        <i class="bi {{ $addonIcons[$addon->type] ?? 'bi-plus' }} me-1"></i>
+                                        +{{ $svc->describeAddon($addon->type, (int) $addon->total_value) }}
+                                        <span class="text-muted">s/d {{ $addon->end_date->format('d M Y') }}</span>
+                                    </span>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
         @endif
@@ -742,7 +1047,7 @@
 
                             <div class="d-flex justify-content-between small text-muted">
                                 <span>0 MB</span>
-                                <span>20 GB</span>
+                                <span>{{ $formatStorageServer($storageAddonMaxBytes) }}</span>
                             </div>
 
                             <div class="small text-muted mt-2">
@@ -819,6 +1124,45 @@
                         </div>
                     </div>
 
+                    {{-- PERIODE PAKET BARU --}}
+                    @if($queuedSubscription)
+                        <div class="alert alert-warning d-flex gap-2 mt-3 mb-0">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            <div class="small">
+                                Anda sudah memiliki paket berikutnya
+                                (<strong>{{ $queuedSubscription->plan->plan_name ?? '-' }}</strong>,
+                                mulai {{ $queuedSubscription->start_date->translatedFormat('d F Y') }}).
+                                Pembelian paket baru dapat dilakukan setelah paket tersebut mulai berjalan.
+                            </div>
+                        </div>
+                    @elseif($periodPreview)
+                        <div class="alert alert-info d-flex gap-2 mt-3 mb-0" id="periodPreview"
+                             data-monthly-start="{{ $periodPreview['monthly']['start']->translatedFormat('d F Y') }}"
+                             data-monthly-end="{{ $periodPreview['monthly']['end']->translatedFormat('d F Y') }}"
+                             data-yearly-start="{{ $periodPreview['yearly']['start']->translatedFormat('d F Y') }}"
+                             data-yearly-end="{{ $periodPreview['yearly']['end']->translatedFormat('d F Y') }}"
+                             data-queued="{{ $periodPreview['monthly']['queued'] ? '1' : '0' }}">
+                            <i class="bi bi-calendar-event"></i>
+                            <div class="small">
+                                @if($periodPreview['monthly']['queued'])
+                                    Paket Anda saat ini masih aktif sampai
+                                    <strong>{{ $paidSubscription?->end_date?->translatedFormat('d F Y') }}</strong>.
+                                    Paket baru akan <strong>masuk antrean</strong> dan aktif mulai
+                                    <strong id="periodPreviewStart">{{ $periodPreview['monthly']['start']->translatedFormat('d F Y') }}</strong>
+                                    s/d <strong id="periodPreviewEnd">{{ $periodPreview['monthly']['end']->translatedFormat('d F Y') }}</strong>.
+                                    Kuota asset &amp; storage paket baru berlaku mulai tanggal tersebut.
+                                @else
+                                    Paket baru <strong>langsung aktif</strong> setelah pembayaran berhasil,
+                                    mulai <strong id="periodPreviewStart">{{ $periodPreview['monthly']['start']->translatedFormat('d F Y') }}</strong>
+                                    s/d <strong id="periodPreviewEnd">{{ $periodPreview['monthly']['end']->translatedFormat('d F Y') }}</strong>.
+                                    @if($currentSubscription && $currentSubscription->status === 'active' && $currentSubscription->billing_cycle === 'trial')
+                                        Masa trial akan ditutup.
+                                    @endif
+                                @endif
+                            </div>
+                        </div>
+                    @endif
+
                     {{-- SUBMIT --}}
                     <div class="d-flex flex-column flex-md-row align-items-center justify-content-between gap-3 mt-5 pt-4 border-top">
                         <div class="text-muted small text-center text-md-start">
@@ -826,12 +1170,13 @@
                             Pembayaran aman melalui DOKU
                             <br>
                             <i class="bi bi-info-circle me-1"></i>
-                            Subscription aktif setelah pembayaran dikonfirmasi.
+                            Tanggal final paket dihitung saat pembayaran dikonfirmasi.
                         </div>
 
                         <button type="submit"
                                 class="btn btn-primary btn-subscription-submit"
-                                id="btnSubmitSubscription">
+                                id="btnSubmitSubscription"
+                                @disabled($queuedSubscription)>
                             <i class="bi bi-arrow-right-circle me-1"></i>
                             Lanjutkan Pembayaran
                         </button>
@@ -842,7 +1187,7 @@
     </div>
 </div>
 
-<script src="https://sandbox.doku.com/jokul-checkout-js/v1/jokul-checkout-1.0.0.js"></script>
+<script src="{{ config('services.doku.checkout_js') }}"></script>
 
 @if(session('doku_checkout_url'))
     <div id="dokuCheckoutConfig"
@@ -954,6 +1299,17 @@ document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('.yearly-price').forEach(element => {
             element.classList.toggle('d-none', !yearly);
         });
+
+        // Perkiraan periode paket baru mengikuti billing cycle.
+        const preview = document.getElementById('periodPreview');
+        const previewStart = document.getElementById('periodPreviewStart');
+        const previewEnd = document.getElementById('periodPreviewEnd');
+
+        if (preview && previewStart && previewEnd) {
+            const key = yearly ? 'yearly' : 'monthly';
+            previewStart.textContent = preview.dataset[key + 'Start'] || '-';
+            previewEnd.textContent = preview.dataset[key + 'End'] || '-';
+        }
 
         updateStorageAndTotal();
     }
@@ -1109,7 +1465,19 @@ document.addEventListener('DOMContentLoaded', function () {
                         '<div class="fw-bold fs-5">' +
                             (plan.dataset.planName || 'Subscription') +
                         '</div>' +
-                        '<div class="text-muted mb-3">Billing Cycle: ' + cycle + '</div>' +
+                        '<div class="text-muted mb-1">Billing Cycle: ' + cycle + '</div>' +
+                        (function () {
+                            const p = document.getElementById('periodPreview');
+                            if (!p) {
+                                return '<div class="mb-3"></div>';
+                            }
+                            const key = yearly ? 'yearly' : 'monthly';
+                            const queued = p.dataset.queued === '1';
+                            return '<div class="small mb-3 ' + (queued ? 'text-warning-emphasis' : 'text-success') + '">' +
+                                (queued ? 'Masuk antrean, aktif ' : 'Aktif ') +
+                                (p.dataset[key + 'Start'] || '') + ' s/d ' + (p.dataset[key + 'End'] || '') +
+                                '</div>';
+                        })() +
                         '<div class="d-flex justify-content-between mb-2">' +
                             '<span>Harga paket</span><strong>' + rupiah(planPrice) + '</strong>' +
                         '</div>' +
@@ -1160,6 +1528,267 @@ document.addEventListener('DOMContentLoaded', function () {
 
     updatePrices();
     updateSelectedPlan();
+    /*
+    |--------------------------------------------------------------------------
+    | UPGRADE SEKARANG
+    |--------------------------------------------------------------------------
+    | Angka di sini untuk tampilan; nominal final dihitung ulang server.
+    */
+    const upgradeForm = document.getElementById('upgradeForm');
+
+    if (upgradeForm) {
+        const options = @json($upgradeOptions);
+        const basePlanName = @json($paidSubscription?->plan?->plan_name ?? '');
+        const baseEnd = @json($paidSubscription?->end_date?->translatedFormat('d M Y') ?? '');
+        const planBox = document.getElementById('upgradePlanChoices');
+        const durationBox = document.getElementById('upgradeDurationChoices');
+        const timeline = document.getElementById('upgradeTimeline');
+        const planInput = document.getElementById('upgrade_plan_id');
+        const durationInput = document.getElementById('upgrade_duration');
+        const upgradeButton = document.getElementById('btnUpgrade');
+
+        const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[c]));
+
+        const durationLabel = months => months === null ? 'Sampai akhir paket' : months + ' bulan';
+        const plansSeen = [...new Map(options.map(o => [o.plan_id, o])).values()];
+
+        let selectedPlan = plansSeen.length ? plansSeen[0].plan_id : null;
+        let selectedMonths = null;
+
+        function currentOption() {
+            return options.find(o => o.plan_id === selectedPlan && o.months === selectedMonths) || null;
+        }
+
+        function renderPlans() {
+            planBox.innerHTML = plansSeen.map(p => `
+                <button type="button" class="btn btn-sm ${p.plan_id === selectedPlan ? 'btn-primary' : 'btn-outline-primary'} upgrade-plan-btn"
+                        data-plan="${p.plan_id}">
+                    ${esc(p.plan_name)}
+                    <small class="d-block opacity-75">
+                        ${p.max_assets === null ? 'Unlimited' : esc(p.max_assets)} asset ·
+                        ${formatStorage(p.max_storage_bytes)}
+                    </small>
+                </button>
+            `).join('');
+        }
+
+        function renderDurations() {
+            const durations = options.filter(o => o.plan_id === selectedPlan);
+
+            if (!durations.some(o => o.months === selectedMonths)) {
+                selectedMonths = durations.length ? durations[0].months : null;
+            }
+
+            durationBox.innerHTML = durations.map(o => `
+                <button type="button" class="btn btn-sm ${o.months === selectedMonths ? 'btn-dark' : 'btn-outline-secondary'} upgrade-duration-btn"
+                        data-months="${o.months === null ? 'end' : o.months}">
+                    ${esc(durationLabel(o.months))}
+                    <small class="d-block opacity-75">${rupiah(o.price)}</small>
+                </button>
+            `).join('');
+        }
+
+        function renderSummary() {
+            const o = currentOption();
+
+            if (!o) {
+                upgradeButton.disabled = true;
+                return;
+            }
+
+            planInput.value = o.plan_id;
+            durationInput.value = o.months === null ? 'end' : String(o.months);
+            upgradeButton.disabled = false;
+
+            document.getElementById('upgradeNewLabel').textContent =
+                'Harga ' + o.plan_name + ' (' + o.days + ' hari)';
+            document.getElementById('upgradeNewPrice').textContent = rupiah(o.new_price);
+            document.getElementById('upgradeCredit').textContent = '−' + rupiah(o.credit);
+            document.getElementById('upgradeTotal').textContent = rupiah(o.price);
+
+            timeline.innerHTML = `
+                <div class="sub-timeline-item active">
+                    <div class="sub-timeline-dot"></div>
+                    <div>
+                        <div class="fw-semibold">${esc(o.plan_name)}</div>
+                        <small class="text-muted">${esc(o.start)} s/d ${esc(o.end)} · aktif setelah pembayaran</small>
+                    </div>
+                </div>
+                ${o.revert_date ? `
+                <div class="sub-timeline-item">
+                    <div class="sub-timeline-dot"></div>
+                    <div>
+                        <div class="fw-semibold">Kembali ke ${esc(basePlanName)}</div>
+                        <small class="text-muted">${esc(o.revert_date)} s/d ${esc(baseEnd)} · otomatis</small>
+                        <div class="small text-warning-emphasis mt-1">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                            Kuota kembali ke paket ${esc(basePlanName)}. Data tetap aman, penambahan diblokir jika melebihi kuota.
+                        </div>
+                    </div>
+                </div>` : `
+                <div class="sub-timeline-item">
+                    <div class="sub-timeline-dot"></div>
+                    <div>
+                        <div class="fw-semibold">Berlaku sampai akhir paket</div>
+                        <small class="text-muted">Tidak kembali ke ${esc(basePlanName)}</small>
+                    </div>
+                </div>`}
+            `;
+        }
+
+        function renderAll() {
+            renderPlans();
+            renderDurations();
+            renderSummary();
+        }
+
+        planBox.addEventListener('click', function (event) {
+            const btn = event.target.closest('.upgrade-plan-btn');
+            if (!btn) return;
+            selectedPlan = Number(btn.dataset.plan);
+            renderAll();
+        });
+
+        durationBox.addEventListener('click', function (event) {
+            const btn = event.target.closest('.upgrade-duration-btn');
+            if (!btn) return;
+            selectedMonths = btn.dataset.months === 'end' ? null : Number(btn.dataset.months);
+            renderAll();
+        });
+
+        upgradeForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+            const o = currentOption();
+            if (!o) return;
+
+            Swal.fire({
+                title: 'Konfirmasi Upgrade',
+                html:
+                    '<div class="text-start">' +
+                        '<div class="fw-bold fs-5 mb-1">' + esc(basePlanName) + ' → ' + esc(o.plan_name) + '</div>' +
+                        '<div class="small text-muted mb-3">' + esc(o.start) + ' s/d ' + esc(o.end) + ' (' + o.days + ' hari)</div>' +
+                        (o.revert_date
+                            ? '<div class="small mb-3">Kembali ke ' + esc(basePlanName) + ' mulai <strong>' + esc(o.revert_date) + '</strong>.</div>'
+                            : '') +
+                        '<div class="d-flex justify-content-between"><span>Harga paket baru</span><strong>' + rupiah(o.new_price) + '</strong></div>' +
+                        '<div class="d-flex justify-content-between"><span>Kredit</span><strong class="text-success">−' + rupiah(o.credit) + '</strong></div>' +
+                        '<hr><div class="d-flex justify-content-between align-items-center"><span class="fw-bold">Bayar</span>' +
+                        '<strong class="fs-4 text-primary">' + rupiah(o.price) + '</strong></div>' +
+                    '</div>',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: '<i class="bi bi-credit-card me-1"></i> Bayar',
+                cancelButtonText: 'Batal',
+                reverseButtons: true,
+                buttonsStyling: false,
+                customClass: { confirmButton: 'btn btn-primary px-4 ms-2', cancelButton: 'btn btn-secondary px-4' }
+            }).then(function (result) {
+                if (result.isConfirmed) {
+                    upgradeButton.disabled = true;
+                    upgradeButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Menghubungkan ke DOKU...';
+                    upgradeForm.submit();
+                }
+            });
+        });
+
+        renderAll();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | TAMBAH KAPASITAS
+    |--------------------------------------------------------------------------
+    */
+    const addonForm = document.getElementById('addonForm');
+
+    if (addonForm) {
+        const rates = @json($addonOffer['rates'] ?? []);
+        const prices = @json($addonOffer['prices'] ?? []);
+        const durationInput = document.getElementById('addon_duration');
+        const totalLabel = document.getElementById('addonTotal');
+        const periodLabel = document.getElementById('addonPeriodLabel');
+        const addonButton = document.getElementById('btnAddon');
+
+        const durationKey = () => durationInput.value === 'end' ? 'end' : '1';
+
+        function describe(type, units) {
+            const rate = rates[type];
+            const total = units * rate.unit_value;
+            if (type === 'storage') return '+' + formatStorage(total);
+            return '+' + total.toLocaleString('id-ID') + (type === 'asset' ? ' asset' : ' user');
+        }
+
+        function update() {
+            const key = durationKey();
+            const info = prices[key] || { unit_price: {}, days: 0, end: '' };
+            let total = 0;
+            const lines = [];
+
+            addonForm.querySelectorAll('.addon-tile').forEach(function (tile) {
+                const type = tile.dataset.type;
+                const slider = tile.querySelector('.addon-slider');
+                if (!slider) return;
+
+                const units = Number(slider.value || 0);
+                const price = units * Number(info.unit_price[type] || 0);
+
+                tile.querySelector('.addon-units-input').value = String(units);
+                tile.querySelector('.addon-amount').textContent = describe(type, units);
+                tile.querySelector('.addon-price').textContent = rupiah(price);
+                tile.classList.toggle('is-selected', units > 0);
+
+                if (units > 0) lines.push(describe(type, units));
+                total += price;
+            });
+
+            totalLabel.textContent = rupiah(total);
+            periodLabel.textContent = 'Aktif hari ini s/d ' + info.end + ' (' + info.days + ' hari)';
+            addonButton.disabled = total <= 0;
+            addonForm.dataset.summary = lines.join(', ');
+            addonForm.dataset.total = String(total);
+        }
+
+        addonForm.querySelectorAll('.addon-slider').forEach(s => s.addEventListener('input', update));
+
+        document.querySelectorAll('input[name="addon_duration_display"]').forEach(function (radio) {
+            radio.addEventListener('change', function () {
+                durationInput.value = this.value;
+                update();
+            });
+        });
+
+        addonForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            Swal.fire({
+                title: 'Konfirmasi Tambah Kapasitas',
+                html:
+                    '<div class="text-start">' +
+                        '<div class="mb-2">' + (addonForm.dataset.summary || '-') + '</div>' +
+                        '<div class="small text-muted mb-3">' + periodLabel.textContent + '</div>' +
+                        '<div class="d-flex justify-content-between align-items-center"><span class="fw-bold">Total</span>' +
+                        '<strong class="fs-4 text-success">' + rupiah(Number(addonForm.dataset.total || 0)) + '</strong></div>' +
+                    '</div>',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: '<i class="bi bi-credit-card me-1"></i> Bayar',
+                cancelButtonText: 'Batal',
+                reverseButtons: true,
+                buttonsStyling: false,
+                customClass: { confirmButton: 'btn btn-success px-4 ms-2', cancelButton: 'btn btn-secondary px-4' }
+            }).then(function (result) {
+                if (result.isConfirmed) {
+                    addonButton.disabled = true;
+                    addonButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Menghubungkan ke DOKU...';
+                    addonForm.submit();
+                }
+            });
+        });
+
+        update();
+    }
 });
 </script>
 

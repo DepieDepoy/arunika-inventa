@@ -11,55 +11,42 @@ use Illuminate\Support\Facades\File;
 class CompanyStorage
 {
     /**
-     * Mengambil batas storage sesuai paket aktif.
-     * Logikanya disamakan dengan halaman Usage & Limits.
+     * Batas storage yang berlaku hari ini:
+     * paket berlaku (upgrade menimpa regular) + add-on storage aktif.
+     * Sumber tunggal: SubscriptionService::quota().
      */
-    
     public static function limitBytes(int $companyId): int
     {
-        $subscription = \App\Models\Subscription::query()
-            ->where('company_id', $companyId)
-            ->where('status', 'active')
-            ->whereDate('start_date', '<=', today())
-            ->whereDate('end_date', '>=', today())
-            ->orderByDesc('start_date')
-            ->orderByDesc('id')
-            ->first();
+        return (int) app(\App\Services\Subscription\SubscriptionService::class)
+            ->quota($companyId)['storage'];
+    }
 
-        // Prioritas utama: total kuota yang tersimpan pada subscription.
-        if (
-            $subscription
-            && (int) $subscription->total_storage_bytes > 0
-        ) {
-            return (int) $subscription->total_storage_bytes;
-        }
+    /**
+     * Pastikan upload baru masih muat dalam kuota storage.
+     *
+     * @param  array<int, UploadedFile|null>  $files
+     * @return array{allowed:bool, used:int, limit:int, incoming:int, message:?string}
+     */
+    public static function checkUpload(int $companyId, array $files): array
+    {
+        $used = self::usedBytes($companyId);
+        $limit = self::limitBytes($companyId);
+        $incoming = self::uploadBytes($files);
 
-        // Fallback untuk subscription lama yang belum memiliki total kuota.
-        if ($subscription) {
-            $baseStorageBytes = (int) (
-                $subscription->base_storage_bytes ?? 0
-            );
+        $allowed = $incoming <= 0 || ($used + $incoming) <= $limit;
 
-            $storageAddonBytes = (int) (
-                $subscription->storage_addon_bytes ?? 0
-            );
-
-            $calculatedTotal = $baseStorageBytes + $storageAddonBytes;
-
-            if ($calculatedTotal > 0) {
-                return $calculatedTotal;
-            }
-
-            // Fallback terakhir menggunakan kuota dasar paket.
-            $plan = \App\Models\Plan::find($subscription->plan_id);
-
-            if ($plan && (int) $plan->max_storage_bytes > 0) {
-                return (int) $plan->max_storage_bytes;
-            }
-        }
-
-        // Default jika perusahaan belum memiliki subscription yang valid.
-        return 536870912; // 512 MiB
+        return [
+            'allowed' => $allowed,
+            'used' => $used,
+            'limit' => $limit,
+            'incoming' => $incoming,
+            'message' => $allowed
+                ? null
+                : 'Kuota storage perusahaan tidak mencukupi. Terpakai '
+                    . self::formatBytes($used) . ' dari ' . self::formatBytes($limit)
+                    . ', file baru ' . self::formatBytes($incoming)
+                    . '. Hapus file lama, tambah storage, atau upgrade paket.',
+        ];
     }
 
     /**

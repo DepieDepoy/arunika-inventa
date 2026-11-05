@@ -143,7 +143,8 @@ class Asset extends Model
 
     public function maintenances(): HasMany
     {
-        return $this->hasMany(AssetMaintenance::class);
+        // Riwayat maintenance memakai tabel `maintenances` (asset_maintenances sudah tidak diisi).
+        return $this->hasMany(Maintenance::class);
     }
 
     public function activeMaintenanceRequest()

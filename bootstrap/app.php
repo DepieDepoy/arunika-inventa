@@ -215,9 +215,16 @@ return Application::configure(basePath: dirname(__DIR__))
                 'message' => $status >= 500
                     ? 'An internal server error occurred.'
                     : ($e->getMessage() ?: 'An error occurred.'),
-                'code' => $status >= 500
-                    ? 'SERVER_ERROR'
-                    : 'HTTP_ERROR',
+                // Kode seragam agar aplikasi mobile cukup memeriksa `code`.
+                'code' => match (true) {
+                    $status >= 500 => 'SERVER_ERROR',
+                    $status === 401 => 'UNAUTHENTICATED',
+                    $status === 403 => 'FORBIDDEN',
+                    $status === 404 => 'NOT_FOUND',
+                    $status === 405 => 'METHOD_NOT_ALLOWED',
+                    $status === 429 => 'RATE_LIMITED',
+                    default => 'HTTP_ERROR',
+                },
             ], $status);
         });
 

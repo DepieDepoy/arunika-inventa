@@ -21,13 +21,17 @@ class PaymentTransaction extends Model
 
         // TRANSACTION
         'order_id',
+        'purchase_type',
         'plan_name',
         'billing_cycle',
 
         // PRICE BREAKDOWN
         'package_price',
         'storage_addon_gb',
+        'storage_addon_bytes',
         'storage_addon_price',
+        'prorated_days',
+        'duration_months',
         'discount_amount',
         'gross_amount',
 
@@ -61,6 +65,8 @@ class PaymentTransaction extends Model
             'storage_addon_price' => 'decimal:2',
             'discount_amount'     => 'decimal:2',
             'gross_amount'        => 'decimal:2',
+            'storage_addon_bytes' => 'integer',
+            'prorated_days'       => 'integer',
 
             // DATETIME
             'transaction_time' => 'datetime',
@@ -86,6 +92,14 @@ class PaymentTransaction extends Model
     public function subscription(): BelongsTo
     {
         return $this->belongsTo(Subscription::class);
+    }
+
+    /**
+     * Item add-on yang dibeli dalam transaksi ini.
+     */
+    public function addons(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(SubscriptionAddon::class);
     }
 
     public function plan(): BelongsTo

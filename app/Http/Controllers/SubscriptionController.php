@@ -6,10 +6,12 @@ use App\Models\Asset;
 use App\Models\PaymentTransaction;
 use App\Models\Plan;
 use App\Models\Subscription;
+use App\Models\SubscriptionAddon;
 use App\Models\User;
 use App\Services\CompanyStorage;
 use App\Services\DokuService;
 use App\Services\MidtransService;
+use App\Services\Subscription\SubscriptionService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,86 +30,34 @@ class SubscriptionController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    public function index(): View
+    public function __construct(
+        protected SubscriptionService $subscriptions
+    ) {
+    }
+
+    public function index(DokuService $doku): View
     {
         $user = Auth::user();
 
         abort_unless($user, 401);
 
+        $this->requireAdministrator();
+
         $company = $user->company;
 
-        $isAdministrator = $user->role
-            && $user->role->role_code === 'administrator';
-
-        if (!$isAdministrator) {
-            abort(403, 'Only Administrator can manage subscription.');
-        }
-
         /*
-         * Periksa transaksi pending yang sudah kedaluwarsa.
-         * Transaksi yang sudah paid tidak disentuh.
+         * Transaksi pending yang sudah lewat batas waktu dicek ulang
+         * ke DOKU dulu: jika ternyata sudah dibayar, paket diaktifkan.
          */
-        $pendingTransactions = $company
-            ? $company->paymentTransactions()
-                ->with('subscription')
-                ->where('transaction_status', 'pending')
-                ->get()
-            : collect();
-
-        foreach ($pendingTransactions as $transaction) {
-            if (
-                !$transaction->expiry_time
-                || !Carbon::parse($transaction->expiry_time)->isPast()
-            ) {
-                continue;
-            }
-
-            DB::transaction(function () use ($transaction) {
-                $lockedTransaction = PaymentTransaction::query()
-                    ->whereKey($transaction->id)
-                    ->lockForUpdate()
-                    ->first();
-
-                if (
-                    !$lockedTransaction
-                    || $lockedTransaction->transaction_status !== 'pending'
-                    || $lockedTransaction->isPaid()
-                ) {
-                    return;
-                }
-
-                $lockedTransaction->transaction_status = 'expired';
-                $lockedTransaction->save();
-
-                $subscription = Subscription::query()
-                    ->whereKey($lockedTransaction->subscription_id)
-                    ->lockForUpdate()
-                    ->first();
-
-                if (
-                    $subscription
-                    && $subscription->status === 'pending'
-                    && $subscription->payment_status !== 'paid'
-                ) {
-                    $subscription->status = 'cancelled';
-                    $subscription->payment_status = 'failed';
-                    $subscription->save();
-                }
-            });
+        if ($company) {
+            $this->syncExpiredPendingPayments($company->id, $doku);
         }
 
         /*
-         * Paket saat ini adalah paket yang benar-benar aktif hari ini.
+         * Paket yang berlaku hari ini.
          */
         $currentSubscription = $company
-            ? $company->subscriptions()
-                ->with('plan')
-                ->where('status', 'active')
-                ->whereDate('start_date', '<=', today())
-                ->whereDate('end_date', '>=', today())
-                ->orderByDesc('start_date')
-                ->orderByDesc('id')
-                ->first()
+            ? $this->subscriptions->current($company->id)
             : null;
 
         /*
@@ -118,9 +68,19 @@ class SubscriptionController extends Controller
             $currentSubscription = $company
                 ->subscriptions()
                 ->with('plan')
+                ->whereDate('start_date', '<=', today())
+                ->orderByDesc('end_date')
                 ->orderByDesc('id')
                 ->first();
         }
+
+        $queuedSubscription = $company
+            ? $this->subscriptions->queued($company->id)
+            : null;
+
+        $paidSubscription = $company
+            ? $this->subscriptions->currentPaid($company->id)
+            : null;
 
         $plans = Plan::query()
             ->where('status', 1)
@@ -143,13 +103,64 @@ class SubscriptionController extends Controller
                 ->first()
             : null;
 
+        /*
+         * Perkiraan periode paket baru jika dibayar hari ini.
+         */
+        $periodPreview = $company
+            ? [
+                'monthly' => $this->subscriptions->previewPeriod($company->id, 'monthly'),
+                'yearly' => $this->subscriptions->previewPeriod($company->id, 'yearly'),
+            ]
+            : null;
+
+        $storageRate = $this->subscriptions->storageRate();
+
+        /*
+         * Upgrade sekarang & tambah kapasitas (butuh paket berbayar aktif).
+         */
+        $activeUpgrade = $company ? $this->subscriptions->activeUpgrade($company->id) : null;
+        $activeAddons = $company ? $this->subscriptions->activeAddons($company->id) : collect();
+        $quota = $company ? $this->subscriptions->quota($company->id) : null;
+        $usage = $company ? $this->subscriptions->usage($company->id) : null;
+
+        $upgradeOptions = [];
+        $addonOffer = null;
+
+        if ($paidSubscription) {
+            if (!$activeUpgrade && !$queuedSubscription) {
+                $upgradeOptions = $this->subscriptions->upgradeOptions($paidSubscription);
+            }
+
+            $rates = $this->subscriptions->rates();
+            $activeUnits = $this->subscriptions->activeAddonUnits($company->id);
+
+            $addonOffer = [
+                'base' => $paidSubscription,
+                'rates' => $rates,
+                'remaining_units' => collect($rates)->mapWithKeys(fn ($rate, $type) => [
+                    $type => max(0, $rate['max_units'] - (int) ($activeUnits[$type] ?? 0)),
+                ])->all(),
+                'prices' => $this->subscriptions->addonUnitPrices($paidSubscription),
+            ];
+        }
+
         return view(
             'dashboard.subscription.index',
             compact(
                 'company',
                 'currentSubscription',
+                'queuedSubscription',
+                'paidSubscription',
                 'plans',
-                'pendingPayment'
+                'pendingPayment',
+                'periodPreview',
+                'storageRate',
+                'activeUpgrade',
+                'activeAddons',
+                'quota',
+                'usage',
+                'upgradeOptions',
+                'addonOffer'
             )
         );
     }
@@ -166,13 +177,11 @@ class SubscriptionController extends Controller
     ): RedirectResponse {
         $user = Auth::user();
 
-        $isAdministrator = $user
-            && $user->role
-            && $user->role->role_code === 'administrator';
+        $this->requireAdministrator();
 
-        if (!$isAdministrator) {
-            abort(403, 'Only Administrator can manage subscription.');
-        }
+        $rate = $this->subscriptions->storageRate();
+        $unitBytes = $rate['unit_bytes'];
+        $maxExtraBytes = $unitBytes * $rate['max_units'];
 
         $validated = $request->validate([
             'plan_id' => [
@@ -188,13 +197,12 @@ class SubscriptionController extends Controller
                 'nullable',
                 'integer',
                 'min:0',
-                'max:21474836480',
-                function ($attribute, $value, $fail) {
-                    $step = 512 * 1024 * 1024;
-
-                    if ((int) $value % $step !== 0) {
+                'max:' . $maxExtraBytes,
+                function ($attribute, $value, $fail) use ($unitBytes) {
+                    if ((int) $value % $unitBytes !== 0) {
                         $fail(
-                            'Tambahan storage harus kelipatan 512 MB.'
+                            'Tambahan storage harus kelipatan '
+                            . round($unitBytes / (1024 * 1024)) . ' MB.'
                         );
                     }
                 },
@@ -210,8 +218,20 @@ class SubscriptionController extends Controller
         }
 
         /*
-         * Ambil paket yang tersedia dan bukan paket FREE.
+         * Maksimal 1 paket dalam antrean.
          */
+        $queued = $this->subscriptions->queued($company->id);
+
+        if ($queued) {
+            return back()->withErrors([
+                'subscription' =>
+                    'Anda sudah memiliki paket berikutnya ('
+                    . ($queued->plan?->plan_name ?? 'Paket')
+                    . ', mulai ' . $queued->start_date->format('d/m/Y') . '). '
+                    . 'Pembelian paket baru dapat dilakukan setelah paket tersebut berjalan.',
+            ])->withInput();
+        }
+
         $plan = Plan::query()
             ->whereKey($validated['plan_id'])
             ->where('status', 1)
@@ -220,60 +240,47 @@ class SubscriptionController extends Controller
 
         if (!$plan) {
             return back()->withErrors([
-                'subscription' => 'Plan tidak tersedia.',
+                'subscription' =>
+                    'Plan tidak tersedia atau tidak dapat dipilih.',
             ])->withInput();
         }
 
-        $price = $validated['billing_cycle'] === 'yearly'
+        $billingCycle = $validated['billing_cycle'];
+        $yearly = $billingCycle === 'yearly';
+
+        $price = $yearly
             ? $plan->price_yearly
             : $plan->price_monthly;
 
         if ($price === null || (float) $price <= 0) {
             return back()->withErrors([
-                'subscription' => 'Harga subscription tidak tersedia.',
+                'subscription' =>
+                    'Harga paket belum diatur. Silakan hubungi admin.',
+            ])->withInput();
+        }
+
+        $baseStorageBytes = (int) ($plan->max_storage_bytes ?? 0);
+
+        if ($baseStorageBytes <= 0) {
+            report(new \RuntimeException(
+                'max_storage_bytes plan ' . $plan->plan_code . ' belum diatur.'
+            ));
+
+            return back()->withErrors([
+                'subscription' =>
+                    'Kuota storage paket belum diatur. Silakan hubungi admin.',
             ])->withInput();
         }
 
         /*
-         * Hitung storage tambahan.
-         * Satu langkah = 512 MiB.
+         * Harga storage tambahan dari database (storage_addon_rates).
          */
-        $bytesPerStorageStep = 512 * 1024 * 1024;
-        $maxExtraStorageBytes = 20 * 1024 * 1024 * 1024;
+        $extraStorageBytes = (int) ($validated['extra_storage_bytes'] ?? 0);
+        $storageUnits = intdiv($extraStorageBytes, $unitBytes);
+        $storageUnitPrice = $yearly ? $rate['price_yearly'] : $rate['price_monthly'];
+        $storageAddonPrice = $storageUnits * $storageUnitPrice;
+        $storageAddonGb = round($extraStorageBytes / (1024 ** 3), 2);
 
-        $extraStorageBytes = (int) (
-            $validated['extra_storage_bytes'] ?? 0
-        );
-
-        if (
-            $extraStorageBytes > $maxExtraStorageBytes
-            || $extraStorageBytes % $bytesPerStorageStep !== 0
-        ) {
-            return back()->withErrors([
-                'subscription' =>
-                    'Tambahan storage maksimal 20 GB dan harus kelipatan 512 MB.',
-            ])->withInput();
-        }
-
-        $storageSteps = (int) (
-            $extraStorageBytes / $bytesPerStorageStep
-        );
-
-        $storageAddonGb = $storageSteps * 0.5;
-
-        $pricePer500MbMonthly = (int) config(
-            'subscription.storage_addon.price_per_500mb_monthly',
-            10000
-        );
-
-        $billingMultiplier = $validated['billing_cycle'] === 'yearly'
-            ? 12
-            : 1;
-
-        $storageUnitPrice = $pricePer500MbMonthly * $billingMultiplier;
-        $storageAddonPrice = $storageSteps * $storageUnitPrice;
-
-        // Diskon tetap mengikuti perilaku sebelumnya: belum diterapkan.
         $discountAmount = 0;
 
         $totalPrice = (int) round(
@@ -281,199 +288,60 @@ class SubscriptionController extends Controller
         );
 
         /*
-         * Periksa transaksi pending milik perusahaan ini.
-         * Jika masih cocok, gunakan kembali URL pembayaran.
+         * Pakai ulang link pembayaran yang sama bila pilihan tidak berubah.
          */
-        $existingPending = $company
-            ->paymentTransactions()
-            ->with('subscription')
-            ->where('transaction_status', 'pending')
-            ->latest('id')
-            ->first();
+        $reuseUrl = $this->reuseOrCancelPending(
+            $company->id,
+            fn (PaymentTransaction $pending) =>
+                $pending->purchase_type === SubscriptionService::TYPE_SUBSCRIPTION
+                && (int) $pending->plan_id === (int) $plan->id
+                && $pending->billing_cycle === $billingCycle
+                && (int) $pending->storage_addon_bytes === $extraStorageBytes
+                && (int) round((float) $pending->gross_amount) === $totalPrice
+        );
 
-        if ($existingPending) {
-            $samePlan = (int) $existingPending->plan_id === (int) $plan->id;
-
-            $sameCycle = $existingPending->subscription
-                && $existingPending->subscription->billing_cycle
-                    === $validated['billing_cycle'];
-
-            $sameAmount = (int) round(
-                (float) $existingPending->gross_amount
-            ) === $totalPrice;
-
-            $sameStorage = abs(
-                (float) $existingPending->storage_addon_gb
-                - $storageAddonGb
-            ) < 0.001;
-
-            $notExpired = !$existingPending->expiry_time
-                || Carbon::parse($existingPending->expiry_time)->isFuture();
-
-            if (
-                $samePlan
-                && $sameCycle
-                && $sameAmount
-                && $sameStorage
-                && $notExpired
-                && $existingPending->payment_url
-            ) {
-                return back()->with(
-                    'doku_checkout_url',
-                    $existingPending->payment_url
-                );
-            }
-
-            /*
-             * Batalkan hanya transaksi lama yang masih pending.
-             * Jangan mengubah transaksi yang sudah dibayar.
-             */
-            DB::transaction(function () use ($existingPending) {
-                $transaction = PaymentTransaction::query()
-                    ->whereKey($existingPending->id)
-                    ->lockForUpdate()
-                    ->first();
-
-                if (
-                    !$transaction
-                    || $transaction->transaction_status !== 'pending'
-                    || $transaction->isPaid()
-                ) {
-                    return;
-                }
-
-                $transaction->transaction_status = 'cancel';
-                $transaction->save();
-
-                $subscription = Subscription::query()
-                    ->whereKey($transaction->subscription_id)
-                    ->lockForUpdate()
-                    ->first();
-
-                if (
-                    $subscription
-                    && $subscription->payment_status !== 'paid'
-                    && $subscription->status === 'pending'
-                ) {
-                    $subscription->status = 'cancelled';
-                    $subscription->payment_status = 'failed';
-                    $subscription->save();
-                }
-            });
+        if ($reuseUrl) {
+            return back()->with('doku_checkout_url', $reuseUrl);
         }
 
         /*
-         * Generate order ID V-0001, V-0002, dan seterusnya.
+         * Tanggal di bawah hanya perkiraan. Tanggal final dihitung
+         * ulang saat pembayaran lunas (SubscriptionService).
          */
-        $lastSequence = PaymentTransaction::query()
-            ->where('order_id', 'like', 'V-%')
-            ->pluck('order_id')
-            ->map(function ($existingOrderId) {
-                if (
-                    preg_match(
-                        '/^V-(\d+)$/',
-                        (string) $existingOrderId,
-                        $matches
-                    )
-                ) {
-                    return (int) $matches[1];
-                }
-
-                return 0;
-            })
-            ->max() ?? 0;
-
-        $orderId = 'V-' . str_pad(
-            (string) ($lastSequence + 1),
-            4,
-            '0',
-            STR_PAD_LEFT
-        );
+        $period = $this->subscriptions->previewPeriod($company->id, $billingCycle);
 
         try {
-            $result = DB::transaction(function () use (
+            $paymentUrl = DB::transaction(function () use (
                 $company,
                 $plan,
-                $validated,
-                $price,
-                $storageAddonGb,
-                $storageAddonPrice,
-                $storageSteps,
-                $storageUnitPrice,
-                $discountAmount,
-                $totalPrice,
-                $orderId,
                 $user,
                 $doku,
-                $extraStorageBytes
+                $billingCycle,
+                $price,
+                $period,
+                $baseStorageBytes,
+                $extraStorageBytes,
+                $storageUnits,
+                $storageUnitPrice,
+                $storageAddonGb,
+                $storageAddonPrice,
+                $discountAmount,
+                $totalPrice
             ) {
-                $today = today();
-
-                /*
-                 * Ambil paket yang saat ini aktif.
-                 * Lock mengurangi risiko dua proses membaca data bersamaan.
-                 */
-                $previousSubscription = $company
-                    ->subscriptions()
-                    ->where('status', 'active')
-                    ->whereDate('start_date', '<=', $today)
-                    ->whereDate('end_date', '>=', $today)
-                    ->orderByDesc('end_date')
-                    ->lockForUpdate()
-                    ->first();
-
-                /*
-                 * Paket baru akan aktif saat pembayaran terverifikasi.
-                 * Tanggal mulai disimpan sebagai hari ini.
-                 *
-                 * Masa akhir menghitung sisa paket lama:
-                 * Free berakhir 10 November + Starter bulanan
-                 * = Starter berakhir 10 Desember.
-                 */
-                $startDate = $today;
-
-                $billingBaseDate = $previousSubscription
-                    ? Carbon::parse($previousSubscription->end_date)
-                    : $today->copy();
-
-                $endDate = $validated['billing_cycle'] === 'yearly'
-                    ? $billingBaseDate->copy()->addYearNoOverflow()
-                    : $billingBaseDate->copy()->addMonthNoOverflow();
-
-                /*
-                 * Kuota dasar harus berasal dari konfigurasi plan.
-                 * Tidak mengubah data plan secara otomatis.
-                 */
-                $baseStorageBytes = (int) ($plan->max_storage_bytes ?? 0);
-
-                if ($baseStorageBytes <= 0) {
-                    throw new \RuntimeException(
-                        'Kuota storage dasar paket tidak valid. '
-                        . 'Periksa kolom max_storage_bytes pada tabel plans.'
-                    );
-                }
-
-                $storageAddonBytes = $extraStorageBytes;
-                $totalStorageBytes = $baseStorageBytes + $storageAddonBytes;
-
                 $subscription = Subscription::create([
                     'company_id' => $company->id,
                     'plan_id' => $plan->id,
-                    'billing_cycle' => $validated['billing_cycle'],
-
+                    'billing_cycle' => $billingCycle,
                     'price' => $price,
                     'storage_addon_gb' => $storageAddonGb,
                     'storage_addon_price' => $storageAddonPrice,
-
                     'base_storage_bytes' => $baseStorageBytes,
-                    'storage_addon_bytes' => $storageAddonBytes,
-                    'total_storage_bytes' => $totalStorageBytes,
-
+                    'storage_addon_bytes' => $extraStorageBytes,
+                    'total_storage_bytes' => $baseStorageBytes + $extraStorageBytes,
                     'discount_amount' => $discountAmount,
                     'total_price' => $totalPrice,
-
-                    'start_date' => $startDate,
-                    'end_date' => $endDate,
+                    'start_date' => $period['start'],
+                    'end_date' => $period['end'],
                     'status' => 'pending',
                     'payment_status' => 'pending',
                 ]);
@@ -482,106 +350,600 @@ class SubscriptionController extends Controller
                     'company_id' => $company->id,
                     'subscription_id' => $subscription->id,
                     'plan_id' => $plan->id,
-
-                    'order_id' => $orderId,
+                    'order_id' => $this->nextOrderId(),
+                    'purchase_type' => SubscriptionService::TYPE_SUBSCRIPTION,
                     'plan_name' => $plan->plan_name,
-                    'billing_cycle' => $validated['billing_cycle'],
-
+                    'billing_cycle' => $billingCycle,
                     'package_price' => $price,
                     'storage_addon_gb' => $storageAddonGb,
+                    'storage_addon_bytes' => $extraStorageBytes,
                     'storage_addon_price' => $storageAddonPrice,
                     'discount_amount' => $discountAmount,
-
                     'gross_amount' => $totalPrice,
                     'transaction_status' => 'pending',
-                    'payment_url' => null,
-                    'expiry_time' => null,
                 ]);
 
                 $lineItems = [
                     [
                         'id' => (string) $plan->id,
-                        'name' => 'Subscription '
-                            . $plan->plan_name . ' - '
-                            . ucfirst($validated['billing_cycle']),
+                        'name' => 'Subscription ' . $plan->plan_name
+                            . ' - ' . ucfirst($billingCycle),
                         'quantity' => 1,
                         'price' => (int) $price,
                     ],
                 ];
 
-                if ($storageSteps > 0) {
+                if ($storageUnits > 0) {
                     $lineItems[] = [
-                        'id' => 'STORAGE-' . $storageSteps,
+                        'id' => 'STORAGE-' . $storageUnits,
                         'name' => 'Tambahan Storage '
-                            . number_format(
-                                $storageAddonGb,
-                                1,
-                                '.',
-                                ''
-                            )
-                            . ' GB - '
-                            . ucfirst($validated['billing_cycle']),
-                        'quantity' => $storageSteps,
+                            . $this->formatBytes($extraStorageBytes)
+                            . ' - ' . ucfirst($billingCycle),
+                        'quantity' => $storageUnits,
                         'price' => $storageUnitPrice,
                     ];
                 }
 
-                $payload = [
-                    'order' => [
-                        'amount' => $totalPrice,
-                        'invoice_number' => $orderId,
-                        'currency' => 'IDR',
-                        'callback_url' => route(
-                            'subscription.payment.finish',
-                            ['order_id' => $orderId]
-                        ),
-                        'line_items' => $lineItems,
-                    ],
-                    'payment' => [
-                        'payment_due_date' => 5,
-                    ],
-                    'customer' => [
-                        'id' => 'COMPANY-' . $company->id,
-                        'name' => $user->name ?: $company->company_name,
-                        'email' => $user->email,
-                    ],
-                ];
-
-                if ($user->phone) {
-                    $payload['customer']['phone'] = $user->phone;
-                }
-
-                $dokuResult = $doku->createPayment($payload);
-
-                if (empty($dokuResult['payment_url'])) {
-                    throw new \RuntimeException(
-                        'DOKU tidak mengembalikan payment_url.'
-                    );
-                }
-
-                $paymentTransaction->update([
-                    'payment_url' => $dokuResult['payment_url'],
-                    'expiry_time' => $dokuResult['expiry_time'] ?? null,
-                ]);
-
-                return [
-                    'payment_url' => $dokuResult['payment_url'],
-                ];
+                return $this->createDokuCheckout(
+                    $paymentTransaction,
+                    $lineItems,
+                    $user,
+                    $company,
+                    $doku
+                );
             });
 
-            return back()->with(
-                'doku_checkout_url',
-                $result['payment_url']
-            );
+            return back()->with('doku_checkout_url', $paymentUrl);
         } catch (\Throwable $e) {
-            report($e);
-
-            return back()->withErrors([
-                'subscription' =>
-                    'Gagal membuat pembayaran DOKU. '
-                    . 'Silakan periksa log aplikasi.',
-            ])->withInput();
+            return $this->paymentFailedResponse($e);
         }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | UPGRADE SEKARANG (1..N BULAN / SAMPAI AKHIR PAKET)
+    |--------------------------------------------------------------------------
+    |
+    | Bayar selisih harga harian paket baru vs paket saat ini.
+    | Setelah durasi habis, otomatis kembali ke paket regular.
+    |
+    */
+
+    public function upgradeNow(
+        Request $request,
+        DokuService $doku
+    ): RedirectResponse {
+        $user = Auth::user();
+
+        $this->requireAdministrator();
+
+        $validated = $request->validate([
+            'plan_id' => ['required', 'integer', 'exists:plans,id'],
+            'duration' => ['required', 'in:1,2,3,6,end'],
+        ]);
+
+        $company = $user->company;
+        abort_unless($company, 403, 'Company tidak ditemukan.');
+
+        $base = $this->subscriptions->currentPaid($company->id);
+
+        if (!$base) {
+            return back()->withErrors([
+                'subscription' => 'Upgrade sekarang hanya tersedia untuk paket berbayar yang sedang aktif.',
+            ]);
+        }
+
+        if ($this->subscriptions->queued($company->id)) {
+            return back()->withErrors([
+                'subscription' => 'Upgrade sekarang tidak tersedia karena sudah ada paket berikutnya di antrean.',
+            ]);
+        }
+
+        if ($active = $this->subscriptions->activeUpgrade($company->id)) {
+            return back()->withErrors([
+                'subscription' => 'Upgrade ke ' . ($active->plan?->plan_name ?? 'paket lain')
+                    . ' masih berjalan sampai ' . $active->end_date->format('d/m/Y') . '.',
+            ]);
+        }
+
+        $plan = $this->subscriptions->upgradeablePlans($base)
+            ->firstWhere('id', (int) $validated['plan_id']);
+
+        if (!$plan) {
+            return back()->withErrors([
+                'subscription' => 'Paket tujuan harus lebih tinggi dari paket saat ini.',
+            ]);
+        }
+
+        $months = $validated['duration'] === 'end' ? null : (int) $validated['duration'];
+        $quote = $this->subscriptions->upgradeQuote($base, $plan, $months);
+
+        if ($quote['days'] < 1 || $quote['price'] <= 0) {
+            return back()->withErrors([
+                'subscription' => 'Upgrade tidak dapat diproses untuk durasi tersebut.',
+            ]);
+        }
+
+        $reuseUrl = $this->reuseOrCancelPending(
+            $company->id,
+            fn (PaymentTransaction $pending) =>
+                $pending->purchase_type === SubscriptionService::TYPE_UPGRADE
+                && (int) $pending->plan_id === (int) $plan->id
+                && $pending->duration_months === $months
+                && (int) round((float) $pending->gross_amount) === $quote['price']
+        );
+
+        if ($reuseUrl) {
+            return back()->with('doku_checkout_url', $reuseUrl);
+        }
+
+        // Storage paket baru + storage tambahan yang sudah melekat di paket dasar.
+        $baseStorage = (int) ($plan->max_storage_bytes ?? 0);
+        $carriedStorage = (int) $base->storage_addon_bytes;
+
+        try {
+            $paymentUrl = DB::transaction(function () use (
+                $company, $user, $doku, $base, $plan, $months, $quote, $baseStorage, $carriedStorage
+            ) {
+                $upgrade = Subscription::create([
+                    'company_id' => $company->id,
+                    'plan_id' => $plan->id,
+                    'kind' => 'upgrade',
+                    'priority' => 1,
+                    'parent_subscription_id' => $base->id,
+                    'billing_cycle' => $base->billing_cycle,
+                    'price' => $quote['new_price'],
+                    'storage_addon_gb' => round($carriedStorage / (1024 ** 3), 2),
+                    'storage_addon_price' => 0,
+                    'base_storage_bytes' => $baseStorage,
+                    'storage_addon_bytes' => $carriedStorage,
+                    'total_storage_bytes' => $baseStorage + $carriedStorage,
+                    'discount_amount' => $quote['credit'],
+                    'total_price' => $quote['price'],
+                    'start_date' => $quote['start'],
+                    'end_date' => $quote['end'],
+                    'status' => 'pending',
+                    'payment_status' => 'pending',
+                ]);
+
+                $paymentTransaction = PaymentTransaction::create([
+                    'company_id' => $company->id,
+                    'subscription_id' => $upgrade->id,
+                    'plan_id' => $plan->id,
+                    'order_id' => $this->nextOrderId(),
+                    'purchase_type' => SubscriptionService::TYPE_UPGRADE,
+                    'plan_name' => $plan->plan_name,
+                    'billing_cycle' => $base->billing_cycle,
+                    'package_price' => $quote['new_price'],
+                    'storage_addon_gb' => 0,
+                    'storage_addon_price' => 0,
+                    'prorated_days' => $quote['days'],
+                    'duration_months' => $months,
+                    'discount_amount' => $quote['credit'],
+                    'gross_amount' => $quote['price'],
+                    'transaction_status' => 'pending',
+                ]);
+
+                // DOKU: line item harus berjumlah = amount, jadi kirim satu baris selisih.
+                return $this->createDokuCheckout(
+                    $paymentTransaction,
+                    [[
+                        'id' => 'UPGRADE-' . $plan->id,
+                        'name' => 'Upgrade ' . ($base->plan?->plan_name ?? '') . ' ke ' . $plan->plan_name
+                            . ' (' . $quote['days'] . ' hari)',
+                        'quantity' => 1,
+                        'price' => $quote['price'],
+                    ]],
+                    $user,
+                    $company,
+                    $doku
+                );
+            });
+
+            return back()->with('doku_checkout_url', $paymentUrl);
+        } catch (\Throwable $e) {
+            return $this->paymentFailedResponse($e);
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | TAMBAH KAPASITAS (STORAGE / ASSET / USER) - LANGSUNG AKTIF
+    |--------------------------------------------------------------------------
+    */
+
+    public function buyAddon(
+        Request $request,
+        DokuService $doku
+    ): RedirectResponse {
+        $user = Auth::user();
+
+        $this->requireAdministrator();
+
+        $validated = $request->validate([
+            'storage_units' => ['nullable', 'integer', 'min:0', 'max:1000'],
+            'asset_units' => ['nullable', 'integer', 'min:0', 'max:1000'],
+            'user_units' => ['nullable', 'integer', 'min:0', 'max:1000'],
+            'duration' => ['required', 'in:1,end'],
+        ]);
+
+        $company = $user->company;
+        abort_unless($company, 403, 'Company tidak ditemukan.');
+
+        $base = $this->subscriptions->currentPaid($company->id);
+
+        if (!$base) {
+            return back()->withErrors([
+                'subscription' => 'Tambah kapasitas hanya tersedia untuk paket berbayar yang sedang aktif. '
+                    . 'Silakan pilih paket berbayar terlebih dahulu.',
+            ]);
+        }
+
+        $rates = $this->subscriptions->rates();
+        $activeUnits = $this->subscriptions->activeAddonUnits($company->id);
+
+        $units = [];
+
+        foreach (['storage', 'asset', 'user'] as $type) {
+            $qty = (int) ($validated[$type . '_units'] ?? 0);
+
+            if ($qty <= 0) {
+                continue;
+            }
+
+            if (!isset($rates[$type])) {
+                return back()->withErrors(['subscription' => 'Add-on ' . $type . ' sedang tidak tersedia.']);
+            }
+
+            $remaining = max(0, $rates[$type]['max_units'] - (int) ($activeUnits[$type] ?? 0));
+
+            if ($qty > $remaining) {
+                return back()->withErrors([
+                    'subscription' => $rates[$type]['name'] . ' melebihi batas. Sisa yang dapat ditambahkan: '
+                        . $remaining . ' x ' . $rates[$type]['unit_label'] . '.',
+                ]);
+            }
+
+            $units[$type] = $qty;
+        }
+
+        if ($units === []) {
+            return back()->withErrors(['subscription' => 'Pilih minimal satu kapasitas yang ingin ditambahkan.']);
+        }
+
+        $months = $validated['duration'] === 'end' ? null : 1;
+        $quote = $this->subscriptions->addonQuote($base, $units, $months);
+
+        if ($quote['days'] < 1 || $quote['total'] <= 0) {
+            return back()->withErrors(['subscription' => 'Paket Anda sudah berakhir. Silakan perpanjang paket.']);
+        }
+
+        $signature = json_encode($units);
+
+        $reuseUrl = $this->reuseOrCancelPending(
+            $company->id,
+            fn (PaymentTransaction $pending) =>
+                $pending->purchase_type === SubscriptionService::TYPE_ADDON
+                && (int) $pending->subscription_id === (int) $base->id
+                && $pending->duration_months === $months
+                && (int) round((float) $pending->gross_amount) === $quote['total']
+                && data_get($pending->midtrans_response, 'addon_units') === $signature
+        );
+
+        if ($reuseUrl) {
+            return back()->with('doku_checkout_url', $reuseUrl);
+        }
+
+        $storageItem = collect($quote['items'])->firstWhere('type', 'storage');
+
+        try {
+            $paymentUrl = DB::transaction(function () use (
+                $company, $user, $doku, $base, $months, $quote, $storageItem, $signature
+            ) {
+                $paymentTransaction = PaymentTransaction::create([
+                    'company_id' => $company->id,
+                    'subscription_id' => $base->id,
+                    'plan_id' => $base->plan_id,
+                    'order_id' => $this->nextOrderId(),
+                    'purchase_type' => SubscriptionService::TYPE_ADDON,
+                    'plan_name' => $base->plan?->plan_name ?? 'Add-on',
+                    'billing_cycle' => $base->billing_cycle,
+                    'package_price' => 0,
+                    'storage_addon_gb' => $storageItem ? round($storageItem['total_value'] / (1024 ** 3), 2) : 0,
+                    'storage_addon_bytes' => $storageItem['total_value'] ?? 0,
+                    'storage_addon_price' => $storageItem['price'] ?? 0,
+                    'prorated_days' => $quote['days'],
+                    'duration_months' => $months,
+                    'discount_amount' => 0,
+                    'gross_amount' => $quote['total'],
+                    'transaction_status' => 'pending',
+                    // Penanda isi keranjang (untuk pakai ulang link pembayaran).
+                    'midtrans_response' => ['addon_units' => $signature],
+                ]);
+
+                $lineItems = [];
+
+                foreach ($quote['items'] as $item) {
+                    SubscriptionAddon::create([
+                        'company_id' => $company->id,
+                        'subscription_id' => $base->id,
+                        'payment_transaction_id' => $paymentTransaction->id,
+                        'type' => $item['type'],
+                        'units' => $item['units'],
+                        'unit_value' => $item['unit_value'],
+                        'total_value' => $item['total_value'],
+                        'price' => $item['price'],
+                        'duration_months' => $months,
+                        'start_date' => $quote['start'],
+                        'end_date' => $quote['end'],
+                        'status' => 'pending',
+                    ]);
+
+                    $lineItems[] = [
+                        'id' => 'ADDON-' . strtoupper($item['type']),
+                        'name' => $item['name'] . ' ' . $item['unit_label']
+                            . ' (' . $quote['days'] . ' hari)',
+                        'quantity' => $item['units'],
+                        'price' => $item['unit_price'],
+                    ];
+                }
+
+                return $this->createDokuCheckout($paymentTransaction, $lineItems, $user, $company, $doku);
+            });
+
+            return back()->with('doku_checkout_url', $paymentUrl);
+        } catch (\Throwable $e) {
+            return $this->paymentFailedResponse($e);
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | HELPERS
+    |--------------------------------------------------------------------------
+    */
+
+    protected function requireAdministrator(): void
+    {
+        $user = Auth::user();
+
+        if (!$user instanceof User || !$user->isAdministrator()) {
+            abort(403, 'Only Administrator can manage subscription.');
+        }
+    }
+
+    /**
+     * Pesan yang jelas saat checkout DOKU gagal dibuat.
+     * Detail teknis tetap tercatat di log (report()).
+     */
+    protected function paymentFailedResponse(\Throwable $e): RedirectResponse
+    {
+        report($e);
+
+        $message = strtolower($e->getMessage());
+
+        [$title, $text] = match (true) {
+            // Server DOKU tidak dapat dihubungi (timeout, DNS, koneksi ditolak).
+            $e instanceof \Illuminate\Http\Client\ConnectionException,
+            str_contains($message, 'curl error'),
+            str_contains($message, 'timed out') => [
+                'Server Pembayaran Tidak Merespons',
+                'Server pembayaran DOKU sedang tidak dapat dihubungi. '
+                    . 'Tidak ada tagihan yang dibuat. Silakan coba beberapa saat lagi.',
+            ],
+
+            // Konfigurasi .env belum lengkap.
+            str_contains($message, 'konfigurasi doku') => [
+                'Pembayaran Belum Dikonfigurasi',
+                'Konfigurasi pembayaran DOKU belum lengkap. Silakan hubungi tim teknis.',
+            ],
+
+            // DOKU menjawab, tetapi menolak permintaan.
+            $e instanceof \Illuminate\Http\Client\RequestException,
+            str_contains($message, 'doku') => [
+                'Pembayaran Ditolak DOKU',
+                'DOKU menolak permintaan pembayaran. Silakan coba lagi; '
+                    . 'jika berulang, hubungi tim teknis.',
+            ],
+
+            default => [
+                'Pembayaran Belum Dapat Diproses',
+                'Terjadi kendala saat membuat pembayaran. Tidak ada tagihan yang dibuat. '
+                    . 'Silakan coba lagi beberapa saat lagi.',
+            ],
+        };
+
+        return back()
+            ->withInput()
+            ->with('payment_error', [
+                'title' => $title,
+                'message' => $text,
+            ]);
+    }
+
+    /**
+     * Jika ada transaksi pending yang sama persis dan link-nya masih
+     * berlaku, kembalikan link tersebut. Selain itu batalkan pending lama.
+     */
+    protected function reuseOrCancelPending(int $companyId, callable $isSame): ?string
+    {
+        $pending = PaymentTransaction::query()
+            ->where('company_id', $companyId)
+            ->where('transaction_status', 'pending')
+            ->latest('id')
+            ->first();
+
+        if (!$pending) {
+            return null;
+        }
+
+        $notExpired = !$pending->expiry_time
+            || Carbon::parse($pending->expiry_time)->isFuture();
+
+        if ($notExpired && $pending->payment_url && $isSame($pending)) {
+            return $pending->payment_url;
+        }
+
+        $this->subscriptions->failPayment($pending, 'cancel');
+
+        return null;
+    }
+
+    protected function nextOrderId(): string
+    {
+        $lastSequence = PaymentTransaction::query()
+            ->where('order_id', 'like', 'V-%')
+            ->pluck('order_id')
+            ->map(function ($existingOrderId) {
+                return preg_match('/^V-(\d+)$/', (string) $existingOrderId, $matches)
+                    ? (int) $matches[1]
+                    : 0;
+            })
+            ->max() ?? 0;
+
+        return 'V-' . str_pad((string) ($lastSequence + 1), 4, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Buat checkout DOKU dan simpan payment URL ke transaksi.
+     */
+    protected function createDokuCheckout(
+        PaymentTransaction $paymentTransaction,
+        array $lineItems,
+        User $user,
+        $company,
+        DokuService $doku
+    ): string {
+        $orderId = $paymentTransaction->order_id;
+
+        $payload = [
+            'order' => [
+                'amount' => (int) round((float) $paymentTransaction->gross_amount),
+                'invoice_number' => $orderId,
+                'currency' => 'IDR',
+                'callback_url' => route(
+                    'subscription.payment.finish',
+                    ['order_id' => $orderId]
+                ),
+                'line_items' => $lineItems,
+            ],
+            'payment' => [
+                'payment_due_date' => 5,
+            ],
+            'customer' => [
+                'id' => 'COMPANY-' . $company->id,
+                'name' => $user->name ?: $company->company_name,
+                'email' => $user->email,
+            ],
+        ];
+
+        if ($user->phone) {
+            $payload['customer']['phone'] = $user->phone;
+        }
+
+        $dokuResult = $doku->createPayment($payload);
+
+        if (empty($dokuResult['payment_url'])) {
+            throw new \RuntimeException(
+                'DOKU tidak mengembalikan payment_url.'
+            );
+        }
+
+        $paymentTransaction->update([
+            'payment_url' => $dokuResult['payment_url'],
+            'expiry_time' => $dokuResult['expiry_time'] ?? null,
+        ]);
+
+        return $dokuResult['payment_url'];
+    }
+
+    /**
+     * Cek status ke DOKU dan validasi invoice + nominal.
+     *
+     * @return array{valid: bool, status: string, result: array}
+     */
+    protected function verifyWithDoku(
+        PaymentTransaction $paymentTransaction,
+        DokuService $doku
+    ): array {
+        $result = $doku->checkStatus($paymentTransaction->order_id);
+
+        $gatewayInvoice = data_get($result, 'order.invoice_number');
+        $gatewayAmount = data_get($result, 'order.amount');
+
+        $valid = (string) $gatewayInvoice === (string) $paymentTransaction->order_id
+            && is_numeric($gatewayAmount)
+            && (int) $gatewayAmount === (int) $paymentTransaction->gross_amount;
+
+        if (!$valid) {
+            Log::warning('Invoice atau nominal DOKU tidak cocok.', [
+                'order_id' => $paymentTransaction->order_id,
+                'gateway_invoice' => $gatewayInvoice,
+                'gateway_amount' => $gatewayAmount,
+                'local_amount' => $paymentTransaction->gross_amount,
+            ]);
+        }
+
+        return [
+            'valid' => $valid,
+            'status' => strtoupper((string) data_get($result, 'transaction.status', '')),
+            'result' => $result,
+        ];
+    }
+
+    /**
+     * Transaksi pending yang sudah lewat batas waktu: cek ulang ke DOKU.
+     * Sudah dibayar -> aktifkan. Belum -> tandai expired.
+     * Dibatasi 3 transaksi per pemanggilan agar halaman tetap cepat.
+     */
+    protected function syncExpiredPendingPayments(int $companyId, DokuService $doku): void
+    {
+        $expired = PaymentTransaction::query()
+            ->where('company_id', $companyId)
+            ->where('transaction_status', 'pending')
+            ->whereNotNull('expiry_time')
+            ->where('expiry_time', '<', now())
+            ->orderBy('id')
+            ->limit(3)
+            ->get();
+
+        foreach ($expired as $transaction) {
+            try {
+                $check = $this->verifyWithDoku($transaction, $doku);
+
+                if ($check['valid'] && $check['status'] === 'SUCCESS') {
+                    $this->subscriptions->activatePayment($transaction, $check['result']);
+                    continue;
+                }
+
+                $this->subscriptions->failPayment($transaction, 'expired', $check['result']);
+            } catch (\Throwable $e) {
+                /*
+                 * DOKU tidak dapat dihubungi: biarkan pending agar
+                 * pembayaran yang mungkin sudah lunas tidak hangus.
+                 * Setelah 1 hari lewat batas, baru dianggap expired.
+                 */
+                if (Carbon::parse($transaction->expiry_time)->lt(now()->subDay())) {
+                    $this->subscriptions->failPayment($transaction, 'expired');
+                }
+
+                Log::warning('Gagal cek ulang transaksi pending ke DOKU.', [
+                    'order_id' => $transaction->order_id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+    }
+
+    protected function formatBytes(int|float $bytes): string
+    {
+        $bytes = (int) $bytes;
+
+        if ($bytes >= 1024 ** 3) {
+            return rtrim(rtrim(number_format($bytes / (1024 ** 3), 2, ',', '.'), '0'), ',') . ' GB';
+        }
+
+        return number_format($bytes / (1024 ** 2), 0, ',', '.') . ' MB';
     }
 
     /*
@@ -863,7 +1225,7 @@ class SubscriptionController extends Controller
 
         try {
             // Status diambil langsung dari DOKU, bukan dipercaya dari URL.
-            $result = $doku->checkStatus($paymentTransaction->order_id);
+            $check = $this->verifyWithDoku($paymentTransaction, $doku);
         } catch (\Throwable $e) {
             Log::error('Gagal memverifikasi pembayaran DOKU.', [
                 'order_id' => $paymentTransaction->order_id,
@@ -879,27 +1241,7 @@ class SubscriptionController extends Controller
                 );
         }
 
-        $gatewayInvoice = data_get($result, 'order.invoice_number');
-        $gatewayAmount = data_get($result, 'order.amount');
-        $gatewayStatus = strtoupper(
-            (string) data_get($result, 'transaction.status', '')
-        );
-
-        /*
-         * Pastikan invoice dan nominal yang dikonfirmasi DOKU cocok.
-         */
-        if (
-            (string) $gatewayInvoice !== (string) $paymentTransaction->order_id
-            || !is_numeric($gatewayAmount)
-            || (int) $gatewayAmount !== (int) $paymentTransaction->gross_amount
-        ) {
-            Log::warning('Invoice atau nominal DOKU tidak cocok.', [
-                'order_id' => $paymentTransaction->order_id,
-                'gateway_invoice' => $gatewayInvoice,
-                'gateway_amount' => $gatewayAmount,
-                'local_amount' => $paymentTransaction->gross_amount,
-            ]);
-
+        if (!$check['valid']) {
             return redirect()
                 ->route('subscription.index')
                 ->withErrors([
@@ -910,117 +1252,58 @@ class SubscriptionController extends Controller
 
         /*
          * PEMBAYARAN SUKSES
-         *
-         * Subscription baru langsung aktif.
-         * Subscription aktif lain, termasuk Free, dinonaktifkan.
-         * Data lama tidak dihapus; statusnya menjadi cancelled.
          */
-        if ($gatewayStatus === 'SUCCESS') {
-            DB::transaction(function () use ($paymentTransaction, $result) {
-                $transaction = PaymentTransaction::query()
-                    ->whereKey($paymentTransaction->id)
-                    ->lockForUpdate()
-                    ->firstOrFail();
+        if ($check['status'] === 'SUCCESS') {
+            $outcome = $this->subscriptions->activatePayment(
+                $paymentTransaction,
+                $check['result']
+            );
 
-                /*
-                 * Callback berulang tidak boleh memproses transaksi sukses
-                 * untuk kedua kalinya.
-                 */
-                if ($transaction->isPaid()) {
-                    return;
-                }
+            $subscription = Subscription::query()
+                ->with('plan')
+                ->find($paymentTransaction->subscription_id);
 
-                $subscription = Subscription::query()
-                    ->whereKey($transaction->subscription_id)
-                    ->lockForUpdate()
-                    ->firstOrFail();
+            $planName = $subscription?->plan?->plan_name ?? 'Paket';
+            $start = $subscription?->start_date?->format('d/m/Y');
+            $end = $subscription?->end_date?->format('d/m/Y');
 
-                /*
-                 * Simpan status transaksi terlebih dahulu.
-                 */
-                $transaction->transaction_status = 'success';
-
-                $gatewayDate = data_get($result, 'transaction.date');
-
-                $transaction->transaction_time = $gatewayDate
-                    ? Carbon::parse($gatewayDate)
-                    : now();
-
-                $transaction->settlement_time = now();
-                $transaction->midtrans_response = $result;
-                $transaction->save();
-
-                /*
-                 * Aktifkan subscription yang pembayarannya terverifikasi.
-                 */
-                $subscription->payment_status = 'paid';
-                $subscription->status = 'active';
-                $subscription->save();
-
-                /*
-                 * Nonaktifkan subscription lain yang masih aktif.
-                 * Baris lama tetap ada untuk keperluan riwayat.
-                 */
-                Subscription::query()
-                    ->where('company_id', $transaction->company_id)
-                    ->where('id', '!=', $subscription->id)
-                    ->where('status', 'active')
-                    ->update([
-                        'status' => 'cancelled',
-                    ]);
-            });
+            $message = match ($outcome) {
+                'queued' => 'Pembayaran berhasil. Paket ' . $planName
+                    . ' dijadwalkan aktif mulai ' . $start . ' s/d ' . $end
+                    . ', setelah paket Anda saat ini berakhir.',
+                'activated' => 'Pembayaran berhasil. Paket ' . $planName
+                    . ' aktif mulai ' . $start . ' s/d ' . $end . '.',
+                'upgraded' => 'Pembayaran berhasil. Paket ' . $planName
+                    . ' aktif mulai hari ini s/d ' . $end
+                    . ($subscription?->parent && $subscription->end_date->lt($subscription->parent->end_date)
+                        ? ', lalu otomatis kembali ke ' . ($subscription->parent->plan?->plan_name ?? 'paket sebelumnya') . '.'
+                        : '.'),
+                'addon_applied' => 'Pembayaran berhasil. Kapasitas tambahan sudah aktif'
+                    . ' sampai ' . (SubscriptionAddon::query()
+                        ->where('payment_transaction_id', $paymentTransaction->id)
+                        ->value('end_date')?->format('d/m/Y') ?? $end) . '.',
+                default => 'Pembayaran ini sudah diproses sebelumnya.',
+            };
 
             return redirect()
                 ->route('subscription.index')
-                ->with(
-                    'success',
-                    'Pembayaran berhasil diverifikasi oleh DOKU. '
-                    . 'Subscription telah diperbarui.'
-                );
+                ->with('success', $message);
         }
 
         /*
          * PEMBAYARAN GAGAL ATAU KEDALUWARSA
          */
-        if (in_array($gatewayStatus, ['FAILED', 'EXPIRED'], true)) {
-            DB::transaction(function () use (
+        if (in_array($check['status'], ['FAILED', 'EXPIRED'], true)) {
+            $this->subscriptions->failPayment(
                 $paymentTransaction,
-                $gatewayStatus,
-                $result
-            ) {
-                $transaction = PaymentTransaction::query()
-                    ->whereKey($paymentTransaction->id)
-                    ->lockForUpdate()
-                    ->firstOrFail();
-
-                // Jangan mengubah transaksi yang sudah berhasil dibayar.
-                if ($transaction->isPaid()) {
-                    return;
-                }
-
-                $transaction->transaction_status = strtolower($gatewayStatus);
-                $transaction->midtrans_response = $result;
-                $transaction->save();
-
-                $subscription = Subscription::query()
-                    ->whereKey($transaction->subscription_id)
-                    ->lockForUpdate()
-                    ->first();
-
-                if (
-                    $subscription
-                    && $subscription->payment_status !== 'paid'
-                ) {
-                    $subscription->status = 'cancelled';
-                    $subscription->payment_status = 'failed';
-                    $subscription->save();
-                }
-            });
+                $check['status'],
+                $check['result']
+            );
 
             return redirect()
                 ->route('subscription.index')
                 ->withErrors([
-                    'subscription' => $gatewayStatus === 'EXPIRED'
+                    'subscription' => $check['status'] === 'EXPIRED'
                         ? 'Pembayaran telah kedaluwarsa. Silakan buat pembayaran baru.'
                         : 'Pembayaran dinyatakan gagal oleh DOKU.',
                 ]);
@@ -1074,6 +1357,11 @@ class SubscriptionController extends Controller
             ->selectRaw('MAX(id) AS latest_id, subscription_id')
             ->where('company_id', $user->company_id)
             ->whereNotNull('subscription_id')
+            // Add-on punya riwayat sendiri; jangan menimpa transaksi paket.
+            ->whereIn('purchase_type', [
+                SubscriptionService::TYPE_SUBSCRIPTION,
+                SubscriptionService::TYPE_UPGRADE,
+            ])
             ->groupBy('subscription_id');
 
         $query = Subscription::query()
@@ -1139,9 +1427,17 @@ class SubscriptionController extends Controller
                         ?? $row->plan?->plan_code
                         ?? 'Subscription';
 
+                    $badge = match (true) {
+                        $row->kind === 'upgrade' => '<span class="badge bg-primary-subtle text-primary ms-1">Upgrade</span>',
+                        $row->billing_cycle === 'trial' => '<span class="badge bg-secondary-subtle text-secondary ms-1">Trial</span>',
+                        $row->start_date && $row->start_date->isFuture() && $row->status === 'active'
+                            => '<span class="badge bg-info-subtle text-info-emphasis ms-1">Terjadwal</span>',
+                        default => '',
+                    };
+
                     return '<span class="fw-bold text-dark">'
                         . e($planName)
-                        . '</span>';
+                        . '</span>' . $badge;
                 })
 
                 ->addColumn('billing_cycle', function ($row) {
@@ -1370,11 +1666,22 @@ class SubscriptionController extends Controller
 
         return view(
             'dashboard.subscription.history',
-            compact(
-                'company',
-                'totalSubscriptions',
-                'activeSubscription'
-            )
+            [
+                'company' => $company,
+                'totalSubscriptions' => $totalSubscriptions,
+                'activeSubscription' => $activeSubscription,
+                // Riwayat pembelian kapasitas tambahan (add-on).
+                'addonPurchases' => PaymentTransaction::query()
+                    ->where('company_id', $user->company_id)
+                    ->whereIn('purchase_type', [
+                        SubscriptionService::TYPE_ADDON,
+                        SubscriptionService::TYPE_STORAGE_ADDON,
+                    ])
+                    ->with('addons')
+                    ->latest('id')
+                    ->limit(50)
+                    ->get(),
+            ]
         );
     }
 
@@ -1420,85 +1727,33 @@ class SubscriptionController extends Controller
         abort_unless($companyId, 403, 'Company tidak ditemukan.');
 
         /*
-         * Ambil paket yang aktif pada tanggal sekarang.
-         * Paket pending atau paket yang belum dimulai tidak dihitung.
+         * Kuota efektif hari ini = paket berlaku (upgrade menimpa regular)
+         * + add-on aktif. Sumber yang sama dipakai pengecekan upload/tambah data.
          */
-        $subscription = Subscription::query()
-            ->where('company_id', $companyId)
-            ->where('status', 'active')
-            ->whereDate('start_date', '<=', today())
-            ->whereDate('end_date', '>=', today())
-            ->orderByDesc('start_date')
-            ->orderByDesc('id')
-            ->first();
-
-        $plan = $subscription
-            ? Plan::find($subscription->plan_id)
-            : null;
-
-        $planName = $plan
-            ? ($plan->plan_name ?? $plan->name ?? $plan->plan_code ?? 'Free')
-            : 'Free';
-
-        $subscriptionStatus = $subscription
-            ? $subscription->status
-            : 'inactive';
-
-        $subscriptionEndsAt = $subscription?->end_date;
-
-        /*
-         * Jumlah pengguna perusahaan.
-         */
-        $usersUsed = User::query()
-            ->where('company_id', $companyId)
-            ->count();
-
-        /*
-         * Jumlah aset perusahaan.
-         */
-        $assetsQuery = Asset::query()
-            ->where('company_id', $companyId);
-
-        /*
-         * Pertahankan perhitungan aset yang digunakan saat ini.
-         * Jika model menggunakan SoftDeletes, withTrashed() turut
-         * menghitung aset yang sudah dihapus secara lunak.
-         */
-        if (method_exists(Asset::class, 'bootSoftDeletes')) {
-            $assetsQuery->withTrashed();
-        }
-
-        $assetsUsed = $assetsQuery->count();
-
-        /*
-         * Batas user dan aset berasal dari paket aktif.
-         */
-        $usersLimit = (int) ($plan?->max_users ?? 5);
-        $assetsLimit = (int) ($plan?->max_assets ?? 5);
-
-        /*
-         * CompanyStorage menjadi sumber tunggal perhitungan storage.
-         */
-        $storageUsed = CompanyStorage::usedBytes($companyId);
-        $storageLimit = CompanyStorage::limitBytes($companyId);
+        $quota = $this->subscriptions->quota((int) $companyId);
+        $used = $this->subscriptions->usage((int) $companyId);
+        $subscription = $quota['subscription'];
 
         return view('dashboard.subscription.usage', [
-            'planName' => $planName,
-            'subscriptionStatus' => $subscriptionStatus,
-            'subscriptionEndsAt' => $subscriptionEndsAt,
-
+            'planName' => $quota['plan']?->plan_name ?? 'Tidak ada paket aktif',
+            'subscriptionStatus' => $subscription ? $subscription->status : 'inactive',
+            'subscriptionEndsAt' => $subscription?->end_date,
+            'activeUpgrade' => $this->subscriptions->activeUpgrade((int) $companyId),
+            'activeAddons' => $this->subscriptions->activeAddons((int) $companyId),
+            'addonTotals' => $quota['addons'],
+            'canManage' => $user->isAdministrator(),
             'usage' => [
                 'users' => [
-                    'used' => $usersUsed,
-                    'limit' => $usersLimit,
+                    'used' => $used['users'],
+                    'limit' => $quota['users'],
                 ],
                 'assets' => [
-                    'used' => $assetsUsed,
-                    'limit' => $assetsLimit,
+                    'used' => $used['assets'],
+                    'limit' => $quota['assets'],
                 ],
                 'storage' => [
-                    'used' => $storageUsed,
-                    'limit' => $storageLimit,
+                    'used' => $used['storage'],
+                    'limit' => $quota['storage'],
                 ],
             ],
         ]);

@@ -10,6 +10,7 @@ use App\Models\MaintenanceRequest;
 use App\Models\MaintenanceRequestLog;
 use App\Models\MaintenanceRequestLogPhoto;
 use App\Models\Vendor;
+use App\Services\CompanyStorage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +18,23 @@ use Illuminate\Support\Str;
 
 class MaintenanceRequestController extends Controller
 {
+    /**
+     * Respons standar saat kuota storage perusahaan tidak mencukupi.
+     */
+    protected function storageQuotaExceeded(array $check): JsonResponse
+    {
+        return response()->json([
+            'success' => false,
+            'message' => $check['message'],
+            'code' => 'STORAGE_QUOTA_EXCEEDED',
+            'data' => [
+                'used_bytes' => $check['used'],
+                'limit_bytes' => $check['limit'],
+                'incoming_bytes' => $check['incoming'],
+            ],
+        ], 422);
+    }
+
     /*
     |--------------------------------------------------------------------------
     | USER - LIST REQUEST
@@ -780,6 +798,21 @@ class MaintenanceRequestController extends Controller
 
         /*
         |--------------------------------------------------------------------------
+        | STORAGE QUOTA
+        |--------------------------------------------------------------------------
+        */
+
+        $storageCheck = CompanyStorage::checkUpload(
+            (int) $user->company_id,
+            (array) ($request->file('photos') ?? [])
+        );
+
+        if (!$storageCheck['allowed']) {
+            return $this->storageQuotaExceeded($storageCheck);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
         | CREATE LOG + PHOTOS
         |--------------------------------------------------------------------------
         */
@@ -1149,6 +1182,21 @@ class MaintenanceRequestController extends Controller
                 )
                 ->exists()
         );
+
+        /*
+        |--------------------------------------------------------------------------
+        | STORAGE QUOTA
+        |--------------------------------------------------------------------------
+        */
+
+        $storageCheck = CompanyStorage::checkUpload(
+            (int) $user->company_id,
+            (array) ($request->file('after_photos') ?? [])
+        );
+
+        if (!$storageCheck['allowed']) {
+            return $this->storageQuotaExceeded($storageCheck);
+        }
 
         /*
         |--------------------------------------------------------------------------

@@ -56,6 +56,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'status',
         'last_login_at',
         'last_login_ip',
+        'last_login_device',
         'role_id',
         'email_verified_at',
     ];
@@ -86,6 +87,14 @@ class User extends Authenticatable implements MustVerifyEmail
     public function role(): BelongsTo
     {
         return $this->belongsTo(Role::class);
+    }
+
+    /**
+     * Aset yang menjadi tanggung jawab user.
+     */
+    public function assets(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Asset::class, 'responsible_user_id');
     }
 
     /**

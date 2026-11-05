@@ -1,0 +1,307 @@
+/* ==========================================================================
+   VASETRA BRAND LAYER
+   --------------------------------------------------------------------------
+   Identitas visual Vasetra di atas base UI:
+   font, warna brand (navy -> biru -> teal dari logo), header, sidebar,
+   kartu, tombol, form. Dimuat paling akhir di layout dashboard.
+   ========================================================================== */
+
+:root {
+    --vx-navy: #0b2447;
+    --vx-navy-2: #12305c;
+    --vx-blue: #1f5fbf;
+    --vx-blue-2: #2f7be0;
+    --vx-teal: #14b8a6;
+    --vx-cyan: #22d3ee;
+
+    --vx-page: #f4f7fb;
+    --vx-surface: #ffffff;
+    --vx-ink: #0f1b2d;
+    --vx-ink-2: #4b5a6e;
+    --vx-muted: #8592a6;
+    --vx-hairline: rgba(15, 27, 45, 0.08);
+
+    --vx-radius: 16px;
+    --vx-radius-sm: 10px;
+    --vx-shadow: 0 1px 2px rgba(15, 27, 45, 0.04), 0 8px 24px -12px rgba(15, 27, 45, 0.12);
+    --vx-shadow-hover: 0 2px 4px rgba(15, 27, 45, 0.06), 0 16px 32px -16px rgba(15, 27, 45, 0.22);
+
+    --vx-gradient: linear-gradient(125deg, #0b2447 0%, #163f86 38%, #1f5fbf 64%, #14b8a6 118%);
+
+    --bs-font-sans-serif: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --bs-body-font-family: var(--bs-font-sans-serif);
+}
+
+/* ---------- Typography ---------- */
+body,
+.btn,
+.form-control,
+.form-select,
+.dropdown-menu,
+.tooltip,
+.popover,
+.swal2-popup {
+    font-family: var(--bs-font-sans-serif) !important;
+}
+
+body:not(.dark) {
+    background-color: var(--vx-page);
+    color: var(--vx-ink-2);
+}
+
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+    letter-spacing: -0.015em;
+    font-weight: 700;
+}
+
+body:not(.dark) h1, body:not(.dark) h2, body:not(.dark) h3,
+body:not(.dark) h4, body:not(.dark) h5, body:not(.dark) h6 {
+    color: var(--vx-ink);
+}
+
+/* ---------- Header banner (pengganti gambar gelombang template) ---------- */
+.iq-navbar-header {
+    height: auto !important;
+    min-height: 190px;
+    padding-bottom: 4.5rem !important;
+}
+
+.iq-navbar-header .iq-header-img {
+    background: var(--vx-gradient) !important;
+    border-radius: 0 0 28px 28px !important;
+    overflow: hidden;
+}
+
+.iq-navbar-header .iq-header-img::before,
+.iq-navbar-header .iq-header-img::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+/* Lingkaran cahaya dekoratif */
+.iq-navbar-header .iq-header-img::before {
+    width: 520px;
+    height: 520px;
+    right: -120px;
+    top: -260px;
+    background: radial-gradient(circle, rgba(34, 211, 238, 0.35) 0%, rgba(34, 211, 238, 0) 70%);
+}
+
+.iq-navbar-header .iq-header-img::after {
+    width: 380px;
+    height: 380px;
+    left: 30%;
+    bottom: -260px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0) 70%);
+}
+
+.iq-navbar-header .iq-header-img img {
+    display: none !important;
+}
+
+/* Banner mengikuti tinggi isi header (template mematok 264px),
+   sehingga kartu konten bisa "menumpuk" rapi di tepi bawah banner. */
+.iq-navbar-header .iq-header-img {
+    height: 100% !important;
+}
+
+.iq-navbar-header .btn-light {
+    background: #fff !important;
+    color: var(--vx-navy) !important;
+    border-color: #fff !important;
+    opacity: 1 !important;
+    box-shadow: 0 8px 20px -10px rgba(0, 0, 0, 0.45);
+}
+
+.iq-navbar-header .btn-danger,
+.iq-navbar-header .btn-warning {
+    opacity: 1 !important;
+}
+
+/* ---------- Logo ---------- */
+.vx-navbar-logo {
+    height: 34px;
+    width: auto;
+    object-fit: contain;
+}
+
+/* Logo berteks navy -> versi putih di mode gelap */
+body.dark .vasetra-logo img,
+body.dark .vx-navbar-logo {
+    filter: brightness(0) invert(1);
+}
+
+/* ---------- Mode gelap: judul tetap terang ---------- */
+body.dark h1, body.dark h2, body.dark h3,
+body.dark h4, body.dark h5, body.dark h6,
+body.dark .vx-card-title {
+    color: #eef1f6 !important;
+}
+
+/* ---------- Footer & tombol pengaturan ---------- */
+.vx-footer .footer-body {
+    font-size: 0.82rem;
+    color: var(--vx-muted);
+}
+
+.vx-setting-btn {
+    background: var(--vx-gradient) !important;
+    border: 0 !important;
+}
+
+/* Pola grid halus */
+.iq-navbar-header .iq-header-img {
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+        var(--vx-gradient) !important;
+    background-size: 32px 32px, 32px 32px, 100% 100% !important;
+}
+
+.iq-navbar-header h1,
+.iq-navbar-header p,
+.iq-navbar-header .text-white {
+    color: #fff !important;
+}
+
+.iq-navbar-header h1 {
+    font-size: clamp(1.4rem, 2.4vw, 2rem);
+    font-weight: 800;
+}
+
+.iq-navbar-header p {
+    opacity: 0.85;
+}
+
+.vx-header-eyebrow {
+    display: inline-block;
+    margin-bottom: 0.5rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    backdrop-filter: blur(6px);
+}
+
+/* ---------- Navbar ---------- */
+.iq-navbar {
+    backdrop-filter: saturate(160%) blur(10px);
+}
+
+body:not(.dark) .iq-navbar {
+    background-color: rgba(255, 255, 255, 0.88) !important;
+    border-bottom: 1px solid var(--vx-hairline);
+}
+
+/* ---------- Sidebar ---------- */
+body:not(.dark) .sidebar {
+    border-right: 1px solid var(--vx-hairline);
+    box-shadow: none !important;
+}
+
+.sidebar .sidebar-body .nav-item .nav-link {
+    border-radius: 12px !important;
+    font-weight: 500;
+    margin-bottom: 2px;
+}
+
+.sidebar .sidebar-body .nav-item .nav-link:not(.active):hover {
+    background-color: rgba(31, 95, 191, 0.07) !important;
+    color: var(--vx-blue) !important;
+}
+
+.sidebar .sidebar-body .nav-item .nav-link.active,
+.sidebar .sidebar-body .nav-item .nav-link[aria-expanded="true"] {
+    background: linear-gradient(120deg, var(--vx-navy-2) 0%, var(--vx-blue) 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 10px 20px -12px rgba(31, 95, 191, 0.75) !important;
+}
+
+.sidebar .sidebar-body .sub-nav .nav-link.active {
+    background: rgba(31, 95, 191, 0.1) !important;
+    color: var(--vx-blue) !important;
+    box-shadow: none !important;
+    font-weight: 600;
+}
+
+body.dark .sidebar .sidebar-body .sub-nav .nav-link.active {
+    color: #8fb8f2 !important;
+}
+
+/* ---------- Cards ---------- */
+.card {
+    border-radius: var(--vx-radius) !important;
+    border: 1px solid var(--vx-hairline) !important;
+    box-shadow: var(--vx-shadow) !important;
+}
+
+body.dark .card {
+    border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.card .card-header {
+    background: transparent;
+    border-bottom: 1px solid var(--vx-hairline);
+}
+
+/* ---------- Buttons & form ---------- */
+.btn {
+    border-radius: var(--vx-radius-sm);
+    font-weight: 600;
+    letter-spacing: 0.005em;
+}
+
+.btn-primary {
+    box-shadow: 0 6px 16px -8px rgba(31, 95, 191, 0.65);
+}
+
+.form-control,
+.form-select {
+    border-radius: var(--vx-radius-sm);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--vx-blue);
+    box-shadow: 0 0 0 0.2rem rgba(31, 95, 191, 0.15);
+}
+
+.badge {
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+/* ---------- DataTables: selaraskan aksen hijau lama ke brand ---------- */
+table.dataTable thead th {
+    border-bottom-color: var(--vx-blue) !important;
+}
+
+table.dataTable tbody tr:hover {
+    background: rgba(31, 95, 191, 0.04) !important;
+}
+
+.dataTables_filter input:focus {
+    border-color: var(--vx-blue) !important;
+    box-shadow: 0 0 0 0.15rem rgba(31, 95, 191, 0.15) !important;
+}
+
+/* ---------- SweetAlert ---------- */
+.swal2-popup {
+    border-radius: 20px !important;
+}
+
+/* ---------- Scrollbar ---------- */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: rgba(15, 27, 45, 0.18); border-radius: 10px; border: 2px solid transparent; background-clip: content-box; }
+body.dark ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.16); background-clip: content-box; }
+
+@media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+}

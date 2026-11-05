@@ -1,0 +1,1806 @@
+{
+    "info": {
+        "name": "Vasetra Mobile API v1",
+        "description": "Lihat docs/api/MOBILE_API.md.\n\n1. Atur variabel base_url.\n2. Jalankan Auth › POST /login — token tersimpan otomatis.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {
+                "key": "token",
+                "value": "{{token}}",
+                "type": "string"
+            }
+        ]
+    },
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost/arunika-inventa/public/api/v1"
+        },
+        {
+            "key": "token",
+            "value": ""
+        }
+    ],
+    "item": [
+        {
+            "name": "Auth",
+            "item": [
+                {
+                    "name": "GET /app-info",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/app-info",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "app-info"
+                            ],
+                            "variable": []
+                        },
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    }
+                },
+                {
+                    "name": "GET /me",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/me",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "me"
+                            ],
+                            "variable": []
+                        }
+                    }
+                },
+                {
+                    "name": "GET /test",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/test",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "test"
+                            ],
+                            "variable": []
+                        },
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    }
+                },
+                {
+                    "name": "POST /forgot-password",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/forgot-password",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "forgot-password"
+                            ],
+                            "variable": []
+                        },
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"admin@perusahaan.com\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "POST /login",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/login",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "login"
+                            ],
+                            "variable": []
+                        },
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"login\": \"admin@perusahaan.com\",\n    \"password\": \"password\",\n    \"device_name\": \"Postman\",\n    \"platform\": \"android\"\n}"
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "const j = pm.response.json();",
+                                    "if (j.success && j.data && j.data.token) { pm.collectionVariables.set(\"token\", j.data.token); }"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "POST /logout",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/logout",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "logout"
+                            ],
+                            "variable": []
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"fcm_token\": \"FCM_TOKEN\"\n}"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Profil & Perangkat",
+            "item": [
+                {
+                    "name": "DELETE /devices",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/devices",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "devices"
+                            ],
+                            "variable": []
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"fcm_token\": \"FCM_TOKEN\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "GET /profile",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/profile",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "profile"
+                            ],
+                            "variable": []
+                        }
+                    }
+                },
+                {
+                    "name": "POST /devices",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/devices",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "devices"
+                            ],
+                            "variable": []
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"fcm_token\": \"FCM_TOKEN\",\n    \"platform\": \"android\",\n    \"device_name\": \"Pixel 8\",\n    \"app_version\": \"1.0.0\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "PUT /profile",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/profile",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "profile"
+                            ],
+                            "variable": []
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Nama Baru\",\n    \"nik\": \"1234567890\",\n    \"phone\": \"081234567890\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "PUT /profile/password",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/profile/password",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "profile",
+                                "password"
+                            ],
+                            "variable": []
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"current_password\": \"password\",\n    \"password\": \"PasswordBaru#1\",\n    \"password_confirmation\": \"PasswordBaru#1\",\n    \"logout_other_devices\": false\n}"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Notifikasi",
+            "item": [
+                {
+                    "name": "DELETE /notifications/{id}",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/notifications/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "notifications",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "GET /notifications",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/notifications",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "notifications"
+                            ],
+                            "variable": []
+                        }
+                    }
+                },
+                {
+                    "name": "GET /notifications/unread-count",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/notifications/unread-count",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "notifications",
+                                "unread-count"
+                            ],
+                            "variable": []
+                        }
+                    }
+                },
+                {
+                    "name": "POST /notifications/read-all",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/notifications/read-all",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "notifications",
+                                "read-all"
+                            ],
+                            "variable": []
+                        }
+                    }
+                },
+                {
+                    "name": "POST /notifications/{id}/read",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/notifications/:id/read",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "notifications",
+                                ":id",
+                                "read"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Beranda",
+            "item": [
+                {
+                    "name": "GET /dashboard",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/dashboard",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "dashboard"
+                            ],
+                            "variable": []
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Aset",
+            "item": [
+                {
+                    "name": "DELETE /assets/{id}",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/assets/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "assets",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "GET /assets",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/assets",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "assets"
+                            ],
+                            "variable": []
+                        }
+                    }
+                },
+                {
+                    "name": "GET /assets/photos/{photoId}",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/assets/photos/:photoId",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "assets",
+                                "photos",
+                                ":photoId"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "photoId",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "GET /assets/qr/{qrToken}",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/assets/qr/:qrToken",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "assets",
+                                "qr",
+                                ":qrToken"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "qrToken",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "GET /assets/{id}",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/assets/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "assets",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "GET /assets/{id}/assignments",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/assets/:id/assignments",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "assets",
+                                ":id",
+                                "assignments"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "GET /assets/{id}/maintenances",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/assets/:id/maintenances",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "assets",
+                                ":id",
+                                "maintenances"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "GET /my-assets",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/my-assets",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "my-assets"
+                            ],
+                            "variable": []
+                        }
+                    }
+                },
+                {
+                    "name": "GET /my-assets/{id}",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/my-assets/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "my-assets",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "GET /my-assets/{id}/maintenances",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/my-assets/:id/maintenances",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "my-assets",
+                                ":id",
+                                "maintenances"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "POST /assets",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/assets",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "assets"
+                            ],
+                            "variable": []
+                        },
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "asset_name",
+                                    "value": "Laptop Lenovo ThinkPad",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "category_id",
+                                    "value": "1",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "vendor_id",
+                                    "value": "1",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "purchase_price",
+                                    "value": "15000000",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "asset_condition",
+                                    "value": "new",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "location",
+                                    "value": "Lantai 2",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "status",
+                                    "value": "1",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "maintenance_required",
+                                    "value": "0",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "asset_photos[]",
+                                    "type": "file",
+                                    "src": []
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "POST /assets/{assetId}/maintenance-request",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/assets/:assetId/maintenance-request",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "assets",
+                                ":assetId",
+                                "maintenance-request"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "assetId",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"description\": \"AC kurang dingin sejak kemarin\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "POST /assets/{assetId}/repair-request",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/assets/:assetId/repair-request",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "assets",
+                                ":assetId",
+                                "repair-request"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "assetId",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"description\": \"Layar laptop berkedip\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "POST /assets/{id}/assign",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/assets/:id/assign",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "assets",
+                                ":id",
+                                "assign"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"user_id\": 2,\n    \"reason\": \"Serah terima\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "POST /assets/{id}/return",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/assets/:id/return",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "assets",
+                                ":id",
+                                "return"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"reason\": \"Resign\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "PUT /assets/{id}",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/assets/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "assets",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "_method",
+                                    "value": "PUT",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "asset_name",
+                                    "value": "Laptop Lenovo ThinkPad",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "category_id",
+                                    "value": "1",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "vendor_id",
+                                    "value": "1",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "status",
+                                    "value": "1",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "delete_images[]",
+                                    "value": "",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "asset_photos[]",
+                                    "type": "file",
+                                    "src": []
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Maintenance",
+            "item": [
+                {
+                    "name": "GET /maintenance-requests",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/maintenance-requests",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "maintenance-requests"
+                            ],
+                            "variable": []
+                        }
+                    }
+                },
+                {
+                    "name": "GET /maintenance-requests/{id}",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/maintenance-requests/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "maintenance-requests",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "GET /maintenance/team/requests",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/maintenance/team/requests",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "maintenance",
+                                "team",
+                                "requests"
+                            ],
+                            "variable": []
+                        }
+                    }
+                },
+                {
+                    "name": "GET /maintenance/team/requests/{id}",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/maintenance/team/requests/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "maintenance",
+                                "team",
+                                "requests",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "GET /maintenances",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/maintenances",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "maintenances"
+                            ],
+                            "variable": []
+                        }
+                    }
+                },
+                {
+                    "name": "GET /maintenances/{id}",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/maintenances/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "maintenances",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "POST /maintenance/team/requests/{id}/complete",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/maintenance/team/requests/:id/complete",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "maintenance",
+                                "team",
+                                "requests",
+                                ":id",
+                                "complete"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "action_taken",
+                                    "value": "Ganti freon dan bersihkan filter",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "maintenance_date",
+                                    "value": "2026-11-05",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "cost",
+                                    "value": "350000",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "after_photos[]",
+                                    "type": "file",
+                                    "src": []
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "POST /maintenance/team/requests/{id}/progress",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/maintenance/team/requests/:id/progress",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "maintenance",
+                                "team",
+                                "requests",
+                                ":id",
+                                "progress"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "note",
+                                    "value": "Sedang dicek teknisi",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "photos[]",
+                                    "type": "file",
+                                    "src": []
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "POST /maintenance/team/requests/{id}/take",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/maintenance/team/requests/:id/take",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "maintenance",
+                                "team",
+                                "requests",
+                                ":id",
+                                "take"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Kalender",
+            "item": [
+                {
+                    "name": "DELETE /calendar/events/{id}",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/calendar/events/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "calendar",
+                                "events",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "GET /calendar/events",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/calendar/events",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "calendar",
+                                "events"
+                            ],
+                            "variable": []
+                        }
+                    }
+                },
+                {
+                    "name": "GET /calendar/events/{id}",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/calendar/events/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "calendar",
+                                "events",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "POST /calendar/events",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/calendar/events",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "calendar",
+                                "events"
+                            ],
+                            "variable": []
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"title\": \"Rapat Mingguan\",\n    \"event_type\": \"meeting\",\n    \"start_at\": \"2026-11-10 09:00\",\n    \"end_at\": \"2026-11-10 10:00\",\n    \"location\": \"Ruang Rapat\",\n    \"attendees\": [\n        2,\n        3\n    ]\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "PUT /calendar/events/{id}",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/calendar/events/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "calendar",
+                                "events",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"title\": \"Rapat Mingguan (ubah)\",\n    \"event_type\": \"meeting\",\n    \"start_at\": \"2026-11-10 09:00\",\n    \"end_at\": \"2026-11-10 11:00\",\n    \"attendees\": [\n        2\n    ]\n}"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Lookups",
+            "item": [
+                {
+                    "name": "GET /lookups/categories",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/lookups/categories",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "lookups",
+                                "categories"
+                            ],
+                            "variable": []
+                        }
+                    }
+                },
+                {
+                    "name": "GET /lookups/options",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/lookups/options",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "lookups",
+                                "options"
+                            ],
+                            "variable": []
+                        }
+                    }
+                },
+                {
+                    "name": "GET /lookups/users",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/lookups/users",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "lookups",
+                                "users"
+                            ],
+                            "variable": []
+                        }
+                    }
+                },
+                {
+                    "name": "GET /lookups/vendors",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/lookups/vendors",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "lookups",
+                                "vendors"
+                            ],
+                            "variable": []
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "User & Admin",
+            "item": [
+                {
+                    "name": "GET /admin/audit-logs",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/admin/audit-logs",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "audit-logs"
+                            ],
+                            "variable": []
+                        }
+                    }
+                },
+                {
+                    "name": "GET /admin/audit-logs/filters",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/admin/audit-logs/filters",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "audit-logs",
+                                "filters"
+                            ],
+                            "variable": []
+                        }
+                    }
+                },
+                {
+                    "name": "GET /admin/audit-logs/{id}",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/admin/audit-logs/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "audit-logs",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "GET /admin/subscription",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/admin/subscription",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "subscription"
+                            ],
+                            "variable": []
+                        }
+                    }
+                },
+                {
+                    "name": "GET /admin/subscription/payments",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/admin/subscription/payments",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "subscription",
+                                "payments"
+                            ],
+                            "variable": []
+                        }
+                    }
+                },
+                {
+                    "name": "GET /users",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/users",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "users"
+                            ],
+                            "variable": []
+                        }
+                    }
+                },
+                {
+                    "name": "GET /users/{id}",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/users/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "users",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}

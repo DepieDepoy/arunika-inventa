@@ -29,8 +29,16 @@ Route::prefix('dashboard')
         Route::post('/subscription/renewmidtrans', [SubscriptionController::class, 'renewmidtrans'])
             ->name('subscription.renewmidtrans');
                 
-            Route::post('/subscription/renewdoku', [SubscriptionController::class, 'renewdoku'])
-                ->name('subscription.renewdoku');
+        Route::post('/subscription/renewdoku', [SubscriptionController::class, 'renewdoku'])
+            ->name('subscription.renewdoku');
+
+        // Upgrade sekarang (1..N bulan / sampai akhir paket), bayar selisih
+        Route::post('/subscription/upgrade', [SubscriptionController::class, 'upgradeNow'])
+            ->name('subscription.upgrade');
+
+        // Tambah kapasitas storage / asset / user (prorata, langsung aktif)
+        Route::post('/subscription/addon', [SubscriptionController::class, 'buyAddon'])
+            ->name('subscription.addon');
 
         // Halaman setelah pembayaran selesai
         Route::get('/subscription/payment/finish', [SubscriptionController::class, 'paymentFinish'])
