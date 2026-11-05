@@ -7,6 +7,20 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AssetAssignment extends Model
 {
+    use \App\Models\Concerns\Auditable;
+
+    protected string $auditModule = 'asset_assignment';
+
+    public function auditCompanyId(): ?int
+    {
+        return $this->asset?->company_id;
+    }
+
+    public function auditLabel(): ?string
+    {
+        return $this->asset?->asset_name;
+    }
+
     protected $fillable = [
         'asset_id',
         'user_id',

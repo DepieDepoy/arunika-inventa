@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Dashboard;
 use App\Http\Controllers\Controller;
 use App\Models\Permission;
 use App\Models\Role;
+use App\Services\Audit\AuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -118,8 +119,43 @@ class PermissionController extends Controller
         |--------------------------------------------------------------------------
         */
 
+        /*
+         * Hanya permission yang benar-benar ada yang disimpan.
+         */
+        $permissionIds = Permission::query()
+            ->whereIn('id', array_filter((array) $permissionIds, 'is_numeric'))
+            ->pluck('id')
+            ->all();
+
+        $before = $roleModel->permissions()
+            ->pluck('permission_code')
+            ->sort()
+            ->values()
+            ->all();
+
         $roleModel->permissions()
             ->sync($permissionIds);
+
+        $after = Permission::query()
+            ->whereIn('id', $permissionIds)
+            ->orderBy('permission_code')
+            ->pluck('permission_code')
+            ->all();
+
+        $added = array_values(array_diff($after, $before));
+        $removed = array_values(array_diff($before, $after));
+
+        if ($added !== [] || $removed !== []) {
+            AuditLogger::log(
+                event: 'permission_updated',
+                module: 'role',
+                description: 'Mengubah permission role "' . $roleModel->role_name . '"'
+                    . ' (+' . count($added) . ' / -' . count($removed) . ')',
+                subject: $roleModel,
+                oldValues: ['removed' => $removed],
+                newValues: ['added' => $added],
+            );
+        }
 
 
         /*

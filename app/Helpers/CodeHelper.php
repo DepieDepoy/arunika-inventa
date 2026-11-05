@@ -69,7 +69,8 @@ class CodeHelper
         string $codeColumn,
         int $companyId
     ): string {
-        $counter = 0;
+        // Nomor urut dimulai dari 01.
+        $counter = 1;
 
         do {
             $code = $prefix . str_pad(

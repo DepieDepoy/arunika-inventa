@@ -7,6 +7,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PaymentTransaction extends Model
 {
+    use \App\Models\Concerns\Auditable;
+
+    protected string $auditModule = 'payment';
+
+    protected array $auditExclude = ['midtrans_response', 'qr_string'];
+
     protected $fillable = [
         // RELATION
         'company_id',

@@ -12,6 +12,10 @@ use App\Models\MaintenanceRequest;
 
 class Asset extends Model
 {
+    use \App\Models\Concerns\Auditable;
+
+    protected string $auditModule = 'asset';
+
     use SoftDeletes;
 
     protected $fillable = [

@@ -114,4 +114,23 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Login Throttle
+    |--------------------------------------------------------------------------
+    |
+    | max_attempts    : jumlah gagal per akun + IP sebelum dikunci.
+    | decay_minutes   : lama penguncian (menit).
+    | ip_max_attempts : jumlah gagal per IP (semua akun) sebelum dikunci.
+    |
+    | Dipakai oleh login web dan login API (App\Services\Auth\LoginThrottle).
+    |
+    */
+
+    'login_throttle' => [
+        'max_attempts' => (int) env('LOGIN_MAX_ATTEMPTS', 5),
+        'decay_minutes' => (int) env('LOGIN_DECAY_MINUTES', 15),
+        'ip_max_attempts' => (int) env('LOGIN_IP_MAX_ATTEMPTS', 20),
+    ],
+
 ];

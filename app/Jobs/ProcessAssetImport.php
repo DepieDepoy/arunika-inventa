@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Imports\AssetImport;
 use App\Models\ImportHistory;
+use App\Services\Audit\AuditLogger;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -102,10 +103,12 @@ class ProcessAssetImport implements ShouldQueue
             |--------------------------------------------------------------------------
             */
 
-            Excel::import(
+            // Baris import tidak diaudit satu per satu; ringkasan
+            // dicatat oleh ImportHistoryAuditObserver.
+            AuditLogger::withoutAuditing(fn () => Excel::import(
                 new AssetImport($history),
                 $fullPath
-            );
+            ));
 
             /*
             |--------------------------------------------------------------------------

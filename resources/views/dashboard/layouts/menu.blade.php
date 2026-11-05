@@ -728,10 +728,11 @@
                 {{-- =================================================
                      HISTORY
                 ================================================== --}}
-                @if(auth()->user()->hasPermission('history.view'))
+                @if(auth()->user()->hasPermission('history.view') || auth()->user()->isAdministrator())
 
                     @php
-                        $historyActive = request()->routeIs('import.history*');
+                        $historyActive = request()->routeIs('import.history*')
+                            || request()->routeIs('audit-trail.*');
                     @endphp
 
                     <li class="nav-item">
@@ -818,6 +819,41 @@
                                 </a>
 
                             </li>
+
+                            {{-- AUDIT TRAIL (khusus Administrator) --}}
+                            @if(auth()->user()->isAdministrator())
+
+                                <li class="nav-item">
+
+                                    <a class="nav-link {{ request()->routeIs('audit-trail.*') ? 'active' : '' }}"
+                                       href="{{ route('audit-trail.index') }}">
+
+                                        <i class="icon">
+
+                                            <svg class="icon-10"
+                                                 xmlns="http://www.w3.org/2000/svg"
+                                                 width="10"
+                                                 viewBox="0 0 24 24"
+                                                 fill="currentColor">
+
+                                                <circle cx="12"
+                                                        cy="12"
+                                                        r="8"
+                                                        fill="currentColor"/>
+
+                                            </svg>
+
+                                        </i>
+
+                                        <i class="sidenav-mini-icon">A</i>
+
+                                        <span class="item-name">Audit Trail</span>
+
+                                    </a>
+
+                                </li>
+
+                            @endif
 
                         </ul>
 

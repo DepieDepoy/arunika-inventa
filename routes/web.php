@@ -56,6 +56,7 @@ require __DIR__.'/dashboard/subscription.php';
 require __DIR__.'/dashboard/profile.php';
 require __DIR__.'/dashboard/calendar.php';
 require __DIR__.'/dashboard/notification.php';
+require __DIR__.'/dashboard/audit.php';
 
 
 /*

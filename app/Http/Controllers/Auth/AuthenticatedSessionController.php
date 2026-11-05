@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\Audit\AuditLogger;
+use App\Services\Auth\LoginThrottle;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,12 +19,12 @@ class AuthenticatedSessionController extends Controller
         return view('auth.login.index');
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, LoginThrottle $throttle): RedirectResponse
     {
         $request->validate(
             [
-                'login' => ['required'],
-                'password' => ['required'],
+                'login' => ['required', 'string', 'max:255'],
+                'password' => ['required', 'string'],
             ],
             [
                 'login.required' => 'Email address or WhatsApp number is required.',
@@ -32,54 +34,109 @@ class AuthenticatedSessionController extends Controller
 
         /*
         |--------------------------------------------------------------------------
+        | LOCKOUT CHECK
+        |--------------------------------------------------------------------------
+        |
+        | Dicek sebelum query user & cek password, sehingga saat terkunci
+        | password tidak diperiksa sama sekali (benar ataupun salah).
+        |
+        */
+
+        if ($throttle->isLocked()) {
+            return back()
+                ->withErrors(['login' => $throttle->lockoutMessage()])
+                ->onlyInput('login');
+        }
+
+        /*
+        |--------------------------------------------------------------------------
         | DETERMINE LOGIN FIELD
         |--------------------------------------------------------------------------
         */
 
-        $field = filter_var($request->login, FILTER_VALIDATE_EMAIL)
+        $login = trim((string) $request->input('login'));
+
+        $field = filter_var($login, FILTER_VALIDATE_EMAIL)
             ? 'email'
             : 'phone';
 
         /*
         |--------------------------------------------------------------------------
-        | FIND USER
+        | FIND USER & VERIFY PASSWORD
         |--------------------------------------------------------------------------
+        |
+        | Akun tidak ditemukan dan password salah diperlakukan sama
+        | (pesan & waktu respons), agar tidak bisa dipakai untuk
+        | mengecek email/no. HP yang terdaftar.
+        |
         */
 
-        $user = User::where($field, $request->login)->first();
+        $user = User::where($field, $login)->first();
+
+        $passwordValid = $user
+            ? Hash::check((string) $request->password, $user->password)
+            : false;
 
         if (!$user) {
+            $throttle->burnPasswordCheck((string) $request->password);
+        }
+
+        if (!$passwordValid) {
+            $throttle->hit();
+
+            // Audit hanya bila akun ada (audit terikat ke PT).
+            if ($user) {
+                AuditLogger::log(
+                    event: $throttle->isLocked() ? 'login_locked' : 'login_failed',
+                    module: 'auth',
+                    description: $throttle->isLocked()
+                        ? 'Login dikunci sementara karena terlalu banyak percobaan gagal'
+                        : 'Login gagal: password salah',
+                    subject: $user,
+                    companyId: (int) $user->company_id,
+                    actor: $user,
+                );
+            }
+
             return back()
                 ->withErrors([
-                    'login' => 'Invalid email/WhatsApp number or password.'
+                    'login' => $throttle->isLocked()
+                        ? $throttle->lockoutMessage()
+                        : $throttle->failedMessage(),
                 ])
                 ->onlyInput('login');
         }
+
+        /*
+        |--------------------------------------------------------------------------
+        | PASSWORD BENAR -> RESET HITUNGAN GAGAL
+        |--------------------------------------------------------------------------
+        */
+
+        $throttle->clear();
 
         /*
         |--------------------------------------------------------------------------
         | ACCOUNT STATUS
         |--------------------------------------------------------------------------
+        |
+        | Baru diinformasikan setelah password terbukti benar.
+        |
         */
 
-        if ($user->status != 1) {
+        if ((int) $user->status !== 1) {
+            AuditLogger::log(
+                event: 'login_failed',
+                module: 'auth',
+                description: 'Login ditolak: akun tidak aktif',
+                subject: $user,
+                companyId: (int) $user->company_id,
+                actor: $user,
+            );
+
             return back()
                 ->withErrors([
-                    'login' => 'Your account is inactive.'
-                ])
-                ->onlyInput('login');
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | PASSWORD
-        |--------------------------------------------------------------------------
-        */
-
-        if (!Hash::check($request->password, $user->password)) {
-            return back()
-                ->withErrors([
-                    'login' => 'Invalid email/WhatsApp number or password.'
+                    'login' => 'Your account is inactive. Please contact your administrator.'
                 ])
                 ->onlyInput('login');
         }

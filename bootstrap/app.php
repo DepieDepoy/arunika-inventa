@@ -40,6 +40,17 @@ return Application::configure(basePath: dirname(__DIR__))
             'subscription.active' => CheckSubscriptionActive::class,
             'api.company' => EnsureUserCompany::class,
             'api.security' => \App\Http\Middleware\ApiSecurityHeaders::class,
+            'administrator' => \App\Http\Middleware\EnsureAdministrator::class,
+        ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | AUDIT TRAIL - export / cetak data
+        |--------------------------------------------------------------------------
+        */
+
+        $middleware->web(append: [
+            \App\Http\Middleware\AuditDataAccess::class,
         ]);
 
         /*

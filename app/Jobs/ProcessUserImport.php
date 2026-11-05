@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Imports\UserImport;
 use App\Models\ImportHistory;
+use App\Services\Audit\AuditLogger;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -90,13 +91,15 @@ class ProcessUserImport implements ShouldQueue
             |--------------------------------------------------------------------------
             */
 
-            Excel::import(
+            // Baris import tidak diaudit satu per satu; ringkasan
+            // dicatat oleh ImportHistoryAuditObserver.
+            AuditLogger::withoutAuditing(fn () => Excel::import(
                 new UserImport(
                     $history,
                     $this->sendVerificationEmail
                 ),
                 $fullPath
-            );
+            ));
 
             /*
             |--------------------------------------------------------------------------

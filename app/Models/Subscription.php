@@ -8,6 +8,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Subscription extends Model
 {
+    use \App\Models\Concerns\Auditable;
+
+    protected string $auditModule = 'subscription';
+
+    public function auditLabel(): ?string
+    {
+        return trim(($this->plan?->plan_name ?? 'Plan') . ' (' . $this->billing_cycle . ')');
+    }
+
     
     protected $fillable = [
         'company_id',

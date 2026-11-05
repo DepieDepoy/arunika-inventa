@@ -10,6 +10,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CalendarEvent extends Model
 {
+    use \App\Models\Concerns\Auditable;
+
+    protected string $auditModule = 'calendar';
+
     use SoftDeletes;
 
     protected $fillable = [

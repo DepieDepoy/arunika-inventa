@@ -7,6 +7,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Vendor extends Model
 {
+    use \App\Models\Concerns\Auditable;
+
+    protected string $auditModule = 'vendor';
+
     use SoftDeletes;
 
     protected $fillable = [

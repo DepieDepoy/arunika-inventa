@@ -7,6 +7,15 @@ use Illuminate\Database\Eloquent\Model;
 
 class MaintenanceRequest extends Model
 {
+    use \App\Models\Concerns\Auditable;
+
+    protected string $auditModule = 'maintenance_request';
+
+    public function auditLabel(): ?string
+    {
+        return trim($this->request_type . ' #' . $this->getKey() . ' - ' . ($this->asset?->asset_name ?? ''), ' -');
+    }
+
     use HasFactory;
 
     protected $fillable = [

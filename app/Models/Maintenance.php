@@ -8,6 +8,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Maintenance extends Model
 {
+    use \App\Models\Concerns\Auditable;
+
+    protected string $auditModule = 'maintenance';
+
     use HasFactory, SoftDeletes;
 
     protected $fillable = [

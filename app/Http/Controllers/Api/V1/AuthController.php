@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\Audit\AuditLogger;
+use App\Services\Auth\LoginThrottle;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -14,7 +16,22 @@ class AuthController extends Controller
     /**
      * Login Mobile API
      */
-    public function login(Request $request): JsonResponse
+    /**
+     * Respons saat login dikunci sementara.
+     */
+    protected function lockoutResponse(LoginThrottle $throttle): JsonResponse
+    {
+        $seconds = $throttle->lockedSeconds();
+
+        return response()->json([
+            'success' => false,
+            'message' => $throttle->lockoutMessage(),
+            'code' => 'TOO_MANY_LOGIN_ATTEMPTS',
+            'retry_after' => $seconds,
+        ], 429)->header('Retry-After', (string) $seconds);
+    }
+
+    public function login(Request $request, LoginThrottle $throttle): JsonResponse
     {
         /*
         |--------------------------------------------------------------------------
@@ -49,42 +66,88 @@ class AuthController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $user = User::where($field, $request->login)->first();
+        /*
+        |--------------------------------------------------------------------------
+        | Lockout Check
+        |--------------------------------------------------------------------------
+        */
+
+        if ($throttle->isLocked()) {
+            return $this->lockoutResponse($throttle);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Find User & Verify Password
+        |--------------------------------------------------------------------------
+        |
+        | Akun tidak ditemukan dan password salah diperlakukan sama.
+        |
+        */
+
+        $user = User::where($field, trim((string) $request->login))->first();
+
+        $passwordValid = $user
+            ? Hash::check((string) $request->password, $user->password)
+            : false;
 
         if (!$user) {
+            $throttle->burnPasswordCheck((string) $request->password);
+        }
+
+        if (!$passwordValid) {
+            $throttle->hit();
+
+            if ($user) {
+                AuditLogger::log(
+                    event: $throttle->isLocked() ? 'login_locked' : 'login_failed',
+                    module: 'auth',
+                    description: $throttle->isLocked()
+                        ? 'Login mobile dikunci sementara karena terlalu banyak percobaan gagal'
+                        : 'Login mobile gagal: password salah',
+                    subject: $user,
+                    companyId: (int) $user->company_id,
+                    actor: $user,
+                );
+            }
+
+            if ($throttle->isLocked()) {
+                return $this->lockoutResponse($throttle);
+            }
+
             throw ValidationException::withMessages([
                 'login' => [
-                    'Invalid email/WhatsApp number or password.'
+                    $throttle->failedMessage()
                 ],
             ]);
         }
+
+        $throttle->clear();
 
         /*
         |--------------------------------------------------------------------------
         | Account Status
         |--------------------------------------------------------------------------
+        |
+        | Baru diinformasikan setelah password terbukti benar.
+        |
         */
 
         if ((int) $user->status !== 1) {
-            throw ValidationException::withMessages([
-                'login' => [
-                    'Your account is inactive.'
-                ],
-            ]);
-        }
+            AuditLogger::log(
+                event: 'login_failed',
+                module: 'auth',
+                description: 'Login mobile ditolak: akun tidak aktif',
+                subject: $user,
+                companyId: (int) $user->company_id,
+                actor: $user,
+            );
 
-        /*
-        |--------------------------------------------------------------------------
-        | Password
-        |--------------------------------------------------------------------------
-        */
-
-        if (!Hash::check($request->password, $user->password)) {
-            throw ValidationException::withMessages([
-                'login' => [
-                    'Invalid email/WhatsApp number or password.'
-                ],
-            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Your account is inactive. Please contact your administrator.',
+                'code' => 'ACCOUNT_INACTIVE',
+            ], 403);
         }
 
         /*
@@ -134,6 +197,14 @@ class AuthController extends Controller
             'last_login_ip' => $request->ip(),
             'last_login_device' => $request->userAgent(),
         ]);
+
+        AuditLogger::log(
+            event: 'login',
+            module: 'auth',
+            description: 'Login ke aplikasi mobile',
+            subject: $user,
+            actor: $user,
+        );
 
         /*
         |--------------------------------------------------------------------------
@@ -212,6 +283,14 @@ class AuthController extends Controller
         */
 
         $user->currentAccessToken()?->delete();
+
+        AuditLogger::log(
+            event: 'logout',
+            module: 'auth',
+            description: 'Logout dari aplikasi mobile',
+            subject: $user,
+            actor: $user,
+        );
 
         return response()->json([
             'success' => true,

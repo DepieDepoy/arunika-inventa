@@ -34,6 +34,10 @@ use Laravel\Sanctum\HasApiTokens;
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements MustVerifyEmail
 {
+    use \App\Models\Concerns\Auditable;
+
+    protected string $auditModule = 'user';
+
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
 
@@ -103,6 +107,16 @@ class User extends Authenticatable implements MustVerifyEmail
             ->permissions()
             ->where('permission_code', $permission)
             ->exists();
+    }
+
+    /**
+     * Apakah user memiliki role Administrator di PT-nya.
+     */
+    public function isAdministrator(): bool
+    {
+        return $this->role
+            && $this->role->role_code === 'administrator'
+            && (int) $this->role->company_id === (int) $this->company_id;
     }
 
     /**
