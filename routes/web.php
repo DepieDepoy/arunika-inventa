@@ -5,8 +5,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ImportHistoryController;
 
 // Landing page: / (Indonesia) dan /en (English).
-Route::get('/', App\Http\Controllers\LandingController::class)->name('landing');
-Route::get('/en', App\Http\Controllers\LandingController::class)->defaults('locale', 'en')->name('landing.en');
+Route::get('/', App\Http\Controllers\LandingController::class)->middleware('track:landing')->name('landing');
+Route::get('/en', App\Http\Controllers\LandingController::class)->defaults('locale', 'en')->middleware('track:landing')->name('landing.en');
 
 
 /*

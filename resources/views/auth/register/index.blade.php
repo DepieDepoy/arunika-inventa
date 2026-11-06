@@ -81,6 +81,7 @@
 </style>
 
 
+@include('analytics._ga4')
 </head>
 
 <body class=" "

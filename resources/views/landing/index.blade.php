@@ -328,7 +328,12 @@ section{padding:96px 0}
 
 /* footer */
 footer{background:#fff;border-top:1px solid var(--line);padding:56px 0 28px;font-size:.92rem}
-.foot{display:grid;grid-template-columns:1.6fr 1fr 1fr;gap:40px}
+.foot{display:grid;grid-template-columns:1.5fr .8fr .8fr 1.3fr;gap:40px}
+.foot-contact li{display:flex;align-items:flex-start;gap:10px}
+.foot-contact li i{color:var(--ink);font-size:1rem;line-height:1.35;flex:none}
+.foot-contact a{transition:color .15s}
+.foot-contact .addr{text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px;line-height:1.55}
+@media(max-width:980px){.foot{grid-template-columns:1fr 1fr}.foot > div:first-child{grid-column:1/-1}}
 .foot img{height:40px;width:auto;margin-bottom:14px}
 .foot h4{font-size:.85rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:14px}
 .foot ul{list-style:none;padding:0;margin:0;display:grid;gap:9px}
@@ -505,6 +510,7 @@ footer{background:#fff;border-top:1px solid var(--line);padding:56px 0 28px;font
 .reveal.in{opacity:1;transform:none}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.reveal{opacity:1;transform:none;transition:none}.float{animation:none}.btn,.feature{transition:none}}
 </style>
+@include('analytics._ga4')
 </head>
 <body>
 
@@ -1156,6 +1162,11 @@ footer{background:#fff;border-top:1px solid var(--line);padding:56px 0 28px;font
   $ft = $c['footer'];
   $wa = preg_replace('/\D+/', '', (string) $ft['whatsapp']);
   $wa = $wa && str_starts_with($wa, '0') ? '62' . substr($wa, 1) : $wa;
+  // Tampilan nomor: +62 8121 1955 805
+  $waLabel = $wa ? '+' . (str_starts_with($wa, '62') ? '62 ' . trim(chunk_split(substr($wa, 2), 4, ' ')) : $wa) : '';
+  $waUrl = $wa ? 'https://wa.me/' . $wa . (trim((string) ($ft['whatsapp_text'] ?? '')) !== '' ? '?text=' . rawurlencode(trim($ft['whatsapp_text'])) : '') : '';
+  $mapsUrl = preg_match('#^https://#i', trim((string) ($ft['maps_url'] ?? ''))) ? trim($ft['maps_url']) : '';
+  $ftEmail = filter_var(trim((string) $ft['email']), FILTER_VALIDATE_EMAIL) ?: '';
 @endphp
 <footer>
   <div class="wrap">
@@ -1169,14 +1180,23 @@ footer{background:#fff;border-top:1px solid var(--line);padding:56px 0 28px;font
         <ul><li><a href="#fitur">{{ __('Fitur') }}</a></li><li><a href="#tur">{{ __('Tur produk') }}</a></li><li><a href="#solusi">{{ __('Solusi') }}</a></li><li><a href="#harga">{{ __('Harga') }}</a></li></ul>
       </div>
       <div>
-        <h4>{{ $ft['email'] || $wa || $ft['address'] ? __('Kontak') : __('Akun') }}</h4>
-        <ul>
-          @if($ft['email'])<li><i class="bi bi-envelope me-1"></i> <a href="mailto:{{ $ft['email'] }}">{{ $ft['email'] }}</a></li>@endif
-          @if($wa)<li><i class="bi bi-whatsapp me-1"></i> <a href="https://wa.me/{{ $wa }}" target="_blank" rel="noopener">+{{ $wa }}</a></li>@endif
-          @if($ft['address'])<li style="white-space:pre-line">{{ $ft['address'] }}</li>@endif
-          <li><a href="{{ route('register') }}">{{ __('Coba gratis') }}</a> · <a href="{{ route('login') }}">{{ __('Masuk') }}</a></li>
+        <h4>{{ __('Akun') }}</h4>
+        <ul><li><a href="{{ route('register') }}">{{ __('Coba gratis') }}</a></li><li><a href="{{ route('login') }}">{{ __('Masuk') }}</a></li><li><a href="#faq">FAQ</a></li></ul>
+      </div>
+      @if($ftEmail || $wa || $ft['address'])
+      <div id="kontak">
+        <h4>{{ __('Kontak') }}</h4>
+        <ul class="foot-contact">
+          @if($wa)<li><i class="bi bi-whatsapp"></i><a href="{{ $waUrl }}" target="_blank" rel="noopener">{{ $waLabel }}</a></li>@endif
+          @if($ftEmail)<li><i class="bi bi-envelope"></i><a href="mailto:{{ $ftEmail }}">{{ $ftEmail }}</a></li>@endif
+          @if($ft['address'])
+            <li><i class="bi bi-geo-alt"></i>
+              @if($mapsUrl)<a href="{{ $mapsUrl }}" target="_blank" rel="noopener noreferrer" class="addr" style="white-space:pre-line">{{ $ft['address'] }}</a>@else<span style="white-space:pre-line">{{ $ft['address'] }}</span>@endif
+            </li>
+          @endif
         </ul>
       </div>
+      @endif
     </div>
     <div class="copy">
       <span>© {{ now()->year }} Vasetra{{ $ft['company'] ? ' · ' . $ft['company'] : '' }}</span>

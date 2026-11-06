@@ -230,6 +230,10 @@ class RegisteredUserController extends Controller
 
             DB::commit();
 
+            // Analitik funnel (backoffice > Analitik).
+            app(\App\Services\Analytics\AnalyticsTracker::class)
+                ->event($request, \App\Models\AnalyticsHit::SIGNUP, (int) $user->id, (int) $company->id);
+
         } catch (Throwable $e) {
             DB::rollBack();
 

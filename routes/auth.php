@@ -25,7 +25,8 @@ Route::middleware('guest')->group(function () {
     */
 
     Route::get('register', [RegisteredUserController::class, 'create'])
-        ->name('register');
+        ->name('register')
+        ->middleware('track:register');
 
     Route::post('register', [RegisteredUserController::class, 'store']);
 
@@ -37,7 +38,8 @@ Route::middleware('guest')->group(function () {
     */
 
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
-        ->name('login');
+        ->name('login')
+        ->middleware('track:login');
 
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
 

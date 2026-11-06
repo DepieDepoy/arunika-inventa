@@ -47,6 +47,10 @@
         <small>BACKOFFICE</small>
     </div>
     <nav class="bo-nav">
+        @if($me?->isSuperAdmin())
+            <div class="grp">Ringkasan</div>
+            <a href="{{ route('backoffice.analytics.index') }}" class="{{ request()->routeIs('backoffice.analytics.*') ? 'active' : '' }}"><i class="bi bi-graph-up-arrow"></i> Analitik</a>
+        @endif
         <div class="grp">Website</div>
         <a href="{{ route('backoffice.cms.index') }}" class="{{ request()->routeIs('backoffice.cms.*') ? 'active' : '' }}"><i class="bi bi-window-sidebar"></i> Konten Landing</a>
         @if($me?->isSuperAdmin())

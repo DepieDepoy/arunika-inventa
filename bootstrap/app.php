@@ -42,6 +42,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'api.security' => \App\Http\Middleware\ApiSecurityHeaders::class,
             'administrator' => \App\Http\Middleware\EnsureAdministrator::class,
             'backoffice' => \App\Http\Middleware\EnsureBackofficeAdmin::class,
+            'track' => \App\Http\Middleware\TrackPageView::class,
         ]);
 
         /*

@@ -60,6 +60,13 @@
             letter-spacing: 1px;
         }
 
+        .brand-logo {
+            display: block;
+            height: 44px;
+            width: auto;
+            margin-bottom: 10px;
+        }
+
         .muted { color: #64748b; }
         .small { font-size: 12px; }
 
@@ -265,7 +272,7 @@
     <main class="invoice">
         <header class="header">
             <div>
-                <div class="brand">VASETRA</div>
+                <img src="{{ asset('assets/images/brand/vasetra-logo.png') }}" alt="Vasetra" class="brand-logo">
                 <div class="muted">Subscription Billing Statement</div>
                 <div class="muted small">Dokumen tagihan berlangganan</div>
             </div>

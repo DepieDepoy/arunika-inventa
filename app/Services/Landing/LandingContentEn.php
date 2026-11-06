@@ -172,9 +172,11 @@ class LandingContentEn
             'footer' => [
                 'tagline' => 'An asset lifecycle management platform for companies in Indonesia — from procurement to audit.',
                 'company' => 'PT Arunika Solusi Inovasi',
-                'email' => '',
-                'whatsapp' => '',
-                'address' => '',
+                'email' => 'info@vasetra.com',
+                'whatsapp' => '6281211955805',
+                'whatsapp_text' => 'Hi Vasetra, I have a question..',
+                'address' => 'Enablerspace.id, Kebayoran Lama, South Jakarta',
+                'maps_url' => 'https://maps.app.goo.gl/NMFYRh6x2uAfrxmM9',
             ],
         ];
     }

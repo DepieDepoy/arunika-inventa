@@ -8,7 +8,7 @@
     $labels = [
         'login' => 'Login', 'logout' => 'Logout', 'login_failed' => 'Gagal login', 'password_changed' => 'Ganti password',
         'cms_updated' => 'Ubah konten', 'cms_reset' => 'Reset konten', 'pricing_updated' => 'Ubah harga',
-        'admin_created' => 'Akun dibuat', 'admin_updated' => 'Akun diubah', 'admin_password_reset' => 'Reset password', 'admin_activated' => 'Akun diaktifkan', 'admin_deactivated' => 'Akun dinonaktifkan',
+        'admin_created' => 'Akun dibuat', 'admin_updated' => 'Akun diubah', 'admin_password_reset' => 'Reset password', 'admin_activated' => 'Akun diaktifkan', 'admin_deactivated' => 'Akun dinonaktifkan', 'analytics.settings' => 'Pengaturan analitik',
     ];
 @endphp
 <div class="container-xxl flex-grow-1 container-p-y">

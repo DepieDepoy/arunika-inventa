@@ -23,7 +23,7 @@ class AuthController extends Controller
     public function showLogin(): View|RedirectResponse
     {
         if (Auth::guard('backoffice')->check()) {
-            return redirect()->route('backoffice.cms.index');
+            return redirect()->route('backoffice.home');
         }
 
         return view('backoffice.auth.login');
@@ -71,7 +71,7 @@ class AuthController extends Controller
         $admin->forceFill(['last_login_at' => now(), 'last_login_ip' => $request->ip()])->save();
         BackofficeAudit::log('login', 'Login backoffice', admin: $admin);
 
-        return redirect()->intended(route('backoffice.cms.index'));
+        return redirect()->intended(route('backoffice.home'));
     }
 
     public function logout(Request $request): RedirectResponse

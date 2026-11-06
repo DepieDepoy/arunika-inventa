@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Backoffice\ActivityController;
+use App\Http\Controllers\Backoffice\AnalyticsController;
 use App\Http\Controllers\Backoffice\AuthController;
 use App\Http\Controllers\Backoffice\CmsController;
 use App\Http\Controllers\Backoffice\PlanController;
@@ -24,7 +25,9 @@ Route::prefix(config('backoffice.path', 'backoffice'))
         Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:20,1')->name('login.attempt');
 
         Route::middleware('backoffice')->group(function () {
-            Route::get('/', fn () => redirect()->route('backoffice.cms.index'))->name('home');
+            Route::get('/', fn () => redirect()->route(
+                auth('backoffice')->user()?->isSuperAdmin() ? 'backoffice.analytics.index' : 'backoffice.cms.index'
+            ))->name('home');
             Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
             Route::get('/password', [AuthController::class, 'editPassword'])->name('password.edit');
             Route::post('/password', [AuthController::class, 'updatePassword'])->name('password.update');
@@ -45,6 +48,9 @@ Route::prefix(config('backoffice.path', 'backoffice'))
                 Route::post('/staff/{staff}/reset-password', [StaffController::class, 'resetPassword'])->whereNumber('staff')->name('staff.reset');
 
                 Route::get('/activity', [ActivityController::class, 'index'])->name('activity.index');
+
+                Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
+                Route::post('/analytics/settings', [AnalyticsController::class, 'settings'])->name('analytics.settings');
             });
         });
     });

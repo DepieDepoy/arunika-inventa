@@ -188,6 +188,10 @@ class AuthenticatedSessionController extends Controller
             'last_login_ip' => $request->ip(),
         ]);
 
+        // Analitik funnel (backoffice > Analitik).
+        app(\App\Services\Analytics\AnalyticsTracker::class)
+            ->event($request, \App\Models\AnalyticsHit::LOGIN, (int) $user->id, (int) $user->company_id);
+
         /*
         |--------------------------------------------------------------------------
         | REGENERATE SESSION

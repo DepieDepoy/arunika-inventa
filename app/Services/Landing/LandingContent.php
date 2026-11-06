@@ -219,9 +219,11 @@ class LandingContent
                 'fields' => [
                     'tagline' => ['type' => 'textarea', 'label' => 'Deskripsi singkat'],
                     'company' => ['type' => 'text', 'label' => 'Nama perusahaan'],
-                    'email' => ['type' => 'text', 'label' => 'Email kontak'],
-                    'whatsapp' => ['type' => 'text', 'label' => 'Nomor WhatsApp (mis. 6281234567890)'],
-                    'address' => ['type' => 'textarea', 'label' => 'Alamat'],
+                    'email' => ['type' => 'text', 'label' => 'Email kontak', 'help' => 'Kosongkan untuk menyembunyikan.'],
+                    'whatsapp' => ['type' => 'text', 'label' => 'Nomor WhatsApp', 'help' => 'Contoh: 6281211955805 atau 081211955805. Kosongkan untuk menyembunyikan.'],
+                    'whatsapp_text' => ['type' => 'text', 'label' => 'Pesan pembuka WhatsApp', 'help' => 'Teks yang otomatis terisi saat pengunjung menekan nomor WhatsApp.'],
+                    'address' => ['type' => 'textarea', 'label' => 'Alamat', 'help' => 'Kosongkan untuk menyembunyikan.'],
+                    'maps_url' => ['type' => 'text', 'label' => 'Link Google Maps', 'help' => 'Opsional. Di Google Maps: Bagikan › Salin link (diawali https://).'],
                 ],
             ],
         ];
@@ -400,9 +402,11 @@ class LandingContent
             'footer' => [
                 'tagline' => 'Platform pengelolaan siklus hidup aset untuk perusahaan di Indonesia — dari pengadaan hingga audit.',
                 'company' => 'PT Arunika Solusi Inovasi',
-                'email' => '',
-                'whatsapp' => '',
-                'address' => '',
+                'email' => 'info@vasetra.com',
+                'whatsapp' => '6281211955805',
+                'whatsapp_text' => 'Halo Vasetra, ada yang ingin saya tanyakan..',
+                'address' => 'Enablerspace.id, Kebayoran Lama, Jakarta Selatan',
+                'maps_url' => 'https://maps.app.goo.gl/NMFYRh6x2uAfrxmM9',
             ],
         ];
     }

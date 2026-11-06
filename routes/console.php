@@ -23,3 +23,8 @@ Illuminate\Support\Facades\Schedule::command('subscription:reminders')
 Illuminate\Support\Facades\Schedule::command('sanctum:prune-expired --hours=24')
     ->dailyAt('02:00')
     ->withoutOverlapping();
+
+// Analitik pengunjung: IP dikosongkan setelah ANALYTICS_IP_RETENTION_DAYS (default 60 hari).
+Illuminate\Support\Facades\Schedule::command('analytics:prune')
+    ->dailyAt('03:00')
+    ->withoutOverlapping();
