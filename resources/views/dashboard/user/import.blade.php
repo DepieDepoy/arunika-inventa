@@ -117,7 +117,7 @@
                                 <strong>Active</strong>.
                             </li>
                             <li>
-                                User hasil import akan menggunakan password default (Vasetra@2026)
+                                User hasil import akan menggunakan password default ({{ config('auth.default_user_password') }})
                                 dan diwajibkan mengganti password saat login pertama.
                             </li>
                         </ul>

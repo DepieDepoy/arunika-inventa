@@ -49,6 +49,11 @@ class UserController extends Controller
             Auth::user()->company_id
         )
         ->where('status', 1)
+        // Role Administrator hanya bisa diberikan oleh Administrator.
+        ->when(
+            !Auth::user()->isAdministrator(),
+            fn ($q) => $q->where('role_code', '!=', 'administrator')
+        )
         ->orderBy('role_name')
         ->get();
 
@@ -72,7 +77,7 @@ class UserController extends Controller
                 'email'   => 'required|email',
                 'phone'   => 'required',
                 'role_id' => 'required',
-                'status'  => 'required',
+                'status'  => 'required|in:0,1',
 
                 'send_verification_email' => 'nullable|boolean',
             ],
@@ -84,6 +89,7 @@ class UserController extends Controller
                 'phone.required'    => 'No. Telepon wajib diisi',
                 'role_id.required'  => 'Role wajib dipilih',
                 'status.required'   => 'Status wajib dipilih',
+                'status.in'         => 'Status tidak valid',
             ]
         );
 
@@ -93,6 +99,10 @@ class UserController extends Controller
                 'success' => false,
                 'errors'  => $validator->errors()
             ], 422);
+        }
+
+        if ($denied = $this->guardUserChange(Auth::user(), null, $request->role_id, $request->status)) {
+            return $denied;
         }
 
 
@@ -126,12 +136,9 @@ class UserController extends Controller
         |--------------------------------------------------------------------------
         */
 
+        // Unik di seluruh sistem: login memakai email / no. HP tanpa memilih perusahaan.
         if (
             User::where('email', $request->email)
-                ->where(
-                    'company_id',
-                    Auth::user()->company_id
-                )
                 ->exists()
         ) {
             return response()->json([
@@ -153,10 +160,6 @@ class UserController extends Controller
 
         if (
             User::where('phone', $request->phone)
-                ->where(
-                    'company_id',
-                    Auth::user()->company_id
-                )
                 ->exists()
         ) {
             return response()->json([
@@ -204,11 +207,9 @@ class UserController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        /*$passwordPlain = Str::password(
-            length: 10
-        );*/
-
-        $passwordPlain = 'Vasetra@' . now()->format('Y');
+        // Password awal acak per user (ditampilkan sekali ke admin / dikirim via email).
+        // User wajib menggantinya saat pertama login (must_change_password).
+        $passwordPlain = Str::password(length: 12, symbols: false);
 
 
         /*
@@ -233,7 +234,8 @@ class UserController extends Controller
             'phone'      => $request->phone,
             'email'      => $request->email,
             'password'   => Hash::make($passwordPlain),
-            'status'     => $request->status
+            'status'     => $request->status,
+            'must_change_password' => true,
         ]);
 
         if (!$sendVerificationEmail) {
@@ -500,7 +502,7 @@ class UserController extends Controller
                 'email'   => 'required|email',
                 'phone'   => 'required',
                 'role_id' => 'required',
-                'status'  => 'required',
+                'status'  => 'required|in:0,1',
             ],
             [
                 'name.required'     => 'Nama wajib diisi',
@@ -510,6 +512,7 @@ class UserController extends Controller
                 'phone.required'    => 'No. Telepon wajib diisi',
                 'role_id.required'  => 'Role wajib dipilih',
                 'status.required'   => 'Status wajib dipilih',
+                'status.in'         => 'Status tidak valid',
             ]
         );
 
@@ -534,10 +537,14 @@ class UserController extends Controller
         )
         ->findOrFail($request->id);
 
+        if ($denied = $this->guardUserChange(Auth::user(), $user, $request->role_id, $request->status)) {
+            return $denied;
+        }
+
 
         /*
         |--------------------------------------------------------------------------
-        | Check Email Duplicate
+        | Check Email & Phone Duplicate (seluruh sistem, dipakai untuk login)
         |--------------------------------------------------------------------------
         */
 
@@ -551,10 +558,6 @@ class UserController extends Controller
                 '!=',
                 $user->id
             )
-            ->where(
-                'company_id',
-                Auth::user()->company_id
-            )
             ->exists()
         ) {
             return response()->json([
@@ -562,6 +565,21 @@ class UserController extends Controller
                 'errors' => [
                     'email' => [
                         'Email sudah digunakan'
+                    ]
+                ]
+            ], 422);
+        }
+
+        if (
+            User::where('phone', $request->phone)
+                ->where('id', '!=', $user->id)
+                ->exists()
+        ) {
+            return response()->json([
+                'success' => false,
+                'errors' => [
+                    'phone' => [
+                        'No. telepon sudah digunakan'
                     ]
                 ]
             ], 422);
@@ -648,6 +666,9 @@ class UserController extends Controller
             $user->password = Hash::make(
                 $request->password
             );
+
+            // Password diatur admin untuk orang lain -> pemilik akun wajib menggantinya.
+            $user->must_change_password = (int) $user->id !== (int) Auth::id();
         }
 
 
@@ -672,6 +693,17 @@ class UserController extends Controller
         )
         ->findOrFail($id);
 
+        if ((int) $user->id === (int) Auth::id()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda tidak dapat menghapus akun sendiri.',
+            ], 403);
+        }
+
+        if ($denied = $this->guardUserChange(Auth::user(), $user, null, null)) {
+            return $denied;
+        }
+
 
         $user->delete();
 
@@ -688,176 +720,26 @@ class UserController extends Controller
      */
     public function export()
     {
-        $users = User::select(
-            'users.*',
-            'companies.company_name',
-            'users.role_name',
-            'users.role_code'
-        )
+        $users = User::query()
+            ->leftJoin('roles', 'roles.id', '=', 'users.role_id')
+            ->where('users.company_id', Auth::user()->company_id)
+            ->orderBy('users.name')
+            ->get(['users.*', 'roles.role_name']);
 
-        ->leftJoin(
-            'companies',
-            'companies.id',
-            '=',
-            'users.company_id'
-        )
+        $excel = \App\Services\Reports\SpreadsheetExporter::forCurrentUser();
+        $excel->table('User', 'Daftar User', [
+            ['key' => 'name', 'label' => 'Nama', 'width' => 28],
+            ['key' => 'nik', 'label' => 'NIK / ID', 'width' => 18],
+            ['key' => 'email', 'label' => 'Email', 'width' => 30],
+            ['key' => 'phone', 'label' => 'No. HP', 'width' => 17],
+            ['key' => 'role_name', 'label' => 'Role', 'width' => 16],
+            ['label' => 'Status', 'width' => 11, 'value' => fn ($u) => (int) $u->status === 1 ? 'Aktif' : 'Nonaktif'],
+            ['label' => 'Email terverifikasi', 'width' => 13, 'value' => fn ($u) => $u->email_verified_at ? 'Ya' : 'Belum'],
+            ['key' => 'last_login_at', 'label' => 'Login terakhir', 'type' => 'datetime', 'width' => 17],
+            ['key' => 'created_at', 'label' => 'Terdaftar', 'type' => 'date', 'width' => 13],
+        ], $users, $users->count() . ' user');
 
-        ->leftJoin(
-            'users',
-            'users.id',
-            '=',
-            'users.role_id'
-        )
-
-        ->where(
-            'users.company_id',
-            Auth::user()->company_id
-        )
-
-        ->orderBy(
-            'users.id'
-        )
-
-        ->get();
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Spreadsheet
-        |--------------------------------------------------------------------------
-        */
-
-        $spreadsheet = new Spreadsheet();
-
-        $sheet = $spreadsheet->getActiveSheet();
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Header
-        |--------------------------------------------------------------------------
-        */
-
-        $sheet->setCellValue('A1', 'Company Name');
-        $sheet->setCellValue('B1', 'Name');
-        $sheet->setCellValue('C1', 'NIK');
-        $sheet->setCellValue('D1', 'Email');
-        $sheet->setCellValue('E1', 'No. Telepon');
-        $sheet->setCellValue('F1', 'Role');
-        $sheet->setCellValue('G1', 'Role Code');
-        $sheet->setCellValue('H1', 'Status');
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Styling Header
-        |--------------------------------------------------------------------------
-        */
-
-        $sheet->getStyle('A1:H1')
-            ->getFont()
-            ->setBold(true);
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Auto Size
-        |--------------------------------------------------------------------------
-        */
-
-        foreach (range('A', 'H') as $column) {
-
-            $sheet->getColumnDimension($column)
-                ->setAutoSize(true);
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Data
-        |--------------------------------------------------------------------------
-        */
-
-        $row = 2;
-
-
-        foreach ($users as $item) {
-
-            $status = $item->status == 1
-                ? 'Active'
-                : 'Non Active';
-
-
-            $sheet->setCellValue(
-                'A' . $row,
-                $item->company_name
-            );
-
-            $sheet->setCellValue(
-                'B' . $row,
-                $item->name
-            );
-
-            $sheet->setCellValue(
-                'C' . $row,
-                $item->nik
-            );
-
-            $sheet->setCellValue(
-                'D' . $row,
-                $item->email
-            );
-
-            $sheet->setCellValue(
-                'E' . $row,
-                $item->phone
-            );
-
-            $sheet->setCellValue(
-                'F' . $row,
-                $item->role_name
-            );
-
-            $sheet->setCellValue(
-                'G' . $row,
-                $item->role_code
-            );
-
-            $sheet->setCellValue(
-                'H' . $row,
-                $status
-            );
-
-
-            $row++;
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Download
-        |--------------------------------------------------------------------------
-        */
-
-        $writer = new Xlsx($spreadsheet);
-
-
-        $filename = 'User_' . date('Ymd_His') . '.xlsx';
-
-
-        $temp_file = tempnam(
-            sys_get_temp_dir(),
-            'users'
-        );
-
-
-        $writer->save($temp_file);
-
-
-        return response()->download(
-            $temp_file,
-            $filename
-        )->deleteFileAfterSend(true);
+        return $excel->download('Vasetra-User-' . now()->format('Ymd-His'));
     }
 
 
@@ -1670,5 +1552,55 @@ class UserController extends Controller
             )
 
             ->make(true);
+    }
+
+
+    /**
+     * Pengaman perubahan akun (dipakai web & API mobile):
+     *  - hanya Administrator yang boleh memberi role Administrator
+     *    atau mengubah / menghapus akun Administrator;
+     *  - user tidak boleh mengganti role / menonaktifkan akunnya sendiri.
+     */
+    protected function guardUserChange(User $actor, ?User $target, mixed $roleId, mixed $status): ?\Illuminate\Http\JsonResponse
+    {
+        $actor->loadMissing('role');
+        $isAdmin = $actor->isAdministrator();
+
+        $deny = fn (string $field, string $message) => response()->json([
+            'success' => false,
+            'message' => $message,
+            'errors' => [$field => [$message]],
+        ], 403);
+
+        if ($target) {
+            $target->loadMissing('role');
+
+            if (!$isAdmin && $target->role?->role_code === 'administrator') {
+                return $deny('role_id', 'Hanya Administrator yang dapat mengubah akun Administrator.');
+            }
+
+            if ((int) $target->id === (int) $actor->id) {
+                if ($roleId !== null && (int) $roleId !== (int) $target->role_id) {
+                    return $deny('role_id', 'Anda tidak dapat mengganti role akun sendiri.');
+                }
+
+                if ($status !== null && (string) $status !== '1') {
+                    return $deny('status', 'Anda tidak dapat menonaktifkan akun sendiri.');
+                }
+            }
+        }
+
+        if (!$isAdmin && $roleId !== null) {
+            $isAdminRole = Role::where('company_id', $actor->company_id)
+                ->whereKey((int) $roleId)
+                ->where('role_code', 'administrator')
+                ->exists();
+
+            if ($isAdminRole) {
+                return $deny('role_id', 'Hanya Administrator yang dapat memberikan role Administrator.');
+            }
+        }
+
+        return null;
     }
 }

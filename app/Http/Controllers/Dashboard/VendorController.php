@@ -370,58 +370,24 @@ class VendorController extends Controller
      */
     public function export()
     {
-        $companyId = Auth::user()->company_id;
-
-        $vendors = Vendor::where('company_id', $companyId)
+        $vendors = Vendor::query()
             ->withCount('assets')
+            ->where('company_id', Auth::user()->company_id)
             ->orderBy('vendor_name')
             ->get();
 
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
+        $excel = \App\Services\Reports\SpreadsheetExporter::forCurrentUser();
+        $excel->table('Vendor', 'Daftar Vendor', [
+            ['key' => 'vendor_name', 'label' => 'Nama vendor', 'width' => 30],
+            ['key' => 'vendor_code', 'label' => 'Kode', 'width' => 14],
+            ['key' => 'pic_name', 'label' => 'PIC', 'width' => 22],
+            ['key' => 'phone', 'label' => 'Telepon', 'width' => 17],
+            ['key' => 'email', 'label' => 'Email', 'width' => 28],
+            ['key' => 'address', 'label' => 'Alamat', 'width' => 40],
+            ['key' => 'assets_count', 'label' => 'Jumlah aset', 'type' => 'number', 'width' => 13],
+            ['label' => 'Status', 'width' => 11, 'value' => fn ($v) => (int) $v->status === 1 ? 'Aktif' : 'Nonaktif'],
+        ], $vendors, $vendors->count() . ' vendor');
 
-        // Header
-        $sheet->setCellValue('A1', 'No');
-        $sheet->setCellValue('B1', 'Vendor Code');
-        $sheet->setCellValue('C1', 'Vendor Name');
-        $sheet->setCellValue('D1', 'PIC');
-        $sheet->setCellValue('E1', 'Phone');
-        $sheet->setCellValue('F1', 'Address');
-        $sheet->setCellValue('G1', 'Total Assets');
-        $sheet->setCellValue('H1', 'Status');
-
-        $row = 2;
-
-        foreach ($vendors as $index => $vendor) {
-
-            $sheet->setCellValue('A' . $row, $index + 1);
-            $sheet->setCellValue('B' . $row, $vendor->vendor_code);
-            $sheet->setCellValue('C' . $row, $vendor->vendor_name);
-            $sheet->setCellValue('D' . $row, $vendor->pic_name);
-            $sheet->setCellValue('E' . $row, $vendor->phone);
-            $sheet->setCellValue('F' . $row, $vendor->address);
-            $sheet->setCellValue('G' . $row, $vendor->assets_count);
-            $sheet->setCellValue(
-                'H' . $row,
-                $vendor->status == 1 ? 'Active' : 'Inactive'
-            );
-
-            $row++;
-        }
-
-        foreach (range('A', 'H') as $column) {
-            $sheet->getColumnDimension($column)->setAutoSize(true);
-        }
-
-        $writer = new Xlsx($spreadsheet);
-
-        $fileName = 'vendors_' . date('Ymd_His') . '.xlsx';
-
-        return response()->streamDownload(
-            function () use ($writer) {
-                $writer->save('php://output');
-            },
-            $fileName
-        );
+        return $excel->download('Vasetra-Vendor-' . now()->format('Ymd-His'));
     }
 }

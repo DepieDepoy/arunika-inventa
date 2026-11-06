@@ -153,6 +153,15 @@ class AuthController extends Controller
             ], 403);
         }
 
+        // Perusahaan ditangguhkan dari Backoffice Vasetra.
+        if ($user->company && (int) $user->company->status !== 1) {
+            return response()->json([
+                'success' => false,
+                'message' => \App\Http\Middleware\EnsureCompanyActive::MESSAGE,
+                'code' => 'COMPANY_SUSPENDED',
+            ], 403);
+        }
+
         /*
         |--------------------------------------------------------------------------
         | Email Verification

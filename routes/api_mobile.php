@@ -211,6 +211,12 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                 Route::delete('/{id}', [VendorController::class, 'destroy'])->whereNumber('id')->middleware('permission:vendor.delete')->name('destroy');
             });
 
+            // Laporan mingguan / bulanan / tahunan.
+            Route::get('/reports', [\App\Http\Controllers\Api\V1\ReportController::class, 'show'])
+                ->middleware('permission:report.view')->name('reports.show');
+            Route::get('/reports/download', [\App\Http\Controllers\Api\V1\ReportController::class, 'download'])
+                ->middleware(['permission:report.export', 'throttle:20,1'])->name('reports.download');
+
             // Vasetra AI.
             Route::prefix('ai')->name('ai.')->middleware('throttle:20,1')->group(function () {
                 Route::post('/ask', [IntelligenceController::class, 'ask'])->name('ask');

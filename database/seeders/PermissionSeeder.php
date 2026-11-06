@@ -359,6 +359,24 @@ class PermissionSeeder extends Seeder
                 'description'     => 'Melihat penggunaan resource dan batas paket subscription company',
             ],
 
+            /*
+            | LAPORAN
+            */
+            [
+                'permission_name' => 'View Report',
+                'permission_code' => 'report.view',
+                'module'          => 'report',
+                'action'          => 'view',
+                'description'     => 'Melihat & mencetak laporan aset mingguan / bulanan / tahunan',
+            ],
+            [
+                'permission_name' => 'Export Report',
+                'permission_code' => 'report.export',
+                'module'          => 'report',
+                'action'          => 'export',
+                'description'     => 'Mengunduh laporan dalam Excel dan PowerPoint',
+            ],
+
         ];
 
         foreach ($permissions as $permission) {

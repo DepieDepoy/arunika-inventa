@@ -126,6 +126,12 @@ return [
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
     /*
+    | Password awal user hasil import Excel. User wajib menggantinya saat login
+    | pertama (must_change_password). Ganti nilainya di .env untuk produksi.
+    */
+    'default_user_password' => env('DEFAULT_USER_PASSWORD') ?: 'Vasetra@123',
+
+    /*
     |--------------------------------------------------------------------------
     | Login Throttle
     |--------------------------------------------------------------------------

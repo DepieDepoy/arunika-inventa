@@ -57,9 +57,9 @@ class AccountPresenter
             'id' => $user->company?->id,
             'name' => $user->company?->company_name,
             'code' => $user->company?->company_code,
-            'logo_url' => $user->company?->logo
-                ? asset('storage/' . ltrim($user->company->logo, '/'))
-                : null,
+            // null = belum ada logo (aplikasi menampilkan logo Vasetra).
+            'logo_url' => \App\Services\CompanyBranding::logoUrl($user->company),
+            'address' => $user->company?->address,
         ];
     }
 

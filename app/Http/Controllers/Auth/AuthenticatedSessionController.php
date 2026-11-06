@@ -141,6 +141,13 @@ class AuthenticatedSessionController extends Controller
                 ->onlyInput('login');
         }
 
+        // Perusahaan ditangguhkan dari Backoffice Vasetra.
+        if ($user->company && (int) $user->company->status !== 1) {
+            return back()
+                ->withErrors(['login' => \App\Http\Middleware\EnsureCompanyActive::MESSAGE])
+                ->onlyInput('login');
+        }
+
         /*
         |--------------------------------------------------------------------------
         | EMAIL VERIFICATION

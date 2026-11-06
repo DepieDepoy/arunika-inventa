@@ -48,8 +48,10 @@
     </div>
     <nav class="bo-nav">
         @if($me?->isSuperAdmin())
-            <div class="grp">Ringkasan</div>
-            <a href="{{ route('backoffice.analytics.index') }}" class="{{ request()->routeIs('backoffice.analytics.*') ? 'active' : '' }}"><i class="bi bi-graph-up-arrow"></i> Analitik</a>
+            <div class="grp">Bisnis</div>
+            <a href="{{ route('backoffice.dashboard') }}" class="{{ request()->routeIs('backoffice.dashboard') ? 'active' : '' }}"><i class="bi bi-speedometer2"></i> Dashboard</a>
+            <a href="{{ route('backoffice.customers.index') }}" class="{{ request()->routeIs('backoffice.customers.*') ? 'active' : '' }}"><i class="bi bi-buildings"></i> Pelanggan</a>
+            <a href="{{ route('backoffice.analytics.index') }}" class="{{ request()->routeIs('backoffice.analytics.*') ? 'active' : '' }}"><i class="bi bi-graph-up-arrow"></i> Analitik website</a>
         @endif
         <div class="grp">Website</div>
         <a href="{{ route('backoffice.cms.index') }}" class="{{ request()->routeIs('backoffice.cms.*') ? 'active' : '' }}"><i class="bi bi-window-sidebar"></i> Konten Landing</a>

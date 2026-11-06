@@ -587,161 +587,21 @@ class CategoryController extends Controller
  */
     public function export()
     {
-        /*
-        |--------------------------------------------------------------------------
-        | Get Category
-        |--------------------------------------------------------------------------
-        */
+        $categories = Category::query()
+            ->withCount('assets')
+            ->where('company_id', Auth::user()->company_id)
+            ->orderBy('category_name')
+            ->get();
 
-        $categories = Category::select(
-            'categories.*',
-            'companies.company_name'
-        )
+        $excel = \App\Services\Reports\SpreadsheetExporter::forCurrentUser();
+        $excel->table('Kategori', 'Daftar Kategori Aset', [
+            ['key' => 'category_name', 'label' => 'Nama kategori', 'width' => 30],
+            ['key' => 'category_code', 'label' => 'Kode', 'width' => 14],
+            ['key' => 'description', 'label' => 'Deskripsi', 'width' => 42],
+            ['key' => 'assets_count', 'label' => 'Jumlah aset', 'type' => 'number', 'width' => 13],
+            ['label' => 'Status', 'width' => 11, 'value' => fn ($c) => (int) $c->status === 1 ? 'Aktif' : 'Nonaktif'],
+        ], $categories, $categories->count() . ' kategori');
 
-        ->leftJoin(
-            'companies',
-            'companies.id',
-            '=',
-            'categories.company_id'
-        )
-
-        ->withCount('assets')
-
-        ->where(
-            'categories.company_id',
-            Auth::user()->company_id
-        )
-
-        ->orderBy(
-            'categories.id'
-        )
-
-        ->get();
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Spreadsheet
-        |--------------------------------------------------------------------------
-        */
-
-        $spreadsheet = new Spreadsheet();
-
-        $sheet = $spreadsheet->getActiveSheet();
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Header
-        |--------------------------------------------------------------------------
-        */
-
-        $sheet->setCellValue('A1', 'Company Name');
-        $sheet->setCellValue('B1', 'Category Name');
-        $sheet->setCellValue('C1', 'Category Code');
-        $sheet->setCellValue('D1', 'Description');
-        $sheet->setCellValue('E1', 'Total Asset');
-        $sheet->setCellValue('F1', 'Status');
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Styling Header
-        |--------------------------------------------------------------------------
-        */
-
-        $sheet->getStyle('A1:F1')
-            ->getFont()
-            ->setBold(true);
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Auto Size
-        |--------------------------------------------------------------------------
-        */
-
-        foreach (range('A', 'F') as $column) {
-
-            $sheet->getColumnDimension($column)
-                ->setAutoSize(true);
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Data
-        |--------------------------------------------------------------------------
-        */
-
-        $row = 2;
-
-        foreach ($categories as $item) {
-
-            $status = $item->status == 1
-                ? 'Active'
-                : 'Non Active';
-
-
-            $sheet->setCellValue(
-                'A' . $row,
-                $item->company_name
-            );
-
-            $sheet->setCellValue(
-                'B' . $row,
-                $item->category_name
-            );
-
-            $sheet->setCellValue(
-                'C' . $row,
-                $item->category_code
-            );
-
-            $sheet->setCellValue(
-                'D' . $row,
-                $item->description
-            );
-
-            $sheet->setCellValue(
-                'E' . $row,
-                $item->assets_count
-            );
-
-            $sheet->setCellValue(
-                'F' . $row,
-                $status
-            );
-
-
-            $row++;
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Download
-        |--------------------------------------------------------------------------
-        */
-
-        $writer = new Xlsx($spreadsheet);
-
-
-        $filename = 'Category_' . date('Ymd_His') . '.xlsx';
-
-
-        $temp_file = tempnam(
-            sys_get_temp_dir(),
-            'categories'
-        );
-
-
-        $writer->save($temp_file);
-
-
-        return response()->download(
-            $temp_file,
-            $filename
-        )->deleteFileAfterSend(true);
+        return $excel->download('Vasetra-Kategori-' . now()->format('Ymd-His'));
     }
 }

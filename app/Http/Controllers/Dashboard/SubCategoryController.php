@@ -525,179 +525,25 @@ class SubCategoryController extends Controller
      */
     public function export()
     {
-        $subcategories = SubCategory::select(
-            'sub_categories.*',
-            'companies.company_name',
-            'categories.category_name',
-            'categories.category_code'
-        )
+        $subcategories = SubCategory::query()
+            ->select('sub_categories.*', 'categories.category_name')
+            ->leftJoin('categories', 'categories.id', '=', 'sub_categories.category_id')
+            ->withCount('assets')
+            ->where('sub_categories.company_id', Auth::user()->company_id)
+            ->orderBy('categories.category_name')
+            ->orderBy('sub_categories.sub_category_name')
+            ->get();
 
-        ->leftJoin(
-            'companies',
-            'companies.id',
-            '=',
-            'sub_categories.company_id'
-        )
+        $excel = \App\Services\Reports\SpreadsheetExporter::forCurrentUser();
+        $excel->table('Sub Kategori', 'Daftar Sub Kategori Aset', [
+            ['key' => 'category_name', 'label' => 'Kategori', 'width' => 26],
+            ['key' => 'sub_category_name', 'label' => 'Sub kategori', 'width' => 28],
+            ['key' => 'sub_category_code', 'label' => 'Kode', 'width' => 14],
+            ['key' => 'description', 'label' => 'Deskripsi', 'width' => 40],
+            ['key' => 'assets_count', 'label' => 'Jumlah aset', 'type' => 'number', 'width' => 13],
+            ['label' => 'Status', 'width' => 11, 'value' => fn ($c) => (int) $c->status === 1 ? 'Aktif' : 'Nonaktif'],
+        ], $subcategories, $subcategories->count() . ' sub kategori');
 
-        ->leftJoin(
-            'categories',
-            'categories.id',
-            '=',
-            'sub_categories.category_id'
-        )
-
-        ->where(
-            'sub_categories.company_id',
-            Auth::user()->company_id
-        )
-
-        ->orderBy(
-            'sub_categories.id'
-        )
-
-        ->get();
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Spreadsheet
-        |--------------------------------------------------------------------------
-        */
-
-        $spreadsheet = new Spreadsheet();
-
-        $sheet = $spreadsheet->getActiveSheet();
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Header
-        |--------------------------------------------------------------------------
-        */
-
-        $sheet->setCellValue('A1', 'Company Name');
-        $sheet->setCellValue('B1', 'Category Name');
-        $sheet->setCellValue('C1', 'Category Code');
-        $sheet->setCellValue('D1', 'Sub Category Name');
-        $sheet->setCellValue('E1', 'Sub Category Code');
-        $sheet->setCellValue('F1', 'Description');
-        $sheet->setCellValue('G1', 'Total Asset');
-        $sheet->setCellValue('H1', 'Status');
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Styling Header
-        |--------------------------------------------------------------------------
-        */
-
-        $sheet->getStyle('A1:H1')
-            ->getFont()
-            ->setBold(true);
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Auto Size
-        |--------------------------------------------------------------------------
-        */
-
-        foreach (range('A', 'H') as $column) {
-
-            $sheet->getColumnDimension($column)
-                ->setAutoSize(true);
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Data
-        |--------------------------------------------------------------------------
-        */
-
-        $row = 2;
-
-
-        foreach ($subcategories as $item) {
-
-            $status = $item->status == 1
-                ? 'Active'
-                : 'Non Active';
-
-
-            $totalAsset = $item->assets()
-                ->count();
-
-
-            $sheet->setCellValue(
-                'A' . $row,
-                $item->company_name
-            );
-
-            $sheet->setCellValue(
-                'B' . $row,
-                $item->category_name
-            );
-
-            $sheet->setCellValue(
-                'C' . $row,
-                $item->category_code
-            );
-
-            $sheet->setCellValue(
-                'D' . $row,
-                $item->sub_category_name
-            );
-
-            $sheet->setCellValue(
-                'E' . $row,
-                $item->sub_category_code
-            );
-
-            $sheet->setCellValue(
-                'F' . $row,
-                $item->description
-            );
-
-            $sheet->setCellValue(
-                'G' . $row,
-                $totalAsset
-            );
-
-            $sheet->setCellValue(
-                'H' . $row,
-                $status
-            );
-
-
-            $row++;
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Download
-        |--------------------------------------------------------------------------
-        */
-
-        $writer = new Xlsx($spreadsheet);
-
-
-        $filename = 'Sub_Category_' . date('Ymd_His') . '.xlsx';
-
-
-        $temp_file = tempnam(
-            sys_get_temp_dir(),
-            'subcategories'
-        );
-
-
-        $writer->save($temp_file);
-
-
-        return response()->download(
-            $temp_file,
-            $filename
-        )->deleteFileAfterSend(true);
+        return $excel->download('Vasetra-SubKategori-' . now()->format('Ymd-His'));
     }
 }

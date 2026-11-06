@@ -176,6 +176,26 @@
                 </li>
 
 
+                {{-- =================================================
+                     LAPORAN
+                ================================================== --}}
+                @if(auth()->user()->hasPermission('report.view'))
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}"
+                       aria-current="{{ request()->routeIs('reports.*') ? 'page' : 'false' }}"
+                       href="{{ route('reports.index') }}">
+                        <i class="icon">
+                            <svg class="icon-20" width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path opacity="0.4" d="M7.33 14.49L9.71 11.4L12.42 13.53L14.75 10.53" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path fill-rule="evenodd" clip-rule="evenodd" d="M7.67 2.75H16.34C19.36 2.75 21.25 4.89 21.25 7.92V16.08C21.25 19.11 19.36 21.25 16.34 21.25H7.67C4.64 21.25 2.75 19.11 2.75 16.08V7.92C2.75 4.89 4.65 2.75 7.67 2.75Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </i>
+                        <span class="item-name">Laporan</span>
+                    </a>
+                </li>
+                @endif
+
+
                 <li>
                     <hr class="hr-horizontal">
                 </li>
@@ -1049,6 +1069,24 @@
                     </a>
 
                 </li>
+
+
+                {{-- PROFIL PERUSAHAAN (khusus Administrator) --}}
+                @if(auth()->user()->isAdministrator())
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('company.*') ? 'active' : '' }}"
+                       aria-current="{{ request()->routeIs('company.*') ? 'page' : 'false' }}"
+                       href="{{ route('company.edit') }}">
+                        <i class="icon">
+                            <svg class="icon-20" width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path opacity="0.4" d="M3 21H21M5 21V7L13 3V21M19 21V11L13 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M9 9V9.01M9 12V12.01M9 15V15.01M9 18V18.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </i>
+                        <span class="item-name">Profil Perusahaan</span>
+                    </a>
+                </li>
+                @endif
 
 
                 {{-- =================================================

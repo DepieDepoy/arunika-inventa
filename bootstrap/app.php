@@ -53,6 +53,15 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->web(append: [
             \App\Http\Middleware\AuditDataAccess::class,
+            \App\Http\Middleware\WebSecurityHeaders::class,
+            \App\Http\Middleware\EnsureCompanyActive::class,
+            \App\Http\Middleware\EnsurePasswordChanged::class,
+        ]);
+
+        // Perusahaan ditangguhkan & password awal juga berlaku untuk API mobile.
+        $middleware->api(append: [
+            \App\Http\Middleware\EnsureCompanyActive::class,
+            \App\Http\Middleware\EnsurePasswordChanged::class,
         ]);
 
         /*

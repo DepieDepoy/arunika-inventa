@@ -330,6 +330,52 @@ class AssetController extends Controller
             ->make(true);
     }
 
+    /**
+     * Export daftar aset (.xlsx). Mengikuti pencarian / filter di halaman daftar aset bila ada.
+     */
+    public function export(Request $request)
+    {
+        $companyId = Auth::user()->company_id;
+        $search = trim((string) $request->query('search', ''));
+
+        $assets = Asset::query()
+            ->with(['category:id,category_name', 'subCategory:id,sub_category_name', 'vendor:id,vendor_name', 'responsibleUser:id,name'])
+            ->where('company_id', $companyId)
+            ->when($search !== '', fn ($q) => $q->where(fn ($w) => $w
+                ->where('asset_code', 'like', "%{$search}%")
+                ->orWhere('asset_name', 'like', "%{$search}%")
+                ->orWhere('serial_number', 'like', "%{$search}%")
+                ->orWhere('location', 'like', "%{$search}%")))
+            ->when($request->filled('category_id'), fn ($q) => $q->where('category_id', (int) $request->query('category_id')))
+            ->when($request->filled('status'), fn ($q) => $q->where('status', (int) $request->query('status')))
+            ->orderBy('asset_code')
+            ->get();
+
+        $excel = \App\Services\Reports\SpreadsheetExporter::forCurrentUser();
+        $excel->table('Aset', 'Daftar Aset', [
+            ['key' => 'asset_code', 'label' => 'Kode aset', 'width' => 16],
+            ['key' => 'asset_name', 'label' => 'Nama aset', 'width' => 30],
+            ['key' => 'category.category_name', 'label' => 'Kategori', 'width' => 18],
+            ['key' => 'subCategory.sub_category_name', 'label' => 'Sub kategori', 'width' => 18],
+            ['key' => 'brand', 'label' => 'Merek', 'width' => 14],
+            ['key' => 'model', 'label' => 'Model', 'width' => 16],
+            ['key' => 'serial_number', 'label' => 'No. seri', 'width' => 18],
+            ['label' => 'Kondisi', 'width' => 10, 'value' => fn ($a) => match ($a->asset_condition) { 'new' => 'Baru', 'used' => 'Bekas', default => $a->asset_condition }],
+            ['label' => 'Status', 'width' => 11, 'value' => fn ($a) => (int) $a->status === 1 ? 'Aktif' : 'Tidak aktif'],
+            ['key' => 'location', 'label' => 'Lokasi', 'width' => 20],
+            ['key' => 'responsibleUser.name', 'label' => 'Pemegang', 'width' => 20],
+            ['key' => 'vendor.vendor_name', 'label' => 'Vendor', 'width' => 20],
+            ['key' => 'purchase_date', 'label' => 'Tgl. beli', 'type' => 'date', 'width' => 12],
+            ['key' => 'purchase_price', 'label' => 'Harga beli', 'type' => 'money', 'width' => 16],
+            ['label' => 'Nilai buku (estimasi)', 'type' => 'money', 'width' => 18, 'value' => fn ($a) => \App\Support\AssetValuation::bookValue($a)['value'] ?? $a->purchase_price],
+            ['key' => 'warranty_end', 'label' => 'Garansi s/d', 'type' => 'date', 'width' => 12],
+            ['key' => 'next_maintenance_date', 'label' => 'Maintenance berikutnya', 'type' => 'date', 'width' => 14],
+            ['key' => 'created_at', 'label' => 'Dicatat', 'type' => 'date', 'width' => 12],
+        ], $assets, $assets->count() . ' aset · total harga beli Rp' . number_format((float) $assets->sum('purchase_price'), 0, ',', '.'));
+
+        return $excel->download('Vasetra-Aset-' . now()->format('Ymd-His'));
+    }
+
 
     /**
      * =========================================================================

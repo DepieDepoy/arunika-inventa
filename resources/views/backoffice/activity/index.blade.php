@@ -8,7 +8,7 @@
     $labels = [
         'login' => 'Login', 'logout' => 'Logout', 'login_failed' => 'Gagal login', 'password_changed' => 'Ganti password',
         'cms_updated' => 'Ubah konten', 'cms_reset' => 'Reset konten', 'pricing_updated' => 'Ubah harga',
-        'admin_created' => 'Akun dibuat', 'admin_updated' => 'Akun diubah', 'admin_password_reset' => 'Reset password', 'admin_activated' => 'Akun diaktifkan', 'admin_deactivated' => 'Akun dinonaktifkan', 'analytics.settings' => 'Pengaturan analitik',
+        'admin_created' => 'Akun dibuat', 'admin_updated' => 'Akun diubah', 'admin_password_reset' => 'Reset password', 'admin_activated' => 'Akun diaktifkan', 'admin_deactivated' => 'Akun dinonaktifkan', 'analytics.settings' => 'Pengaturan analitik', 'customer.trial_extended' => 'Perpanjang trial', 'customer.suspended' => 'Tangguhkan pelanggan', 'customer.activated' => 'Aktifkan pelanggan',
     ];
 @endphp
 <div class="container-xxl flex-grow-1 container-p-y">
@@ -33,7 +33,7 @@
                         <tr>
                             <td class="small text-nowrap">{{ $log->created_at?->translatedFormat('d M Y H:i') }}</td>
                             <td class="small">{{ $log->admin_name ?? '—' }}</td>
-                            <td><span class="cms-chip {{ in_array($log->event, ['login_failed', 'admin_deactivated', 'cms_reset'], true) ? '' : 'cms-chip-blue' }}">{{ $labels[$log->event] ?? $log->event }}</span></td>
+                            <td><span class="cms-chip {{ in_array($log->event, ['login_failed', 'admin_deactivated', 'cms_reset', 'customer.suspended'], true) ? '' : 'cms-chip-blue' }}">{{ $labels[$log->event] ?? $log->event }}</span></td>
                             <td class="small">{{ $log->description }}</td>
                             <td class="small text-muted">{{ $log->ip_address ?? '—' }}</td>
                         </tr>

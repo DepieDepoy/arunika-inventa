@@ -32,7 +32,9 @@ class Cors
         |--------------------------------------------------------------------------
         */
 
+        // Origin localhost hanya diizinkan saat pengembangan (Flutter web lokal).
         $isLocalOrigin =
+            app()->isLocal() &&
             $origin &&
             (
                 str_starts_with(

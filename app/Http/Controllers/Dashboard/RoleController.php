@@ -349,119 +349,23 @@ class RoleController extends Controller
 
     public function export()
     {
-        $role = Role::select(
-            'roles.*',
-            'companies.company_name'
-        )
-        ->leftJoin(
-            'companies',
-            'companies.id',
-            '=',
-            'roles.company_id'
-        )
-        ->where(
-            'roles.company_id',
-            Auth::user()->company_id
-        )
-        ->get();
+        $roles = Role::query()
+            ->withCount(['users', 'permissions'])
+            ->where('company_id', Auth::user()->company_id)
+            ->orderBy('role_name')
+            ->get();
 
+        $excel = \App\Services\Reports\SpreadsheetExporter::forCurrentUser();
+        $excel->table('Role', 'Daftar Role & Hak Akses', [
+            ['key' => 'role_name', 'label' => 'Nama role', 'width' => 26],
+            ['key' => 'role_code', 'label' => 'Kode', 'width' => 18],
+            ['key' => 'users_count', 'label' => 'Jumlah user', 'type' => 'number', 'width' => 13],
+            ['label' => 'Jumlah hak akses', 'type' => 'number', 'width' => 16, 'value' => fn ($r) => $r->role_code === 'administrator' ? null : $r->permissions_count],
+            ['label' => 'Keterangan', 'width' => 30, 'value' => fn ($r) => $r->role_code === 'administrator' ? 'Semua hak akses' : ''],
+            ['label' => 'Status', 'width' => 11, 'value' => fn ($r) => (int) $r->status === 1 ? 'Aktif' : 'Nonaktif'],
+        ], $roles, $roles->count() . ' role');
 
-        $spreadsheet = new Spreadsheet();
-
-        $sheet = $spreadsheet->getActiveSheet();
-
-
-        // Header
-        $sheet->setCellValue(
-            'A1',
-            'Companies Name'
-        );
-
-        $sheet->setCellValue(
-            'B1',
-            'Role Name'
-        );
-
-        $sheet->setCellValue(
-            'C1',
-            'Role Code'
-        );
-
-        $sheet->setCellValue(
-            'D1',
-            'Status'
-        );
-
-
-        // Styling Header
-        $sheet->getStyle('A1:D1')
-            ->getFont()
-            ->setBold(true);
-
-
-        foreach (range('A', 'D') as $column) {
-
-            $sheet->getColumnDimension($column)
-                ->setAutoSize(true);
-        }
-
-
-        $row = 2;
-
-
-        foreach ($role as $items) {
-
-            if ($items->status == 1) {
-                $s = "Active";
-            } else {
-                $s = "Non Active";
-            }
-
-
-            $sheet->setCellValue(
-                'A' . $row,
-                $items->company_name
-            );
-
-            $sheet->setCellValue(
-                'B' . $row,
-                $items->role_name
-            );
-
-            $sheet->setCellValue(
-                'C' . $row,
-                $items->role_code
-            );
-
-            $sheet->setCellValue(
-                'D' . $row,
-                $s
-            );
-
-
-            $row++;
-        }
-
-
-        $writer = new Xlsx($spreadsheet);
-
-        $filename = 'Role_' . date('Ymd_His') . '.xlsx';
-
-        $temp_file = tempnam(
-            sys_get_temp_dir(),
-            'users'
-        );
-
-
-        $writer->save($temp_file);
-
-
-        return response()
-            ->download(
-                $temp_file,
-                $filename
-            )
-            ->deleteFileAfterSend(true);
+        return $excel->download('Vasetra-Role-' . now()->format('Ymd-His'));
     }
 
 

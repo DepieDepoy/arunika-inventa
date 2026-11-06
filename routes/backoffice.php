@@ -4,6 +4,7 @@ use App\Http\Controllers\Backoffice\ActivityController;
 use App\Http\Controllers\Backoffice\AnalyticsController;
 use App\Http\Controllers\Backoffice\AuthController;
 use App\Http\Controllers\Backoffice\CmsController;
+use App\Http\Controllers\Backoffice\CustomerController;
 use App\Http\Controllers\Backoffice\PlanController;
 use App\Http\Controllers\Backoffice\StaffController;
 use Illuminate\Support\Facades\Route;
@@ -26,7 +27,7 @@ Route::prefix(config('backoffice.path', 'backoffice'))
 
         Route::middleware('backoffice')->group(function () {
             Route::get('/', fn () => redirect()->route(
-                auth('backoffice')->user()?->isSuperAdmin() ? 'backoffice.analytics.index' : 'backoffice.cms.index'
+                auth('backoffice')->user()?->isSuperAdmin() ? 'backoffice.dashboard' : 'backoffice.cms.index'
             ))->name('home');
             Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
             Route::get('/password', [AuthController::class, 'editPassword'])->name('password.edit');
@@ -48,6 +49,13 @@ Route::prefix(config('backoffice.path', 'backoffice'))
                 Route::post('/staff/{staff}/reset-password', [StaffController::class, 'resetPassword'])->whereNumber('staff')->name('staff.reset');
 
                 Route::get('/activity', [ActivityController::class, 'index'])->name('activity.index');
+
+                Route::get('/dashboard', [CustomerController::class, 'dashboard'])->name('dashboard');
+                Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
+                Route::get('/customers/{company}', [CustomerController::class, 'show'])->whereNumber('company')->name('customers.show');
+                Route::post('/customers/{company}/extend-trial', [CustomerController::class, 'extendTrial'])->whereNumber('company')->name('customers.extend-trial');
+                Route::post('/customers/{company}/status', [CustomerController::class, 'toggleStatus'])->whereNumber('company')->name('customers.status');
+                Route::post('/customers/{company}/refresh-storage', [CustomerController::class, 'refreshStorage'])->whereNumber('company')->name('customers.refresh-storage');
 
                 Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
                 Route::post('/analytics/settings', [AnalyticsController::class, 'settings'])->name('analytics.settings');

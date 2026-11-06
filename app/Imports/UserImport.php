@@ -38,16 +38,15 @@ class UserImport implements ToCollection, WithHeadingRow, WithChunkReading
         $this->sendVerificationEmail = $sendVerificationEmail;
         $this->companyId = (int) $history->company_id;
 
+        // Role bawaan untuk user hasil import: Karyawan (dulu "Staff").
         $staffRole = Role::where('company_id', $this->companyId)
-            ->where('role_name', 'Staff')
+            ->where(fn ($q) => $q->where('role_code', 'karyawan')->orWhere('role_name', 'Staff'))
+            ->orderByRaw("role_code = 'karyawan' desc")
             ->firstOrFail();
 
         $this->staffRoleId = (int) $staffRole->id;
 
-        $this->defaultPassword = env(
-            'DEFAULT_USER_PASSWORD',
-            'Vasetra@123'
-        );
+        $this->defaultPassword = (string) config('auth.default_user_password', 'Vasetra@123');
 
         $this->defaultPasswordHash = Hash::make(
             $this->defaultPassword
@@ -153,8 +152,8 @@ class UserImport implements ToCollection, WithHeadingRow, WithChunkReading
         $existingEmails = [];
 
         if ($emails !== []) {
+            // Email unik di seluruh sistem (dipakai untuk login).
             $existingEmails = User::query()
-                ->where('company_id', $this->companyId)
                 ->whereIn('email', $emails)
                 ->pluck('email')
                 ->map(fn ($value) => strtolower(trim((string) $value)))
