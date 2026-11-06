@@ -1,6 +1,6 @@
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Assets')
+@section('title', 'Data Aset')
 
 @section('content')
 
@@ -31,22 +31,35 @@
     }
 
     .filter-card {
-        background: #f8f9fc !important;
-
-        border-top: 1px solid #e1e3ea !important;
-        border-bottom: 1px solid #e1e3ea !important;
-
-        border-left: 3px solid #696cff !important;
-        border-right: 3px solid #696cff !important;
-
+        background: var(--bs-tertiary-bg, #f6f9fd) !important;
+        border: 1px solid rgba(15, 27, 45, .08) !important;
         border-radius: 14px !important;
-
-        padding: 20px !important;
-
+        padding: 18px 20px !important;
         margin-bottom: 20px;
-
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06) !important;
     }
+
+    /* Header & tabel — seragam dengan tampilan di landing page */
+    .al-head { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }
+    .al-sub { display:flex; flex-wrap:wrap; gap:4px 6px; font-size:.84rem; color:#8592a6; }
+    .al-sub b { color:inherit; font-weight:700; }
+    .al-toolbar { display:flex; gap:8px; flex-wrap:wrap; }
+    .al-tbtn { display:inline-flex; align-items:center; gap:6px; font-size:.85rem; font-weight:700; padding:8px 14px; border-radius:10px; border:1px solid rgba(15,27,45,.12); background:var(--bs-body-bg); color:inherit; }
+    .al-tbtn:hover { border-color:#1f5fbf; color:#1f5fbf; }
+    .al-tbtn-primary, .al-tbtn-primary:hover { background:linear-gradient(125deg,#0b2447 0%,#163f86 38%,#1f5fbf 64%,#14b8a6 118%); color:#fff; border-color:transparent; }
+    #table-assets thead th { font-size:.68rem; letter-spacing:.08em; text-transform:uppercase; color:#8592a6; font-weight:800; white-space:nowrap; }
+    #table-assets td { font-size:.86rem; }
+    .al-code { font-weight:800; color:#1f5fbf; white-space:nowrap; }
+    .al-name { font-weight:700; }
+    .al-meta { font-size:.75rem; color:#8592a6; }
+    .al-muted { color:#8592a6; }
+    .al-holder { display:inline-flex; align-items:center; gap:8px; white-space:nowrap; }
+    .al-ava { width:26px; height:26px; border-radius:50%; display:inline-grid; place-items:center; color:#fff; font-size:.62rem; font-weight:800; flex:none; }
+    .al-chip { display:inline-block; font-size:.7rem; font-weight:800; padding:3px 9px; border-radius:999px; white-space:nowrap; }
+    .al-chip-teal { background:#ccfbf1; color:#0f766e; } .al-chip-gray { background:#eef2f7; color:#4b5a6e; } .al-chip-blue { background:#dbeafe; color:#1d4ed8; }
+    .al-actions { display:flex; gap:4px; }
+    .al-btn { width:32px; height:32px; border-radius:9px; display:inline-grid; place-items:center; border:1px solid rgba(15,27,45,.1); background:var(--bs-body-bg); color:#4b5a6e; }
+    .al-btn:hover { border-color:#1f5fbf; color:#1f5fbf; }
+    .al-btn-danger:hover { border-color:#dc2626; color:#dc2626; }
     .filter-title {
         font-size: 14px;
         font-weight: 600;
@@ -80,52 +93,31 @@
                 <!-- ===================================================== -->
                 <!-- HEADER -->
                 <!-- ===================================================== -->
-                <div class="card-header d-flex justify-content-between align-items-center">
+                <div class="card-header al-head">
                     <div>
-                        <h5 class="mb-0">
-                            Assets
-                        </h5>
-                        <small class="text-muted">
-                            Manage company assets
-                        </small>
+                        <h5 class="mb-1">Data Aset</h5>
+                        <div class="al-sub">
+                            <span><b>{{ number_format((int) $stats->total, 0, ',', '.') }}</b> aset</span>
+                            <span>· <b>{{ number_format((int) $stats->active, 0, ',', '.') }}</b> aktif</span>
+                            <span>· <b>{{ number_format((int) $stats->assigned, 0, ',', '.') }}</b> dipegang karyawan</span>
+                            <span>· <b>{{ $categories->count() }}</b> kategori</span>
+                            <span>· nilai beli <b>Rp{{ number_format((float) $stats->value, 0, ',', '.') }}</b></span>
+                        </div>
                     </div>
-                   <div class="d-flex gap-2">
-
-    {{-- Export Asset --}}
-    @if(auth()->user()->hasPermission('asset.export'))
-        <a
-            href="{{ route('assets.export') }}"
-            class="btn btn-success"
-        >
-            <i class="fa-solid fa-file-excel me-1"></i>
-            Export Excel
-        </a>
-    @endif
-
-    {{-- Print QR --}}
-    @if(auth()->user()->hasPermission('asset.print_qr'))
-        <button
-            type="button"
-            class="btn btn-dark"
-            id="btnPrintQr"
-        >
-            <i class="fa-solid fa-qrcode me-1"></i>
-            Print QR
-        </button>
-    @endif
-
-    {{-- Add Asset --}}
-    @if(auth()->user()->hasPermission('asset.create'))
-        <a
-            href="{{ route('assets.create') }}"
-            class="btn btn-primary"
-        >
-            <i class="fa-solid fa-plus me-1"></i>
-            Add Asset
-        </a>
-    @endif
-
-</div>
+                    <div class="al-toolbar">
+                        @if(auth()->user()->hasPermission('asset.import'))
+                            <a href="{{ route('assets.import') }}" class="al-tbtn"><i class="bi bi-upload"></i> Import Excel</a>
+                        @endif
+                        @if(auth()->user()->hasPermission('asset.export'))
+                            <a href="{{ route('assets.export') }}" class="al-tbtn"><i class="bi bi-file-earmark-spreadsheet"></i> Export</a>
+                        @endif
+                        @if(auth()->user()->hasPermission('asset.print_qr'))
+                            <button type="button" class="al-tbtn" id="btnPrintQr" title="Centang aset di tabel, lalu cetak"><i class="bi bi-qr-code"></i> Cetak QR</button>
+                        @endif
+                        @if(auth()->user()->hasPermission('asset.create'))
+                            <a href="{{ route('assets.create') }}" class="al-tbtn al-tbtn-primary"><i class="bi bi-plus-lg"></i> Tambah Aset</a>
+                        @endif
+                    </div>
                 </div>
                 <!-- ===================================================== -->
                 <!-- BODY -->
@@ -139,10 +131,10 @@
                             <div>
                                 <div class="filter-title">
                                     <i class="fa-solid fa-filter me-1"></i>
-                                    Filter Assets
+                                    Filter Aset
                                 </div>
                                 <small class="text-muted">
-                                    Gunakan filter untuk mencari asset
+                                    Saring aset berdasarkan kategori, vendor, status, atau tanggal dibuat
                                 </small>
                             </div>
                             <button
@@ -158,7 +150,7 @@
                             <!-- SEARCH -->
                             <div class="col-md-4">
                                 <label class="form-label filter-label">
-                                    Search Asset
+                                    Cari aset
                                 </label>
                                 <div class="input-group">
                                     <span class="input-group-text">
@@ -169,7 +161,7 @@
                                         type="text"
                                         id="search_asset"
                                         class="form-control"
-                                        placeholder="Asset code / asset name"
+                                        placeholder="Kode atau nama aset"
                                     >
                                 </div>
                             </div>
@@ -181,7 +173,7 @@
 
                                 <label class="form-label filter-label">
 
-                                    Category
+                                    Kategori
 
                                 </label>
 
@@ -191,7 +183,7 @@
                                 >
 
                                     <option value="">
-                                        All Categories
+                                        Semua kategori
                                     </option>
 
                                     @foreach($categories ?? [] as $category)
@@ -217,7 +209,7 @@
 
                                 <label class="form-label filter-label">
 
-                                    Sub Category
+                                    Subkategori
 
                                 </label>
 
@@ -227,7 +219,7 @@
                                 >
 
                                     <option value="">
-                                        All Sub Categories
+                                        Semua subkategori
                                     </option>
 
                                     @foreach($subCategories ?? [] as $subCategory)
@@ -264,7 +256,7 @@
                                 >
 
                                     <option value="">
-                                        All Vendors
+                                        Semua vendor
                                     </option>
 
                                     @foreach($vendors ?? [] as $vendor)
@@ -300,15 +292,15 @@
                                 >
 
                                     <option value="">
-                                        All Status
+                                        Semua status
                                     </option>
 
                                     <option value="1">
-                                        Active
+                                        Aktif
                                     </option>
 
                                     <option value="0">
-                                        Inactive
+                                        Tidak aktif
                                     </option>
 
                                 </select>
@@ -322,7 +314,7 @@
 
                                 <label class="form-label filter-label">
 
-                                    Created From
+                                    Dibuat dari
 
                                 </label>
 
@@ -341,7 +333,7 @@
 
                                 <label class="form-label filter-label">
 
-                                    Created To
+                                    Sampai
 
                                 </label>
 
@@ -368,7 +360,7 @@
 
                                 <i class="fa-solid fa-magnifying-glass me-1"></i>
 
-                                Search
+                                Terapkan
 
                             </button>
 
@@ -458,72 +450,14 @@
 
                                     <!-- ASSET CODE -->
 
-                                    <th>
-                                        Asset Code
-                                    </th>
-
-
-                                    <!-- ASSET NAME -->
-
-                                    <th>
-                                        Asset Name
-                                    </th>
-
-
-                                    <!-- CATEGORY -->
-
-                                    <th>
-                                        Category
-                                    </th>
-
-
-                                    <!-- SUB CATEGORY -->
-
-                                    <th>
-                                        Sub Category
-                                    </th>
-
-
-                                    <!-- VENDOR -->
-
-                                    <th>
-                                        Vendor
-                                    </th>
-
-
-                                    <!-- RESPONSIBLE -->
-
-                                    <th>
-                                        Responsible
-                                    </th>
-
-
-                                    <!-- PRICE -->
-
-                                    <th>
-                                        Price
-                                    </th>
-
-
-                                    <!-- PURCHASE DATE -->
-
-                                    <th>
-                                        Purchase Date
-                                    </th>
-
-
-                                    <!-- STATUS -->
-
-                                    <th>
-                                        Status
-                                    </th>
-
-
-                                    <!-- ACTION -->
-
-                                    <th width="12%">
-                                        Action
-                                    </th>
+                                    <th>Kode</th>
+                                    <th>Nama aset</th>
+                                    <th>Pemegang</th>
+                                    <th>Lokasi</th>
+                                    <th>Vendor</th>
+                                    <th>Harga beli</th>
+                                    <th>Status</th>
+                                    <th width="10%">Aksi</th>
 
                                 </tr>
 
@@ -690,94 +624,11 @@ $(function () {
             },
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | CATEGORY
-            |--------------------------------------------------------------------------
-            */
-
-            {
-
-                data: 'category_name',
-
-                name: 'category_name'
-
-            },
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | SUB CATEGORY
-            |--------------------------------------------------------------------------
-            */
-
-            {
-
-                data: 'sub_category_name',
-
-                name: 'sub_category_name'
-
-            },
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | VENDOR
-            |--------------------------------------------------------------------------
-            */
-
-            {
-
-                data: 'vendor_name',
-
-                name: 'vendor_name'
-
-            },
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | RESPONSIBLE
-            |--------------------------------------------------------------------------
-            */
-
-            {
-
-                data: 'responsible_name',
-
-                name: 'responsible_name'
-
-            },
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | PURCHASE PRICE
-            |--------------------------------------------------------------------------
-            */
-
-            {
-
-                data: 'purchase_price',
-
-                name: 'purchase_price'
-
-            },
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | PURCHASE DATE
-            |--------------------------------------------------------------------------
-            */
-
-            {
-
-                data: 'purchase_date',
-
-                name: 'purchase_date'
-
-            },
+            // Pemegang, lokasi, vendor, harga.
+            { data: 'responsible_name', name: 'responsible_name', orderable: false, searchable: false },
+            { data: 'location', name: 'location' },
+            { data: 'vendor_name', name: 'vendor_name', orderable: false, searchable: false },
+            { data: 'purchase_price', name: 'purchase_price' },
 
 
             /*

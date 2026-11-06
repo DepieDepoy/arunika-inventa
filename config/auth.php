@@ -42,6 +42,12 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // Backoffice pegawai Vasetra (CMS & harga) — terpisah dari pelanggan.
+        'backoffice' => [
+            'driver' => 'session',
+            'provider' => 'backoffice_admins',
+        ],
     ],
 
     /*
@@ -65,6 +71,11 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
+        ],
+
+        'backoffice_admins' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\BackofficeAdmin::class,
         ],
 
         // 'users' => [

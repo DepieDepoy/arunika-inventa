@@ -605,10 +605,13 @@
                                         tetapi penambahan {{ strtolower($metric['title']) }} baru diblokir.
                                         @if($canManage ?? false)
                                             <div class="d-flex flex-wrap gap-2 mt-2">
-                                                <a href="{{ route('subscription.index') }}#addon-card" class="btn btn-sm btn-danger">
-                                                    <i class="bi bi-plus-circle me-1"></i> Tambah Kapasitas
-                                                </a>
-                                                <a href="{{ route('subscription.index') }}#upgrade-card" class="btn btn-sm btn-outline-danger">
+                                                {{-- Add-on hanya untuk storage; kuota user & aset naik lewat upgrade paket. --}}
+                                                @if($metric['key'] === 'storage')
+                                                    <a href="{{ route('subscription.index') }}#addon-card" class="btn btn-sm btn-danger">
+                                                        <i class="bi bi-plus-circle me-1"></i> Tambah Storage
+                                                    </a>
+                                                @endif
+                                                <a href="{{ route('subscription.index') }}#upgrade-card" class="btn btn-sm {{ $metric['key'] === 'storage' ? 'btn-outline-danger' : 'btn-danger' }}">
                                                     <i class="bi bi-arrow-up-circle me-1"></i> Upgrade Paket
                                                 </a>
                                             </div>

@@ -66,11 +66,20 @@ class AssetController extends Controller
             ->orderBy('name')
             ->get();
 
+        $stats = Asset::query()
+            ->where('company_id', $companyId)
+            ->selectRaw('COUNT(*) AS total')
+            ->selectRaw('SUM(status = 1) AS active')
+            ->selectRaw('SUM(responsible_user_id IS NOT NULL) AS assigned')
+            ->selectRaw('COALESCE(SUM(purchase_price), 0) AS value')
+            ->first();
+
         return view('dashboard.asset.index', compact(
             'categories',
             'subCategories',
             'vendors',
-            'users'
+            'users',
+            'stats'
         ));
     }
 
@@ -247,154 +256,77 @@ class AssetController extends Controller
         |--------------------------------------------------------------------------
         */
 
+        $canEdit = Auth::user()->hasPermission('asset.edit');
+        $canDelete = Auth::user()->hasPermission('asset.delete');
+        $palette = ['#2f7be0', '#14b8a6', '#8b5cf6', '#f59e0b', '#ef4444', '#0ea5e9', '#22c55e'];
+
         return DataTables::eloquent($query)
-
             ->addIndexColumn()
-
             ->addColumn('checkbox', function ($asset) {
-
-                return '
-                    <div class="text-center">
-
-                        <input
-                            type="checkbox"
-                            class="form-check-input asset-checkbox"
-                            value="' . $asset->id . '"
-                        >
-
-                    </div>
-                ';
+                return '<div class="text-center"><input type="checkbox" class="form-check-input asset-checkbox" value="' . $asset->id . '"></div>';
             })
-
-            ->addColumn('category_name', function ($asset) {
-
-                return $asset->category
-                    ? $asset->category->category_name
-                    : '-';
+            ->editColumn('asset_code', function ($asset) {
+                return '<a href="' . route('assets.show', encryptId($asset->id)) . '" class="al-code">' . e($asset->asset_code) . '</a>';
             })
+            ->editColumn('asset_name', function ($asset) {
+                $category = trim(($asset->category->category_name ?? '') . ($asset->subCategory ? ' › ' . $asset->subCategory->sub_category_name : ''));
+                $meta = trim(implode(' · ', array_filter([$category, trim($asset->brand . ' ' . $asset->model)])));
 
-            ->addColumn('sub_category_name', function ($asset) {
-
-                return $asset->subCategory
-                    ? $asset->subCategory->sub_category_name
-                    : '-';
+                return '<div class="al-name">' . e($asset->asset_name) . '</div>'
+                    . ($meta !== '' ? '<div class="al-meta">' . e($meta) . '</div>' : '');
             })
+            ->addColumn('responsible_name', function ($asset) use ($palette) {
+                $user = $asset->responsibleUser;
 
+                if (!$user) {
+                    return '<span class="al-muted">—</span>';
+                }
+
+                $initials = collect(explode(' ', trim($user->name)))->filter()->take(2)
+                    ->map(fn ($p) => mb_strtoupper(mb_substr($p, 0, 1)))->implode('');
+
+                return '<span class="al-holder"><span class="al-ava" style="background:' . $palette[$user->id % count($palette)] . '">'
+                    . e($initials) . '</span>' . e($user->name) . '</span>';
+            })
+            ->editColumn('location', function ($asset) {
+                return $asset->location ? e($asset->location) : '<span class="al-muted">—</span>';
+            })
             ->addColumn('vendor_name', function ($asset) {
-
-                return $asset->vendor
-                    ? $asset->vendor->vendor_name
-                    : '-';
+                return $asset->vendor ? e($asset->vendor->vendor_name) : '<span class="al-muted">—</span>';
             })
-
-            ->addColumn('responsible_name', function ($asset) {
-
-                return $asset->responsibleUser
-                    ? $asset->responsibleUser->name
-                    : '-';
-            })
-
-            ->editColumn('purchase_date', function ($asset) {
-
-                if (!$asset->purchase_date) {
-                    return '-';
-                }
-
-                return Carbon::parse(
-                    $asset->purchase_date
-                )->translatedFormat('d F Y');
-            })
-
             ->editColumn('purchase_price', function ($asset) {
-
-                if ($asset->purchase_price === null) {
-                    return '-';
-                }
-
-                return 'Rp ' . number_format(
-                    $asset->purchase_price,
-                    0,
-                    ',',
-                    '.'
-                );
+                return $asset->purchase_price === null
+                    ? '<span class="al-muted">—</span>'
+                    : 'Rp' . number_format($asset->purchase_price, 0, ',', '.');
             })
-
             ->editColumn('status', function ($asset) {
+                $status = $asset->status == 1
+                    ? '<span class="al-chip al-chip-teal">Aktif</span>'
+                    : '<span class="al-chip al-chip-gray">Tidak aktif</span>';
 
-                if ($asset->status == 1) {
-
-                    return '
-                        <span class="badge bg-success">
-                            Active
-                        </span>
-                    ';
+                if ($asset->asset_condition) {
+                    $status .= ' <span class="al-chip al-chip-blue">' . ($asset->asset_condition === 'new' ? 'Baru' : 'Bekas') . '</span>';
                 }
 
-                return '
-                    <span class="badge bg-secondary">
-                        Inactive
-                    </span>
-                ';
+                return $status;
             })
+            ->addColumn('action', function ($asset) use ($canEdit, $canDelete) {
+                $id = encryptId($asset->id);
+                $html = '<div class="al-actions">'
+                    . '<a href="' . route('assets.show', $id) . '" class="al-btn" title="Detail"><i class="bi bi-eye"></i></a>';
 
-            ->addColumn('action', function ($asset) {
+                if ($canEdit) {
+                    $html .= '<a href="' . route('assets.assignment.index', $id) . '" class="al-btn" title="Serahkan / pindahkan"><i class="bi bi-arrow-left-right"></i></a>'
+                        . '<a href="' . route('assets.edit', $id) . '" class="al-btn" title="Ubah"><i class="bi bi-pencil"></i></a>';
+                }
 
-            $encryptedId = encryptId($asset->id);
+                if ($canDelete) {
+                    $html .= '<button type="button" class="al-btn al-btn-danger btn-delete" data-id="' . $id . '" title="Hapus"><i class="bi bi-trash"></i></button>';
+                }
 
-            return '
-                <div class="d-flex gap-1">
-                    <a
-                        href="' . route(
-                            'assets.show',
-                            $encryptedId
-                        ) . '"
-                        class="btn btn-sm btn-info"
-                        title="View Asset"
-                    >
-                        <i class="fa fa-eye"></i>
-                    </a>
-
-                    <a
-                        href="' . route(
-                            'assets.assignment.index',
-                            $encryptedId
-                        ) . '"
-                        class="btn btn-sm btn-primary"
-                        title="Manage Assignment"
-                    >
-                        <i class="fa-solid fa-users-gear"></i>
-                    </a>
-
-                    <a
-                        href="' . route(
-                            'assets.edit',
-                            $encryptedId
-                        ) . '"
-                        class="btn btn-sm btn-warning"
-                        title="Edit Asset"
-                    >
-                        <i class="fa fa-edit"></i>
-                    </a>
-
-                    <button
-                        type="button"
-                        class="btn btn-sm btn-danger btn-delete"
-                        data-id="' . $encryptedId . '"
-                        title="Delete Asset"
-                    >
-                        <i class="fa fa-trash"></i>
-                    </button>
-
-                </div>
-            ';
-        })
-
-            ->rawColumns([
-                'checkbox',
-                'status',
-                'action'
-            ])
-
+                return $html . '</div>';
+            })
+            ->rawColumns(['checkbox', 'asset_code', 'asset_name', 'responsible_name', 'location', 'vendor_name', 'purchase_price', 'status', 'action'])
             ->make(true);
     }
 
@@ -2759,14 +2691,66 @@ public function update(Request $request)
             'responsibleUser',
             'photos',
             'documents',
+            'currentAssignment',
+            'activeMaintenanceRequest.handler',
         ])
+            ->withCount('assignments')
             ->where('company_id', $companyId)
             ->findOrFail($id);
 
+        // Ringkasan riwayat untuk panel QR & tab riwayat.
+        $assignments = $asset->assignments()->with('user:id,name')->limit(5)->get();
+
+        $maintenances = $asset->maintenances()
+            ->with('vendor:id,vendor_name')
+            ->orderByDesc('maintenance_date')
+            ->orderByDesc('id')
+            ->limit(5)
+            ->get();
+
+        $maintenanceStats = [
+            'count' => $asset->maintenances()->where('status', 'completed')->count(),
+            'cost' => (float) $asset->maintenances()->where('status', 'completed')->sum('cost'),
+        ];
+
+        $bookValue = $this->bookValue($asset);
+
         return view(
             'dashboard.asset.show',
-            compact('asset')
+            compact('asset', 'assignments', 'maintenances', 'maintenanceStats', 'bookValue')
         );
+    }
+
+    /**
+     * Nilai buku metode garis lurus per hari ini.
+     *
+     * @return array{value: float, depreciated: float, percent: float}|null
+     */
+    protected function bookValue(Asset $asset): ?array
+    {
+        $price = (float) $asset->purchase_price;
+        $years = (int) $asset->useful_life;
+
+        if ($asset->depreciation_method !== 'straight_line' || $price <= 0 || $years <= 0) {
+            return null;
+        }
+
+        $residual = min((float) $asset->residual_value, $price);
+        $start = $asset->depreciation_start_date ?? $asset->purchase_date;
+
+        if (!$start) {
+            return null;
+        }
+
+        $elapsedMonths = max(0, $start->diffInMonths(now()));
+        $ratio = min(1, $elapsedMonths / ($years * 12));
+        $depreciated = ($price - $residual) * $ratio;
+
+        return [
+            'value' => round($price - $depreciated),
+            'depreciated' => round($depreciated),
+            'percent' => round($ratio * 100, 1),
+        ];
     }
 
 

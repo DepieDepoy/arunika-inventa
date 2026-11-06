@@ -26,6 +26,8 @@ class DatabaseSeeder extends Seeder
             PlanSeeder::class,
             AiProviderSeeder::class,
             StorageAddonRateSeeder::class,
+            // Akun backoffice pertama dari BACKOFFICE_ADMIN_* di .env (dilewati bila email kosong).
+            BackofficeAdminSeeder::class,
         ]);
     }
 }

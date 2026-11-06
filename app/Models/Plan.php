@@ -11,11 +11,13 @@ class Plan extends Model
         'plan_code',
         'plan_name',
         'description',
+        'description_en',
         'price_monthly',
         'price_yearly',
         'trial_days',
         'max_users',
         'max_assets',
+        'max_storage_bytes',
         'status',
     ];
 

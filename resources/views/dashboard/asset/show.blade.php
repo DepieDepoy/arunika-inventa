@@ -1,1024 +1,371 @@
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Asset Detail')
+@section('title', 'Detail Aset')
 
 @section('content')
 
+@php
+    $rp = fn ($v) => 'Rp' . number_format((float) $v, 0, ',', '.');
+    $date = fn ($v) => $v ? \Carbon\Carbon::parse($v)->translatedFormat('d M Y') : null;
+    $holder = $asset->responsibleUser;
+    $since = $asset->currentAssignment?->start_at;
+    $mainPhoto = $asset->photos->first();
+    $initials = fn ($name) => collect(explode(' ', trim((string) $name)))->filter()->take(2)->map(fn ($p) => mb_strtoupper(mb_substr($p, 0, 1)))->implode('');
+    $warrantyActive = $asset->warranty_end && $asset->warranty_end->copy()->endOfDay()->isFuture();
+    $next = $asset->next_maintenance_date ? \Carbon\Carbon::parse($asset->next_maintenance_date) : null;
+    $nextState = !$next ? null : ($next->isPast() && !$next->isToday() ? ['Terlambat', 'ad-chip-red'] : ($next->isToday() ? ['Hari ini', 'ad-chip-amber'] : ($next->diffInDays(now()) <= 7 ? ['Minggu ini', 'ad-chip-blue'] : ['Terjadwal', 'ad-chip-teal'])));
+    $activeRequest = $asset->activeMaintenanceRequest;
+    $encId = encryptId($asset->id);
+    $statusLabels = ['scheduled' => 'Terjadwal', 'in_progress' => 'Dikerjakan', 'completed' => 'Selesai', 'cancelled' => 'Dibatalkan'];
+    $typeLabels = ['preventive' => 'Preventif', 'corrective' => 'Perbaikan', 'inspection' => 'Inspeksi', 'calibration' => 'Kalibrasi'];
+    $assignLabels = ['assign' => 'Diserahkan ke', 'transfer' => 'Dipindahkan ke', 'return' => 'Dikembalikan oleh'];
+@endphp
+
 <style>
-
-    .asset-page-header {
-        margin-bottom: 1.5rem;
-    }
-
-    .asset-section {
-        margin-bottom: 1.5rem;
-    }
-
-    .asset-section-header {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 1.25rem;
-        padding-bottom: 10px;
-        border-bottom: 1px solid #e9ecef;
-    }
-
-    .asset-section-number {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #696cff;
-        color: #fff;
-        font-weight: 600;
-        font-size: 14px;
-        flex-shrink: 0;
-    }
-
-    .asset-section-title {
-        margin: 0;
-        font-size: 16px;
-        font-weight: 600;
-        color: #566a7f;
-    }
-
-    .asset-section-description {
-        margin: 2px 0 0;
-        font-size: 12px;
-        color: #8592a3;
-    }
-
-    .detail-item {
-        margin-bottom: 1.25rem;
-    }
-
-    .detail-label {
-        display: block;
-        font-size: 12px;
-        color: #8592a3;
-        margin-bottom: 5px;
-        font-weight: 500;
-    }
-
-    .detail-value {
-        font-size: 14px;
-        color: #495057;
-        font-weight: 400;
-        word-break: break-word;
-    }
-
-    .detail-value.empty {
-        color: #adb5bd;
-        font-style: italic;
-    }
-
-    .asset-code-box {
-        background: #f8f8ff;
-        border: 1px solid #e7e7ff;
-        border-radius: 8px;
-        padding: 15px 18px;
-    }
-
-    .asset-code-label {
-        font-size: 11px;
-        color: #8592a3;
-        margin-bottom: 3px;
-    }
-
-    .asset-code {
-        font-size: 20px;
-        font-weight: 600;
-        color: #696cff;
-        letter-spacing: .5px;
-    }
-
-    .status-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 5px 10px;
-        border-radius: 6px;
-        font-size: 12px;
-        font-weight: 500;
-    }
-
-    .status-active {
-        background: #e8fadf;
-        color: #71dd37;
-    }
-
-    .status-inactive {
-        background: #ffe8e6;
-        color: #ff3e1d;
-    }
-
-    .asset-photo-card {
-        border: 1px solid #e5e7eb;
-        border-radius: 10px;
-        overflow: hidden;
-        background: #fff;
-        height: 100%;
-    }
-
-    .asset-photo {
-        width: 100%;
-        height: 220px;
-        object-fit: cover;
-        display: block;
-        background: #f8f9fa;
-    }
-
-    .asset-photo-footer {
-        padding: 10px 12px;
-    }
-
-    .asset-photo-name {
-        font-size: 12px;
-        color: #566a7f;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .document-item {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 15px;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        padding: 12px 15px;
-        margin-bottom: 10px;
-        background: #fff;
-    }
-
-    .document-left {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        min-width: 0;
-    }
-
-    .document-icon {
-        font-size: 25px;
-        color: #696cff;
-        flex-shrink: 0;
-    }
-
-    .document-name {
-        font-size: 13px;
-        color: #495057;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .empty-data {
-        padding: 25px;
-        text-align: center;
-        border: 1px dashed #d9dee3;
-        border-radius: 8px;
-        color: #8592a3;
-        font-size: 13px;
-    }
-
-    .description-box {
-        background: #f8f9fa;
-        border-radius: 8px;
-        padding: 15px;
-        color: #495057;
-        font-size: 14px;
-        line-height: 1.7;
-        white-space: pre-line;
-    }
-
+    .ad-wrap { --ad-line: rgba(15,27,45,.08); --ad-muted: #8592a6; --ad-ink: #0f1b2d; }
+    .ad-head { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; margin-bottom:1.25rem; }
+    .ad-head h4 { margin:0; font-weight:800; letter-spacing:-.02em; }
+    .ad-sub { color:var(--ad-muted); font-size:.88rem; margin-top:4px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .ad-actions { display:flex; gap:8px; flex-wrap:wrap; }
+    .ad-actions .btn { border-radius:10px; font-weight:600; }
+    .ad-card { background:var(--bs-body-bg); border:1px solid var(--ad-line); border-radius:16px; box-shadow:0 1px 2px rgba(15,27,45,.04), 0 8px 24px -16px rgba(15,27,45,.16); }
+    .ad-photo { height:260px; border-radius:12px; overflow:hidden; background:linear-gradient(135deg,#dbeafe,#ccfbf1); display:grid; place-items:center; color:#1f5fbf; font-size:4rem; position:relative; }
+    .ad-photo img { width:100%; height:100%; object-fit:cover; }
+    .ad-photo .ad-count { position:absolute; right:12px; bottom:12px; background:rgba(11,36,71,.75); color:#fff; font-size:.75rem; font-weight:700; padding:4px 10px; border-radius:999px; }
+    .ad-thumbs { display:flex; gap:8px; margin-top:10px; overflow-x:auto; }
+    .ad-thumbs a { flex:none; width:64px; height:48px; border-radius:9px; overflow:hidden; border:2px solid transparent; }
+    .ad-thumbs a.on { border-color:#1f5fbf; }
+    .ad-thumbs img { width:100%; height:100%; object-fit:cover; }
+    .ad-tiles { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    .ad-tile { background:var(--bs-tertiary-bg, #f4f7fb); border-radius:11px; padding:10px 12px; min-width:0; }
+    .ad-tile small { display:block; font-size:.68rem; font-weight:700; color:var(--ad-muted); text-transform:uppercase; letter-spacing:.04em; }
+    .ad-tile b { display:block; color:var(--ad-ink); font-size:.9rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    body.dark .ad-tile b, body.dark .ad-card b { color:#fff; }
+    .ad-tile .muted { color:var(--ad-muted); font-weight:500; }
+    .ad-chip { display:inline-flex; align-items:center; gap:5px; font-size:.72rem; font-weight:800; padding:3px 10px; border-radius:999px; }
+    .ad-chip-teal { background:#ccfbf1; color:#0f766e; } .ad-chip-red { background:#fee2e2; color:#b91c1c; }
+    .ad-chip-amber { background:#fef3c7; color:#92400e; } .ad-chip-blue { background:#dbeafe; color:#1d4ed8; }
+    .ad-chip-gray { background:#eef2f7; color:#4b5a6e; }
+    .ad-qr { text-align:center; padding:22px 18px 16px; }
+    .ad-qr-box { width:168px; height:168px; margin:0 auto 12px; padding:10px; border-radius:14px; border:1px solid var(--ad-line); background:#fff; display:grid; place-items:center; }
+    .ad-qr-box img, .ad-qr-box canvas { width:146px !important; height:146px !important; }
+    .ad-qr-code { font-weight:800; letter-spacing:.04em; color:var(--ad-ink); font-size:1.05rem; }
+    .ad-row { display:flex; align-items:center; gap:12px; padding:14px 18px; border-top:1px solid var(--ad-line); font-size:.86rem; }
+    .ad-ava { width:38px; height:38px; border-radius:50%; flex:none; display:grid; place-items:center; color:#fff; font-weight:800; font-size:.8rem; background:linear-gradient(135deg,#1f5fbf,#14b8a6); }
+    .ad-row .ic { width:38px; height:38px; border-radius:11px; flex:none; display:grid; place-items:center; background:#e8f0fd; color:#1f5fbf; font-size:1.05rem; }
+    .ad-row small { color:var(--ad-muted); display:block; }
+    .ad-progress { height:8px; border-radius:99px; background:#eef2f7; overflow:hidden; }
+    .ad-progress span { display:block; height:100%; background:linear-gradient(90deg,#1f5fbf,#14b8a6); border-radius:99px; }
+    .ad-tabs { display:flex; gap:6px; flex-wrap:wrap; border-bottom:1px solid var(--ad-line); padding:0 18px; }
+    .ad-tabs button { border:0; background:none; font-weight:700; font-size:.88rem; color:var(--ad-muted); padding:14px 12px; border-bottom:2px solid transparent; margin-bottom:-1px; }
+    .ad-tabs button.active { color:#1f5fbf; border-color:#1f5fbf; }
+    .ad-pane { display:none; padding:20px; } .ad-pane.active { display:block; }
+    .ad-tl { list-style:none; margin:0; padding:0; position:relative; }
+    .ad-tl::before { content:""; position:absolute; left:15px; top:8px; bottom:8px; width:2px; background:var(--ad-line); }
+    .ad-tl li { display:flex; gap:14px; padding:9px 0; position:relative; }
+    .ad-tl .dot { width:32px; height:32px; border-radius:50%; flex:none; display:grid; place-items:center; font-size:.85rem; position:relative; z-index:1; border:3px solid var(--bs-body-bg); }
+    .ad-tl b { color:var(--ad-ink); font-size:.9rem; }
+    .ad-tl small { color:var(--ad-muted); display:block; font-size:.78rem; }
+    .ad-doc { display:flex; align-items:center; gap:12px; padding:12px 14px; border:1px solid var(--ad-line); border-radius:12px; margin-bottom:8px; }
+    .ad-doc i.bi { font-size:1.4rem; color:#1f5fbf; }
+    .ad-doc .name { flex:1; min-width:0; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .ad-empty { text-align:center; color:var(--ad-muted); padding:28px 10px; font-size:.9rem; }
+    .ad-empty i { font-size:1.8rem; display:block; margin-bottom:6px; opacity:.6; }
+    .ad-alert { display:flex; gap:12px; align-items:center; background:#fff8e6; border:1px solid #fde68a; border-radius:12px; padding:12px 16px; margin-bottom:1rem; font-size:.88rem; color:#92400e; }
+    @media (max-width: 991.98px) { .ad-tiles { grid-template-columns:repeat(2,1fr); } }
+    @media (max-width: 575.98px) { .ad-tiles { grid-template-columns:1fr 1fr; } .ad-photo { height:200px; } }
 </style>
 
-<div class="content-wrapper">
-<div class="container-xxl flex-grow-1 container-p-y">
-    <div class="row">
-        <div class="col-xxl-12 mb-4">
+<div class="container-xxl flex-grow-1 container-p-y ad-wrap">
 
-            <div class="card">
-
-                <!-- ===================================================== -->
-                <!-- HEADER -->
-                <!-- ===================================================== -->
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="mb-0">
-                            Asset Detail
-                        </h5>
-                        <small class="text-muted">
-                            View asset information
-                        </small>
-                    </div>
-                   <div class="d-flex gap-2">
-
-
-        <div class="d-flex gap-2">
-
-            <a
-                href="{{ route('assets.index') }}"
-                class="btn btn-label-secondary"
-            >
-                <i class="fa-solid fa-arrow-left me-1"></i>
-                Back to Assets
+    {{-- HEADER --}}
+    <div class="ad-head ad-card p-3 p-md-4">
+        <div>
+            <a href="{{ route('assets.index') }}" class="text-muted small d-inline-flex align-items-center gap-1 mb-1">
+                <i class="bi bi-arrow-left"></i> Data Aset
             </a>
-
-            <a
-                href="{{ route('assets.edit', encryptId($asset->id)) }}"
-                class="btn btn-warning"
-            >
-                <i class="fa-solid fa-edit me-1"></i>
-                Edit
-            </a>
-
-            <button
-                type="button"
-                class="btn btn-primary"
-                data-bs-toggle="modal"
-                data-bs-target="#printQrModal"
-                onclick="generateAssetQr()"
-            >
-                <i class="fa-solid fa-qrcode me-1"></i>
-                Print QR
-            </button>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-<!-- ========================================================= -->
-<!-- 1. ASSET INFORMATION -->
-<!-- ========================================================= -->
-
-<div class="card asset-section">
-
-    <div class="card-body">
-
-        <div class="asset-section-header">
-
-            <div class="asset-section-number">
-                1
-            </div>
-
-            <div>
-
-                <h6 class="asset-section-title">
-                    Asset Information
-                </h6>
-
-                <p class="asset-section-description">
-                    Basic information about this asset
-                </p>
-
-            </div>
-
-        </div>
-
-
-        <div class="row">
-
-            <div class="col-md-6 detail-item">
-
-                <div class="asset-code-box">
-
-                    <div class="asset-code-label">
-                        ASSET CODE
-                    </div>
-
-                    <div class="asset-code">
-                        {{ $asset->asset_code }}
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <div class="col-md-6 detail-item">
-
-                <span class="detail-label">
-                    Status
-                </span>
-
+            <h4>{{ $asset->asset_name }}</h4>
+            <div class="ad-sub">
+                <span class="fw-bold">{{ $asset->asset_code }}</span>
+                <span>·</span>
+                <span>{{ $asset->category->category_name ?? 'Tanpa kategori' }}@if($asset->subCategory) › {{ $asset->subCategory->sub_category_name }}@endif</span>
                 @if($asset->status == 1)
-
-                    <span class="status-badge status-active">
-                        <i class="fa-solid fa-circle"></i>
-                        Active
-                    </span>
-
+                    <span class="ad-chip ad-chip-teal"><i class="bi bi-circle-fill" style="font-size:.45rem"></i>Aktif</span>
                 @else
-
-                    <span class="status-badge status-inactive">
-                        <i class="fa-solid fa-circle"></i>
-                        Inactive
-                    </span>
-
+                    <span class="ad-chip ad-chip-gray"><i class="bi bi-circle-fill" style="font-size:.45rem"></i>Tidak aktif</span>
                 @endif
-
-            </div>
-
-
-            <div class="col-md-6 detail-item">
-
-                <span class="detail-label">
-                    Asset Name
-                </span>
-
-                <div class="detail-value">
-                    {{ $asset->asset_name }}
-                </div>
-
-            </div>
-
-
-            <div class="col-md-6 detail-item">
-
-                <span class="detail-label">
-                    Category
-                </span>
-
-                <div class="detail-value">
-
-                    {{ $asset->category->category_name ?? '-' }}
-
-                    @if($asset->category && $asset->category->category_code)
-
-                        <small class="text-muted">
-                            ({{ $asset->category->category_code }})
-                        </small>
-
-                    @endif
-
-                </div>
-
-            </div>
-
-
-            <div class="col-md-6 detail-item">
-
-                <span class="detail-label">
-                    Sub Category
-                </span>
-
-                <div class="detail-value">
-
-                    {{ $asset->subCategory->sub_category_name ?? '-' }}
-
-                    @if($asset->subCategory && $asset->subCategory->sub_category_code)
-
-                        <small class="text-muted">
-                            ({{ $asset->subCategory->sub_category_code }})
-                        </small>
-
-                    @endif
-
-                </div>
-
-            </div>
-
-
-            <div class="col-md-6 detail-item">
-
-                <span class="detail-label">
-                    Vendor
-                </span>
-
-                <div class="detail-value">
-                    {{ $asset->vendor->vendor_name ?? '-' }}
-                </div>
-
-            </div>
-
-
-            <div class="col-md-6 detail-item">
-
-                <span class="detail-label">
-                    Brand
-                </span>
-
-                <div class="detail-value">
-
-                    @if($asset->brand)
-
-                        {{ $asset->brand }}
-
-                    @else
-
-                        <span class="empty">
-                            Not specified
-                        </span>
-
-                    @endif
-
-                </div>
-
-            </div>
-
-
-            <div class="col-md-6 detail-item">
-
-                <span class="detail-label">
-                    Model
-                </span>
-
-                <div class="detail-value">
-                    {{ $asset->model ?: 'Not specified' }}
-                </div>
-
-            </div>
-
-
-            <div class="col-md-6 detail-item">
-
-                <span class="detail-label">
-                    Serial Number
-                </span>
-
-                <div class="detail-value">
-                    {{ $asset->serial_number ?: 'Not specified' }}
-                </div>
-
-            </div>
-
-
-            <div class="col-md-12 detail-item">
-
-                <span class="detail-label">
-                    Description
-                </span>
-
-                @if($asset->description)
-
-                    <div class="description-box">
-                        {{ $asset->description }}
-                    </div>
-
-                @else
-
-                    <div class="detail-value empty">
-                        No description available.
-                    </div>
-
+                @if($asset->asset_condition)
+                    <span class="ad-chip ad-chip-blue">{{ $asset->asset_condition === 'new' ? 'Baru' : 'Bekas' }}</span>
                 @endif
-
             </div>
-
         </div>
-
+        <div class="ad-actions">
+            @if(auth()->user()->hasPermission('asset.edit'))
+                <a href="{{ route('assets.assignment.index', $encId) }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left-right me-1"></i> {{ $holder ? 'Pindahkan / Kembalikan' : 'Serahkan' }}
+                </a>
+                <a href="{{ route('assets.edit', $encId) }}" class="btn btn-outline-primary">
+                    <i class="bi bi-pencil me-1"></i> Ubah
+                </a>
+            @endif
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#printQrModal" onclick="generateAssetQr()">
+                <i class="bi bi-qr-code me-1"></i> Cetak QR
+            </button>
+        </div>
     </div>
 
-</div>
-
-
-<!-- ========================================================= -->
-<!-- 2. PURCHASE -->
-<!-- ========================================================= -->
-
-<div class="card asset-section">
-
-    <div class="card-body">
-
-        <div class="asset-section-header">
-
-            <div class="asset-section-number">
-                2
-            </div>
-
+    @if($activeRequest)
+        <div class="ad-alert">
+            <i class="bi bi-tools fs-5"></i>
             <div>
-
-                <h6 class="asset-section-title">
-                    Purchase Information
-                </h6>
-
-                <p class="asset-section-description">
-                    Purchase and invoice information
-                </p>
-
+                Ada request <strong>{{ strtolower(\App\Services\Maintenance\MaintenanceRequestNotifier::TYPE_LABELS[$activeRequest->request_type] ?? $activeRequest->request_type) }}</strong> yang
+                {{ $activeRequest->status === 'pending' ? 'menunggu diambil teknisi' : 'sedang dikerjakan oleh ' . ($activeRequest->handler->name ?? 'teknisi') }}:
+                “{{ \Illuminate\Support\Str::limit($activeRequest->description, 90) }}”
             </div>
-
         </div>
-
-
-        <div class="row">
-
-            <div class="col-md-4 detail-item">
-
-                <span class="detail-label">
-                    Purchase Date
-                </span>
-
-                <div class="detail-value">
-
-                    @if($asset->purchase_date)
-
-                        {{ \Carbon\Carbon::parse($asset->purchase_date)->format('d M Y') }}
-
-                    @else
-
-                        Not specified
-
-                    @endif
-
-                </div>
-
-            </div>
-
-
-            <div class="col-md-4 detail-item">
-
-                <span class="detail-label">
-                    Purchase Price
-                </span>
-
-                <div class="detail-value">
-
-                    Rp
-                    {{ number_format($asset->purchase_price ?? 0, 0, ',', '.') }}
-
-                </div>
-
-            </div>
-
-
-            <div class="col-md-4 detail-item">
-
-                <span class="detail-label">
-                    Purchase Number
-                </span>
-
-                <div class="detail-value">
-
-                    {{ $asset->purchase_invoice ?: 'Not specified' }}
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-<!-- ========================================================= -->
-<!-- 3. DEPRECIATION -->
-<!-- ========================================================= -->
-
-<div class="card asset-section">
-
-    <div class="card-body">
-
-        <div class="asset-section-header">
-
-            <div class="asset-section-number">
-                3
-            </div>
-
-            <div>
-
-                <h6 class="asset-section-title">
-                    Depreciation
-                </h6>
-
-                <p class="asset-section-description">
-                    Asset depreciation configuration
-                </p>
-
-            </div>
-
-        </div>
-
-
-        <div class="row">
-
-            <div class="col-md-4 detail-item">
-
-                <span class="detail-label">
-                    Depreciation Method
-                </span>
-
-                <div class="detail-value">
-
-                    @if($asset->depreciation_method === 'straight_line')
-
-                        Straight Line
-
-                    @else
-
-                        Not specified
-
-                    @endif
-
-                </div>
-
-            </div>
-
-
-            <div class="col-md-4 detail-item">
-
-                <span class="detail-label">
-                    Useful Life
-                </span>
-
-                <div class="detail-value">
-
-                    @if($asset->useful_life)
-
-                        {{ $asset->useful_life }} Years
-
-                    @else
-
-                        Not specified
-
-                    @endif
-
-                </div>
-
-            </div>
-
-
-            <div class="col-md-4 detail-item">
-
-                <span class="detail-label">
-                    Residual Value
-                </span>
-
-                <div class="detail-value">
-
-                    Rp
-                    {{ number_format($asset->residual_value ?? 0, 0, ',', '.') }}
-
-                </div>
-
-            </div>
-
-
-            <div class="col-md-4 detail-item">
-
-                <span class="detail-label">
-                    Depreciation Start Date
-                </span>
-
-                <div class="detail-value">
-
-                    @if($asset->depreciation_start_date)
-
-                        {{ \Carbon\Carbon::parse($asset->depreciation_start_date)->format('d M Y') }}
-
-                    @else
-
-                        Not specified
-
-                    @endif
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-<!-- ========================================================= -->
-<!-- 4. ASSIGNMENT -->
-<!-- ========================================================= -->
-
-<div class="card asset-section">
-
-    <div class="card-body">
-
-        <div class="asset-section-header">
-
-            <div class="asset-section-number">
-                4
-            </div>
-
-            <div>
-
-                <h6 class="asset-section-title">
-                    Asset Assignment
-                </h6>
-
-                <p class="asset-section-description">
-                    Person responsible for this asset
-                </p>
-
-            </div>
-
-        </div>
-
-
-        <div class="row">
-
-            <div class="col-md-6 detail-item">
-
-                <span class="detail-label">
-                    Responsible
-                </span>
-
-                <div class="detail-value">
-                    {{ $asset->responsibleUser->name ?? 'Not assigned' }}
-                </div>
-
-            </div>
-
-
-            <div class="col-md-6 detail-item">
-
-                <span class="detail-label">
-                    Location
-                </span>
-
-                <div class="detail-value">
-                    {{ $asset->location ?: 'Not specified' }}
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-<!-- ========================================================= -->
-<!-- 5. PHOTOS -->
-<!-- ========================================================= -->
-
-<div class="card asset-section">
-
-    <div class="card-body">
-
-        <div class="asset-section-header">
-
-            <div class="asset-section-number">
-                5
-            </div>
-
-            <div>
-
-                <h6 class="asset-section-title">
-                    Asset Photos
-                </h6>
-
-                <p class="asset-section-description">
-                    Photos attached to this asset
-                </p>
-
-            </div>
-
-        </div>
-
-
-        @if($asset->photos->count())
-
-            <div class="row g-3">
-
-                @foreach($asset->photos as $photo)
-
-                    @php
-
-                        $photoUrl = asset(
-                            'storage/' . $photo->file_path
-                        );
-
-                    @endphp
-
-                    <div class="col-md-4">
-
-                        <div class="asset-photo-card">
-
-                            <a
-                                href="{{ $photoUrl }}"
-                                target="_blank"
-                            >
-
-                                <img
-                                    src="{{ $photoUrl }}"
-                                    class="asset-photo"
-                                    alt="{{ $photo->original_name ?? 'Asset Photo' }}"
-                                    onerror="this.style.opacity='0.4';"
-                                >
-
-                            </a>
-
-                            <div class="asset-photo-footer">
-
-                                <div
-                                    class="asset-photo-name"
-                                    title="{{ $photo->original_name ?? basename($photo->file_path) }}"
-                                >
-                                    {{ $photo->original_name ?? basename($photo->file_path) }}
-                                </div>
-
-                            </div>
-
+    @endif
+
+    <div class="row g-4">
+
+        {{-- KIRI: FOTO + INFO --}}
+        <div class="col-lg-8">
+            <div class="ad-card p-3 p-md-4 h-100">
+                <div class="row g-4">
+                    <div class="col-md-5">
+                        <div class="ad-photo" id="adMainPhoto">
+                            @if($mainPhoto)
+                                <img src="{{ asset('storage/' . $mainPhoto->file_path) }}" alt="{{ $asset->asset_name }}">
+                                @if($asset->photos->count() > 1)<span class="ad-count"><i class="bi bi-images me-1"></i>{{ $asset->photos->count() }} foto</span>@endif
+                            @else
+                                <i class="bi bi-box-seam"></i>
+                            @endif
                         </div>
-
+                        @if($asset->photos->count() > 1)
+                            <div class="ad-thumbs">
+                                @foreach($asset->photos as $photo)
+                                    <a href="{{ asset('storage/' . $photo->file_path) }}" class="{{ $loop->first ? 'on' : '' }}" data-photo>
+                                        <img src="{{ asset('storage/' . $photo->file_path) }}" alt="">
+                                    </a>
+                                @endforeach
+                            </div>
+                        @endif
                     </div>
-
-                @endforeach
-
-            </div>
-
-        @else
-
-            <div class="empty-data">
-
-                <i class="fa-solid fa-image mb-2"></i>
-
-                <div>
-                    No photos available.
+                    <div class="col-md-7">
+                        <div class="ad-tiles">
+                            <div class="ad-tile"><small>Vendor</small><b title="{{ $asset->vendor->vendor_name ?? '' }}">{{ $asset->vendor->vendor_name ?? '—' }}</b></div>
+                            <div class="ad-tile"><small>Tanggal beli</small><b>{{ $date($asset->purchase_date) ?? '—' }}</b></div>
+                            <div class="ad-tile"><small>Harga beli</small><b>{{ $asset->purchase_price ? $rp($asset->purchase_price) : '—' }}</b></div>
+                            <div class="ad-tile"><small>Nilai buku</small><b>{{ $bookValue ? $rp($bookValue['value']) : '—' }}</b></div>
+                            <div class="ad-tile"><small>Garansi s/d</small>
+                                <b>{{ $date($asset->warranty_end) ?? '—' }}
+                                    @if($asset->warranty_end)<span class="ad-chip {{ $warrantyActive ? 'ad-chip-teal' : 'ad-chip-gray' }} ms-1" style="font-size:.6rem">{{ $warrantyActive ? 'aktif' : 'habis' }}</span>@endif
+                                </b>
+                            </div>
+                            <div class="ad-tile"><small>Lokasi</small><b title="{{ $asset->location }}">{{ $asset->location ?: '—' }}</b></div>
+                            <div class="ad-tile"><small>Merek</small><b>{{ $asset->brand ?: '—' }}</b></div>
+                            <div class="ad-tile"><small>Model</small><b title="{{ $asset->model }}">{{ $asset->model ?: '—' }}</b></div>
+                            <div class="ad-tile"><small>Nomor seri</small><b title="{{ $asset->serial_number }}">{{ $asset->serial_number ?: '—' }}</b></div>
+                        </div>
+                        @if($asset->description)
+                            <div class="ad-tile mt-2" style="white-space:normal">
+                                <small>Deskripsi</small><div class="small" style="color:inherit">{{ $asset->description }}</div>
+                            </div>
+                        @endif
+                    </div>
                 </div>
-
             </div>
-
-        @endif
-
-    </div>
-
-</div>
-
-
-<!-- ========================================================= -->
-<!-- 6. DOCUMENTS -->
-<!-- ========================================================= -->
-
-<div class="card asset-section">
-
-    <div class="card-body">
-
-        <div class="asset-section-header">
-
-            <div class="asset-section-number">
-                6
-            </div>
-
-            <div>
-
-                <h6 class="asset-section-title">
-                    Invoice / Documents
-                </h6>
-
-                <p class="asset-section-description">
-                    Invoice and supporting documents
-                </p>
-
-            </div>
-
         </div>
 
+        {{-- KANAN: QR + PEMEGANG + RIWAYAT --}}
+        <div class="col-lg-4">
+            <div class="ad-card h-100">
+                <div class="ad-qr">
+                    <div class="ad-qr-box" id="assetQrPreview"></div>
+                    <div class="ad-qr-code">{{ $asset->asset_code }}</div>
+                    <small class="text-muted">Scan untuk lihat detail &amp; lapor kerusakan</small>
+                </div>
+                <div class="ad-row">
+                    @if($holder)
+                        <span class="ad-ava">{{ $initials($holder->name) }}</span>
+                        <div>
+                            <b>{{ $holder->name }}</b>
+                            <small>Pemegang{{ $since ? ' sejak ' . $since->translatedFormat('d M Y') : '' }}</small>
+                        </div>
+                    @else
+                        <span class="ic"><i class="bi bi-person-dash"></i></span>
+                        <div><b>Belum diserahkan</b><small>Aset belum dipegang siapa pun</small></div>
+                    @endif
+                </div>
+                <div class="ad-row">
+                    <span class="ic"><i class="bi bi-clock-history"></i></span>
+                    <div>
+                        <small>Riwayat</small>
+                        <b>{{ $asset->assignments_count }} penugasan · {{ $maintenanceStats['count'] }} maintenance · {{ $rp($maintenanceStats['cost']) }}</b>
+                    </div>
+                </div>
+                <div class="ad-row">
+                    <span class="ic"><i class="bi bi-calendar2-check"></i></span>
+                    <div>
+                        <small>Maintenance berikutnya</small>
+                        @if($next)
+                            <b>{{ $next->translatedFormat('d M Y') }}</b>
+                            <span class="ad-chip {{ $nextState[1] }} ms-1">{{ $nextState[0] }}</span>
+                        @else
+                            <b class="muted">Tidak dijadwalkan</b>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        @if($asset->documents->count())
+        {{-- TAB DETAIL --}}
+        <div class="col-12">
+            <div class="ad-card">
+                <div class="ad-tabs" role="tablist">
+                    <button type="button" class="active" data-ad-tab="finance"><i class="bi bi-cash-stack me-1"></i>Pembelian &amp; Penyusutan</button>
+                    <button type="button" data-ad-tab="maintenance"><i class="bi bi-tools me-1"></i>Maintenance</button>
+                    <button type="button" data-ad-tab="assignment"><i class="bi bi-arrow-left-right me-1"></i>Penugasan</button>
+                    <button type="button" data-ad-tab="docs"><i class="bi bi-paperclip me-1"></i>Dokumen ({{ $asset->documents->count() }})</button>
+                </div>
 
-            @foreach($asset->documents as $document)
+                {{-- Pembelian & penyusutan --}}
+                <div class="ad-pane active" data-ad-pane="finance">
+                    <div class="ad-tiles mb-3">
+                        <div class="ad-tile"><small>No. invoice / pembelian</small><b>{{ $asset->purchase_invoice ?: '—' }}</b></div>
+                        <div class="ad-tile"><small>Metode penyusutan</small><b>{{ $asset->depreciation_method === 'straight_line' ? 'Garis lurus' : '—' }}</b></div>
+                        <div class="ad-tile"><small>Umur manfaat</small><b>{{ $asset->useful_life ? $asset->useful_life . ' tahun' : '—' }}</b></div>
+                        <div class="ad-tile"><small>Nilai residu</small><b>{{ $asset->residual_value ? $rp($asset->residual_value) : '—' }}</b></div>
+                        <div class="ad-tile"><small>Mulai penyusutan</small><b>{{ $date($asset->depreciation_start_date) ?? '—' }}</b></div>
+                        <div class="ad-tile"><small>Periode garansi</small><b>@if($asset->warranty_start || $asset->warranty_end){{ $date($asset->warranty_start) ?? '?' }} – {{ $date($asset->warranty_end) ?? '?' }}@else—@endif</b></div>
+                    </div>
+                    @if($bookValue)
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span>Sudah disusutkan <strong>{{ $rp($bookValue['depreciated']) }}</strong></span>
+                            <span class="text-muted">{{ number_format($bookValue['percent'], 1, ',', '.') }}% dari umur manfaat</span>
+                        </div>
+                        <div class="ad-progress"><span style="width:{{ min(100, $bookValue['percent']) }}%"></span></div>
+                    @else
+                        <div class="text-muted small"><i class="bi bi-info-circle me-1"></i>Isi harga beli, umur manfaat, dan metode penyusutan untuk melihat nilai buku.</div>
+                    @endif
+                    @if($asset->warranty_note)
+                        <div class="ad-tile mt-3" style="white-space:normal"><small>Catatan garansi</small><div class="small">{{ $asset->warranty_note }}</div></div>
+                    @endif
+                </div>
 
-                @php
+                {{-- Maintenance --}}
+                <div class="ad-pane" data-ad-pane="maintenance">
+                    @if($asset->maintenance_required)
+                        <div class="ad-tiles mb-3">
+                            <div class="ad-tile"><small>Jenis</small><b>{{ $typeLabels[$asset->maintenance_type] ?? ($asset->maintenance_type ?: '—') }}</b></div>
+                            <div class="ad-tile"><small>Interval</small><b>{{ $asset->maintenance_interval ? 'Tiap ' . $asset->maintenance_interval . ' ' . ($asset->maintenance_interval_unit ?? '') : '—' }}</b></div>
+                            <div class="ad-tile"><small>Terakhir</small><b>{{ $date($asset->last_maintenance_date) ?? '—' }}</b></div>
+                        </div>
+                    @endif
+                    @if($maintenances->isEmpty())
+                        <div class="ad-empty"><i class="bi bi-tools"></i>Belum ada riwayat maintenance.</div>
+                    @else
+                        <ul class="ad-tl">
+                            @foreach($maintenances as $m)
+                                <li>
+                                    <span class="dot {{ $m->status === 'completed' ? 'ad-chip-teal' : 'ad-chip-blue' }}"><i class="bi {{ $m->status === 'completed' ? 'bi-check-lg' : 'bi-tools' }}"></i></span>
+                                    <div>
+                                        <b>{{ $typeLabels[$m->maintenance_type] ?? ucfirst((string) $m->maintenance_type) }} — {{ $m->action_taken ?: ($m->problem_description ?: 'Maintenance') }}</b>
+                                        <small>
+                                            {{ $date($m->maintenance_date) }} · {{ $statusLabels[$m->status] ?? $m->status }}
+                                            @if($m->technician_name) · {{ $m->technician_name }}@endif
+                                            @if($m->vendor) · {{ $m->vendor->vendor_name }}@endif
+                                            @if($m->cost > 0) · {{ $rp($m->cost) }}@endif
+                                        </small>
+                                    </div>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+                </div>
 
-                    $extension = strtolower(
-                        pathinfo(
-                            $document->file_path,
-                            PATHINFO_EXTENSION
-                        )
-                    );
+                {{-- Penugasan --}}
+                <div class="ad-pane" data-ad-pane="assignment">
+                    @if($assignments->isEmpty())
+                        <div class="ad-empty"><i class="bi bi-person-badge"></i>Belum ada riwayat penugasan.</div>
+                    @else
+                        <ul class="ad-tl">
+                            @foreach($assignments as $a)
+                                <li>
+                                    <span class="dot {{ $a->assignment_type === 'return' ? 'ad-chip-gray' : 'ad-chip-blue' }}"><i class="bi {{ $a->assignment_type === 'return' ? 'bi-box-arrow-in-left' : 'bi-person-check' }}"></i></span>
+                                    <div>
+                                        <b>{{ $assignLabels[$a->assignment_type] ?? 'Diserahkan ke' }} {{ $a->user->name ?? '—' }}</b>
+                                        <small>
+                                            {{ $a->start_at?->translatedFormat('d M Y') }}{{ $a->end_at ? ' – ' . $a->end_at->translatedFormat('d M Y') : ($a->assignment_type !== 'return' ? ' – sekarang' : '') }}
+                                            @if($a->reason) · {{ $a->reason }}@endif
+                                        </small>
+                                    </div>
+                                </li>
+                            @endforeach
+                        </ul>
+                        @if(auth()->user()->hasPermission('asset.edit') && $asset->assignments_count > $assignments->count())
+                            <a href="{{ route('assets.assignment.index', $encId) }}" class="small fw-semibold">Lihat semua riwayat penugasan →</a>
+                        @endif
+                    @endif
+                </div>
 
-                    $icon = $extension === 'pdf'
-                        ? 'fa-file-pdf'
-                        : 'fa-file-image';
-
-                    $documentUrl =
-                        asset(
-                            'storage/' . $document->file_path
-                        );
-
-                @endphp
-
-
-                <div class="document-item">
-
-                    <div class="document-left">
-
-                        <i
-                            class="fa-solid {{ $icon }} document-icon"
-                        ></i>
-
-                        <div style="min-width:0;">
-
-                            <div
-                                class="document-name"
-                                title="{{ $document->original_name ?? basename($document->file_path) }}"
-                            >
+                {{-- Dokumen --}}
+                <div class="ad-pane" data-ad-pane="docs">
+                    @forelse($asset->documents as $document)
+                        @php $ext = strtolower(pathinfo($document->file_path, PATHINFO_EXTENSION)); @endphp
+                        <div class="ad-doc">
+                            <i class="bi {{ $ext === 'pdf' ? 'bi-file-earmark-pdf' : 'bi-file-earmark-image' }}"></i>
+                            <div class="name" title="{{ $document->original_name ?? basename($document->file_path) }}">
                                 {{ $document->original_name ?? basename($document->file_path) }}
+                                <small class="text-muted d-block">{{ strtoupper($ext) }}</small>
                             </div>
-
-                            <small class="text-muted">
-                                {{ strtoupper($extension) }}
-                            </small>
-
+                            <a href="{{ asset('storage/' . $document->file_path) }}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye me-1"></i>Lihat</a>
                         </div>
-
-                    </div>
-
-
-                    <a
-                        href="{{ $documentUrl }}"
-                        target="_blank"
-                        class="btn btn-sm btn-outline-primary"
-                    >
-
-                        <i class="fa-solid fa-eye me-1"></i>
-
-                        View
-
-                    </a>
-
+                    @empty
+                        <div class="ad-empty"><i class="bi bi-paperclip"></i>Belum ada invoice atau dokumen.</div>
+                    @endforelse
                 </div>
-
-            @endforeach
-
-        @else
-
-            <div class="empty-data">
-
-                <i class="fa-solid fa-file mb-2"></i>
-
-                <div>
-                    No documents available.
-                </div>
-
             </div>
-
-        @endif
-
+        </div>
     </div>
-
 </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Tab detail
+    document.querySelectorAll('[data-ad-tab]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var key = btn.getAttribute('data-ad-tab');
+            document.querySelectorAll('[data-ad-tab]').forEach(function (b) { b.classList.toggle('active', b === btn); });
+            document.querySelectorAll('[data-ad-pane]').forEach(function (p) { p.classList.toggle('active', p.getAttribute('data-ad-pane') === key); });
+        });
+    });
 
-<!-- ========================================================= -->
-<!-- BOTTOM ACTION -->
-<!-- ========================================================= -->
+    // Galeri foto
+    var main = document.querySelector('#adMainPhoto img');
+    document.querySelectorAll('[data-photo]').forEach(function (a) {
+        a.addEventListener('click', function (e) {
+            if (!main) return;
+            e.preventDefault();
+            main.src = a.getAttribute('href');
+            document.querySelectorAll('[data-photo]').forEach(function (x) { x.classList.toggle('on', x === a); });
+        });
+    });
 
-<div class="d-flex justify-content-end gap-2 mb-4">
-
-    <a
-        href="{{ route('assets.index') }}"
-        class="btn btn-label-secondary"
-    >
-
-        <i class="fa-solid fa-arrow-left me-1"></i>
-
-        Back
-
-    </a>
-
-
-    <a
-        href="{{ route('assets.edit', encryptId($asset->id)) }}"
-        class="btn btn-warning"
-    >
-
-        <i class="fa-solid fa-edit me-1"></i>
-
-        Edit Asset
-
-    </a>
-
-
-    <button
-        type="button"
-        class="btn btn-primary"
-        data-bs-toggle="modal"
-        data-bs-target="#printQrModal"
-        onclick="generateAssetQr()"
-    >
-
-        <i class="fa-solid fa-qrcode me-1"></i>
-
-        Print QR
-
-    </button>
-
-</div>
-
-
-</div>
-
-</div>
+    // Pratinjau QR (isi sama dengan label cetak)
+    var data = document.getElementById('assetQrData');
+    var box = document.getElementById('assetQrPreview');
+    if (data && box && typeof QRCode !== 'undefined' && data.dataset.qrToken) {
+        new QRCode(box, {
+            text: data.dataset.qrBaseUrl + '/' + data.dataset.qrToken,
+            width: 146, height: 146,
+            colorDark: '#0b2447', colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.M
+        });
+    } else if (box) {
+        box.innerHTML = '<span class="text-muted small">QR belum tersedia</span>';
+    }
+});
+</script>
 
 <!-- =========================================================
      QR DATA

@@ -738,11 +738,12 @@
                     <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
                         <div>
                             <span class="badge bg-success-subtle text-success mb-2">
-                                <i class="bi bi-sliders me-1"></i> Tambah Kapasitas
+                                <i class="bi bi-sliders me-1"></i> Tambah Storage
                             </span>
-                            <h5 class="fw-bold mb-1">Atur kapasitas sesuai kebutuhan</h5>
+                            <h5 class="fw-bold mb-1">Butuh ruang penyimpanan lebih?</h5>
                             <p class="text-muted small mb-0">
-                                Tanpa ganti paket. Langsung aktif setelah pembayaran, harga dihitung prorata.
+                                Tambah storage tanpa ganti paket. Langsung aktif setelah pembayaran, harga dihitung prorata.
+                                Untuk menambah kuota user atau aset, gunakan <a href="#upgrade-card">upgrade paket</a>.
                             </p>
                         </div>
                         <div class="btn-group" role="group" aria-label="Durasi add-on" id="addonDurationGroup">
@@ -767,7 +768,7 @@
                                     $currentLimit = $quota[$quotaKey] ?? null;
                                     $currentUsed = $usage[$quotaKey] ?? 0;
                                 @endphp
-                                <div class="col-md-4">
+                                <div class="{{ count($addonOffer['rates']) === 1 ? 'col-12' : 'col-md-4' }}">
                                     <div class="addon-tile h-100" data-type="{{ $type }}">
                                         <div class="d-flex align-items-center gap-2 mb-2">
                                             <span class="addon-tile-icon"><i class="bi {{ $addonIcons[$type] ?? 'bi-plus' }}"></i></span>

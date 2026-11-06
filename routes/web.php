@@ -4,9 +4,9 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ImportHistoryController;
 
-Route::get('/', function () {
-    return view('landing');
-});
+// Landing page: / (Indonesia) dan /en (English).
+Route::get('/', App\Http\Controllers\LandingController::class)->name('landing');
+Route::get('/en', App\Http\Controllers\LandingController::class)->defaults('locale', 'en')->name('landing.en');
 
 
 /*
@@ -53,6 +53,7 @@ require __DIR__.'/dashboard/vendor.php';
 require __DIR__.'/dashboard/asset.php';
 require __DIR__.'/dashboard/maintenance.php';
 require __DIR__.'/dashboard/subscription.php';
+require __DIR__.'/backoffice.php';
 require __DIR__.'/dashboard/profile.php';
 require __DIR__.'/dashboard/calendar.php';
 require __DIR__.'/dashboard/notification.php';

@@ -41,6 +41,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'api.company' => EnsureUserCompany::class,
             'api.security' => \App\Http\Middleware\ApiSecurityHeaders::class,
             'administrator' => \App\Http\Middleware\EnsureAdministrator::class,
+            'backoffice' => \App\Http\Middleware\EnsureBackofficeAdmin::class,
         ]);
 
         /*
