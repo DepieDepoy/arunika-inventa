@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Dashboard\SubcategoryController;
+use App\Http\Controllers\Dashboard\SubCategoryController as SubcategoryController;
 
 Route::prefix('dashboard')
     ->middleware('auth','subscription.access')

@@ -68,7 +68,7 @@
     <!-- DataTables -->
     <link
         rel="stylesheet"
-        href="{{ asset('assets/css/datatables.min.css') }}"
+        href="{{ asset('assets/css/dataTables.min.css') }}"
     >
 
     <link
