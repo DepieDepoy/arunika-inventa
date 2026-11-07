@@ -103,8 +103,10 @@ Untuk endpoint `PUT` yang membawa file, kirim **POST** dengan field tambahan `_m
 
 | Fitur | Permission |
 |---|---|
-| Lihat semua aset, scan QR | `asset.view` |
-| Aset saya, request saya, foto aset yang dipegang | `asset.view` **atau** `maintenance.create` |
+| Lihat semua aset | `asset.view` |
+| Scan QR | `asset.view` / `asset.my` / `maintenance.create` (detail lengkap hanya untuk administrator & pemegang aset) |
+| Menu **Aset Saya**, request saya, foto aset yang dipegang | `asset.my` (server juga menerima `asset.view` / `maintenance.create`) |
+| Riwayat maintenance aset sendiri | `asset.my` → `GET /my-assets/{id}/maintenances` |
 | Tambah aset | `asset.create` |
 | Ubah aset, assign/transfer/return | `asset.edit` |
 | Hapus aset | `asset.delete` |
@@ -124,8 +126,8 @@ Server tetap memeriksa izin; aplikasi hanya menyesuaikan tampilan.
 | Role (`role_code`) | Untuk | Permission bawaan |
 |---|---|---|
 | Administrator (`administrator`) | Pengelola aplikasi | Semua (tidak dapat diubah) |
-| Teknisi (`teknisi`) | Mengambil & mengerjakan request | `asset.view`, `maintenance.view`, `maintenance.create`, `maintenance.edit`, `maintenance.history` |
-| Karyawan (`karyawan`) | Memegang aset & membuat request | `maintenance.create` |
+| Teknisi (`teknisi`) | Mengambil & mengerjakan request | `asset.view`, `asset.my`, `maintenance.view`, `maintenance.create`, `maintenance.edit`, `maintenance.history` |
+| Karyawan (`karyawan`) | Memegang aset & membuat request | `asset.my`, `maintenance.create`, `maintenance.history` |
 
 Admin dapat mengubah permission Teknisi/Karyawan atau menambah role sendiri. Karena itu aplikasi harus selalu
 membaca `permissions`, bukan menebak dari nama role.
@@ -254,7 +256,7 @@ Nilai `target.screen`: `calendar_event`, `calendar`, `maintenance_request`, `mai
 |---|---|---|---|
 | GET | `/assets?search=` | asset.view | Semua aset perusahaan (cari kode/nama/merek/model/serial) |
 | GET | `/assets/{id}` | asset.view | Detail + foto + riwayat maintenance |
-| GET | `/assets/qr/{qrToken}` | asset.view | Hasil scan QR |
+| GET | `/assets/qr/{qrToken}` | asset.view / asset.my / maintenance.create | Hasil scan QR. `data.access` = `full` (administrator / pemegang: `asset` berisi detail lengkap) atau `limited` (user lain: `asset` hanya kode, nama, kategori, merek, model, kondisi, lokasi, status, `responsible_user.name`, `has_active_request`). `data.is_mine` = aset dipegang user. |
 | GET | `/assets/photos/{photoId}` | asset.view | File foto (kirim header Authorization) |
 | GET | `/assets/{id}/maintenances` | asset.view | Riwayat maintenance aset |
 | GET | `/my-assets`, `/my-assets/{id}`, `/my-assets/{id}/maintenances` | asset.view | Aset yang dipegang user |
@@ -318,7 +320,7 @@ Bila perusahaan belum punya role teknisi, notifikasi request baru dikirim ke Adm
 
 | Method | Path | Izin | Body / Query |
 |---|---|---|---|
-| POST | `/assets/{assetId}/requests` | maintenance.create | `request_type` (`maintenance`/`repair`/`problem`/`other`), `description` (5–5000) |
+| POST | `/assets/{assetId}/requests` | maintenance.create | `request_type` (`maintenance`/`repair`/`problem`/`other`), `description` (5–5000). Jenis `problem` (laporan masalah) boleh untuk aset perusahaan mana pun; jenis lain hanya untuk aset yang dipegang user. |
 | POST | `/assets/{assetId}/maintenance-request` | maintenance.create | `description` (pintasan jenis `maintenance`) |
 | POST | `/assets/{assetId}/repair-request` | maintenance.create | `description` (pintasan jenis `repair`) |
 | PUT | `/maintenance-requests/{id}` | maintenance.create | `description`, `request_type`? — hanya pemohon & selama `pending` |

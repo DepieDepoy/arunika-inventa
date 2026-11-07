@@ -88,7 +88,7 @@ Route::prefix('v1')->group(function () {
             */
 
             Route::middleware(
-                'permission:asset.view|maintenance.create'
+                'permission:asset.view|asset.my|maintenance.create'
             )->group(function () {
 
                 /*
@@ -97,10 +97,13 @@ Route::prefix('v1')->group(function () {
                 |--------------------------------------------------------------------------
                 */
 
+                // Semua user yang memegang aset boleh scan. Detail lengkap
+                // hanya untuk administrator & pemegang aset; selain itu
+                // dikembalikan info ringkas (lihat AssetController::scanQr).
                 Route::get(
                     '/assets/qr/{qrToken}',
                     [AssetController::class, 'scanQr']
-                )->middleware('permission:asset.view')->name(
+                )->name(
                     'api.v1.assets.scan-qr'
                 );
 
@@ -286,7 +289,7 @@ Route::prefix('v1')->group(function () {
             */
 
             Route::middleware(
-                'permission:asset.view|maintenance.create'
+                'permission:asset.view|asset.my|maintenance.create'
             )->group(function () {
 
                 /*

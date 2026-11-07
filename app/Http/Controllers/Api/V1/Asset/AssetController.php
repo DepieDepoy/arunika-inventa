@@ -546,15 +546,59 @@ class AssetController extends Controller
             ], 404);
         }
 
+        /*
+         * access:
+         *  - full    → administrator atau pemegang aset: detail lengkap.
+         *  - limited → user lain: info ringkas + boleh "Laporkan masalah"
+         *              (POST /assets/{id}/requests, request_type=problem).
+         */
+        $isMine = (int) $asset->responsible_user_id === (int) $user->id;
+        $isFull = $isMine || $user->isAdministrator();
+
         return response()->json([
             'success' => true,
             'data' => [
-                'asset' =>
-                    $this->formatAssetDetail(
-                        $asset
-                    ),
+                'access' => $isFull ? 'full' : 'limited',
+                'is_mine' => $isMine,
+                'asset' => $isFull
+                    ? $this->formatAssetDetail($asset)
+                    : $this->formatAssetLimited($asset),
             ],
         ]);
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | INFO RINGKAS ASSET (hasil scan oleh user yang bukan pemegang)
+    |--------------------------------------------------------------------------
+    */
+
+    private function formatAssetLimited(
+        Asset $asset
+    ): array {
+        $activeRequest = $this->getActiveRequest($asset);
+
+        return [
+            'id' => $asset->id,
+            'asset_code' => $asset->asset_code,
+            'asset_name' => $asset->asset_name,
+            'category' => $asset->category
+                ? ['id' => $asset->category->id, 'name' => $asset->category->category_name]
+                : null,
+            'sub_category' => $asset->subCategory
+                ? ['id' => $asset->subCategory->id, 'name' => $asset->subCategory->sub_category_name]
+                : null,
+            'brand' => $asset->brand,
+            'model' => $asset->model,
+            'condition' => $asset->asset_condition,
+            'location' => $asset->location,
+            'status' => $asset->status,
+            'responsible_user' => $asset->responsibleUser
+                ? ['id' => $asset->responsibleUser->id, 'name' => $asset->responsibleUser->name]
+                : null,
+            'has_active_request' => $activeRequest !== null,
+        ];
     }
 
 

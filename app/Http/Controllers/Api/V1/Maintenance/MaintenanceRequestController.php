@@ -417,12 +417,15 @@ class MaintenanceRequestController extends Controller
         |--------------------------------------------------------------------------
         */
 
+        // Laporan masalah ('problem') boleh dibuat siapa pun untuk aset
+        // perusahaannya (mis. setelah scan QR aset rekan kerja).
+        // Jenis lain hanya oleh pemegang aset.
         $asset = Asset::query()
             ->where('id', $assetId)
             ->where('company_id', $user->company_id)
-            ->where(
-                'responsible_user_id',
-                $user->id
+            ->when(
+                $requestType !== 'problem',
+                fn ($query) => $query->where('responsible_user_id', $user->id)
             )
             ->first();
 

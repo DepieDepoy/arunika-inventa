@@ -900,6 +900,13 @@ class UserController extends Controller
             |--------------------------------------------------------------------------
             */
 
+            // Pratinjau sebelumnya yang tidak dikonfirmasi: hapus filenya.
+            $previousFile = session('user_import_file');
+
+            if ($previousFile && $previousFile !== $filePath) {
+                Storage::delete($previousFile);
+            }
+
             session([
                 'user_import_file' =>
                     $filePath,

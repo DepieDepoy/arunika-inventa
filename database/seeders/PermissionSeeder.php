@@ -66,6 +66,13 @@ class PermissionSeeder extends Seeder
                 'action'          => 'print_qr',
                 'description'     => 'Mencetak QR asset',
             ],
+            [
+                'permission_name' => 'My Asset',
+                'permission_code' => 'asset.my',
+                'module'          => 'asset',
+                'action'          => 'my',
+                'description'     => 'Melihat aset yang dipegang sendiri & mengajukan maintenance',
+            ],
 
 
             // =====================================================

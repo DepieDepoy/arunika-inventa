@@ -28,3 +28,8 @@ Illuminate\Support\Facades\Schedule::command('sanctum:prune-expired --hours=24')
 Illuminate\Support\Facades\Schedule::command('analytics:prune')
     ->dailyAt('03:00')
     ->withoutOverlapping();
+
+// File upload import yang tidak dikonfirmasi & file sementara Excel yang tertinggal.
+Illuminate\Support\Facades\Schedule::command('imports:clean-temp')
+    ->hourly()
+    ->withoutOverlapping();

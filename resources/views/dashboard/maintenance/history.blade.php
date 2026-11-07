@@ -345,7 +345,11 @@
                         </h5>
 
                         <small class="text-muted">
-                            Riwayat maintenance yang sudah selesai
+                            @if($seeAll ?? true)
+                                Riwayat maintenance yang sudah selesai untuk semua aset perusahaan
+                            @else
+                                Riwayat maintenance aset Anda: aset yang Anda pegang, ajukan, atau tangani
+                            @endif
                         </small>
 
                     </div>

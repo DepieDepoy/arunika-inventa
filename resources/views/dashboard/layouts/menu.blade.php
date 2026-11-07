@@ -410,11 +410,12 @@
                 ================================================== --}}
                 @if(
                     auth()->user()->hasPermission('asset.view') ||
-                    auth()->user()->hasPermission('asset.import')
+                    auth()->user()->hasPermission('asset.import') ||
+                    auth()->user()->hasPermission('asset.my')
                 )
 
                     @php
-                        $assetActive = request()->routeIs('assets.*');
+                        $assetActive = request()->routeIs('assets.*') || request()->routeIs('my-assets.*');
                     @endphp
 
                     <li class="nav-item">
@@ -544,7 +545,7 @@
                             {{-- =================================================
                                  MY ASSETS
                             ================================================== --}}
-                            @if(auth()->user()->hasPermission('maintenance.create'))
+                            @if(auth()->user()->hasPermission('asset.my'))
 
                                 <li class="nav-item">
 
@@ -591,7 +592,6 @@
                 ================================================== --}}
                 @if(
                     auth()->user()->hasPermission('maintenance.view') ||
-                    auth()->user()->hasPermission('maintenance.create') ||
                     auth()->user()->hasPermission('maintenance.history')
                 )
 

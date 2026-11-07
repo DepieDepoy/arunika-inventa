@@ -36,6 +36,7 @@ class DefaultRoles
                 'name' => 'Teknisi',
                 'permissions' => [
                     'asset.view',
+                    'asset.my',
                     'maintenance.view',
                     'maintenance.create',
                     'maintenance.edit',
@@ -45,7 +46,9 @@ class DefaultRoles
             self::EMPLOYEE => [
                 'name' => 'Karyawan',
                 'permissions' => [
+                    'asset.my',
                     'maintenance.create',
+                    'maintenance.history',
                 ],
             ],
         ];

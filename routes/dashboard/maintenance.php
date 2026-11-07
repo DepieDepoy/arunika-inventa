@@ -198,7 +198,7 @@ Route::prefix('dashboard')
             '/my-assets',
             [MaintenanceController::class, 'myAssets']
         )
-            ->middleware('permission:maintenance.create')
+            ->middleware('permission:asset.my')
             ->name('my-assets.index');
 
 

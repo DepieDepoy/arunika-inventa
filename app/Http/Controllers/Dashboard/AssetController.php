@@ -3045,6 +3045,13 @@ public function update(Request $request)
             |--------------------------------------------------------------------------
             */
 
+            // Pratinjau sebelumnya yang tidak dikonfirmasi: hapus filenya.
+            $previousFile = session('asset_import_file');
+
+            if ($previousFile && $previousFile !== $filePath) {
+                Storage::delete($previousFile);
+            }
+
             session([
                 'asset_import_file' =>
                     $filePath,

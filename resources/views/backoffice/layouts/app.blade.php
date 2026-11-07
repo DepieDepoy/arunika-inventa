@@ -51,6 +51,7 @@
             <div class="grp">Bisnis</div>
             <a href="{{ route('backoffice.dashboard') }}" class="{{ request()->routeIs('backoffice.dashboard') ? 'active' : '' }}"><i class="bi bi-speedometer2"></i> Dashboard</a>
             <a href="{{ route('backoffice.customers.index') }}" class="{{ request()->routeIs('backoffice.customers.*') ? 'active' : '' }}"><i class="bi bi-buildings"></i> Pelanggan</a>
+            <a href="{{ route('backoffice.transactions.index') }}" class="{{ request()->routeIs('backoffice.transactions.*') ? 'active' : '' }}"><i class="bi bi-receipt"></i> Transaksi</a>
             <a href="{{ route('backoffice.analytics.index') }}" class="{{ request()->routeIs('backoffice.analytics.*') ? 'active' : '' }}"><i class="bi bi-graph-up-arrow"></i> Analitik website</a>
             @php $pendingDeletion = \App\Models\AccountDeletionRequest::where('status', 'pending')->count(); @endphp
             <a href="{{ route('backoffice.account-deletions.index') }}" class="{{ request()->routeIs('backoffice.account-deletions.*') ? 'active' : '' }}">

@@ -18,6 +18,7 @@ class PaymentTransaction extends Model
         'company_id',
         'subscription_id',
         'plan_id',
+        'created_by',
 
         // TRANSACTION
         'order_id',
@@ -105,6 +106,21 @@ class PaymentTransaction extends Model
     public function plan(): BelongsTo
     {
         return $this->belongsTo(Plan::class);
+    }
+
+    /** User yang membuat transaksi (diisi otomatis saat dibuat dari dashboard). */
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (self $transaction) {
+            if (! $transaction->created_by && auth()->guard('web')->check()) {
+                $transaction->created_by = auth()->guard('web')->id();
+            }
+        });
     }
 
     /*

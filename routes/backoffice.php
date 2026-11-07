@@ -61,6 +61,9 @@ Route::prefix(config('backoffice.path', 'backoffice'))
                 Route::get('/activity', [ActivityController::class, 'index'])->name('activity.index');
 
                 Route::get('/dashboard', [CustomerController::class, 'dashboard'])->name('dashboard');
+                Route::get('/transactions', [\App\Http\Controllers\Backoffice\TransactionController::class, 'index'])->name('transactions.index');
+                Route::get('/transactions/export', [\App\Http\Controllers\Backoffice\TransactionController::class, 'export'])->name('transactions.export');
+                Route::get('/transactions/{transaction}/invoice', [\App\Http\Controllers\Backoffice\TransactionController::class, 'invoice'])->whereNumber('transaction')->name('transactions.invoice');
                 Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
                 Route::get('/customers/{company}', [CustomerController::class, 'show'])->whereNumber('company')->name('customers.show');
                 Route::post('/customers/{company}/extend-trial', [CustomerController::class, 'extendTrial'])->whereNumber('company')->name('customers.extend-trial');

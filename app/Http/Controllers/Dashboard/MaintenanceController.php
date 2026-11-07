@@ -902,6 +902,31 @@ class MaintenanceController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
+        /*
+        |--------------------------------------------------------------------------
+        | CAKUPAN RIWAYAT
+        |--------------------------------------------------------------------------
+        |
+        | Administrator melihat riwayat semua aset perusahaan.
+        | Pegawai lain hanya aset yang ia pegang, request yang ia ajukan,
+        | atau pekerjaan yang ia tangani (teknisi).
+        |
+        */
+
+        $seeAll = $user->isAdministrator();
+
+        $scope = function ($query) use ($user, $seeAll) {
+            if ($seeAll) {
+                return;
+            }
+
+            $query->where(function ($q) use ($user) {
+                $q->where('requested_by', $user->id)
+                    ->orWhere('handled_by', $user->id)
+                    ->orWhereHas('asset', fn ($a) => $a->where('responsible_user_id', $user->id));
+            });
+        };
+
         $requests = MaintenanceRequest::with([
             /*
             |--------------------------------------------------------------------------
@@ -945,6 +970,7 @@ class MaintenanceController extends Controller
                 'company_id',
                 $user->company_id
             )
+            ->tap($scope)
             ->where(
                 'status',
                 'completed'
@@ -970,6 +996,7 @@ class MaintenanceController extends Controller
                 'company_id',
                 $user->company_id
             )
+            ->tap($scope)
             ->whereIn(
                 'status',
                 [
@@ -995,7 +1022,8 @@ class MaintenanceController extends Controller
             'dashboard.maintenance.history',
             compact(
                 'requests',
-                'assetRequestCounts'
+                'assetRequestCounts',
+                'seeAll'
             )
         );
     }
