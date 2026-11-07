@@ -19,12 +19,12 @@
         .bo-brand { padding:22px 22px 8px; }
         .bo-brand img { height:30px; filter:brightness(0) invert(1); }
         .bo-brand small { display:block; margin-top:8px; font-size:.68rem; letter-spacing:.14em; font-weight:800; color:#22d3ee; }
-        .bo-nav { padding:14px 12px; flex:1; }
+        .bo-nav { padding:14px 12px; flex:1; min-height:0; overflow-y:auto; scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.2) transparent; }
         .bo-nav a { display:flex; align-items:center; gap:12px; padding:10px 14px; border-radius:11px; color:inherit; font-weight:600; font-size:.92rem; margin-bottom:3px; }
         .bo-nav a:hover { background:rgba(255,255,255,.07); color:#fff; }
         .bo-nav a.active { background:rgba(255,255,255,.14); color:#fff; }
         .bo-nav .grp { font-size:.66rem; letter-spacing:.12em; text-transform:uppercase; opacity:.5; margin:16px 14px 6px; font-weight:800; }
-        .bo-me { padding:16px 18px; border-top:1px solid rgba(255,255,255,.1); font-size:.84rem; }
+        .bo-me { flex-shrink:0; padding:16px 18px; border-top:1px solid rgba(255,255,255,.1); font-size:.84rem; }
         .bo-me b { color:#fff; display:block; }
         .bo-main { margin-left:250px; min-height:100vh; }
         .bo-top { display:flex; justify-content:space-between; align-items:center; padding:14px 28px; background:#fff; border-bottom:1px solid rgba(15,27,45,.08); position:sticky; top:0; z-index:20; }
@@ -98,7 +98,13 @@
             <button type="button" class="bo-toggle" onclick="document.body.classList.toggle('bo-open')" aria-label="Menu"><i class="bi bi-list"></i></button>
             <strong class="text-dark">@yield('title', 'Backoffice')</strong>
         </div>
-        <span class="env"><i class="bi bi-shield-lock me-1"></i>Khusus pegawai Vasetra</span>
+        <div class="d-flex align-items-center gap-2">
+            <span class="env d-none d-sm-inline"><i class="bi bi-shield-lock me-1"></i>Khusus pegawai Vasetra</span>
+            <form method="POST" action="{{ route('backoffice.logout') }}" class="m-0">
+                @csrf
+                <button type="submit" class="btn btn-sm btn-outline-secondary" title="Keluar dari backoffice"><i class="bi bi-box-arrow-right"></i><span class="d-none d-md-inline ms-1">Keluar</span></button>
+            </form>
+        </div>
     </div>
 
     @yield('content')
