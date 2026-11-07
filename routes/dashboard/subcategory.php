@@ -13,7 +13,7 @@ Route::prefix('dashboard')
             ->name('subcategory.index');
 
         Route::post('/subcategory/store', [SubcategoryController::class, 'store'])
-            ->middleware('permission:subcategory.store','subscription.active')
+            ->middleware('permission:subcategory.create','subscription.active')
             ->name('subcategory.store');
 
         Route::get('/subcategory/edit/{id}', [SubcategoryController::class, 'edit'])
@@ -21,11 +21,11 @@ Route::prefix('dashboard')
             ->name('subcategory.edit');
 
         Route::post('/subcategory/update', [SubcategoryController::class, 'update'])
-            ->middleware('permission:subcategory.update','subscription.active')
+            ->middleware('permission:subcategory.edit','subscription.active')
             ->name('subcategory.update');
 
         Route::delete('/subcategory/delete/{id}', [SubcategoryController::class, 'destroy'])
-            ->middleware('permission:subcategory.destroy','subscription.active')
+            ->middleware('permission:subcategory.delete','subscription.active')
             ->name('subcategory.destroy');
 
         Route::get('/subcategory/data', [SubcategoryController::class, 'data'])

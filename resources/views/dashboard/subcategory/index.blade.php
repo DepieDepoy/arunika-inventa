@@ -310,10 +310,21 @@ $('#formAddSubcategory').submit(function(e){
                     allowOutsideClick: false,
                     backdrop: true
                 });
+            } else {
+                showRequestError(xhr, 'Subcategory gagal disimpan');
             }
         }
     });
 });
+
+// Popup untuk error selain validasi (mis. 403 tidak punya hak akses, 500).
+function showRequestError(xhr, fallback) {
+    Swal.fire({
+        icon: xhr.status === 403 ? 'warning' : 'error',
+        title: xhr.status === 403 ? 'Akses ditolak' : 'Gagal',
+        text: xhr.responseJSON?.message || fallback
+    });
+}
 
 //edit
 $(document).on('click', '.btn-edit', function() {
@@ -332,6 +343,8 @@ $(document).on('click', '.btn-edit', function() {
             document.getElementById('modalEditSubcategory')
         );
         modal.show();
+    }).fail(function(xhr){
+        showRequestError(xhr, 'Data subcategory gagal dimuat');
     });
 });
 $('#formEditSubcategory').submit(function(e){
@@ -384,6 +397,8 @@ $('#formEditSubcategory').submit(function(e){
                     title: 'Validasi Gagal',
                     html: message
                 });
+            } else {
+                showRequestError(xhr, 'Subcategory gagal diupdate');
             }
         }
     });

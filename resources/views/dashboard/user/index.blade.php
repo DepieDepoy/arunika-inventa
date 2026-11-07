@@ -46,7 +46,7 @@
 
                         <div class="d-flex gap-2">
 
-                            @if(auth()->user()->hasPermission('users.view'))
+                            @if(auth()->user()->hasPermission('user.export'))
 
                                 <a href="{{ route('users.export') }}"
                                    class="btn btn-success">
@@ -60,7 +60,7 @@
                             @endif
 
 
-                            @if(auth()->user()->hasPermission('users.create'))
+                            @if(auth()->user()->hasPermission('user.create'))
                                 <button
                                     type="button"
                                     class="btn btn-primary"
