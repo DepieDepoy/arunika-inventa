@@ -19,7 +19,12 @@ self.addEventListener('push', function (event) {
         data: { url: data.open_url || data.url || '/dashboard/home' },
     };
 
-    event.waitUntil(self.registration.showNotification(title, options));
+    // Beri tahu tab Vasetra yang terbuka agar badge lonceng langsung diperbarui.
+    var informTabs = self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (list) {
+        list.forEach(function (c) { c.postMessage({ type: 'vasetra-push' }); });
+    });
+
+    event.waitUntil(Promise.all([self.registration.showNotification(title, options), informTabs]));
 });
 
 self.addEventListener('notificationclick', function (event) {

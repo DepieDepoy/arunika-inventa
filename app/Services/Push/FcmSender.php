@@ -29,7 +29,20 @@ class FcmSender
             return null;
         }
 
-        $json = json_decode((string) file_get_contents($path), true);
+        // File ada tapi tidak bisa dibaca web server (mis. hak akses 600/640 milik root):
+        // anggap push belum aktif, jangan sampai halaman/pengiriman notifikasi error 500.
+        $raw = is_readable($path) ? @file_get_contents($path) : false;
+        if ($raw === false) {
+            static $warned = false;
+            if (!$warned) {
+                $warned = true;
+                \Illuminate\Support\Facades\Log::warning('Firebase credentials tidak bisa dibaca web server. Periksa hak akses file.', ['path' => $path]);
+            }
+
+            return null;
+        }
+
+        $json = json_decode((string) $raw, true);
 
         return is_array($json) && !empty($json['client_email']) && !empty($json['private_key']) ? $json : null;
     }

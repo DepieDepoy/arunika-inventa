@@ -15,6 +15,28 @@ Route::prefix('dashboard')
         |--------------------------------------------------------------------------
         */
 
+        // Ringkasan lonceng: jumlah belum dibaca + 5 terbaru (untuk update tanpa reload).
+        Route::get('/notifications-summary', function () {
+
+            /** @var User|null $user */
+            $user = Auth::user();
+
+            if (!$user instanceof User) {
+                abort(401);
+            }
+
+            $notifications = $user->notifications()->latest()->take(5)->get();
+
+            return response()->json([
+                'unread' => $user->unreadNotifications()->count(),
+                'html' => view('dashboard.layouts.partials.notification-list', [
+                    'navbarNotifications' => $notifications,
+                ])->render(),
+            ])->header('Cache-Control', 'no-store');
+
+        })->middleware('throttle:60,1')->name('dashboard.notifications.summary');
+
+
         Route::get('/notifications/{id}', function (string $id) {
 
             /** @var User|null $user */
