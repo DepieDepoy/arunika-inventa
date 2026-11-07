@@ -484,6 +484,14 @@
 
                                         <div class="col-lg-12">
 
+                                            <p class="small text-muted text-center mb-3">
+                                                Dengan mendaftar, Anda menyetujui
+                                                <a href="{{ route('legal.terms') }}" target="_blank" rel="noopener">Syarat Layanan</a>
+                                                dan
+                                                <a href="{{ route('legal.privacy') }}" target="_blank" rel="noopener">Kebijakan Privasi</a>
+                                                Vasetra.
+                                            </p>
+
                                             <button
                                                 type="submit"
                                                 class="btn btn-primary w-100"

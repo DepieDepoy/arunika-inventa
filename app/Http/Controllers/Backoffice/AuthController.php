@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Backoffice;
 use App\Http\Controllers\Controller;
 use App\Models\BackofficeAdmin;
 use App\Services\Backoffice\BackofficeAudit;
+use App\Services\Backoffice\TwoFactor;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -65,11 +66,100 @@ class AuthController extends Controller
 
         RateLimiter::clear($key);
 
-        Auth::guard('backoffice')->login($admin, $request->boolean('remember'));
+        // Verifikasi 2 langkah: password benar -> minta kode authenticator dulu
+        // (kecuali perangkat ini sudah dipercaya 30 hari).
+        if (TwoFactor::mustChallenge($admin) && !TwoFactor::isTrusted($request, $admin)) {
+            $request->session()->regenerate();
+            $request->session()->put('bo_2fa_pending', [
+                'id' => $admin->id,
+                'remember' => $request->boolean('remember'),
+                'expires' => now()->addMinutes(5)->timestamp,
+                'tries' => 0,
+            ]);
+
+            return redirect()->route('backoffice.two-factor.challenge');
+        }
+
+        return $this->completeLogin($request, $admin, $request->boolean('remember'));
+    }
+
+    /** Halaman memasukkan kode 6 digit. */
+    public function showChallenge(Request $request): View|RedirectResponse
+    {
+        $pending = $this->pending($request);
+        if (!$pending) {
+            return redirect()->route('backoffice.login')->withErrors(['email' => 'Sesi verifikasi berakhir. Silakan login ulang.']);
+        }
+
+        return view('backoffice.auth.two-factor-challenge', [
+            'email' => TwoFactor::maskEmail(BackofficeAdmin::query()->find($pending['id'])?->email ?? ''),
+        ]);
+    }
+
+    public function verifyChallenge(Request $request): RedirectResponse
+    {
+        $pending = $this->pending($request);
+        $admin = $pending ? BackofficeAdmin::query()->find($pending['id']) : null;
+
+        if (!$admin || !$admin->is_active) {
+            $request->session()->forget('bo_2fa_pending');
+
+            return redirect()->route('backoffice.login')->withErrors(['email' => 'Sesi verifikasi berakhir. Silakan login ulang.']);
+        }
+
+        $code = (string) $request->input('code', '');
+        $recovery = (string) $request->input('recovery_code', '');
+        $secret = TwoFactor::secretOf($admin);
+
+        $ok = $recovery !== ''
+            ? TwoFactor::useRecoveryCode($admin, $recovery)
+            : ($secret && TwoFactor::verify($secret, $code, $admin->id));
+
+        if (!$ok) {
+            $pending['tries']++;
+            BackofficeAudit::log('two_factor_failed', 'Kode verifikasi 2 langkah salah', admin: $admin);
+
+            // Maksimal 5 kali salah, lalu harus login ulang dari awal.
+            if ($pending['tries'] >= 5) {
+                $request->session()->forget('bo_2fa_pending');
+
+                return redirect()->route('backoffice.login')->withErrors(['email' => 'Terlalu banyak kode salah. Silakan login ulang.']);
+            }
+
+            $request->session()->put('bo_2fa_pending', $pending);
+
+            return back()->withErrors(['code' => 'Kode salah atau sudah kedaluwarsa. Sisa percobaan: ' . (5 - $pending['tries']) . '.']);
+        }
+
+        $request->session()->forget('bo_2fa_pending');
+
+        if ($recovery !== '') {
+            BackofficeAudit::log('two_factor_recovery_used', 'Login memakai kode cadangan (sisa ' . TwoFactor::recoveryCodesLeft($admin) . ')', admin: $admin);
+        }
+
+        $response = $this->completeLogin($request, $admin, (bool) $pending['remember']);
+
+        if ($request->boolean('trust_device')) {
+            $response->withCookie(cookie(TwoFactor::TRUST_COOKIE, TwoFactor::trustValue($admin), TwoFactor::TRUST_DAYS * 24 * 60, null, null, $request->isSecure(), true, false, 'Lax'));
+        }
+
+        return $response;
+    }
+
+    private function pending(Request $request): ?array
+    {
+        $pending = $request->session()->get('bo_2fa_pending');
+
+        return is_array($pending) && ($pending['expires'] ?? 0) >= time() ? $pending : null;
+    }
+
+    private function completeLogin(Request $request, BackofficeAdmin $admin, bool $remember): RedirectResponse
+    {
+        Auth::guard('backoffice')->login($admin, $remember);
         $request->session()->regenerate();
 
         $admin->forceFill(['last_login_at' => now(), 'last_login_ip' => $request->ip()])->save();
-        BackofficeAudit::log('login', 'Login backoffice', admin: $admin);
+        BackofficeAudit::log('login', 'Login backoffice' . (TwoFactor::mustChallenge($admin) ? ' (verifikasi 2 langkah)' : ''), admin: $admin);
 
         return redirect()->intended(route('backoffice.home'));
     }

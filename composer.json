@@ -12,6 +12,7 @@
         "laravel/tinker": "^3.0",
         "maatwebsite/excel": "4.0",
         "midtrans/midtrans-php": "2.6",
+        "minishlink/web-push": "^11.0",
         "phpoffice/phpspreadsheet": "^5.9",
         "vinkla/hashids": "^14.0",
         "yajra/laravel-datatables-oracle": "^13.1"

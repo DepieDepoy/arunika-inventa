@@ -140,6 +140,13 @@
                         @if($company->customer_status === 'paid')<p class="mt-2 mb-0">Sudah berbayar — trial tidak perlu diperpanjang.</p>@endif
                     </form>
 
+                    <form method="POST" action="{{ route('backoffice.customers.tera', $company->id) }}">
+                        @csrf
+                        <h6><i class="bi bi-stars me-1"></i> Tera AI {!! ($company->ai_enabled ?? true) ? '<span class="bx-st paid">aktif</span>' : '<span class="bx-st suspended">nonaktif</span>' !!}</h6>
+                        <p>Asisten chat di dashboard &amp; aplikasi perusahaan ini.</p>
+                        <button class="btn btn-sm {{ ($company->ai_enabled ?? true) ? 'btn-outline-secondary' : 'btn-primary' }}">{{ ($company->ai_enabled ?? true) ? 'Nonaktifkan Tera' : 'Aktifkan Tera' }}</button>
+                    </form>
+
                     <form method="POST" action="{{ route('backoffice.customers.status', $company->id) }}" id="statusForm">
                         @csrf
                         @if($suspended)

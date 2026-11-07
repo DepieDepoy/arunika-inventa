@@ -226,12 +226,13 @@ class LandingContent
                     'maps_url' => ['type' => 'text', 'label' => 'Link Google Maps', 'help' => 'Opsional. Di Google Maps: Bagikan › Salin link (diawali https://).'],
                 ],
             ],
-        ];
+        ] + LegalContent::schema();
     }
 
     public function defaults(string $locale = self::DEFAULT_LOCALE): array
     {
-        return $locale === 'en' ? LandingContentEn::defaults() : $this->defaultsId();
+        return ($locale === 'en' ? LandingContentEn::defaults() : $this->defaultsId())
+            + LegalContent::defaults($locale);
     }
 
     /**

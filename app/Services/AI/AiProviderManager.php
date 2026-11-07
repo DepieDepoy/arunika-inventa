@@ -41,6 +41,15 @@ class AiProviderManager
         };
     }
 
+    /**
+     * Dipakai VasetraAiUnderstandingService (sebelumnya method ini belum ada,
+     * sehingga provider AI tidak pernah terpanggil).
+     */
+    public function provider(): AiProviderInterface
+    {
+        return $this->activeDriver();
+    }
+
     public function activeDriver(): AiProviderInterface
     {
         return $this->driver(

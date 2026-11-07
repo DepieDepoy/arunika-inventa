@@ -231,6 +231,8 @@
                                 @endforelse
 
                             </div>
+
+                            @include('dashboard.components.webpush')
                         </div>
                     </div>
                 </li>

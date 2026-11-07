@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Landing;
 
+use App\Http\Controllers\Controller;
 use App\Models\Plan;
 use App\Services\Landing\LandingContent;
 use Illuminate\Support\Facades\App;

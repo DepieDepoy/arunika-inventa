@@ -52,6 +52,11 @@
             <a href="{{ route('backoffice.dashboard') }}" class="{{ request()->routeIs('backoffice.dashboard') ? 'active' : '' }}"><i class="bi bi-speedometer2"></i> Dashboard</a>
             <a href="{{ route('backoffice.customers.index') }}" class="{{ request()->routeIs('backoffice.customers.*') ? 'active' : '' }}"><i class="bi bi-buildings"></i> Pelanggan</a>
             <a href="{{ route('backoffice.analytics.index') }}" class="{{ request()->routeIs('backoffice.analytics.*') ? 'active' : '' }}"><i class="bi bi-graph-up-arrow"></i> Analitik website</a>
+            @php $pendingDeletion = \App\Models\AccountDeletionRequest::where('status', 'pending')->count(); @endphp
+            <a href="{{ route('backoffice.account-deletions.index') }}" class="{{ request()->routeIs('backoffice.account-deletions.*') ? 'active' : '' }}">
+                <i class="bi bi-person-x"></i> Hapus akun
+                @if($pendingDeletion)<span class="ms-auto badge rounded-pill" style="background:#dc2626">{{ $pendingDeletion }}</span>@endif
+            </a>
         @endif
         <div class="grp">Website</div>
         <a href="{{ route('backoffice.cms.index') }}" class="{{ request()->routeIs('backoffice.cms.*') ? 'active' : '' }}"><i class="bi bi-window-sidebar"></i> Konten Landing</a>
@@ -62,10 +67,18 @@
         @if($me?->isSuperAdmin())
             <div class="grp">Tim Vasetra</div>
             <a href="{{ route('backoffice.staff.index') }}" class="{{ request()->routeIs('backoffice.staff.*') ? 'active' : '' }}"><i class="bi bi-people"></i> Pegawai</a>
+            <div class="grp">Pengaturan</div>
+            <a href="{{ route('backoffice.settings.mobile') }}" class="{{ request()->routeIs('backoffice.settings.mobile*') ? 'active' : '' }}"><i class="bi bi-phone"></i> Aplikasi mobile</a>
+            <a href="{{ route('backoffice.settings.tera') }}" class="{{ request()->routeIs('backoffice.settings.tera*') ? 'active' : '' }}"><i class="bi bi-stars"></i> Tera AI</a>
+            <a href="{{ route('backoffice.settings.security') }}" class="{{ request()->routeIs('backoffice.settings.security*') ? 'active' : '' }}"><i class="bi bi-shield-lock"></i> Keamanan</a>
             <a href="{{ route('backoffice.activity.index') }}" class="{{ request()->routeIs('backoffice.activity.*') ? 'active' : '' }}"><i class="bi bi-clock-history"></i> Log aktivitas</a>
         @endif
         <div class="grp">Akun</div>
         <a href="{{ route('backoffice.password.edit') }}" class="{{ request()->routeIs('backoffice.password.*') ? 'active' : '' }}"><i class="bi bi-key"></i> Ganti password</a>
+        <a href="{{ route('backoffice.two-factor.show') }}" class="{{ request()->routeIs('backoffice.two-factor.*') ? 'active' : '' }}">
+            <i class="bi bi-phone-vibrate"></i> Verifikasi 2 langkah
+            @if($me && \App\Services\Backoffice\TwoFactor::inUse() && !\App\Services\Backoffice\TwoFactor::enabled($me))<span class="ms-auto badge rounded-pill" style="background:#f59e0b">!</span>@endif
+        </a>
     </nav>
     <div class="bo-me">
         <b>{{ $me?->name }}</b>

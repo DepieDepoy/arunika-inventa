@@ -35,6 +35,13 @@ class EnsureBackofficeAdmin
 
         Auth::shouldUse('backoffice');
 
+        // Kebijakan mewajibkan verifikasi 2 langkah tapi belum disiapkan -> wajib siapkan dulu.
+        if (\App\Services\Backoffice\TwoFactor::mustSetup($admin)
+            && !$request->routeIs('backoffice.two-factor.*', 'backoffice.logout')) {
+            return redirect()->route('backoffice.two-factor.show')
+                ->with('warning', 'Demi keamanan, aktifkan verifikasi 2 langkah terlebih dahulu.');
+        }
+
         if ($level === 'super' && !$admin->isSuperAdmin()) {
             abort(403, 'Halaman ini khusus Super Admin backoffice.');
         }

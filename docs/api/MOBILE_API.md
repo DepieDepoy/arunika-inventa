@@ -59,9 +59,26 @@ Tampilkan `message` ke user. Pakai `code` untuk logika aplikasi. `errors` hanya 
 | 403 | `CANNOT_MODIFY_SELF` | Tidak boleh menonaktifkan/menghapus/mengganti role akun sendiri |
 | 403 | `SYSTEM_ROLE` | Role Administrator tidak dapat diubah |
 | 422 | `ROLE_IN_USE`, `IN_USE`, `USER_HAS_ASSETS` | Data masih dipakai, tidak bisa dihapus |
+| 403 | `PASSWORD_CHANGE_REQUIRED` | Password awal (dibuat admin / hasil import) belum diganti → paksa layar ganti password. Yang tetap boleh: `/profile*`, `/account/delete`, `/devices`, `/notifications*`, `/logout`, `/app-info` |
+| 403 | `COMPANY_SUSPENDED` | Perusahaan ditangguhkan tim Vasetra → hapus token, tampilkan pesan, kembali ke login |
+| 426 | `UPGRADE_REQUIRED` | Versi aplikasi di bawah minimal → layar wajib update; `data.store_url` berisi link toko |
+| 503 | `MAINTENANCE` | Mode pemeliharaan aplikasi aktif → layar "sedang pemeliharaan" + tombol coba lagi |
+| 422 | `INVALID_PASSWORD` | Password salah saat hapus akun |
 | 429 | `TOO_MANY_LOGIN_ATTEMPTS` | Login dikunci; tampilkan hitung mundur dari `retry_after` (detik) |
 | 429 | `RATE_LIMITED` | Terlalu banyak request; coba lagi nanti |
 | 500 | `SERVER_ERROR` | Tampilkan pesan umum + tombol coba lagi |
+
+### Header wajib dari aplikasi
+
+Kirim di **setiap** request agar server bisa memaksa update & mode pemeliharaan:
+
+```
+Accept: application/json
+X-App-Platform: android        # atau ios
+X-App-Version: 1.0.0           # versi aplikasi (pubspec.yaml)
+```
+
+Versi minimal, versi terbaru, link toko, dan mode pemeliharaan diatur di **Backoffice › Aplikasi mobile** (bukan .env).
 
 ### Tanggal & angka
 
@@ -111,13 +128,18 @@ membaca `permissions`, bukan menebak dari nama role.
 
 ## 2. Alur aplikasi yang disarankan
 
-1. **Splash** → `GET /app-info`. Bila versi aplikasi < `min_app_version`, tampilkan layar wajib update.
-2. Ada token tersimpan? → `GET /me`. Jika 401 → ke login.
+1. **Splash** → `GET /app-info?platform=android&version=1.0.0`.
+   - `update.required = true` → layar wajib update (tombol ke `store_url`).
+   - `update.available = true` → tawarkan update (boleh dilewati).
+   - `maintenance.active = true` → layar pemeliharaan.
+2. Ada token tersimpan? → `GET /me`. Jika 401 / `COMPANY_SUSPENDED` → ke login.
 3. **Login** → `POST /login` dan simpan `token` di secure storage (`flutter_secure_storage`).
 4. Jika `user.must_change_password = true` → paksa ke layar ganti password (`PUT /profile/password`).
 5. Jika `subscription.is_active = false` → layar "Langganan berakhir". Admin diarahkan ke web.
 6. **Beranda** → `GET /dashboard`.
 7. Setelah login & saat token FCM berubah → `POST /devices`. Saat logout → `POST /logout` dengan `fcm_token`.
+8. Menu **Profil** wajib punya: link Kebijakan Privasi & Syarat Layanan (`app-info.links`) dan tombol **Hapus akun** (`POST /account/delete`) — syarat Google Play & App Store.
+9. Logo perusahaan: `company.logo_url` di `/me` (null = tampilkan logo Vasetra).
 
 Token berlaku **60 hari** (`expires_at` pada respons login). Login di perangkat baru akan mengeluarkan sesi di perangkat lama (satu sesi aktif per user).
 
@@ -182,6 +204,14 @@ Respons `data`: `token`, `token_type`, `expires_at`, dan isi yang sama dengan `G
 | PUT | `/profile/password` | `current_password`, `password` (min. 8), `password_confirmation`, `logout_other_devices` (bool, opsional) |
 | POST | `/devices` | `fcm_token`, `platform` (`android`/`ios`), `device_name`?, `app_version`? |
 | DELETE | `/devices` | `fcm_token` |
+| POST | `/account/delete` | `password`, `reason`? — hapus akun sendiri |
+
+**POST /account/delete** — respons `data.status`:
+- `deleted` → akun sudah dihapus & semua token dicabut. Hapus data lokal, kembali ke login.
+- `company_pending` → user adalah **administrator terakhir**; dicatat sebagai permintaan penutupan perusahaan (diproses tim Vasetra ≤ 30 hari). Tampilkan `message`, akun masih bisa dipakai.
+
+**app-info** (publik) juga berisi `links.privacy_policy`, `links.terms_of_service`, `links.delete_account`,
+`features.push_notification`, `features.tera_ai`, dan `support_email`.
 
 ### 3.3 Notifikasi 🔐
 
@@ -422,6 +452,21 @@ Untuk dropdown di form aset tetap gunakan `/lookups/*` (lebih ringan, hanya data
 Respons `ask` sama dengan panel AI di web. Bila jawaban berisi aksi yang perlu persetujuan (mis. membuat jadwal),
 tampilkan ringkasannya lalu kirim `token`-nya ke `/ai/confirm` jika user setuju. Dibatasi 20 permintaan/menit.
 
+- `message` berisi teks polos dengan baris baru (`\n`) dan poin `•` — tampilkan apa adanya (multi-line).
+- `data.url` (opsional) = halaman web terkait; `data.items` (opsional) = daftar aset `{code, name, location, holder}`.
+- Tera bisa dimatikan dari Backoffice (global / per perusahaan) → `ask` membalas **403** dengan `type = "disabled"`.
+  Sembunyikan tombol Tera bila `app-info.features.tera_ai = false`.
+
+### 3.13 Laporan 🔐💳
+
+| Method | Path | Permission | Keterangan |
+|---|---|---|---|
+| GET | `/reports?range=this_month` | report.view | Data laporan lengkap (KPI, tren, kategori, lokasi, maintenance, ringkasan otomatis `highlights`) + daftar `presets` |
+| GET | `/reports/download?format=xlsx&range=this_year` | report.export | Unduh file **Excel** (`xlsx`) atau **PowerPoint** (`pptx`) |
+
+`range`: `this_week`, `last_week`, `this_month`, `last_month`, `this_quarter`, `this_year`, `last_year`, atau `custom` + `from` & `to` (`YYYY-MM-DD`).
+Unduhan berupa file biner (bukan JSON) — simpan lalu buka dengan `open_filex` / share sheet.
+
 ---
 
 ## 4. Langganan & pembayaran di aplikasi
@@ -438,18 +483,40 @@ Pembelian paket, perpanjangan, upgrade, dan add-on **tidak disediakan di aplikas
 
 ```
 SANCTUM_EXPIRATION=86400          # menit (60 hari); kosongkan = tanpa batas
-MOBILE_MIN_APP_VERSION=1.0.0      # naikkan untuk memaksa update
-MOBILE_LATEST_APP_VERSION=1.0.0
-MOBILE_PLAY_STORE_URL=
-MOBILE_APP_STORE_URL=
 MOBILE_SUPPORT_EMAIL=
+FIREBASE_CREDENTIALS=storage/app/private/firebase.json   # service account Firebase (push ke HP)
 ```
+
+Versi minimal/terbaru, link toko, mode pemeliharaan, serta saklar notifikasi browser & aplikasi
+diatur di **Backoffice › Aplikasi mobile** (nilai `MOBILE_*` di .env hanya bawaan awal).
 
 Cron server wajib aktif: `* * * * * php artisan schedule:run` (pengingat langganan & pembersihan token kedaluwarsa).
 
 ---
 
-## 6. Belum tersedia (rencana berikutnya)
+## 6. Push notification (FCM)
 
-- **Pengiriman push notification (FCM)**: token perangkat sudah disimpan (`device_tokens`), pengirimnya belum dibuat. Saat ini notifikasi (termasuk alur request maintenance) dibaca lewat `GET /notifications` (polling / pull-to-refresh). Setelah FCM aktif, notifikasi yang sama akan dikirim sebagai push tanpa perubahan format.
-- Fitur khusus web: import/export Excel, cetak label QR, dan pembelian/upgrade paket.
+Server mengirim lewat **FCM HTTP v1** setiap kali ada notifikasi baru (isi sama dengan `GET /notifications`):
+
+```json
+{
+  "notification": { "title": "Request perbaikan baru", "body": "Laptop Dell · Budi" },
+  "data": { "type": "maintenance", "url": "https://…/dashboard/maintenance-requests", "notification_id": "uuid", "...": "..." },
+  "android": { "priority": "high", "notification": { "channel_id": "vasetra_default" } },
+  "apns": { "payload": { "aps": { "sound": "default", "badge": 1 } } }
+}
+```
+
+Di aplikasi:
+- Buat Android notification channel `vasetra_default` (importance high).
+- Saat notifikasi diketuk: tandai dibaca (`POST /notifications/{notification_id}/read`) lalu navigasi sesuai `type` / muat `GET /notifications`.
+- Token yang tidak berlaku (aplikasi di-uninstall) otomatis dihapus server.
+- Push bisa dimatikan dari Backoffice; notifikasi tetap tersedia di `GET /notifications`.
+
+Persiapan Firebase (sekali): buat project di console.firebase.google.com → tambah app Android (& iOS) →
+`google-services.json` / `GoogleService-Info.plist` untuk aplikasi → *Service accounts › Generate new private key*
+untuk server (`FIREBASE_CREDENTIALS`).
+
+## 7. Khusus web
+
+Import/export Excel, cetak label QR, profil & logo perusahaan, dan pembelian/upgrade paket hanya di dashboard web.

@@ -4,9 +4,8 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ImportHistoryController;
 
-// Landing page: / (Indonesia) dan /en (English).
-Route::get('/', App\Http\Controllers\LandingController::class)->middleware('track:landing')->name('landing');
-Route::get('/en', App\Http\Controllers\LandingController::class)->defaults('locale', 'en')->middleware('track:landing')->name('landing.en');
+// Halaman publik: landing, kebijakan privasi, syarat layanan, hapus akun.
+require __DIR__.'/landing.php';
 
 
 /*

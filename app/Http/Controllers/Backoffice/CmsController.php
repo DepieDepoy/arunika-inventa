@@ -173,6 +173,7 @@ class CmsController extends Controller
         return match ($field['type']) {
             'text' => $this->str($raw, 300),
             'textarea' => $this->str($raw, 3000),
+            'longtext' => $this->str($raw, 30000),
             'icon' => is_string($raw) && preg_match('/^bi-[a-z0-9-]{1,60}$/', trim($raw)) ? trim($raw) : 'bi-check2-circle',
             'lines' => collect(preg_split('/\r\n|\r|\n/', (string) $raw))
                 ->map(fn ($l) => $this->str($l, 300))

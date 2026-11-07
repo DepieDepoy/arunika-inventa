@@ -1200,7 +1200,11 @@ footer{background:#fff;border-top:1px solid var(--line);padding:56px 0 28px;font
     </div>
     <div class="copy">
       <span>© {{ now()->year }} Vasetra{{ $ft['company'] ? ' · ' . $ft['company'] : '' }}</span>
-      <span>Asset Lifecycle Platform</span>
+      <span class="legal-links">
+        <a href="{{ $isEn ? route('legal.privacy.en') : route('legal.privacy') }}">{{ __('Kebijakan Privasi') }}</a> ·
+        <a href="{{ $isEn ? route('legal.terms.en') : route('legal.terms') }}">{{ __('Syarat Layanan') }}</a> ·
+        <a href="{{ $isEn ? route('account-deletion.create.en') : route('account-deletion.create') }}">{{ __('Hapus Akun') }}</a>
+      </span>
     </div>
   </div>
 </footer>

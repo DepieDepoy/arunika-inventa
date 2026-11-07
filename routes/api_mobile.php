@@ -38,25 +38,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     |----------------------------------------------------------------------
     */
 
-    // Info aplikasi: versi minimal (paksa update), tautan toko, dukungan.
-    Route::get('/app-info', function () {
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'name' => config('app.name'),
-                'api_version' => 'v1',
-                'min_app_version' => config('mobile.min_app_version'),
-                'latest_app_version' => config('mobile.latest_app_version'),
-                'store_url' => [
-                    'android' => config('mobile.store_url.android'),
-                    'ios' => config('mobile.store_url.ios'),
-                ],
-                'web_url' => url('/'),
-                'support_email' => config('mobile.support_email'),
-                'server_time' => now()->toIso8601String(),
-            ],
-        ]);
-    })->name('app-info');
+    // Info aplikasi: wajib update, pemeliharaan, tautan legal, fitur aktif.
+    Route::get('/app-info', \App\Http\Controllers\Api\V1\AppInfoController::class)->name('app-info');
 
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])
         ->middleware('throttle:5,1')
@@ -75,6 +58,11 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::put('/profile/password', [ProfileController::class, 'changePassword'])
             ->middleware('throttle:10,1')
             ->name('profile.password');
+
+        // Hapus akun sendiri (wajib Google Play & App Store).
+        Route::post('/account/delete', [\App\Http\Controllers\Api\V1\AccountController::class, 'destroy'])
+            ->middleware('throttle:5,1')
+            ->name('account.delete');
 
         Route::post('/devices', [DeviceController::class, 'store'])->name('devices.store');
         Route::delete('/devices', [DeviceController::class, 'destroy'])->name('devices.destroy');

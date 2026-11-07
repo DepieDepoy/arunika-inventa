@@ -392,6 +392,7 @@
         font-size: 13px;
         line-height: 1.7;
         color: #475467;
+        white-space: pre-line;
     }
 
     .vi-response-loading {

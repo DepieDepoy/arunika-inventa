@@ -20,6 +20,8 @@ class EnsurePasswordChanged
         'verification.*',
         'password.*',
         'api.v1.profile.*',
+        'api.v1.account.*',
+        'api.v1.app-info',
         'api.v1.logout',
         'api.v1.devices.*',
         'api.v1.app-info',

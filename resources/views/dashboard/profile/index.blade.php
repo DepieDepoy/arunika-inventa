@@ -602,8 +602,7 @@
 
     </div>
 
-
-    
+    @include('dashboard.profile._delete-account')
 
 </div>
 

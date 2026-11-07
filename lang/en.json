@@ -250,5 +250,11 @@
     "oleh Dewi": "by Dewi",
     "sejak 09.10": "since 09:10",
     "terakhir kapan ya? lupa…": "when was the last one? forgot…",
-    "user": "users"
+    "user": "users",
+    "Kebijakan Privasi": "Privacy Policy",
+    "Syarat Layanan": "Terms of Service",
+    "Hapus Akun": "Delete Account",
+    "Email wajib diisi.": "Email is required.",
+    "Format email tidak valid.": "Please enter a valid email address.",
+    "Centang pernyataan persetujuan terlebih dahulu.": "Please tick the confirmation box first."
 }

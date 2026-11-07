@@ -50,4 +50,23 @@ Route::prefix('dashboard')
         })->name('dashboard.notifications.read');
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | Notifikasi browser (Web Push)
+        |--------------------------------------------------------------------------
+        */
+
+        Route::post('/push/subscribe', [\App\Http\Controllers\Dashboard\PushSubscriptionController::class, 'store'])
+            ->middleware('throttle:30,1')
+            ->name('push.subscribe');
+
+        Route::post('/push/unsubscribe', [\App\Http\Controllers\Dashboard\PushSubscriptionController::class, 'destroy'])
+            ->middleware('throttle:30,1')
+            ->name('push.unsubscribe');
+
+        Route::post('/push/test', [\App\Http\Controllers\Dashboard\PushSubscriptionController::class, 'test'])
+            ->middleware('throttle:5,1')
+            ->name('push.test');
+
+
     });

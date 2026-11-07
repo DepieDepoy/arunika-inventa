@@ -157,7 +157,10 @@
     <!-- SweetAlert -->
     @include('dashboard.components.sweetalert')
 
-  @include('components.vasetra-ai')
+  {{-- Tera AI: bisa dimatikan dari Backoffice (global / per perusahaan) --}}
+  @if(\App\Services\Intelligence\TeraSettings::enabledFor(auth()->user()?->company))
+    @include('components.vasetra-ai')
+  @endif
     @stack('scripts')
 
 </body>

@@ -55,4 +55,18 @@ Route::prefix('dashboard')
         ])
         ->name('profile.password');
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | Hapus Akun Sendiri
+        |--------------------------------------------------------------------------
+        */
+
+        Route::post('/profile/delete-account', [
+            \App\Http\Controllers\Dashboard\AccountController::class,
+            'destroy'
+        ])
+        ->middleware('throttle:5,1')
+        ->name('profile.delete-account');
+
     });

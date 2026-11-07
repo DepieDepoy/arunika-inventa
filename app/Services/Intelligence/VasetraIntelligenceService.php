@@ -39,6 +39,48 @@ class VasetraIntelligenceService
 
         /*
         |--------------------------------------------------------------------------
+        | Tera dinonaktifkan dari Backoffice (global / per perusahaan)
+        |--------------------------------------------------------------------------
+        */
+
+        if (!TeraSettings::enabledFor($user->company)) {
+            return [
+                'success' => false,
+                'type' => 'disabled',
+                'message' => 'Tera AI sedang dinonaktifkan. Silakan hubungi tim Vasetra.',
+            ];
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Mesin Dasar (gratis): pahami singkatan & jawab langsung dari database.
+        | Mode Gemini: bila mesin dasar belum paham, Gemini hanya menerjemahkan
+        | pertanyaan (tanpa data perusahaan), jawaban tetap dari database.
+        |--------------------------------------------------------------------------
+        */
+
+        $engine = app(Basic\TeraBasicEngine::class);
+        $plan = $engine->understand($user, $question);
+
+        if (!$plan && TeraSettings::mode() === 'gemini') {
+            $plan = app(\App\Services\AI\GeminiClassifier::class)->classify($question);
+        }
+
+        // Tambah aset lewat percakapan butuh provider AI penuh; selain itu jawab dari database.
+        $hasLlm = \App\Models\AiProvider::query()->where('is_active', true)->exists();
+
+        if ($plan && ($plan['intent'] !== 'create_hint' || !$hasLlm)) {
+            return $engine->execute($user, $plan);
+        }
+
+        if (!$plan && !$hasLlm) {
+            return $engine->help($user, 'Maaf, saya belum menangkap maksudnya.');
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
         | Build context
         |--------------------------------------------------------------------------
         */

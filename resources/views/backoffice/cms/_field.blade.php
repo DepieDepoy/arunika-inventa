@@ -11,6 +11,11 @@
         <textarea class="form-control" name="{{ $fname }}" id="{{ $fid }}" rows="3" maxlength="3000">{{ $val }}</textarea>
         @break
 
+    @case('longtext')
+        <textarea class="form-control font-monospace" name="{{ $fname }}" id="{{ $fid }}" rows="22" maxlength="30000" style="font-size:.84rem">{{ $val }}</textarea>
+        <div class="cms-help">Format: baris diawali <code>## </code> = judul bagian, <code>- </code> = poin, <code>**teks**</code> = tebal, baris kosong = paragraf baru.</div>
+        @break
+
     @case('lines')
         <textarea class="form-control" name="{{ $fname }}" id="{{ $fid }}" rows="{{ max(3, count((array) $val) + 1) }}">{{ implode("\n", (array) $val) }}</textarea>
         @break

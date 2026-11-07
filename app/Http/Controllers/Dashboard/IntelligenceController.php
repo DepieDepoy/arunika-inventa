@@ -36,7 +36,8 @@ class IntelligenceController extends Controller
         );
 
         return response()->json(
-            $result
+            $result,
+            ($result['type'] ?? '') === 'disabled' ? 403 : 200
         );
     }
 

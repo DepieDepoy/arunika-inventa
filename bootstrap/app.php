@@ -16,7 +16,6 @@ use App\Http\Middleware\CheckPermission;
 use App\Http\Middleware\CheckSubscriptionAccess;
 use App\Http\Middleware\CheckSubscriptionActive;
 use App\Http\Middleware\EnsureUserCompany;
-use App\Http\Middleware\Cors;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -60,19 +59,12 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Perusahaan ditangguhkan & password awal juga berlaku untuk API mobile.
         $middleware->api(append: [
+            \App\Http\Middleware\CheckAppVersion::class,
             \App\Http\Middleware\EnsureCompanyActive::class,
             \App\Http\Middleware\EnsurePasswordChanged::class,
         ]);
 
-        /*
-        |--------------------------------------------------------------------------
-        | CORS
-        |--------------------------------------------------------------------------
-        */
-
-        $middleware->append(
-            Cors::class
-        );
+        // CORS diatur oleh HandleCors bawaan Laravel lewat config/cors.php.
     })
 
     /*

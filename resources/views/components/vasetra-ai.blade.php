@@ -866,6 +866,9 @@
     line-height: 1.55;
 
     word-break: break-word;
+
+    /* Jawaban Tera berisi daftar per baris. */
+    white-space: pre-line;
 }
 
 
