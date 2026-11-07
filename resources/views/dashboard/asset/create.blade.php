@@ -698,11 +698,11 @@
                         <div>
 
                             <h6 class="asset-section-title">
-                                Depreciation
+                                Depreciation &amp; Warranty
                             </h6>
 
                             <p class="asset-section-description">
-                                Asset depreciation configuration
+                                Asset depreciation and warranty period
                             </p>
 
                         </div>
@@ -827,6 +827,8 @@
                         </div>
 
                     </div>
+
+                    @include('dashboard.asset.partials.warranty-fields', ['asset' => null])
 
                 </div>
 

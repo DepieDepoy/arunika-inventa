@@ -89,7 +89,9 @@ class AssetReport
         return DB::table('assets')
             ->where('assets.company_id', $companyId)
             ->where('assets.created_at', '<=', $at)
-            ->where(fn ($q) => $q->whereNull('assets.deleted_at')->orWhere('assets.deleted_at', '>', $at));
+            ->where(fn ($q) => $q->whereNull('assets.deleted_at')->orWhere('assets.deleted_at', '>', $at))
+            // Aset yang sudah dihapuskan pada tanggal laporan tidak dihitung.
+            ->where(fn ($q) => $q->whereNull('assets.disposed_at')->orWhere('assets.disposed_at', '>', $at->toDateString()));
     }
 
     protected function kpis(int $companyId, ReportPeriod $period, CarbonImmutable $at): array
@@ -138,7 +140,9 @@ class AssetReport
         return [
             'new_assets' => (int) $new->n,
             'new_assets_value' => (float) $new->v,
-            'disposed_assets' => DB::table('assets')->where('company_id', $companyId)->whereBetween('deleted_at', $range)->count(),
+            'disposed_assets' => DB::table('assets')->where('company_id', $companyId)->whereBetween('deleted_at', $range)->count()
+                + DB::table('asset_disposals')->where('company_id', $companyId)->whereNull('cancelled_at')
+                    ->whereBetween('disposal_date', [$period->from->toDateString(), $period->to->toDateString()])->count(),
             'maintenance_count' => (int) $maint->n,
             'maintenance_done' => (int) $maint->done,
             'maintenance_cost' => (float) $maint->cost,

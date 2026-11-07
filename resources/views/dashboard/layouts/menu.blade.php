@@ -542,6 +542,28 @@
                                 </li>
 
                             @endif
+
+                            {{-- PENGHAPUSAN ASET --}}
+                            @if(auth()->user()->hasPermission('asset.view') || auth()->user()->hasPermission('asset.dispose'))
+
+                                <li class="nav-item">
+
+                                    <a class="nav-link {{ request()->routeIs('assets.disposals.*') ? 'active' : '' }}"
+                                       href="{{ route('assets.disposals.index') }}">
+
+                                        <i class="icon">
+                                            <svg class="icon-10" xmlns="http://www.w3.org/2000/svg" width="10" viewBox="0 0 24 24" fill="currentColor">
+                                                <circle cx="12" cy="12" r="8" fill="currentColor"/>
+                                            </svg>
+                                        </i>
+
+                                        <span class="item-name">Penghapusan</span>
+
+                                    </a>
+
+                                </li>
+
+                            @endif
                             {{-- =================================================
                                  MY ASSETS
                             ================================================== --}}

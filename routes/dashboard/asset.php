@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Dashboard\AssetController;
 use App\Http\Controllers\Dashboard\AssetAssignmentController;
+use App\Http\Controllers\Dashboard\AssetDisposalController;
+use App\Http\Controllers\Dashboard\AssetLocationController;
 
 Route::prefix('dashboard')
     ->middleware(['auth', 'subscription.access'])
@@ -179,6 +181,7 @@ Route::prefix('dashboard')
 
         Route::prefix('assets/{id}/assignment')
             ->name('assets.assignment.')
+            ->middleware('permission:asset.edit')
             ->group(function () {
 
                 // Assignment Page
@@ -209,5 +212,44 @@ Route::prefix('dashboard')
                 ])->name('return');
 
             });
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Pindah Lokasi
+        |--------------------------------------------------------------------------
+        */
+
+        Route::post('/assets/{id}/location', [AssetLocationController::class, 'store'])
+            ->middleware(['permission:asset.move', 'subscription.active'])
+            ->name('assets.location.move');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Penghapusan Aset (disposal)
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get('/asset-disposals', [AssetDisposalController::class, 'index'])
+            ->middleware('permission:asset.view|asset.dispose')
+            ->name('assets.disposals.index');
+
+        Route::get('/asset-disposals/export', [AssetDisposalController::class, 'export'])
+            ->middleware('permission:asset.view|asset.dispose')
+            ->name('assets.disposals.export');
+
+        Route::post('/asset-disposals/{disposal}/cancel', [AssetDisposalController::class, 'cancel'])
+            ->whereNumber('disposal')
+            ->middleware(['permission:asset.dispose', 'subscription.active'])
+            ->name('assets.disposals.cancel');
+
+        Route::get('/assets/{id}/dispose/preview', [AssetDisposalController::class, 'preview'])
+            ->middleware('permission:asset.dispose')
+            ->name('assets.dispose.preview');
+
+        Route::post('/assets/{id}/dispose', [AssetDisposalController::class, 'store'])
+            ->middleware(['permission:asset.dispose', 'subscription.active'])
+            ->name('assets.dispose');
 
     });

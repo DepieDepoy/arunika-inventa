@@ -73,6 +73,20 @@ class PermissionSeeder extends Seeder
                 'action'          => 'my',
                 'description'     => 'Melihat aset yang dipegang sendiri & mengajukan maintenance',
             ],
+            [
+                'permission_name' => 'Move Asset Location',
+                'permission_code' => 'asset.move',
+                'module'          => 'asset',
+                'action'          => 'move',
+                'description'     => 'Memindahkan lokasi aset & melihat riwayat lokasi',
+            ],
+            [
+                'permission_name' => 'Dispose Asset',
+                'permission_code' => 'asset.dispose',
+                'module'          => 'asset',
+                'action'          => 'dispose',
+                'description'     => 'Menghapuskan aset (rusak, hilang, dijual, dihibahkan) & membatalkannya',
+            ],
 
 
             // =====================================================

@@ -55,7 +55,7 @@
     .al-holder { display:inline-flex; align-items:center; gap:8px; white-space:nowrap; }
     .al-ava { width:26px; height:26px; border-radius:50%; display:inline-grid; place-items:center; color:#fff; font-size:.62rem; font-weight:800; flex:none; }
     .al-chip { display:inline-block; font-size:.7rem; font-weight:800; padding:3px 9px; border-radius:999px; white-space:nowrap; }
-    .al-chip-teal { background:#ccfbf1; color:#0f766e; } .al-chip-gray { background:#eef2f7; color:#4b5a6e; } .al-chip-blue { background:#dbeafe; color:#1d4ed8; }
+    .al-chip-teal { background:#ccfbf1; color:#0f766e; } .al-chip-gray { background:#eef2f7; color:#4b5a6e; } .al-chip-blue { background:#dbeafe; color:#1d4ed8; } .al-chip-red { background:#fee2e2; color:#b91c1c; }
     .al-actions { display:flex; gap:4px; }
     .al-btn { width:32px; height:32px; border-radius:9px; display:inline-grid; place-items:center; border:1px solid rgba(15,27,45,.1); background:var(--bs-body-bg); color:#4b5a6e; }
     .al-btn:hover { border-color:#1f5fbf; color:#1f5fbf; }
@@ -102,6 +102,9 @@
                             <span>· <b>{{ number_format((int) $stats->assigned, 0, ',', '.') }}</b> dipegang karyawan</span>
                             <span>· <b>{{ $categories->count() }}</b> kategori</span>
                             <span>· nilai beli <b>Rp{{ number_format((float) $stats->value, 0, ',', '.') }}</b></span>
+                            @if($stats->disposed > 0)
+                                <span>· <a href="{{ route('assets.disposals.index', ['period' => 'all']) }}" class="text-danger fw-semibold">{{ number_format((int) $stats->disposed, 0, ',', '.') }} dihapuskan</a></span>
+                            @endif
                         </div>
                     </div>
                     <div class="al-toolbar">
@@ -111,6 +114,7 @@
                         @if(auth()->user()->hasPermission('asset.export'))
                             <a href="{{ route('assets.export') }}" class="al-tbtn"><i class="bi bi-file-earmark-spreadsheet"></i> Export</a>
                         @endif
+                        <a href="{{ route('assets.disposals.index') }}" class="al-tbtn" title="Aset yang dihapuskan: rusak, hilang, dijual, dihibahkan"><i class="bi bi-archive"></i> Penghapusan</a>
                         @if(auth()->user()->hasPermission('asset.print_qr'))
                             <button type="button" class="al-tbtn" id="btnPrintQr" title="Centang aset di tabel, lalu cetak"><i class="bi bi-qr-code"></i> Cetak QR</button>
                         @endif
@@ -301,6 +305,10 @@
 
                                     <option value="0">
                                         Tidak aktif
+                                    </option>
+
+                                    <option value="2">
+                                        Dihapuskan
                                     </option>
 
                                 </select>

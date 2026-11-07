@@ -136,6 +136,16 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                 ->middleware('permission:asset.edit')
                 ->name('assets.return');
 
+            Route::get('/assets/{id}/locations', [AssetManageController::class, 'locationHistory'])
+                ->whereNumber('id')
+                ->middleware('permission:asset.view|asset.move')
+                ->name('assets.locations');
+
+            Route::post('/assets/{id}/location', [AssetManageController::class, 'moveLocation'])
+                ->whereNumber('id')
+                ->middleware('permission:asset.move')
+                ->name('assets.location.move');
+
             // Jadwal & riwayat maintenance.
             Route::middleware('permission:maintenance.view')->group(function () {
                 Route::get('/maintenances', [MaintenanceScheduleController::class, 'index'])->name('maintenances.index');

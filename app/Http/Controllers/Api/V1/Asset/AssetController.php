@@ -55,6 +55,7 @@ class AssetController extends Controller
                 'warranty_note',
                 'location',
                 'status',
+                'disposed_at',
                 'maintenance_required',
                 'maintenance_type',
                 'maintenance_trigger',
@@ -65,6 +66,13 @@ class AssetController extends Controller
                 'next_maintenance_date',
             ])
             ->orderByDesc('id');
+
+        // ?status=0|1|2 memfilter status; tanpa itu aset dihapuskan (2) disembunyikan.
+        if ($request->filled('status') && in_array((string) $request->query('status'), ['0', '1', '2'], true)) {
+            $query->where('status', (int) $request->query('status'));
+        } elseif (!$request->boolean('include_disposed')) {
+            $query->inService();
+        }
 
         $this->applySearch(
             $query,
@@ -143,6 +151,7 @@ class AssetController extends Controller
                 'warranty_note',
                 'location',
                 'status',
+                'disposed_at',
                 'maintenance_required',
                 'maintenance_type',
                 'maintenance_trigger',
@@ -548,12 +557,13 @@ class AssetController extends Controller
 
         /*
          * access:
-         *  - full    → administrator atau pemegang aset: detail lengkap.
+         *  - full    → pemegang aset, atau user dengan izin asset.view
+         *              (administrator, teknisi): detail lengkap.
          *  - limited → user lain: info ringkas + boleh "Laporkan masalah"
          *              (POST /assets/{id}/requests, request_type=problem).
          */
         $isMine = (int) $asset->responsible_user_id === (int) $user->id;
-        $isFull = $isMine || $user->isAdministrator();
+        $isFull = $isMine || $user->hasPermission('asset.view');
 
         return response()->json([
             'success' => true,
@@ -755,6 +765,15 @@ class AssetController extends Controller
 
             'status' =>
                 $asset->status,
+
+            'status_label' =>
+                $asset->statusLabel(),
+
+            'is_disposed' =>
+                $asset->isDisposed(),
+
+            'warranty' =>
+                $this->formatWarranty($asset),
 
             'responsible_user_id' =>
                 $asset->responsible_user_id,
@@ -1006,13 +1025,7 @@ class AssetController extends Controller
             'purchase_date' =>
                 $asset->purchase_date,
 
-            'warranty' => [
-                'start' =>
-                    $asset->warranty_start,
-
-                'end' =>
-                    $asset->warranty_end,
-
+            'warranty' => $this->formatWarranty($asset) + [
                 'note' =>
                     $asset->warranty_note,
             ],
@@ -1022,6 +1035,16 @@ class AssetController extends Controller
 
             'status' =>
                 $asset->status,
+
+            'status_label' =>
+                $asset->statusLabel(),
+
+            'is_disposed' =>
+                $asset->isDisposed(),
+
+            // Hanya terisi bila aset dihapuskan (status 2).
+            'disposal' =>
+                $this->formatDisposal($asset),
 
             /*
             |--------------------------------------------------------------------------
@@ -1171,6 +1194,49 @@ class AssetController extends Controller
     | SEARCH
     |--------------------------------------------------------------------------
     */
+
+    /**
+     * Garansi + status (none | active | expiring | expired) dan sisa hari.
+     */
+    private function formatWarranty(Asset $asset): array
+    {
+        $status = $asset->warrantyStatus();
+
+        return [
+            'start' => $asset->warranty_start?->toDateString(),
+            'end' => $asset->warranty_end?->toDateString(),
+            'status' => $status['state'],
+            'status_label' => $status['label'],
+            'days_left' => $status['days_left'],
+        ];
+    }
+
+    private function formatDisposal(Asset $asset): ?array
+    {
+        if (!$asset->isDisposed()) {
+            return null;
+        }
+
+        $d = $asset->activeDisposal()->with('creator:id,name')->first();
+
+        if (!$d) {
+            return ['date' => $asset->disposed_at?->toDateString()];
+        }
+
+        return [
+            'id' => $d->id,
+            'type' => $d->disposal_type,
+            'type_label' => $d->typeLabel(),
+            'date' => $d->disposal_date->toDateString(),
+            'book_value' => $d->book_value !== null ? (float) $d->book_value : null,
+            'proceeds' => (float) $d->proceeds,
+            'gain_loss' => $d->gain_loss !== null ? (float) $d->gain_loss : null,
+            'notes' => $d->notes,
+            'document_url' => $d->document_path ? asset('storage/' . $d->document_path) : null,
+            'created_by' => $d->creator?->name,
+        ];
+    }
+
 
     private function applySearch(
         $query,

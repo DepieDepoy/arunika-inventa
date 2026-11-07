@@ -58,6 +58,8 @@ class AuditLogger
         'asset_photo' => 'Foto Asset',
         'asset_document' => 'Dokumen Asset',
         'asset_assignment' => 'Penugasan Asset',
+        'asset_location' => 'Lokasi Asset',
+        'asset_disposal' => 'Penghapusan Asset',
         'maintenance_request' => 'Request Maintenance',
         'maintenance' => 'Maintenance',
         'calendar' => 'Kalender',

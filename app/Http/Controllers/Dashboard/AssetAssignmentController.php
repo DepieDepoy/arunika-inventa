@@ -256,6 +256,12 @@ class AssetAssignmentController extends Controller
             ->where('company_id', $authUser->company_id)
             ->findOrFail($id);
 
+        if ($asset->isDisposed()) {
+            return redirect()
+                ->route('assets.show', $encryptedId)
+                ->with('error', 'Aset ini sudah dihapuskan sehingga tidak dapat diserahkan atau dikembalikan.');
+        }
+
         /*
         |--------------------------------------------------------------------------
         | Validate request
@@ -490,6 +496,12 @@ class AssetAssignmentController extends Controller
         $asset = Asset::query()
             ->where('company_id', $authUser->company_id)
             ->findOrFail($id);
+
+        if ($asset->isDisposed()) {
+            return redirect()
+                ->route('assets.show', $encryptedId)
+                ->with('error', 'Aset ini sudah dihapuskan sehingga tidak dapat diserahkan atau dikembalikan.');
+        }
 
         /*
         |--------------------------------------------------------------------------

@@ -68,11 +68,17 @@ class AssetController extends Controller
 
         $stats = Asset::query()
             ->where('company_id', $companyId)
+            ->inService()
             ->selectRaw('COUNT(*) AS total')
             ->selectRaw('SUM(status = 1) AS active')
             ->selectRaw('SUM(responsible_user_id IS NOT NULL) AS assigned')
             ->selectRaw('COALESCE(SUM(purchase_price), 0) AS value')
             ->first();
+
+        $stats->disposed = Asset::query()
+            ->where('company_id', $companyId)
+            ->where('status', Asset::STATUS_DISPOSED)
+            ->count();
 
         return view('dashboard.asset.index', compact(
             'categories',
@@ -215,6 +221,9 @@ class AssetController extends Controller
                 'status',
                 $request->status
             );
+        } else {
+            // Aset dihapuskan hanya tampil bila dipilih di filter status.
+            $query->inService();
         }
 
 
@@ -300,9 +309,11 @@ class AssetController extends Controller
                     : 'Rp' . number_format($asset->purchase_price, 0, ',', '.');
             })
             ->editColumn('status', function ($asset) {
-                $status = $asset->status == 1
-                    ? '<span class="al-chip al-chip-teal">Aktif</span>'
-                    : '<span class="al-chip al-chip-gray">Tidak aktif</span>';
+                $status = match ((int) $asset->status) {
+                    Asset::STATUS_ACTIVE => '<span class="al-chip al-chip-teal">Aktif</span>',
+                    Asset::STATUS_DISPOSED => '<span class="al-chip al-chip-red">Dihapuskan</span>',
+                    default => '<span class="al-chip al-chip-gray">Tidak aktif</span>',
+                };
 
                 if ($asset->asset_condition) {
                     $status .= ' <span class="al-chip al-chip-blue">' . ($asset->asset_condition === 'new' ? 'Baru' : 'Bekas') . '</span>';
@@ -315,7 +326,7 @@ class AssetController extends Controller
                 $html = '<div class="al-actions">'
                     . '<a href="' . route('assets.show', $id) . '" class="al-btn" title="Detail"><i class="bi bi-eye"></i></a>';
 
-                if ($canEdit) {
+                if ($canEdit && !$asset->isDisposed()) {
                     $html .= '<a href="' . route('assets.assignment.index', $id) . '" class="al-btn" title="Serahkan / pindahkan"><i class="bi bi-arrow-left-right"></i></a>'
                         . '<a href="' . route('assets.edit', $id) . '" class="al-btn" title="Ubah"><i class="bi bi-pencil"></i></a>';
                 }
@@ -347,7 +358,7 @@ class AssetController extends Controller
                 ->orWhere('serial_number', 'like', "%{$search}%")
                 ->orWhere('location', 'like', "%{$search}%")))
             ->when($request->filled('category_id'), fn ($q) => $q->where('category_id', (int) $request->query('category_id')))
-            ->when($request->filled('status'), fn ($q) => $q->where('status', (int) $request->query('status')))
+            ->when($request->filled('status'), fn ($q) => $q->where('status', (int) $request->query('status')), fn ($q) => $q->inService())
             ->orderBy('asset_code')
             ->get();
 
@@ -361,7 +372,7 @@ class AssetController extends Controller
             ['key' => 'model', 'label' => 'Model', 'width' => 16],
             ['key' => 'serial_number', 'label' => 'No. seri', 'width' => 18],
             ['label' => 'Kondisi', 'width' => 10, 'value' => fn ($a) => match ($a->asset_condition) { 'new' => 'Baru', 'used' => 'Bekas', default => $a->asset_condition }],
-            ['label' => 'Status', 'width' => 11, 'value' => fn ($a) => (int) $a->status === 1 ? 'Aktif' : 'Tidak aktif'],
+            ['label' => 'Status', 'width' => 11, 'value' => fn ($a) => $a->statusLabel()],
             ['key' => 'location', 'label' => 'Lokasi', 'width' => 20],
             ['key' => 'responsibleUser.name', 'label' => 'Pemegang', 'width' => 20],
             ['key' => 'vendor.vendor_name', 'label' => 'Vendor', 'width' => 20],
@@ -1590,6 +1601,12 @@ class AssetController extends Controller
             ])
             ->findOrFail($id);
 
+        if ($asset->isDisposed()) {
+            return redirect()
+                ->route('assets.show', encryptId($asset->id))
+                ->with('error', 'Aset ini sudah dihapuskan sehingga tidak dapat diubah.');
+        }
+
         $categories = Category::where(
             'company_id',
             $companyId
@@ -1644,6 +1661,19 @@ class AssetController extends Controller
 public function update(Request $request)
 {
     $companyId = Auth::user()->company_id;
+
+    // Aset dihapuskan terkunci: tolak sebelum validasi agar pesannya jelas.
+    if (
+        Asset::where('company_id', $companyId)
+            ->where('id', (int) $request->input('id'))
+            ->where('status', Asset::STATUS_DISPOSED)
+            ->exists()
+    ) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Aset ini sudah dihapuskan sehingga tidak dapat diubah.',
+        ], 422);
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -1891,7 +1921,14 @@ public function update(Request $request)
         ], 404);
     }
 
-    
+    if ($asset->isDisposed()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Aset ini sudah dihapuskan sehingga tidak dapat diubah.',
+        ], 422);
+    }
+
+
     /*
     |--------------------------------------------------------------------------
     | CHECK STORAGE QUOTA
@@ -2464,12 +2501,16 @@ public function update(Request $request)
             'residual_value' => $request->residual_value ?? 0,
             'depreciation_start_date' => $request->depreciation_start_date,
 
-            'warranty_start' => $request->warranty_start,
-            'warranty_end' => $request->warranty_end,
-            'warranty_note' => $request->warranty_note,
-
             'status' => $request->status,
         ]);
+
+        // Form edit belum memuat field garansi: hanya ubah bila dikirim,
+        // agar garansi hasil import / aplikasi mobile tidak terhapus jadi kosong.
+        $warranty = $request->only(['warranty_start', 'warranty_end', 'warranty_note']);
+
+        if ($warranty !== []) {
+            $asset->update($warranty);
+        }
 
         /*
         |--------------------------------------------------------------------------
@@ -2761,9 +2802,21 @@ public function update(Request $request)
 
         $bookValue = $this->bookValue($asset);
 
+        // Siklus hidup: riwayat lokasi, penghapusan, status garansi.
+        $locationHistories = $asset->locationHistories()->with('creator:id,name')->limit(20)->get();
+        $disposals = $asset->disposals()->with(['creator:id,name', 'holder:id,name', 'canceller:id,name'])->get();
+        $activeDisposal = $disposals->first(fn ($d) => !$d->isCancelled());
+        $warranty = $asset->warrantyStatus();
+        $knownLocations = auth()->user()->hasPermission('asset.move')
+            ? app(\App\Services\Asset\AssetLifecycleService::class)->knownLocations($companyId)
+            : [];
+
         return view(
             'dashboard.asset.show',
-            compact('asset', 'assignments', 'maintenances', 'maintenanceStats', 'bookValue')
+            compact(
+                'asset', 'assignments', 'maintenances', 'maintenanceStats', 'bookValue',
+                'locationHistories', 'disposals', 'activeDisposal', 'warranty', 'knownLocations'
+            )
         );
     }
 

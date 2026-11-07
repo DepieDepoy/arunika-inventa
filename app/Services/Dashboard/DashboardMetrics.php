@@ -26,7 +26,8 @@ class DashboardMetrics
         $companyId = (int) $user->company_id;
         $today = today();
 
-        $assetQuery = Asset::query()->where('company_id', $companyId);
+        // Aset dihapuskan (status 2) tidak lagi dihitung sebagai aset perusahaan.
+        $assetQuery = Asset::query()->where('company_id', $companyId)->inService();
 
         // Jadwal maintenance yang masih terbuka.
         $openMaintenance = Maintenance::query()

@@ -60,6 +60,18 @@ class MaintenanceRequestController extends Controller
     }
 
     /**
+     * Yang boleh mengambil (take) request hanya teknisi: punya izin
+     * maintenance.edit dan bukan Administrator. Administrator tetap bisa
+     * melihat seluruh request (maintenance.view) untuk memantau.
+     */
+    protected function canTakeRequests($user): bool
+    {
+        return $user
+            && $user->hasPermission('maintenance.edit')
+            && !$user->isAdministrator();
+    }
+
+    /**
      * Penanda tampilan untuk Flutter: siapa yang mengerjakan,
      * apakah bisa diambil / dikerjakan oleh user login.
      */
@@ -83,7 +95,8 @@ class MaintenanceRequestController extends Controller
             'request_type_label' => $this->notifier->typeLabel($maintenanceRequest),
             'status_label' => $label,
             'is_mine' => $isMine,
-            'can_take' => $maintenanceRequest->status === 'pending',
+            'can_take' => $maintenanceRequest->status === 'pending'
+                && $this->canTakeRequests(auth()->user()),
             'can_work' => $isMine,
             'can_edit' => $maintenanceRequest->status === 'pending'
                 && (int) $maintenanceRequest->requested_by === $userId,
@@ -434,6 +447,14 @@ class MaintenanceRequestController extends Controller
                 'Asset tidak ditemukan atau Anda bukan penanggung jawab asset ini.',
                 'NOT_FOUND',
                 404
+            );
+        }
+
+        if ($asset->isDisposed()) {
+            return $this->error(
+                'Aset ini sudah dihapuskan sehingga tidak dapat diajukan maintenance.',
+                'ASSET_DISPOSED',
+                422
             );
         }
 
@@ -811,6 +832,14 @@ class MaintenanceRequestController extends Controller
         int $id
     ): JsonResponse {
         $user = $request->user();
+
+        if (!$this->canTakeRequests($user)) {
+            return $this->error(
+                'Hanya teknisi yang dapat mengambil request maintenance.',
+                'TECHNICIAN_ONLY',
+                403
+            );
+        }
 
         $maintenanceRequest = MaintenanceRequest::query()
             ->where(

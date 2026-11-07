@@ -109,6 +109,8 @@ Untuk endpoint `PUT` yang membawa file, kirim **POST** dengan field tambahan `_m
 | Riwayat maintenance aset sendiri | `asset.my` → `GET /my-assets/{id}/maintenances` |
 | Tambah aset | `asset.create` |
 | Ubah aset, assign/transfer/return | `asset.edit` |
+| Pindah lokasi aset | `asset.move` (riwayat lokasi: `asset.view` atau `asset.move`) |
+| Penghapusan aset (rusak/hilang/dijual/dihibahkan) | `asset.dispose` — **hanya di dashboard web**; aplikasi cukup menampilkan statusnya |
 | Hapus aset | `asset.delete` |
 | Buat / ubah / batalkan request maintenance | `maintenance.create` |
 | Lihat jadwal maintenance & request tim | `maintenance.view` |
@@ -254,9 +256,9 @@ Nilai `target.screen`: `calendar_event`, `calendar`, `maintenance_request`, `mai
 
 | Method | Path | Izin | Keterangan |
 |---|---|---|---|
-| GET | `/assets?search=` | asset.view | Semua aset perusahaan (cari kode/nama/merek/model/serial) |
+| GET | `/assets?search=` | asset.view | Semua aset perusahaan (cari kode/nama/merek/model/serial). Aset **dihapuskan** disembunyikan; tampilkan dengan `status=2` atau `include_disposed=1`. `status` = `0`/`1`/`2` memfilter status |
 | GET | `/assets/{id}` | asset.view | Detail + foto + riwayat maintenance |
-| GET | `/assets/qr/{qrToken}` | asset.view / asset.my / maintenance.create | Hasil scan QR. `data.access` = `full` (administrator / pemegang: `asset` berisi detail lengkap) atau `limited` (user lain: `asset` hanya kode, nama, kategori, merek, model, kondisi, lokasi, status, `responsible_user.name`, `has_active_request`). `data.is_mine` = aset dipegang user. |
+| GET | `/assets/qr/{qrToken}` | asset.view / asset.my / maintenance.create | Hasil scan QR. `data.access` = `full` (pemegang, atau user dengan izin asset.view seperti administrator & teknisi: `asset` berisi detail lengkap) atau `limited` (user lain: `asset` hanya kode, nama, kategori, merek, model, kondisi, lokasi, status, `responsible_user.name`, `has_active_request`). `data.is_mine` = aset dipegang user. |
 | GET | `/assets/photos/{photoId}` | asset.view | File foto (kirim header Authorization) |
 | GET | `/assets/{id}/maintenances` | asset.view | Riwayat maintenance aset |
 | GET | `/my-assets`, `/my-assets/{id}`, `/my-assets/{id}/maintenances` | asset.view | Aset yang dipegang user |
@@ -266,6 +268,8 @@ Nilai `target.screen`: `calendar_event`, `calendar`, `maintenance_request`, `mai
 | GET | `/assets/{id}/assignments` | asset.view | Pemegang saat ini + riwayat penugasan |
 | POST | `/assets/{id}/assign` | asset.edit | `user_id`, `start_at`?, `reason`?, `notes`? (otomatis transfer bila sudah dipegang orang lain) |
 | POST | `/assets/{id}/return` | asset.edit | `end_at`?, `reason`?, `notes`? |
+| GET | `/assets/{id}/locations` | asset.view / asset.move | Riwayat pindah lokasi (`history[]`: `from`, `to`, `moved_at`, `notes`, `created_by`) + `known_locations[]` untuk saran isian |
+| POST | `/assets/{id}/location` | asset.move | `location` (wajib, maks. 255), `moved_at`? (Y-m-d, default hari ini, tidak boleh masa depan), `notes`? |
 
 **Field tambah/ubah aset** (sama dengan form web):
 
@@ -276,10 +280,11 @@ Nilai `target.screen`: `calendar_event`, `calendar`, `maintenance_request`, `mai
 | `sub_category_id` | | harus milik kategori terpilih |
 | `vendor_id` | ✔ | dari `/lookups/vendors` |
 | `responsible_user_id` | | dari `/lookups/users` (hanya saat tambah) |
-| `status` | ✔ | `1` aktif / `0` tidak aktif |
+| `status` | ✔ | `1` aktif / `0` tidak aktif (`2` = dihapuskan, hanya lewat dashboard) |
 | `maintenance_required` | ✔ (tambah) | `0`/`1`. Jika `1`: `maintenance_type`, `maintenance_trigger`, `maintenance_interval`, `maintenance_interval_unit`, `maintenance_start_date` wajib |
 | `asset_condition` | | `new`/`used` |
-| `brand`, `model`, `serial_number`, `location`, `description` | | |
+| `brand`, `model`, `serial_number`, `description` | | |
+| `location` | | hanya saat **tambah**; setelah itu pakai `POST /assets/{id}/location` agar tercatat di riwayat |
 | `purchase_date`, `purchase_price`, `purchase_invoice` | | |
 | `warranty_start`, `warranty_end`, `warranty_note` | | `warranty_end` ≥ `warranty_start` |
 | `depreciation_method`, `useful_life`, `residual_value`, `depreciation_start_date` | | |
@@ -288,6 +293,17 @@ Nilai `target.screen`: `calendar_event`, `calendar`, `maintenance_request`, `mai
 | `delete_images[]`, `delete_invoice_documents[]` | | hanya saat ubah: id foto/dokumen yang dihapus |
 
 Saat **ubah**, kirim ulang semua nilai lama (form terisi dari `GET /assets/{id}`). Jadwal maintenance tidak diubah lewat endpoint ini.
+
+**Status aset, garansi & penghapusan** (ada di daftar dan detail aset):
+
+| Field | Isi |
+|---|---|
+| `status`, `status_label` | `0` Tidak aktif, `1` Aktif, `2` Dihapuskan |
+| `is_disposed` | `true` bila aset sudah dihapuskan. Aset ini **terkunci**: ubah, assign/return, pindah lokasi, dan request maintenance ditolak `422` dengan `code: ASSET_DISPOSED`. Sembunyikan tombol-tombolnya |
+| `warranty` | `start`, `end`, `status` (`none` / `active` / `expiring` ≤ 30 hari / `expired`), `status_label`, `days_left`; di detail juga `note` |
+| `disposal` (detail) | `null`, atau `type` (`scrapped` / `lost` / `sold` / `donated` / `returned_vendor` / `other`), `type_label`, `date`, `book_value`, `proceeds`, `gain_loss` (negatif = rugi), `notes`, `document_url`, `created_by` |
+
+Pengingat garansi dikirim otomatis (H-30, H-7, hari-H) ke administrator & user ber-izin `asset.edit` sebagai notifikasi tipe `asset_warranty` dengan `asset_id` (`target.screen` = `asset`).
 Respons tambah/ubah berisi detail aset (format sama dengan `GET /assets/{id}`).
 
 ### 3.6 Maintenance 🔐💳
@@ -329,7 +345,7 @@ Bila perusahaan belum punya role teknisi, notifikasi request baru dikirim ke Adm
 | GET | `/maintenance-requests/{id}` | asset.view | Detail + progress + hasil |
 | GET | `/maintenance/team/requests?scope=&search=&request_type=` | maintenance.view | Lihat `scope` di bawah. Respons memuat `summary` |
 | GET | `/maintenance/team/requests/{id}` | maintenance.view | |
-| POST | `/maintenance/team/requests/{id}/take` | maintenance.edit | pending → in_progress. Gagal: 409 `ALREADY_TAKEN` |
+| POST | `/maintenance/team/requests/{id}/take` | maintenance.edit (bukan Administrator) | pending → in_progress. Hanya teknisi: Administrator ditolak 403 `TECHNICIAN_ONLY`. Gagal: 409 `ALREADY_TAKEN`. Flag `can_take` di setiap request sudah memperhitungkan aturan ini |
 | POST | `/maintenance/team/requests/{id}/progress` | maintenance.edit | `note` (5–5000), `photos[]` (maks. 10, ≤ 10 MB) |
 | POST | `/maintenance/team/requests/{id}/complete` | maintenance.edit | `action_taken`, `maintenance_date`, `after_photos[]` (1–10), `technician_name`?, `vendor_id`?, `cost`?, `next_maintenance_date`?, `notes`? |
 

@@ -37,6 +37,7 @@ class DefaultRoles
                 'permissions' => [
                     'asset.view',
                     'asset.my',
+                    'asset.move',
                     'maintenance.view',
                     'maintenance.create',
                     'maintenance.edit',

@@ -33,3 +33,8 @@ Illuminate\Support\Facades\Schedule::command('analytics:prune')
 Illuminate\Support\Facades\Schedule::command('imports:clean-temp')
     ->hourly()
     ->withoutOverlapping();
+
+// Pengingat garansi aset: 30 hari, 7 hari, dan pada hari garansi berakhir.
+Illuminate\Support\Facades\Schedule::command('assets:warranty-reminders')
+    ->dailyAt('07:30')
+    ->withoutOverlapping();

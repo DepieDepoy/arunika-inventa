@@ -770,11 +770,11 @@
 
                         <div>
                             <h6 class="asset-section-title">
-                                Depreciation
+                                Depreciation &amp; Warranty
                             </h6>
 
                             <p class="asset-section-description">
-                                Asset depreciation configuration
+                                Asset depreciation and warranty period
                             </p>
                         </div>
 
@@ -903,6 +903,8 @@
                         </div>
 
                     </div>
+
+                    @include('dashboard.asset.partials.warranty-fields', ['asset' => $asset])
 
                 </div>
 
@@ -1288,7 +1290,10 @@
                             </div>
 
                             <small class="text-muted">
-                                Location can only be changed through the Asset Location process.
+                                Change it with <b>Pindah lokasi</b> on the asset detail page so every move is recorded.
+                                @if(auth()->user()->hasPermission('asset.move'))
+                                    <a href="{{ route('assets.show', ['id' => encryptId($asset->id), 'move' => 1]) }}">Move location &rarr;</a>
+                                @endif
                             </small>
 
                         </div>

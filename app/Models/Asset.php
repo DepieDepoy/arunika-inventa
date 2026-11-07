@@ -57,6 +57,7 @@ class Asset extends Model
 
         'location',
         'status',
+        'disposed_at',
 
         'qr_token',
         'qr_generated_at',
@@ -70,7 +71,72 @@ class Asset extends Model
         'warranty_start' => 'date',
         'warranty_end' => 'date',
         'qr_generated_at' => 'datetime',
+        'disposed_at' => 'date',
     ];
+
+    /*
+    |--------------------------------------------------------------------------
+    | STATUS
+    |--------------------------------------------------------------------------
+    | 0 = tidak aktif, 1 = aktif, 2 = dihapuskan (lihat AssetDisposal).
+    | Aset dihapuskan tetap tersimpan beserta riwayatnya, tetapi tidak dihitung
+    | sebagai aset perusahaan, tidak bisa diubah, diserahkan, atau dipindahkan.
+    */
+
+    public const STATUS_INACTIVE = 0;
+    public const STATUS_ACTIVE = 1;
+    public const STATUS_DISPOSED = 2;
+
+    public const STATUS_LABELS = [
+        self::STATUS_INACTIVE => 'Tidak aktif',
+        self::STATUS_ACTIVE => 'Aktif',
+        self::STATUS_DISPOSED => 'Dihapuskan',
+    ];
+
+    /** Batas hari "garansi segera habis". */
+    public const WARRANTY_SOON_DAYS = 30;
+
+    public function isDisposed(): bool
+    {
+        return (int) $this->status === self::STATUS_DISPOSED;
+    }
+
+    public function statusLabel(): string
+    {
+        return self::STATUS_LABELS[(int) $this->status] ?? 'Tidak aktif';
+    }
+
+    /**
+     * Aset yang masih dimiliki perusahaan (aktif / tidak aktif), tanpa yang dihapuskan.
+     */
+    public function scopeInService($query)
+    {
+        return $query->where($query->qualifyColumn('status'), '!=', self::STATUS_DISPOSED);
+    }
+
+    /**
+     * Status garansi: none | active | expiring | expired, plus sisa hari.
+     *
+     * @return array{state: string, label: string, days_left: ?int}
+     */
+    public function warrantyStatus(): array
+    {
+        if (!$this->warranty_end) {
+            return ['state' => 'none', 'label' => 'Tidak ada garansi', 'days_left' => null];
+        }
+
+        $days = (int) today()->diffInDays($this->warranty_end->copy()->startOfDay(), false);
+
+        if ($days < 0) {
+            return ['state' => 'expired', 'label' => 'Garansi habis', 'days_left' => $days];
+        }
+
+        if ($days <= self::WARRANTY_SOON_DAYS) {
+            return ['state' => 'expiring', 'label' => $days === 0 ? 'Garansi habis hari ini' : "Garansi habis {$days} hari lagi", 'days_left' => $days];
+        }
+
+        return ['state' => 'active', 'label' => 'Masih garansi', 'days_left' => $days];
+    }
 
     /**
      * Company
@@ -145,6 +211,26 @@ class Asset extends Model
     {
         // Riwayat maintenance memakai tabel `maintenances` (asset_maintenances sudah tidak diisi).
         return $this->hasMany(Maintenance::class);
+    }
+
+    public function locationHistories(): HasMany
+    {
+        return $this->hasMany(AssetLocationHistory::class)
+            ->orderByDesc('moved_at')
+            ->orderByDesc('id');
+    }
+
+    public function disposals(): HasMany
+    {
+        return $this->hasMany(AssetDisposal::class)->latest('id');
+    }
+
+    /** Penghapusan yang berlaku (belum dibatalkan). */
+    public function activeDisposal()
+    {
+        return $this->hasOne(AssetDisposal::class)
+            ->whereNull('cancelled_at')
+            ->latestOfMany();
     }
 
     public function activeMaintenanceRequest()

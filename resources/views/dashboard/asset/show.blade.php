@@ -19,6 +19,13 @@
     $statusLabels = ['scheduled' => 'Terjadwal', 'in_progress' => 'Dikerjakan', 'completed' => 'Selesai', 'cancelled' => 'Dibatalkan'];
     $typeLabels = ['preventive' => 'Preventif', 'corrective' => 'Perbaikan', 'inspection' => 'Inspeksi', 'calibration' => 'Kalibrasi'];
     $assignLabels = ['assign' => 'Diserahkan ke', 'transfer' => 'Dipindahkan ke', 'return' => 'Dikembalikan oleh'];
+    $disposed = $asset->isDisposed();
+    $canEdit = auth()->user()->hasPermission('asset.edit');
+    $canMove = auth()->user()->hasPermission('asset.move');
+    $canDispose = auth()->user()->hasPermission('asset.dispose');
+    $warrantyChip = ['active' => 'ad-chip-teal', 'expiring' => 'ad-chip-amber', 'expired' => 'ad-chip-gray', 'none' => 'ad-chip-gray'][$warranty['state']];
+    $warrantyShort = ['active' => 'aktif', 'expiring' => ($warranty['days_left'] === 0 ? 'habis hari ini' : $warranty['days_left'] . ' hari lagi'), 'expired' => 'habis', 'none' => ''][$warranty['state']];
+    $initialTab = in_array(request('tab'), ['finance', 'maintenance', 'assignment', 'location', 'disposal', 'docs'], true) ? request('tab') : 'finance';
 @endphp
 
 <style>
@@ -71,6 +78,20 @@
     .ad-doc .name { flex:1; min-width:0; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .ad-empty { text-align:center; color:var(--ad-muted); padding:28px 10px; font-size:.9rem; }
     .ad-empty i { font-size:1.8rem; display:block; margin-bottom:6px; opacity:.6; }
+    .ad-disposed { border:1px solid #fecaca; background:#fff5f5; border-radius:16px; padding:16px 18px; margin-bottom:1rem; }
+    .ad-disposed-head { display:flex; gap:12px; align-items:center; }
+    .ad-disposed-head .ic { width:40px; height:40px; border-radius:12px; flex:none; display:grid; place-items:center; background:#fee2e2; color:#b91c1c; font-size:1.15rem; }
+    .ad-disposed-head b { color:#7f1d1d; display:block; }
+    .ad-disposed-head small { color:#9f5050; }
+    .ad-disposed-grid { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px; margin-top:14px; }
+    .ad-disposed-grid > div, .ad-disposed-foot > div { background:#fff; border-radius:11px; padding:9px 12px; min-width:0; }
+    .ad-disposed-grid small, .ad-disposed-foot small { display:block; font-size:.68rem; font-weight:700; color:#9f5050; text-transform:uppercase; letter-spacing:.04em; }
+    .ad-disposed-grid b { font-variant-numeric:tabular-nums; }
+    .ad-disposed-foot { display:flex; gap:10px; align-items:center; margin-top:10px; flex-wrap:wrap; font-size:.88rem; }
+    body.dark .ad-disposed { background:rgba(185,28,28,.12); border-color:rgba(248,113,113,.35); }
+    body.dark .ad-disposed-grid > div, body.dark .ad-disposed-foot > div { background:rgba(0,0,0,.2); }
+    body.dark .ad-disposed-head b { color:#fecaca; }
+    @media (max-width: 767.98px) { .ad-disposed-grid { grid-template-columns:repeat(2, minmax(0,1fr)); } }
     .ad-alert { display:flex; gap:12px; align-items:center; background:#fff8e6; border:1px solid #fde68a; border-radius:12px; padding:12px 16px; margin-bottom:1rem; font-size:.88rem; color:#92400e; }
     @media (max-width: 991.98px) { .ad-tiles { grid-template-columns:repeat(2,1fr); } }
     @media (max-width: 575.98px) { .ad-tiles { grid-template-columns:1fr 1fr; } .ad-photo { height:200px; } }
@@ -89,7 +110,9 @@
                 <span class="fw-bold">{{ $asset->asset_code }}</span>
                 <span>·</span>
                 <span>{{ $asset->category->category_name ?? 'Tanpa kategori' }}@if($asset->subCategory) › {{ $asset->subCategory->sub_category_name }}@endif</span>
-                @if($asset->status == 1)
+                @if($disposed)
+                    <span class="ad-chip ad-chip-red"><i class="bi bi-archive"></i>Dihapuskan</span>
+                @elseif($asset->status == 1)
                     <span class="ad-chip ad-chip-teal"><i class="bi bi-circle-fill" style="font-size:.45rem"></i>Aktif</span>
                 @else
                     <span class="ad-chip ad-chip-gray"><i class="bi bi-circle-fill" style="font-size:.45rem"></i>Tidak aktif</span>
@@ -100,19 +123,83 @@
             </div>
         </div>
         <div class="ad-actions">
-            @if(auth()->user()->hasPermission('asset.edit'))
-                <a href="{{ route('assets.assignment.index', $encId) }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left-right me-1"></i> {{ $holder ? 'Pindahkan / Kembalikan' : 'Serahkan' }}
-                </a>
-                <a href="{{ route('assets.edit', $encId) }}" class="btn btn-outline-primary">
-                    <i class="bi bi-pencil me-1"></i> Ubah
-                </a>
+            @if($disposed)
+                @if($canDispose && $activeDisposal)
+                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelDisposalModal">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i> Batalkan penghapusan
+                    </button>
+                @endif
+            @else
+                @if($canEdit)
+                    <a href="{{ route('assets.assignment.index', $encId) }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left-right me-1"></i> {{ $holder ? 'Pindahkan / Kembalikan' : 'Serahkan' }}
+                    </a>
+                @endif
+                @if($canMove)
+                    <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#moveLocationModal">
+                        <i class="bi bi-geo-alt me-1"></i> Pindah lokasi
+                    </button>
+                @endif
+                @if($canEdit)
+                    <a href="{{ route('assets.edit', $encId) }}" class="btn btn-outline-primary">
+                        <i class="bi bi-pencil me-1"></i> Ubah
+                    </a>
+                @endif
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#printQrModal" onclick="generateAssetQr()">
+                    <i class="bi bi-qr-code me-1"></i> Cetak QR
+                </button>
+                @if($canDispose)
+                    <div class="dropdown">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Aksi lainnya" title="Aksi lainnya">
+                            <i class="bi bi-three-dots"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#disposeModal">
+                                    <i class="bi bi-archive me-2"></i>Hapuskan aset
+                                    <small class="d-block text-muted ms-4">Rusak, hilang, dijual, dihibahkan</small>
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                @endif
             @endif
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#printQrModal" onclick="generateAssetQr()">
-                <i class="bi bi-qr-code me-1"></i> Cetak QR
-            </button>
         </div>
     </div>
+
+    @if($disposed && $activeDisposal)
+        @php $gl = $activeDisposal->gain_loss !== null ? (float) $activeDisposal->gain_loss : null; @endphp
+        <div class="ad-disposed">
+            <div class="ad-disposed-head">
+                <span class="ic"><i class="bi bi-archive"></i></span>
+                <div>
+                    <b>Aset ini telah dihapuskan &middot; {{ $activeDisposal->typeLabel() }}</b>
+                    <small>
+                        {{ $activeDisposal->disposal_date->translatedFormat('d M Y') }}
+                        @if($activeDisposal->creator) &middot; dicatat oleh {{ $activeDisposal->creator->name }}@endif
+                        @if($activeDisposal->holder) &middot; pemegang terakhir {{ $activeDisposal->holder->name }}@endif
+                        @if($activeDisposal->previous_location) &middot; lokasi terakhir {{ $activeDisposal->previous_location }}@endif
+                    </small>
+                </div>
+            </div>
+            <div class="ad-disposed-grid">
+                <div><small>Harga perolehan</small><b>{{ $activeDisposal->purchase_price !== null ? $rp($activeDisposal->purchase_price) : '—' }}</b></div>
+                <div><small>Nilai buku saat dihapuskan</small><b>{{ $activeDisposal->book_value !== null ? $rp($activeDisposal->book_value) : '—' }}</b></div>
+                <div><small>Hasil penjualan / ganti</small><b>{{ $rp($activeDisposal->proceeds) }}</b></div>
+                <div><small>{{ $gl !== null && $gl > 0 ? 'Laba penghapusan' : 'Kerugian penghapusan' }}</small>
+                    <b class="{{ $gl !== null && $gl < 0 ? 'text-danger' : ($gl > 0 ? 'text-success' : '') }}">{{ $gl === null ? '—' : ($gl < 0 ? '(' . $rp(abs($gl)) . ')' : $rp($gl)) }}</b>
+                </div>
+            </div>
+            @if($activeDisposal->notes || $activeDisposal->document_path)
+                <div class="ad-disposed-foot">
+                    @if($activeDisposal->notes)<div class="flex-grow-1"><small>Catatan</small>{{ $activeDisposal->notes }}</div>@endif
+                    @if($activeDisposal->document_path)
+                        <a href="{{ asset('storage/' . $activeDisposal->document_path) }}" target="_blank" class="btn btn-sm btn-outline-danger"><i class="bi bi-file-earmark-text me-1"></i>Berita acara</a>
+                    @endif
+                </div>
+            @endif
+        </div>
+    @endif
 
     @if($activeRequest)
         <div class="ad-alert">
@@ -155,10 +242,14 @@
                             <div class="ad-tile"><small>Vendor</small><b title="{{ $asset->vendor->vendor_name ?? '' }}">{{ $asset->vendor->vendor_name ?? '—' }}</b></div>
                             <div class="ad-tile"><small>Tanggal beli</small><b>{{ $date($asset->purchase_date) ?? '—' }}</b></div>
                             <div class="ad-tile"><small>Harga beli</small><b>{{ $asset->purchase_price ? $rp($asset->purchase_price) : '—' }}</b></div>
-                            <div class="ad-tile"><small>Nilai buku</small><b>{{ $bookValue ? $rp($bookValue['value']) : '—' }}</b></div>
+                            @if($disposed && $activeDisposal)
+                                <div class="ad-tile" title="Nilai buku dibekukan pada tanggal penghapusan"><small>Nilai buku (saat dihapuskan)</small><b>{{ $activeDisposal->book_value !== null ? $rp($activeDisposal->book_value) : '—' }}</b></div>
+                            @else
+                                <div class="ad-tile"><small>Nilai buku</small><b>{{ $bookValue ? $rp($bookValue['value']) : '—' }}</b></div>
+                            @endif
                             <div class="ad-tile"><small>Garansi s/d</small>
-                                <b>{{ $date($asset->warranty_end) ?? '—' }}
-                                    @if($asset->warranty_end)<span class="ad-chip {{ $warrantyActive ? 'ad-chip-teal' : 'ad-chip-gray' }} ms-1" style="font-size:.6rem">{{ $warrantyActive ? 'aktif' : 'habis' }}</span>@endif
+                                <b title="{{ $warranty['label'] }}">{{ $date($asset->warranty_end) ?? '—' }}
+                                    @if($asset->warranty_end)<span class="ad-chip {{ $warrantyChip }} ms-1" style="font-size:.6rem">{{ $warrantyShort }}</span>@endif
                                 </b>
                             </div>
                             <div class="ad-tile"><small>Lokasi</small><b title="{{ $asset->location }}">{{ $asset->location ?: '—' }}</b></div>
@@ -222,14 +313,18 @@
         <div class="col-12">
             <div class="ad-card">
                 <div class="ad-tabs" role="tablist">
-                    <button type="button" class="active" data-ad-tab="finance"><i class="bi bi-cash-stack me-1"></i>Pembelian &amp; Penyusutan</button>
+                    <button type="button" data-ad-tab="finance"><i class="bi bi-cash-stack me-1"></i>Pembelian &amp; Penyusutan</button>
                     <button type="button" data-ad-tab="maintenance"><i class="bi bi-tools me-1"></i>Maintenance</button>
                     <button type="button" data-ad-tab="assignment"><i class="bi bi-arrow-left-right me-1"></i>Penugasan</button>
+                    <button type="button" data-ad-tab="location"><i class="bi bi-geo-alt me-1"></i>Lokasi ({{ $locationHistories->count() }})</button>
+                    @if($disposals->isNotEmpty())
+                        <button type="button" data-ad-tab="disposal"><i class="bi bi-archive me-1"></i>Penghapusan</button>
+                    @endif
                     <button type="button" data-ad-tab="docs"><i class="bi bi-paperclip me-1"></i>Dokumen ({{ $asset->documents->count() }})</button>
                 </div>
 
                 {{-- Pembelian & penyusutan --}}
-                <div class="ad-pane active" data-ad-pane="finance">
+                <div class="ad-pane" data-ad-pane="finance">
                     <div class="ad-tiles mb-3">
                         <div class="ad-tile"><small>No. invoice / pembelian</small><b>{{ $asset->purchase_invoice ?: '—' }}</b></div>
                         <div class="ad-tile"><small>Metode penyusutan</small><b>{{ $asset->depreciation_method === 'straight_line' ? 'Garis lurus' : '—' }}</b></div>
@@ -308,6 +403,65 @@
                     @endif
                 </div>
 
+                {{-- Lokasi --}}
+                <div class="ad-pane" data-ad-pane="location">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                        <div>
+                            <small class="text-muted d-block">Lokasi saat ini</small>
+                            <b class="fs-6"><i class="bi bi-geo-alt-fill text-primary me-1"></i>{{ $asset->location ?: 'Belum diisi' }}</b>
+                        </div>
+                        @if($canMove && !$disposed)
+                            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#moveLocationModal">
+                                <i class="bi bi-arrow-right-circle me-1"></i>Pindah lokasi
+                            </button>
+                        @endif
+                    </div>
+                    @if($locationHistories->isEmpty())
+                        <div class="ad-empty"><i class="bi bi-geo-alt"></i>Belum ada perpindahan lokasi.@if($asset->location) Aset berada di lokasi awal sejak dicatat.@endif</div>
+                    @else
+                        <ul class="ad-tl">
+                            @foreach($locationHistories as $h)
+                                <li>
+                                    <span class="dot {{ $loop->first ? 'ad-chip-blue' : 'ad-chip-gray' }}"><i class="bi bi-geo-alt"></i></span>
+                                    <div>
+                                        <b>{{ $h->from_location ?: 'Belum diisi' }} <i class="bi bi-arrow-right mx-1"></i> {{ $h->to_location }}</b>
+                                        <small>
+                                            {{ $h->moved_at->translatedFormat('d M Y') }}
+                                            @if($h->creator) &middot; oleh {{ $h->creator->name }}@endif
+                                            @if($h->notes) &middot; {{ $h->notes }}@endif
+                                        </small>
+                                    </div>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+                </div>
+
+                {{-- Penghapusan (termasuk yang dibatalkan) --}}
+                @if($disposals->isNotEmpty())
+                    <div class="ad-pane" data-ad-pane="disposal">
+                        <ul class="ad-tl">
+                            @foreach($disposals as $d)
+                                <li>
+                                    <span class="dot {{ $d->isCancelled() ? 'ad-chip-gray' : 'ad-chip-red' }}"><i class="bi {{ $d->isCancelled() ? 'bi-arrow-counterclockwise' : 'bi-archive' }}"></i></span>
+                                    <div>
+                                        <b>{{ $d->typeLabel() }}{{ $d->isCancelled() ? ' (dibatalkan)' : '' }}</b>
+                                        <small>
+                                            {{ $d->disposal_date->translatedFormat('d M Y') }}
+                                            &middot; nilai buku {{ $d->book_value !== null ? $rp($d->book_value) : '—' }}
+                                            @if((float) $d->proceeds > 0) &middot; hasil {{ $rp($d->proceeds) }}@endif
+                                            @if($d->creator) &middot; oleh {{ $d->creator->name }}@endif
+                                        </small>
+                                        @if($d->isCancelled())
+                                            <small>Dibatalkan {{ $d->cancelled_at->translatedFormat('d M Y H:i') }}{{ $d->canceller ? ' oleh ' . $d->canceller->name : '' }}: {{ $d->cancel_reason }}</small>
+                                        @endif
+                                    </div>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
                 {{-- Dokumen --}}
                 <div class="ad-pane" data-ad-pane="docs">
                     @forelse($asset->documents as $document)
@@ -329,16 +483,21 @@
     </div>
 </div>
 
+@include('dashboard.asset.partials.lifecycle-modals')
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // Tab detail
+    // Tab detail (?tab=location dst. membuka tab tertentu)
+    function openTab(key) {
+        var btn = document.querySelector('[data-ad-tab="' + key + '"]') || document.querySelector('[data-ad-tab]');
+        key = btn.getAttribute('data-ad-tab');
+        document.querySelectorAll('[data-ad-tab]').forEach(function (b) { b.classList.toggle('active', b === btn); });
+        document.querySelectorAll('[data-ad-pane]').forEach(function (p) { p.classList.toggle('active', p.getAttribute('data-ad-pane') === key); });
+    }
     document.querySelectorAll('[data-ad-tab]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            var key = btn.getAttribute('data-ad-tab');
-            document.querySelectorAll('[data-ad-tab]').forEach(function (b) { b.classList.toggle('active', b === btn); });
-            document.querySelectorAll('[data-ad-pane]').forEach(function (p) { p.classList.toggle('active', p.getAttribute('data-ad-pane') === key); });
-        });
+        btn.addEventListener('click', function () { openTab(btn.getAttribute('data-ad-tab')); });
     });
+    openTab(@json($disposed && $initialTab === 'finance' && $disposals->isNotEmpty() ? 'disposal' : $initialTab));
 
     // Galeri foto
     var main = document.querySelector('#adMainPhoto img');
