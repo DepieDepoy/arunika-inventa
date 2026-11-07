@@ -2612,21 +2612,15 @@ public function update(Request $request)
         $companyId =
             Auth::user()->company_id;
 
+        // Tombol hapus mengirim ID terenkripsi (sama seperti link detail/ubah).
+        $assetId = decryptId((string) $request->route('id'));
 
-        $asset =
-            Asset::where(
-                'company_id',
-                $companyId
-            )
-                ->with([
-                    'photos',
-                    'documents'
-                ])
-                ->where(
-                    'id',
-                    $request->id
-                )
-                ->first();
+        $asset = $assetId
+            ? Asset::where('company_id', $companyId)
+                ->with(['photos', 'documents'])
+                ->where('id', $assetId)
+                ->first()
+            : null;
 
 
         if (!$asset) {
@@ -2639,92 +2633,75 @@ public function update(Request $request)
         }
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | Hapus data salah input: aset + semua turunannya + file fisiknya,
+        | supaya kuota aset & penyimpanan kembali kosong.
+        | (Aset rusak/hilang/dijual memakai menu Penghapusan, bukan ini.)
+        |--------------------------------------------------------------------------
+        */
+
+        $maintenanceIds = Maintenance::withTrashed()
+            ->where('company_id', $companyId)
+            ->where('asset_id', $asset->id)
+            ->pluck('id');
+
+        $requestIds = \App\Models\MaintenanceRequest::query()
+            ->where('company_id', $companyId)
+            ->where('asset_id', $asset->id)
+            ->pluck('id');
+
+        $logIds = \App\Models\MaintenanceRequestLog::query()
+            ->whereIn('maintenance_request_id', $requestIds)
+            ->pluck('id');
+
+        $disposals = \App\Models\AssetDisposal::query()
+            ->where('company_id', $companyId)
+            ->where('asset_id', $asset->id);
+
+        // Kumpulkan semua file milik aset ini (dihapus setelah DB berhasil).
+        $files = collect()
+            ->merge($asset->photos->pluck('file_path'))
+            ->merge($asset->documents->pluck('file_path'))
+            ->merge(\App\Models\MaintenancePhoto::whereIn('maintenance_id', $maintenanceIds)->pluck('file_path'))
+            ->merge(\App\Models\MaintenanceRequestLogPhoto::whereIn('maintenance_request_log_id', $logIds)->pluck('file_path'))
+            ->merge((clone $disposals)->pluck('document_path'))
+            ->filter()
+            ->unique()
+            ->values();
+
+
         DB::beginTransaction();
 
 
         try {
 
-            /*
-            |--------------------------------------------------------------------------
-            | DELETE PHYSICAL PHOTOS
-            |--------------------------------------------------------------------------
-            */
+            \App\Models\MaintenanceRequestLogPhoto::whereIn('maintenance_request_log_id', $logIds)->delete();
+            \App\Models\MaintenanceRequestLog::whereIn('id', $logIds)->delete();
+            \App\Models\MaintenancePhoto::whereIn('maintenance_id', $maintenanceIds)->delete();
 
-            foreach (
-                $asset->photos
-                as $photo
-            ) {
+            Maintenance::withTrashed()->whereIn('id', $maintenanceIds)->forceDelete();
+            \App\Models\MaintenanceRequest::whereIn('id', $requestIds)->delete();
 
-                $fullPath =
-                    storage_path(
-                        'app/public/' . $photo->file_path
-                    );
+            (clone $disposals)->delete();
+            \App\Models\AssetLocationHistory::where('asset_id', $asset->id)->delete();
 
-                if (
-                    file_exists(
-                        $fullPath
-                    )
-                ) {
-
-                    unlink($fullPath);
-                }
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | DELETE PHYSICAL DOCUMENTS
-            |--------------------------------------------------------------------------
-            */
-
-            foreach (
-                $asset->documents
-                as $document
-            ) {
-
-                $fullPath =
-                    storage_path(
-                        'app/public/' . $document->file_path
-                    );
-
-                if (
-                    file_exists(
-                        $fullPath
-                    )
-                ) {
-
-                    unlink($fullPath);
-                }
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | DELETE MAINTENANCE
-            |--------------------------------------------------------------------------
-            */
-
-            Maintenance::where(
-                'company_id',
-                $companyId
-            )
-                ->where(
-                    'asset_id',
-                    $asset->id
-                )
-                ->delete();
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | DELETE ASSET
-            |--------------------------------------------------------------------------
-            */
+            $asset->photos()->delete();
+            $asset->documents()->delete();
 
             $asset->delete();
 
 
             DB::commit();
+
+
+            foreach ($files as $path) {
+                $fullPath = storage_path('app/public/' . ltrim($path, '/'));
+
+                if (is_file($fullPath)) {
+                    @unlink($fullPath);
+                }
+            }
 
 
             return response()->json([
