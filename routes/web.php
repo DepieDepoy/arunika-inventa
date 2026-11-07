@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ImportHistoryController;
 
@@ -14,18 +13,10 @@ require __DIR__.'/landing.php';
 |--------------------------------------------------------------------------
 */
 
-Route::middleware('auth')->group(function () {
-
-    Route::get('/profile', [ProfileController::class, 'edit'])
-        ->name('profile.edit');
-
-    Route::patch('/profile', [ProfileController::class, 'update'])
-        ->name('profile.update');
-
-    Route::delete('/profile', [ProfileController::class, 'destroy'])
-        ->name('profile.destroy');
-
-});
+// Alamat lama /profile (bawaan Breeze) diarahkan ke profil dashboard.
+// Nama rute profile.update dll. dipakai routes/dashboard/profile.php;
+// nama ganda membuat `php artisan optimize` (route:cache) gagal.
+Route::redirect('/profile', '/dashboard/profile')->name('profile.edit');
 
 
 /*
