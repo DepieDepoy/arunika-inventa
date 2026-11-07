@@ -74,11 +74,17 @@ Kirim di **setiap** request agar server bisa memaksa update & mode pemeliharaan:
 
 ```
 Accept: application/json
-X-App-Platform: android        # atau ios
+X-App-Platform: android        # android | ios | web
 X-App-Version: 1.0.0           # versi aplikasi (pubspec.yaml)
 ```
 
 Versi minimal, versi terbaru, link toko, dan mode pemeliharaan diatur di **Backoffice › Aplikasi mobile** (bukan .env).
+
+**Saat dites di browser (Flutter web)** kirim `X-App-Platform: web` (`kIsWeb`). Server tidak menolaknya:
+pengecekan versi & pemeliharaan memakai aturan **android**. Yang berbeda di web hanya pendaftaran
+token push: `POST /devices` hanya menerima `android`/`ios`, jadi **lewati pendaftaran FCM saat `kIsWeb`**.
+
+`X-App-Version` sebaiknya diambil otomatis dari `package_info_plus` (`PackageInfo.version`) agar selalu sama dengan `pubspec.yaml`.
 
 ### Tanggal & angka
 
