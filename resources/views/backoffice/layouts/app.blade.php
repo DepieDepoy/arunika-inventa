@@ -7,7 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="robots" content="noindex, nofollow">
     <title>@yield('title', 'Backoffice') · Vasetra Backoffice</title>
-    <link rel="icon" href="{{ asset('assets/images/favicon.ico') }}">
+    @include('partials.favicon')
     <link rel="stylesheet" href="{{ asset('assets/css/core/libs.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/plus-jakarta-sans/plus-jakarta-sans.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/vasetra/hope-ui.min.css') }}?v=1.0.0">

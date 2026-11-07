@@ -34,7 +34,7 @@
 <meta property="og:description" content="{{ $c['seo']['description'] }}">
 <meta property="og:image" content="{{ $img($c['seo']['og_image']) ?? asset('assets/images/brand/vasetra-logo.png') }}">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="{{ asset('assets/images/favicon.ico') }}">
+@include('partials.favicon')
 <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/plus-jakarta-sans/plus-jakarta-sans.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/vendor/bootstrap-icons/bootstrap-icons.min.css') }}">
 <style>

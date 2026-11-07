@@ -19,10 +19,7 @@
     </title>
 
     <!-- Favicon -->
-    <link
-        rel="shortcut icon"
-        href="{{ asset('assets/images/favicon.ico') }}"
-    >
+    @include('partials.favicon')
 
     <!-- Library / Plugin -->
     <link

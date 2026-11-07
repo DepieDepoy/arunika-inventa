@@ -9,11 +9,10 @@
 <meta name="viewport"
     content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-<title>Asset Management System - By Arunika Solusi Inovasi</title>
+<title>Daftar - Vasetra</title>
 
 <!-- Favicon -->
-<link rel="shortcut icon"
-    href="{{ asset('assets/images/favicon.ico') }}">
+@include('partials.favicon')
 
 <!-- Library / Plugin Css Build -->
 <link rel="stylesheet"

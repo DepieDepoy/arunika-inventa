@@ -14,7 +14,7 @@
 <title>@yield('title') · Vasetra</title>
 <meta name="description" content="@yield('description')">
 <meta name="theme-color" content="#0b2447">
-<link rel="icon" href="{{ asset('assets/images/favicon.ico') }}">
+@include('partials.favicon')
 <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/plus-jakarta-sans/plus-jakarta-sans.css') }}">
 @yield('head')
 <style>
