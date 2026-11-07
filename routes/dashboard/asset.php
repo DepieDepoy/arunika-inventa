@@ -232,12 +232,16 @@ Route::prefix('dashboard')
         */
 
         Route::get('/asset-disposals', [AssetDisposalController::class, 'index'])
-            ->middleware('permission:asset.view|asset.dispose')
+            ->middleware('permission:asset.dispose')
             ->name('assets.disposals.index');
 
         Route::get('/asset-disposals/export', [AssetDisposalController::class, 'export'])
-            ->middleware('permission:asset.view|asset.dispose')
+            ->middleware('permission:asset.dispose')
             ->name('assets.disposals.export');
+
+        Route::get('/asset-disposals/assets', [AssetDisposalController::class, 'candidates'])
+            ->middleware('permission:asset.dispose')
+            ->name('assets.disposals.candidates');
 
         Route::post('/asset-disposals/{disposal}/cancel', [AssetDisposalController::class, 'cancel'])
             ->whereNumber('disposal')

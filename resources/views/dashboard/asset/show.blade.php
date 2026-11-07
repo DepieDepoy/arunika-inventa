@@ -149,19 +149,9 @@
                     <i class="bi bi-qr-code me-1"></i> Cetak QR
                 </button>
                 @if($canDispose)
-                    <div class="dropdown">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Aksi lainnya" title="Aksi lainnya">
-                            <i class="bi bi-three-dots"></i>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li>
-                                <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#disposeModal">
-                                    <i class="bi bi-archive me-2"></i>Hapuskan aset
-                                    <small class="d-block text-muted ms-4">Rusak, hilang, dijual, dihibahkan</small>
-                                </button>
-                            </li>
-                        </ul>
-                    </div>
+                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#disposeModal" title="Rusak, hilang, dijual, dihibahkan, dikembalikan ke vendor">
+                        <i class="bi bi-archive me-1"></i> Hapuskan
+                    </button>
                 @endif
             @endif
         </div>

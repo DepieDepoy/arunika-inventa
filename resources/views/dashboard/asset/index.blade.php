@@ -102,7 +102,7 @@
                             <span>· <b>{{ number_format((int) $stats->assigned, 0, ',', '.') }}</b> dipegang karyawan</span>
                             <span>· <b>{{ $categories->count() }}</b> kategori</span>
                             <span>· nilai beli <b>Rp{{ number_format((float) $stats->value, 0, ',', '.') }}</b></span>
-                            @if($stats->disposed > 0)
+                            @if($stats->disposed > 0 && auth()->user()->hasPermission('asset.dispose'))
                                 <span>· <a href="{{ route('assets.disposals.index', ['period' => 'all']) }}" class="text-danger fw-semibold">{{ number_format((int) $stats->disposed, 0, ',', '.') }} dihapuskan</a></span>
                             @endif
                         </div>
@@ -114,7 +114,9 @@
                         @if(auth()->user()->hasPermission('asset.export'))
                             <a href="{{ route('assets.export') }}" class="al-tbtn"><i class="bi bi-file-earmark-spreadsheet"></i> Export</a>
                         @endif
-                        <a href="{{ route('assets.disposals.index') }}" class="al-tbtn" title="Aset yang dihapuskan: rusak, hilang, dijual, dihibahkan"><i class="bi bi-archive"></i> Penghapusan</a>
+                        @if(auth()->user()->hasPermission('asset.dispose'))
+                            <a href="{{ route('assets.disposals.index') }}" class="al-tbtn" title="Aset yang dihapuskan: rusak, hilang, dijual, dihibahkan"><i class="bi bi-archive"></i> Penghapusan</a>
+                        @endif
                         @if(auth()->user()->hasPermission('asset.print_qr'))
                             <button type="button" class="al-tbtn" id="btnPrintQr" title="Centang aset di tabel, lalu cetak"><i class="bi bi-qr-code"></i> Cetak QR</button>
                         @endif

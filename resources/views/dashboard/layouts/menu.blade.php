@@ -411,6 +411,7 @@
                 @if(
                     auth()->user()->hasPermission('asset.view') ||
                     auth()->user()->hasPermission('asset.import') ||
+                    auth()->user()->hasPermission('asset.dispose') ||
                     auth()->user()->hasPermission('asset.my')
                 )
 
@@ -544,7 +545,7 @@
                             @endif
 
                             {{-- PENGHAPUSAN ASET --}}
-                            @if(auth()->user()->hasPermission('asset.view') || auth()->user()->hasPermission('asset.dispose'))
+                            @if(auth()->user()->hasPermission('asset.dispose'))
 
                                 <li class="nav-item">
 

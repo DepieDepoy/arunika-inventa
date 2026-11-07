@@ -267,6 +267,7 @@ class AssetController extends Controller
 
         $canEdit = Auth::user()->hasPermission('asset.edit');
         $canDelete = Auth::user()->hasPermission('asset.delete');
+        $canDispose = Auth::user()->hasPermission('asset.dispose');
         $palette = ['#2f7be0', '#14b8a6', '#8b5cf6', '#f59e0b', '#ef4444', '#0ea5e9', '#22c55e'];
 
         return DataTables::eloquent($query)
@@ -321,7 +322,7 @@ class AssetController extends Controller
 
                 return $status;
             })
-            ->addColumn('action', function ($asset) use ($canEdit, $canDelete) {
+            ->addColumn('action', function ($asset) use ($canEdit, $canDelete, $canDispose) {
                 $id = encryptId($asset->id);
                 $html = '<div class="al-actions">'
                     . '<a href="' . route('assets.show', $id) . '" class="al-btn" title="Detail"><i class="bi bi-eye"></i></a>';
@@ -329,6 +330,10 @@ class AssetController extends Controller
                 if ($canEdit && !$asset->isDisposed()) {
                     $html .= '<a href="' . route('assets.assignment.index', $id) . '" class="al-btn" title="Serahkan / pindahkan"><i class="bi bi-arrow-left-right"></i></a>'
                         . '<a href="' . route('assets.edit', $id) . '" class="al-btn" title="Ubah"><i class="bi bi-pencil"></i></a>';
+                }
+
+                if ($canDispose && !$asset->isDisposed()) {
+                    $html .= '<a href="' . route('assets.show', ['id' => $id, 'dispose' => 1]) . '" class="al-btn al-btn-danger" title="Hapuskan aset (rusak, hilang, dijual, dihibahkan)"><i class="bi bi-archive"></i></a>';
                 }
 
                 if ($canDelete) {

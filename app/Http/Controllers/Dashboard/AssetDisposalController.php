@@ -123,6 +123,40 @@ class AssetDisposalController extends Controller
     |--------------------------------------------------------------------------
     */
 
+    /**
+     * Pencarian aset yang masih bisa dihapuskan (untuk tombol "Hapuskan aset" di halaman Penghapusan).
+     */
+    public function candidates(Request $request): JsonResponse
+    {
+        $q = mb_substr(trim((string) $request->query('q', '')), 0, 100);
+        $like = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $q) . '%';
+
+        $assets = Asset::query()
+            ->where('company_id', Auth::user()->company_id)
+            ->inService()
+            ->when($q !== '', fn ($w) => $w->where(fn ($s) => $s
+                ->where('asset_code', 'like', $like)
+                ->orWhere('asset_name', 'like', $like)
+                ->orWhere('serial_number', 'like', $like)))
+            ->with(['responsibleUser:id,name', 'category:id,category_name'])
+            ->orderBy('asset_code')
+            ->limit(20)
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $assets->map(fn (Asset $a) => [
+                'code' => $a->asset_code,
+                'name' => $a->asset_name,
+                'category' => $a->category?->category_name,
+                'location' => $a->location,
+                'holder' => $a->responsibleUser?->name,
+                'status' => $a->statusLabel(),
+                'url' => route('assets.show', ['id' => encryptId($a->id), 'dispose' => 1]),
+            ]),
+        ]);
+    }
+
     /** Pratinjau nilai buku & laba/rugi untuk tanggal dan hasil penjualan tertentu. */
     public function preview(Request $request, string $id): JsonResponse
     {

@@ -253,10 +253,18 @@ document.addEventListener('DOMContentLoaded', function () {
 </div>
 @endif
 
-@if(request()->boolean('move') && $canMove && !$disposed)
+@php
+    // ?move=1 / ?dispose=1 (dari daftar aset atau halaman Penghapusan) membuka modal langsung.
+    $autoModal = match (true) {
+        request()->boolean('move') && $canMove && !$disposed => 'moveLocationModal',
+        request()->boolean('dispose') && $canDispose && !$disposed => 'disposeModal',
+        default => null,
+    };
+@endphp
+@if($autoModal)
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    var el = document.getElementById('moveLocationModal');
+    var el = document.getElementById(@json($autoModal));
     if (el && window.bootstrap) bootstrap.Modal.getOrCreateInstance(el).show();
 });
 </script>

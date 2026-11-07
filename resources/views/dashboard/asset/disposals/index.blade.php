@@ -27,6 +27,15 @@
     .dp-asset { min-width:190px; max-width:260px; }
     .dp-chip { display:inline-flex; align-items:center; gap:5px; font-size:.72rem; font-weight:800; padding:3px 10px; border-radius:999px; background:#fee2e2; color:#b91c1c; white-space:nowrap; }
     .dp-chip.gray { background:#eef2f7; color:#4b5a6e; }
+    .dp-steps { display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px; font-size:.8rem; color:var(--dp-muted); }
+    .dp-steps span { display:inline-flex; align-items:center; gap:6px; }
+    .dp-steps span > b:first-child { width:20px; height:20px; border-radius:50%; display:inline-grid; place-items:center; background:#fee2e2; color:#b91c1c; font-size:.7rem; }
+    .dp-steps i { font-size:.7rem; opacity:.6; }
+    .dp-pick { list-style:none; margin:0; padding:0; max-height:360px; overflow-y:auto; }
+    .dp-pick a { display:flex; justify-content:space-between; gap:12px; align-items:center; padding:10px 12px; border-radius:10px; text-decoration:none; color:inherit; border:1px solid transparent; }
+    .dp-pick a:hover, .dp-pick a:focus { border-color:#fecaca; background:#fff5f5; }
+    .dp-pick b { display:block; }
+    .dp-pick small { color:var(--dp-muted); }
     .dp-empty { text-align:center; color:var(--dp-muted); padding:42px 10px; }
     .dp-empty i { font-size:2rem; display:block; margin-bottom:8px; opacity:.6; }
 </style>
@@ -40,7 +49,20 @@
                 <h4 class="mb-1 fw-bold">Penghapusan Aset</h4>
                 <div class="text-muted small">Aset yang rusak & dimusnahkan, hilang, dijual, dihibahkan, atau dikembalikan ke vendor &middot; {{ $periodText }}</div>
             </div>
-            <a href="{{ route('assets.disposals.export', request()->query()) }}" class="btn btn-outline-success"><i class="bi bi-file-earmark-excel me-1"></i>Export Excel</a>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ route('assets.disposals.export', request()->query()) }}" class="btn btn-outline-success"><i class="bi bi-file-earmark-excel me-1"></i>Export Excel</a>
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#pickAssetModal"><i class="bi bi-archive me-1"></i>Hapuskan aset</button>
+            </div>
+        </div>
+
+        <div class="dp-steps mt-3">
+            <span><b>1</b> Klik <b>Hapuskan aset</b> &amp; pilih asetnya</span>
+            <i class="bi bi-chevron-right"></i>
+            <span><b>2</b> Pilih alasan, tanggal &amp; hasil penjualan</span>
+            <i class="bi bi-chevron-right"></i>
+            <span><b>3</b> Lampirkan berita acara &amp; konfirmasi</span>
+            <i class="bi bi-chevron-right"></i>
+            <span><b>4</b> Aset keluar dari daftar aktif; riwayat tetap tersimpan</span>
         </div>
 
         <form method="GET" class="d-flex flex-wrap gap-2 mt-3">
@@ -146,7 +168,7 @@
                         </tr>
                     @empty
                         <tr><td colspan="7" class="dp-empty"><i class="bi bi-archive"></i>Belum ada aset yang dihapuskan pada filter ini.<br>
-                            <small>Untuk menghapuskan aset, buka detail aset lalu pilih <b>&hellip; &rarr; Hapuskan aset</b>.</small></td></tr>
+                            <small>Klik <b>Hapuskan aset</b> di atas, atau tombol <b>Hapuskan</b> di halaman detail aset.</small></td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -154,4 +176,50 @@
         @if($disposals->hasPages())<div class="p-3">{{ $disposals->links() }}</div>@endif
     </div>
 </div>
+
+{{-- Pilih aset yang akan dihapuskan --}}
+<div class="modal fade" id="pickAssetModal" tabindex="-1" aria-labelledby="pickAssetTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="pickAssetTitle"><i class="bi bi-archive me-2 text-danger"></i>Pilih aset yang dihapuskan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+            </div>
+            <div class="modal-body">
+                <input type="search" id="dpPickSearch" class="form-control mb-3" placeholder="Cari kode, nama, atau nomor seri aset" autocomplete="off">
+                <ul class="dp-pick" id="dpPickList" aria-live="polite"></ul>
+                <div class="text-muted small mt-2">Setelah memilih, form penghapusan aset tersebut terbuka. Aset yang sudah dihapuskan tidak tampil di sini.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var modal = document.getElementById('pickAssetModal');
+    var input = document.getElementById('dpPickSearch');
+    var list = document.getElementById('dpPickList');
+    var url = @json(route('assets.disposals.candidates'));
+    var timer = null;
+    var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
+
+    function load() {
+        list.innerHTML = '<li class="text-muted small p-2">Memuat...</li>';
+        fetch(url + '?q=' + encodeURIComponent(input.value.trim()), { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function (r) { return r.json(); })
+            .then(function (res) {
+                var rows = (res && res.data) || [];
+                if (!rows.length) { list.innerHTML = '<li class="text-muted small p-2">Aset tidak ditemukan.</li>'; return; }
+                list.innerHTML = rows.map(function (a) {
+                    var meta = [a.category, a.location, a.holder ? 'dipegang ' + a.holder : null].filter(Boolean).join(' · ');
+                    return '<li><a href="' + esc(a.url) + '"><span><b>' + esc(a.code) + ' &middot; ' + esc(a.name) + '</b><small>' + esc(meta || a.status) + '</small></span><i class="bi bi-chevron-right text-danger"></i></a></li>';
+                }).join('');
+            })
+            .catch(function () { list.innerHTML = '<li class="text-danger small p-2">Gagal memuat daftar aset.</li>'; });
+    }
+
+    input.addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(load, 250); });
+    modal.addEventListener('shown.bs.modal', function () { input.focus(); if (!list.children.length) load(); });
+});
+</script>
 @endsection
