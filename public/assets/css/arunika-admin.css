@@ -599,8 +599,24 @@ table.dataTable tbody tr:hover{
 /* Fix scroll menu sidebar Vasetra */
 .sidebar.sidebar-default {
     height: 100vh !important;
+    /* HP: 100vh ikut menghitung area address bar sehingga menu bawah terpotong.
+       dvh = tinggi layar yang benar-benar terlihat (browser lama memakai baris di atas). */
+    height: 100dvh !important;
     display: flex !important;
     flex-direction: column !important;
+}
+
+/* HP & tablet: scroll sentuh bawaan browser (lebih lancar dari smooth-scrollbar). */
+@media (max-width: 1199.98px) {
+    .sidebar.sidebar-default > .sidebar-body {
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+        touch-action: pan-y;
+    }
+
+    .sidebar.sidebar-default > .sidebar-body .sidebar-list {
+        padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+    }
 }
 
 .sidebar.sidebar-default > .sidebar-header {

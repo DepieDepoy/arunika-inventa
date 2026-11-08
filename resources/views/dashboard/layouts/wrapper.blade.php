@@ -79,7 +79,7 @@
     <!-- Vasetra Custom -->
     <link
         rel="stylesheet"
-        href="{{ asset('assets/css/arunika-admin.css') }}"
+        href="{{ asset('assets/css/arunika-admin.css') }}?v=2"
     >
 
     <!-- Vasetra Brand (identitas visual: font, sidebar, header, kartu) -->

@@ -205,5 +205,17 @@
     <script src="{{ asset('assets/vendor/aos/dist/aos.js') }}"></script>
     <!-- App Script -->
     <script src="{{ asset('assets/js/hope-ui.js') }}" defer></script>
-    
+    <script>
+    /* HP & tablet: matikan smooth-scrollbar di sidebar agar memakai scroll sentuh
+       bawaan browser (menu bisa digulir sampai paling bawah). */
+    window.addEventListener('load', function () {
+        var body = document.querySelector('.sidebar .sidebar-body');
+        if (!body || !window.matchMedia('(max-width: 1199.98px)').matches) return;
+        try {
+            if (window.Scrollbar && window.Scrollbar.has(body)) window.Scrollbar.destroy(body);
+        } catch (e) {}
+        body.style.overflowY = 'auto';
+    });
+    </script>
+
     @yield('js')
