@@ -34,6 +34,7 @@ class AssetAudit extends Model
         'audit_no',
         'title',
         'location_filter',
+        'location_id',
         'status',
         'notes',
         'locations_applied',
@@ -72,6 +73,19 @@ class AssetAudit extends Model
         return $this->belongsTo(Branch::class)->withTrashed();
     }
 
+    public function location(): BelongsTo
+    {
+        return $this->belongsTo(Location::class)->withTrashed();
+    }
+
+    /**
+     * Petugas audit (satu user bisa punya beberapa area lokasi).
+     */
+    public function assignees(): HasMany
+    {
+        return $this->hasMany(AssetAuditAssignee::class);
+    }
+
     public function starter(): BelongsTo
     {
         return $this->belongsTo(User::class, 'started_by');
@@ -85,7 +99,10 @@ class AssetAudit extends Model
     /**
      * Ringkasan hasil audit.
      *
-     * @return array{total:int, checked:int, pending:int, found:int, missing:int, misplaced:int, damaged:int, extra:int, percent:int}
+     * total = aset dalam daftar; found + missing + pending = total.
+     * other_branch = aset cabang lain yang terbaca; extra = aset cabang ini di luar daftar.
+     *
+     * @return array{total:int, checked:int, pending:int, found:int, missing:int, misplaced:int, damaged:int, extra:int, other_branch:int, percent:int}
      */
     public function summary(): array
     {
@@ -98,12 +115,13 @@ class AssetAudit extends Model
             ->selectRaw("SUM(in_scope = 1 AND result = 'missing') AS missing")
             ->selectRaw("SUM(in_scope = 1 AND result = 'found' AND location_mismatch = 1) AS misplaced")
             ->selectRaw("SUM(result = 'found' AND `condition` IN ('minor_damage','major_damage')) AS damaged")
-            ->selectRaw('SUM(in_scope = 0) AS extra')
+            ->selectRaw('SUM(in_scope = 0 AND branch_mismatch = 0) AS extra')
+            ->selectRaw('SUM(in_scope = 0 AND branch_mismatch = 1) AS other_branch')
             ->first();
 
         $s = [];
 
-        foreach (['total', 'checked', 'pending', 'found', 'missing', 'misplaced', 'damaged', 'extra'] as $k) {
+        foreach (['total', 'checked', 'pending', 'found', 'missing', 'misplaced', 'damaged', 'extra', 'other_branch'] as $k) {
             $s[$k] = (int) ($row->{$k} ?? 0);
         }
 

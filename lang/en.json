@@ -306,5 +306,7 @@
     "Mutasi :no sudah diterima": "Transfer :no has been received",
     ":name di :to sudah menerima aset yang Anda kirim.": ":name at :to has received the assets you sent.",
     "Mutasi :no dibatalkan": "Transfer :no was cancelled",
-    "Pengiriman aset dari :from dibatalkan oleh pengirim.": "The asset shipment from :from was cancelled by the sender."
+    "Pengiriman aset dari :from dibatalkan oleh pengirim.": "The asset shipment from :from was cancelled by the sender.",
+    "Tugas audit fisik: :title": "Physical audit task: :title",
+    ":name menugaskan Anda audit fisik :no (:area). Buka lalu scan QR aset.": ":name assigned you to physical audit :no (:area). Open it and scan the asset QR codes."
 }

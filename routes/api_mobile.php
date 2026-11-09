@@ -217,6 +217,15 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                 Route::delete('/{id}', [\App\Http\Controllers\Api\V1\Branch\BranchController::class, 'destroy'])->whereNumber('id')->middleware('permission:branch.delete')->name('destroy');
             });
 
+            // Master lokasi (ruangan / area) per cabang.
+            Route::prefix('locations')->name('locations.')->group(function () {
+                $c = \App\Http\Controllers\Api\V1\MasterData\LocationController::class;
+                Route::get('/', [$c, 'index'])->name('index');
+                Route::post('/', [$c, 'store'])->middleware('permission:location.create|asset.create|asset.move')->name('store');
+                Route::put('/{id}', [$c, 'update'])->whereNumber('id')->middleware('permission:location.edit')->name('update');
+                Route::delete('/{id}', [$c, 'destroy'])->whereNumber('id')->middleware('permission:location.delete')->name('destroy');
+            });
+
             // Mutasi aset antar-cabang.
             Route::prefix('branch-transfers')->name('branch-transfers.')->group(function () {
                 $c = \App\Http\Controllers\Api\V1\Branch\BranchTransferController::class;
@@ -238,6 +247,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                 Route::get('/{id}/items', [$c, 'items'])->whereNumber('id')->middleware('permission:asset_audit.view|asset_audit.scan')->name('items');
                 Route::post('/{id}/scan', [$c, 'scan'])->whereNumber('id')->middleware(['permission:asset_audit.scan', 'throttle:240,1'])->name('scan');
                 Route::post('/{id}/items/{itemId}', [$c, 'mark'])->whereNumber(['id', 'itemId'])->middleware('permission:asset_audit.scan')->name('mark');
+                Route::post('/{id}/mark-location', [$c, 'markLocation'])->whereNumber('id')->middleware('permission:asset_audit.scan')->name('mark-location');
                 Route::post('/{id}/complete', [$c, 'complete'])->whereNumber('id')->middleware('permission:asset_audit.create')->name('complete');
                 Route::post('/{id}/cancel', [$c, 'cancel'])->whereNumber('id')->middleware('permission:asset_audit.create')->name('cancel');
                 Route::get('/{id}/export', [$c, 'export'])->whereNumber('id')->middleware(['permission:asset_audit.view', 'throttle:20,1'])->name('export');

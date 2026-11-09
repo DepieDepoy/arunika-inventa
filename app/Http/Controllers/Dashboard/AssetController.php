@@ -128,12 +128,16 @@ class AssetController extends Controller
             ? \App\Support\BranchAccess::options((int) $companyId, Auth::user())
             : collect();
 
+        // Cabang awal (form lokasi mengikuti cabang ini).
+        $defaultBranchId = \App\Support\BranchAccess::defaultBranchId((int) $companyId);
+
         return view('dashboard.asset.create', compact(
             'categories',
             'subCategories',
             'vendors',
             'users',
-            'branches'
+            'branches',
+            'defaultBranchId'
         ));
     }
 

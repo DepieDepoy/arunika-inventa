@@ -180,7 +180,9 @@ class BranchTransferService
                 }
 
                 $fromLoc = $asset->location;
-                $toLoc = $newLocation !== '' ? $newLocation : $fromLoc;
+                // Lokasi lama milik cabang asal; di cabang tujuan lokasinya dipilih saat
+                // menerima (master lokasi cabang tujuan). Kosong = belum ditentukan.
+                $toLoc = $newLocation !== '' ? $newLocation : null;
 
                 AssetLocationHistory::create([
                     'company_id' => $asset->company_id,

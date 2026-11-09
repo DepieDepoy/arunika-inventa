@@ -23,11 +23,15 @@ class AssetAuditItem extends Model
         'asset_code',
         'asset_name',
         'expected_location',
+        'expected_branch_id',
+        'expected_location_id',
         'in_scope',
         'result',
         'found_location',
+        'found_location_id',
         'condition',
         'location_mismatch',
+        'branch_mismatch',
         'notes',
         'checked_at',
         'checked_by',
@@ -36,6 +40,7 @@ class AssetAuditItem extends Model
     protected $casts = [
         'in_scope' => 'boolean',
         'location_mismatch' => 'boolean',
+        'branch_mismatch' => 'boolean',
         'checked_at' => 'datetime',
     ];
 
@@ -49,6 +54,11 @@ class AssetAuditItem extends Model
         return $this->belongsTo(Asset::class)->withoutGlobalScope(BranchScope::class)->withTrashed();
     }
 
+    public function expectedBranch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class, 'expected_branch_id')->withTrashed();
+    }
+
     public function checker(): BelongsTo
     {
         return $this->belongsTo(User::class, 'checked_by');
@@ -60,12 +70,12 @@ class AssetAuditItem extends Model
     }
 
     /**
-     * Status tampilan: pending | found | misplaced | missing | extra
+     * Status tampilan: pending | found | misplaced | missing | extra | other_branch
      */
     public function state(): string
     {
         if (!$this->in_scope) {
-            return 'extra';
+            return $this->branch_mismatch ? 'other_branch' : 'extra';
         }
 
         if ($this->result === self::RESULT_MISSING) {

@@ -739,6 +739,9 @@ class AssetImport implements
             DB::table('assets')->insert(
                 $insertRows
             );
+
+            // Hubungkan teks lokasi hasil import ke master lokasi cabang.
+            \App\Services\Asset\LocationService::syncMissing($this->companyId);
         }
 
         /**

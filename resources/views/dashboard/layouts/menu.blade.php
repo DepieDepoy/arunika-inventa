@@ -223,14 +223,16 @@
                 @if(
                     auth()->user()->hasPermission('category.view') ||
                     auth()->user()->hasPermission('subcategory.view') ||
-                    auth()->user()->hasPermission('vendor.view')
+                    auth()->user()->hasPermission('vendor.view') ||
+                    auth()->user()->hasPermission('location.view')
                 )
 
                     @php
                         $masterDataActive =
                             request()->routeIs('category.*') ||
                             request()->routeIs('subcategory.*') ||
-                            request()->routeIs('vendor.*');
+                            request()->routeIs('vendor.*') ||
+                            request()->routeIs('locations.*');
                     @endphp
 
                     <li class="nav-item">
@@ -396,6 +398,16 @@
 
                                 </li>
 
+                            @endif
+
+                            {{-- LOKASI (ruangan / area per cabang) --}}
+                            @if(auth()->user()->hasPermission('location.view'))
+                                <li class="nav-item">
+                                    <a class="nav-link {{ request()->routeIs('locations.*') ? 'active' : '' }}" href="{{ route('locations.index') }}">
+                                        <i class="icon"><svg class="icon-10" xmlns="http://www.w3.org/2000/svg" width="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8" fill="currentColor"/></svg></i>
+                                        <span class="item-name">Lokasi</span>
+                                    </a>
+                                </li>
                             @endif
 
                         </ul>

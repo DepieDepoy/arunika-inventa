@@ -109,8 +109,8 @@
                             @csrf
                             <div class="mb-3">
                                 <label class="form-label">Lokasi penempatan baru <small class="text-muted">(opsional)</small></label>
-                                <input type="text" name="location" class="form-control" maxlength="255" placeholder="Contoh: Gudang lt. 1">
-                                <small class="text-muted">Kosongkan bila lokasi tetap seperti sebelumnya.</small>
+                                <select name="location" class="form-select" data-location-picker data-branch="{{ $transfer->to_branch_id }}" data-empty-label="— Tentukan nanti —"></select>
+                                <small class="text-muted">Lokasi di {{ $transfer->toBranch?->branch_name }}. Bisa juga diatur nanti lewat Pindah lokasi.</small>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Catatan penerimaan</label>
@@ -141,6 +141,7 @@
 @endsection
 
 @section('js')
+@include('dashboard.components.location-picker')
 <script>
 $('#formCancel').on('submit', function (e) {
     e.preventDefault();

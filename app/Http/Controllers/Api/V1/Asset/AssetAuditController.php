@@ -25,6 +25,7 @@ use Symfony\Component\HttpFoundation\Response;
  * GET  /asset-audits/{id}/items?filter=&q=                        daftar aset (paginasi)
  * POST /asset-audits/{id}/scan                                    scan QR / kode (asset_audit.scan)
  * POST /asset-audits/{id}/items/{itemId}                          tandai manual found|missing|reset
+ * POST /asset-audits/{id}/mark-location                           tandai semua belum dicek di 1 lokasi = ditemukan
  * POST /asset-audits/{id}/complete                                selesaikan (asset_audit.create)
  * POST /asset-audits/{id}/cancel                                  batalkan (asset_audit.create)
  * GET  /asset-audits/{id}/export                                  unduh Excel (asset_audit.view)
@@ -61,7 +62,26 @@ class AssetAuditController extends ApiController
             // null = boleh pilih "Semua cabang"; terisi = cabang user (wajib).
             'my_branch_id' => BranchAccess::restrictedBranchId($user),
             'multi_branch' => BranchAccess::hasMultiple($companyId),
-            'locations' => $this->lifecycle->knownLocations($companyId),
+            // Master lokasi per cabang: [{branch_id, branch_name, locations:[{id,name}]}]
+            'locations' => \App\Models\Location::query()
+                ->where('company_id', $companyId)->where('status', 1)
+                ->when(BranchAccess::restrictedBranchId($user), fn ($q, $b) => $q->where('branch_id', $b))
+                ->with('branch:id,branch_name')->orderBy('branch_id')->orderBy('name')->get()
+                ->groupBy('branch_id')
+                ->map(fn ($items, $branchId) => [
+                    'branch_id' => (int) $branchId,
+                    'branch_name' => $items->first()->branch?->branch_name,
+                    'locations' => $items->map(fn ($l) => ['id' => $l->id, 'name' => $l->name])->values(),
+                ])->values(),
+            // Calon petugas (hanya untuk pengelola audit).
+            'assignee_candidates' => $user->hasPermission('asset_audit.create')
+                ? $this->audits->assigneeCandidates($user)->map(fn ($u) => [
+                    'id' => $u->id,
+                    'name' => $u->name,
+                    'role' => $u->role?->role_name,
+                    'branch' => BranchController::presentBranch($u->branch),
+                ])->values()
+                : [],
             'conditions' => collect(AssetAuditItem::CONDITIONS)->map(fn ($label, $key) => ['key' => $key, 'label' => $label])->values(),
             'filters' => [
                 ['key' => 'all', 'label' => 'Total aset'],
@@ -70,7 +90,9 @@ class AssetAuditController extends ApiController
                 ['key' => 'misplaced', 'label' => 'Salah lokasi'],
                 ['key' => 'damaged', 'label' => 'Rusak'],
                 ['key' => 'missing', 'label' => 'Tidak ditemukan'],
+                ['key' => 'other_branch', 'label' => 'Beda cabang'],
                 ['key' => 'extra', 'label' => 'Di luar daftar'],
+                ['key' => 'mine', 'label' => 'Tugas saya'],
             ],
         ]);
     }
@@ -80,14 +102,17 @@ class AssetAuditController extends ApiController
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:150'],
             'branch_id' => ['nullable', 'integer'],
-            'location_filter' => ['nullable', 'string', 'max:255'],
+            'location_id' => ['nullable', 'integer'],
             'notes' => ['nullable', 'string', 'max:1000'],
+            'assignees' => ['nullable', 'array', 'max:50'],
+            'assignees.*.user_id' => ['required_with:assignees', 'integer'],
+            'assignees.*.location_id' => ['nullable', 'integer'],
         ], [
             'title.required' => 'Judul audit wajib diisi.',
         ]);
 
         try {
-            $audit = $this->audits->create($request->user(), $validated['title'], $validated['branch_id'] ?? null, $validated['location_filter'] ?? null, $validated['notes'] ?? null);
+            $audit = $this->audits->create($request->user(), $validated['title'], $validated['branch_id'] ?? null, $validated['location_id'] ?? null, $validated['notes'] ?? null, $validated['assignees'] ?? []);
         } catch (ActionFailed $e) {
             return $this->fail($e->getMessage(), $e->errorCode, $e->status);
         }
@@ -116,8 +141,8 @@ class AssetAuditController extends ApiController
 
         $filter = in_array($request->query('filter'), AssetAuditService::FILTERS, true) ? $request->query('filter') : 'all';
 
-        $page = $this->audits->itemsQuery($audit, $filter, $request->query('q'))
-            ->with('checker:id,name')
+        $page = $this->audits->itemsQuery($audit, $filter, $request->query('q'), $request->user())
+            ->with(['checker:id,name', 'expectedBranch:id,branch_name'])
             ->paginate($this->perPage($request, 50));
 
         return $this->paginated('items', $page, fn (AssetAuditItem $i) => $this->audits->itemPayload($i));
@@ -127,20 +152,20 @@ class AssetAuditController extends ApiController
     {
         $validated = $request->validate([
             'code' => ['required', 'string', 'max:500'],
-            'location' => ['nullable', 'string', 'max:255'],
+            'location_id' => ['nullable', 'integer'],
             'condition' => ['nullable', 'in:' . implode(',', array_keys(AssetAuditItem::CONDITIONS))],
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
 
         try {
             $audit = $this->audits->find($request->user(), $id);
-            $result = $this->audits->scan($request->user(), $audit, $validated['code'], $validated['location'] ?? null, $validated['condition'] ?? null, $validated['notes'] ?? null);
+            $result = $this->audits->scan($request->user(), $audit, $validated['code'], $validated['location_id'] ?? null, $validated['condition'] ?? null, $validated['notes'] ?? null);
         } catch (ActionFailed $e) {
             return $this->fail($e->getMessage(), $e->errorCode, $e->status);
         }
 
         return $this->ok([
-            'item' => $this->audits->itemPayload($result['item']->load('checker:id,name')),
+            'item' => $this->audits->itemPayload($result['item']->load(['checker:id,name', 'expectedBranch:id,branch_name'])),
             'already_scanned' => $result['already'],
             'summary' => $audit->summary(),
         ], $result['message']);
@@ -164,6 +189,20 @@ class AssetAuditController extends ApiController
             'removed' => $item === null,
             'summary' => $audit->summary(),
         ]);
+    }
+
+    public function markLocation(Request $request, int $id): JsonResponse
+    {
+        $validated = $request->validate(['location_id' => ['required', 'integer']]);
+
+        try {
+            $audit = $this->audits->find($request->user(), $id);
+            $count = $this->audits->markLocationFound($request->user(), $audit, $validated['location_id']);
+        } catch (ActionFailed $e) {
+            return $this->fail($e->getMessage(), $e->errorCode, $e->status);
+        }
+
+        return $this->ok(['marked' => $count, 'summary' => $audit->summary()], $count . ' aset ditandai ditemukan.');
     }
 
     public function complete(Request $request, int $id): JsonResponse
@@ -217,6 +256,7 @@ class AssetAuditController extends ApiController
             'status_label' => $a->statusLabel(),
             'branch' => BranchController::presentBranch($a->branch),
             'location_filter' => $a->location_filter,
+            'location_id' => $a->location_id,
             'notes' => $a->notes,
             'locations_applied' => (bool) $a->locations_applied,
             'started_by' => $a->starter?->name,
@@ -224,8 +264,12 @@ class AssetAuditController extends ApiController
             'completed_by' => $a->completer?->name,
             'completed_at' => $a->completed_at?->toIso8601String(),
             'summary' => $a->summary(),
-            'can_scan' => $a->isOpen() && $user->hasPermission('asset_audit.scan'),
-            'can_manage' => $a->isOpen() && $user->hasPermission('asset_audit.create'),
+            'can_scan' => $this->audits->canScan($user, $a),
+            'can_manage' => $this->audits->canManage($user, $a),
+            // Petugas: area lokasi user ini (null di dalam array = semua lokasi).
+            'is_assignee' => $this->audits->isAssignee($user, $a),
+            'my_location_ids' => $a->assignees()->where('user_id', $user->id)->pluck('location_id')->values(),
+            'team' => $this->audits->teamProgress($a),
         ];
     }
 }

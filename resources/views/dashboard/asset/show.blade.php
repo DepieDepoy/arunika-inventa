@@ -482,6 +482,7 @@
 </div>
 
 @include('dashboard.asset.partials.lifecycle-modals')
+@include('dashboard.components.location-picker')
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {

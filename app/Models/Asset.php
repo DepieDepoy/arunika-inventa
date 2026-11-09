@@ -31,11 +31,54 @@ class Asset extends Model
                 $asset->branch_id = \App\Support\BranchAccess::defaultBranchId((int) $asset->company_id);
             }
         });
+
+        /*
+         * Master lokasi: teks `location` & `location_id` selalu selaras.
+         *  - location_id diisi  -> teks = nama lokasi
+         *  - teks diisi         -> dicocokkan / dibuat di master lokasi cabang aset
+         *  - pindah cabang      -> lokasi lama (cabang lain) dilepas
+         */
+        static::saving(function (Asset $asset) {
+            if ($asset->isDirty('location_id') && $asset->location_id) {
+                $asset->location = Location::withTrashed()->whereKey($asset->location_id)->value('name') ?? $asset->location;
+
+                return;
+            }
+
+            if ($asset->isDirty('location') || ($asset->location && !$asset->location_id)) {
+                $asset->location = $asset->location !== null ? trim((string) $asset->location) : null;
+                $asset->location_id = \App\Services\Asset\LocationService::resolveId(
+                    (int) $asset->company_id,
+                    $asset->branch_id ? (int) $asset->branch_id : null,
+                    $asset->location
+                );
+
+                if (!$asset->location_id && $asset->location === '') {
+                    $asset->location = null;
+                }
+
+                return;
+            }
+
+            if ($asset->isDirty('branch_id') && $asset->location_id) {
+                $locationBranch = Location::withTrashed()->whereKey($asset->location_id)->value('branch_id');
+
+                if ((int) $locationBranch !== (int) $asset->branch_id) {
+                    $asset->location_id = null;
+                    $asset->location = null;
+                }
+            }
+        });
     }
 
     public function branch()
     {
         return $this->belongsTo(Branch::class)->withTrashed();
+    }
+
+    public function locationRef()
+    {
+        return $this->belongsTo(Location::class, 'location_id')->withTrashed();
     }
 
     protected $fillable = [
@@ -77,6 +120,7 @@ class Asset extends Model
         'next_maintenance_date',
 
         'location',
+        'location_id',
         'status',
         'disposed_at',
 

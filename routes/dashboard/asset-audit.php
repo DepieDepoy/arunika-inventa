@@ -34,6 +34,17 @@ Route::prefix('dashboard')
             ->middleware(['permission:asset_audit.scan', 'subscription.active'])
             ->name('asset-audits.mark');
 
+        Route::get('/asset-audits/{audit}/summary', [AssetAuditController::class, 'summary'])
+            ->whereNumber('audit')
+            ->middleware('permission:asset_audit.view|asset_audit.scan')
+            ->name('asset-audits.summary');
+
+        // Tandai semua aset belum dicek di satu lokasi = ditemukan.
+        Route::post('/asset-audits/{audit}/mark-location', [AssetAuditController::class, 'markLocation'])
+            ->whereNumber('audit')
+            ->middleware(['permission:asset_audit.scan', 'subscription.active'])
+            ->name('asset-audits.mark-location');
+
         Route::post('/asset-audits/{audit}/complete', [AssetAuditController::class, 'complete'])
             ->whereNumber('audit')
             ->middleware(['permission:asset_audit.create', 'subscription.active'])

@@ -73,6 +73,29 @@
 
 <div class="vx-home">
 
+    {{-- Pengingat: lengkapi data Kantor Pusat (nama kota / alamat) --}}
+    @php
+        $hqReminder = null;
+        if (auth()->user()->isCompanyAdmin()) {
+            $hq = \App\Support\BranchAccess::headOffice((int) auth()->user()->company_id);
+            if (!$hq->address) {
+                $hqReminder = $hq;
+            }
+        }
+    @endphp
+    @if($hqReminder)
+        <div class="alert alert-info d-flex flex-wrap gap-2 align-items-center justify-content-between mb-3">
+            <div>
+                <i class="bi bi-building me-1"></i>
+                <b>Lengkapi data Kantor Pusat.</b>
+                Saat ini bernama "{{ $hqReminder->branch_name }}" tanpa alamat. Ganti nama sesuai kota pusat Anda (mis. "Pusat Surabaya") dan isi alamatnya.
+            </div>
+            @if(auth()->user()->hasPermission('branch.edit'))
+                <a href="{{ route('branches.index') }}" class="btn btn-sm btn-primary">Atur Kantor Pusat</a>
+            @endif
+        </div>
+    @endif
+
     {{-- =========================================================
          KPI
     ========================================================== --}}

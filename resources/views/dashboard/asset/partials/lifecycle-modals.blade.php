@@ -39,14 +39,10 @@
                 <div class="fw-bold mb-3">{{ $asset->location ?: 'Belum diisi' }}</div>
 
                 <label class="form-label" for="lcLocation">Lokasi baru <span class="text-danger">*</span></label>
-                <input type="text" name="location" id="lcLocation" class="form-control" maxlength="255" required list="lcKnownLocations"
-                       placeholder="Mis. Gudang B, Lantai 3 - Ruang Finance" value="{{ old('location') }}" autocomplete="off">
-                <datalist id="lcKnownLocations">
-                    @foreach($knownLocations as $loc)
-                        @if(mb_strtolower($loc) !== mb_strtolower((string) $asset->location))<option value="{{ $loc }}">@endif
-                    @endforeach
-                </datalist>
-                <div class="form-text">Pilih lokasi yang sudah ada agar penulisannya seragam di laporan, atau ketik lokasi baru.</div>
+                {{-- Master lokasi cabang aset (lihat menu Master Data > Lokasi) --}}
+                <select name="location" id="lcLocation" class="form-select" required data-location-picker
+                        data-branch="{{ $asset->branch_id }}" data-value="{{ old('location') }}"></select>
+                <div class="form-text">Lokasi di {{ $asset->branch?->branch_name ?? 'cabang aset' }}. Pilih <b>+ Tambah lokasi baru</b> bila belum ada. Untuk pindah ke cabang lain gunakan Mutasi Aset.</div>
 
                 <div class="row g-3 mt-1">
                     <div class="col-sm-5">

@@ -140,6 +140,7 @@ Untuk endpoint `PUT` yang membawa file, kirim **POST** dengan field tambahan `_m
 | Cabang: lihat / tambah / ubah / hapus | `branch.view` / `branch.create` / `branch.edit` / `branch.delete` |
 | Mutasi aset antar-cabang: kirim & batalkan / terima | `branch.transfer` / `branch.receive` |
 | Audit fisik: lihat & laporan / buat-selesaikan-batalkan / scan | `asset_audit.view` / `asset_audit.create` / `asset_audit.scan` |
+| Master lokasi: lihat / tambah / ubah / hapus | `location.view` / `location.create` / `location.edit` / `location.delete` |
 
 Server tetap memeriksa izin; aplikasi hanya menyesuaikan tampilan.
 
@@ -556,32 +557,69 @@ notifikasi (`type = branch_transfer`, `data.branch_transfer_id`) → buka detail
 → aset pindah cabang & tercatat di riwayat lokasi. Pengirim bisa **Batalkan** selama belum diterima (`can_cancel`).
 User cabang hanya boleh mengirim dari cabangnya sendiri (`from_branch_id` = `my_branch_id`).
 
-### 3.15 Audit fisik aset (scan QR) 🔐💳
+### 3.15 Master lokasi 🔐💳
 
-Cek fisik / inventarisasi aset tetap (bukan stok barang). Petugas keliling, scan QR label aset dengan kamera HP.
+**Cabang** = kantor/kota (Kantor Pusat, Surabaya). **Lokasi** = tempat di dalam cabang (Lantai 1, Gudang, Ruang Finance).
+Lokasi dipilih dari daftar (bukan diketik bebas) di form aset, pindah lokasi, terima mutasi, dan audit.
 
 | Method | Path | Permission | Keterangan |
 |---|---|---|---|
-| GET | `/asset-audits?status=in_progress\|completed\|cancelled&page=` | asset_audit.view \| scan | Daftar sesi + `summary` tiap sesi |
-| GET | `/asset-audits/options` | asset_audit.* | Data form: `branches`, `my_branch_id`, `multi_branch`, `locations`, `conditions` `[{key,label}]`, `filters` |
-| POST | `/asset-audits` | asset_audit.create | `title`*, `branch_id` (kosong = semua cabang; user cabang otomatis cabangnya), `location_filter`, `notes` → **201** |
-| GET | `/asset-audits/{id}` | asset_audit.view \| scan | Detail + `summary` + `can_scan` + `can_manage` |
-| GET | `/asset-audits/{id}/items?filter=&q=&page=` | asset_audit.view \| scan | `filter`: `all`, `pending`, `found`, `misplaced`, `damaged`, `missing`, `extra` |
-| POST | `/asset-audits/{id}/scan` | asset_audit.scan | `code`* (isi QR apa adanya — URL label atau kode aset), `location` (lokasi petugas sekarang), `condition` (`good`/`minor_damage`/`major_damage`), `notes` |
-| POST | `/asset-audits/{id}/items/{itemId}` | asset_audit.scan | `action`: `found` \| `missing` \| `reset` (untuk aset tanpa label QR) |
-| POST | `/asset-audits/{id}/complete` | asset_audit.create | `apply_locations` (bool): perbarui lokasi aset yang salah lokasi. Yang belum dicek → `missing` |
+| GET | `/locations?branch_id=` | login | Lokasi aktif `{id, name, description, status, branch_id, branch_name}` (user cabang otomatis cabangnya) |
+| POST | `/locations` | location.create \| asset.create \| asset.move | `name`*, `branch_id`, `description`, `status`. Nama ganda di cabang yang sama → 422 |
+| PUT | `/locations/{id}` | location.edit | Nama baru ikut mengubah nama lokasi di semua aset |
+| DELETE | `/locations/{id}` | location.delete | 422 `IN_USE` bila masih dipakai aset |
+
+Aset: field `location` (nama) tetap ada. Saat menyimpan aset / pindah lokasi cukup kirim `location` = **nama lokasi dari daftar**
+(server mencocokkan ke master; nama baru otomatis dibuat sebagai lokasi cabang aset). Saat aset dimutasi ke cabang lain,
+lokasi lamanya dilepas — pilih lokasi cabang tujuan di `POST /branch-transfers/{id}/receive` (`location`).
+
+### 3.16 Audit fisik aset (scan QR) 🔐💳
+
+Cek fisik / inventarisasi aset tetap (bukan stok barang).
+
+**Alur**
+1. **Pengelola audit** (`asset_audit.create`, mis. Administrator / Auditor) membuat sesi: cabang, lokasi (opsional),
+   dan **petugas** (opsional) — tiap petugas boleh diberi **area lokasi**. Petugas mendapat notifikasi
+   (`type = asset_audit`, `data.asset_audit_id`).
+2. **Petugas** scan dengan **akunnya masing-masing**; beberapa petugas bisa scan bersamaan. Bila audit punya petugas,
+   hanya petugas & pengelola yang boleh scan (`can_scan`). Petugas melihat filter **`mine`** ("Tugas saya") = aset di areanya.
+3. Pengelola **menyelesaikan** audit → yang belum dicek = tidak ditemukan; opsi perbarui lokasi aset yang salah lokasi.
+
+| Method | Path | Permission | Keterangan |
+|---|---|---|---|
+| GET | `/asset-audits?status=in_progress\|completed\|cancelled&page=` | asset_audit.view \| scan | Daftar sesi (user cabang: audit cabangnya + audit tempat ia petugas) |
+| GET | `/asset-audits/options` | asset_audit.* | `branches`, `my_branch_id`, `multi_branch`, `locations` `[{branch_id, branch_name, locations:[{id,name}]}]`, `assignee_candidates` `[{id,name,role,branch}]`, `conditions`, `filters` |
+| POST | `/asset-audits` | asset_audit.create | `title`*, `branch_id`, `location_id`, `notes`, `assignees[]` `{user_id, location_id?}` → **201** |
+| GET | `/asset-audits/{id}` | asset_audit.view \| scan | Detail + `summary` + `can_scan` + `can_manage` + `is_assignee` + `my_location_ids` + `team` |
+| GET | `/asset-audits/{id}/items?filter=&q=&page=` | asset_audit.view \| scan | `filter`: `all`, `mine`, `pending`, `found`, `misplaced`, `other_branch`, `damaged`, `missing`, `extra` |
+| POST | `/asset-audits/{id}/scan` | asset_audit.scan | `code`* (isi QR apa adanya), `location_id` (lokasi petugas saat ini; **kosong = lokasi tidak dicek**), `condition` (`good`/`minor_damage`/`major_damage`), `notes` |
+| POST | `/asset-audits/{id}/items/{itemId}` | asset_audit.scan | `action`: `found` \| `missing` \| `reset` (aset tanpa label QR) |
+| POST | `/asset-audits/{id}/mark-location` | asset_audit.scan | `location_id`* — tandai SEMUA yang belum dicek di lokasi itu = ditemukan → `data.marked` |
+| POST | `/asset-audits/{id}/complete` | asset_audit.create | `apply_locations` (bool) |
 | POST | `/asset-audits/{id}/cancel` | asset_audit.create | |
 | GET | `/asset-audits/{id}/export` | asset_audit.view | File **Excel** (biner) |
 
-`summary`: `{total, checked, pending, found, missing, misplaced, damaged, extra, percent}` — `found + missing + pending = total`;
-`extra` = aset ditemukan tetapi tidak ada di daftar audit (dihitung terpisah).
+**Status item (`state`)**
+| state | Arti |
+|---|---|
+| `pending` | Belum dicek |
+| `found` | Ditemukan (lokasi sesuai, atau lokasi tidak dicek) |
+| `misplaced` | Ditemukan di lokasi lain dalam cabang yang sama (`expected_location` ≠ `found_location`) |
+| `other_branch` | Aset milik cabang lain terbaca di audit ini (`expected_branch`) → perlu Mutasi bila memang pindah |
+| `extra` | Aset cabang ini tetapi di luar daftar audit (mis. audit per lokasi) |
+| `missing` | Tidak ditemukan (otomatis saat audit diselesaikan) |
 
-Item: `{id, asset_id, code, name, state, in_scope, expected_location, found_location, location_mismatch, condition, condition_label, notes, checked_at, checked_by}`.
-`state`: `pending` (belum dicek), `found`, `misplaced` (ditemukan di lokasi lain), `missing`, `extra`.
+`summary`: `{total, checked, pending, found, missing, misplaced, damaged, extra, other_branch, percent}` —
+`found + missing + pending = total` (`found` sudah termasuk `misplaced`); `extra` & `other_branch` dihitung terpisah.
+`team[]`: `{user_id, name, areas (null = bukan petugas, [] = semua lokasi), checked, pending}`.
 
-Respons **scan**: `message` (tampilkan sebagai toast), `data.item`, `data.already_scanned`, `data.summary` (perbarui progres tanpa reload).
-QR tidak dikenal → **404 `ASSET_NOT_FOUND`**. Kamera membaca QR yang sama berkali-kali → abaikan kode yang sama dalam ±2,5 detik di sisi aplikasi.
-Batas 240 scan/menit.
+Item: `{id, asset_id, code, name, state, in_scope, expected_branch_id, expected_branch, expected_location_id, expected_location,
+found_location_id, found_location, location_mismatch, branch_mismatch, condition, condition_label, notes, checked_at, checked_by}`.
+
+Respons **scan**: `message` (toast), `data.item`, `data.already_scanned`, `data.summary`. QR tidak dikenal → **404 `ASSET_NOT_FOUND`**;
+bukan petugas → **403 `FORBIDDEN`**. Abaikan kode yang sama dalam ±2,5 detik di sisi aplikasi. Batas 240 scan/menit.
+Saat beberapa petugas scan bersamaan, muat ulang `GET /asset-audits/{id}` berkala (mis. 20 detik) untuk progres terbaru.
+
 ---
 
 ## 4. Langganan & pembayaran di aplikasi

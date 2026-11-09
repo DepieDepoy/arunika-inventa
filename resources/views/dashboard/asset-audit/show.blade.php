@@ -5,11 +5,16 @@
 @section('content')
 @php
     $chip = ['in_progress' => 'warn', 'completed' => 'ok', 'cancelled' => 'mute'];
-    $tiles = [
+    $tiles = [];
+    if ($isAssignee) {
+        $tiles['mine'] = ['Tugas saya', null, 'bi-person-check-fill', '#0f766e'];
+    }
+    $tiles += [
         'all' => ['Total aset', $stats['total'], 'bi-box-seam', '#3a57e8'],
         'pending' => ['Belum dicek', $stats['pending'], 'bi-hourglass-split', '#6b7280'],
-        'found' => ['Ditemukan', $stats['found'], 'bi-check-circle-fill', '#1a8754'],
+        'found' => ['Ditemukan', $stats['found'] - $stats['misplaced'], 'bi-check-circle-fill', '#1a8754'],
         'misplaced' => ['Salah lokasi', $stats['misplaced'], 'bi-geo-alt-fill', '#d98a00'],
+        'other_branch' => ['Beda cabang', $stats['other_branch'], 'bi-signpost-split-fill', '#0e7490'],
         'damaged' => ['Rusak', $stats['damaged'], 'bi-tools', '#c2410c'],
         'missing' => ['Tidak ditemukan', $stats['missing'], 'bi-x-circle-fill', '#c0392b'],
         'extra' => ['Di luar daftar', $stats['extra'], 'bi-plus-circle-fill', '#7c3aed'],
@@ -20,7 +25,11 @@
         'misplaced' => ['Salah lokasi', 'warn'],
         'missing' => ['Tidak ditemukan', 'bad'],
         'extra' => ['Di luar daftar', 'extra'],
+        'other_branch' => ['Beda cabang', 'branch'],
     ];
+    $locGroups = $scanLocations->groupBy(fn ($l) => $l->branch?->branch_name ?? '-');
+    // Lokasi awal panel scan: area petugas (bila satu) atau lokasi audit (audit per lokasi).
+    $myDefaultLocation = $myAreas->filter()->count() === 1 ? $myAreas->filter()->first() : $audit->location_id;
 @endphp
 <style>
     .au-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 99px; font-size: .75rem; font-weight: 700; white-space: nowrap; }
@@ -29,7 +38,8 @@
     .au-chip.mute { background: #eef0f4; color: #6b7280; }
     .au-chip.bad { background: #fdecee; color: #c0392b; }
     .au-chip.extra { background: #f3edff; color: #7c3aed; }
-    .au-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+    .au-chip.branch { background: #e0f2fe; color: #0e7490; }
+    .au-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(125px, 1fr)); gap: 10px; }
     .au-tile { display: block; border-radius: 12px; padding: 12px 14px; background: #f7f8fc; text-decoration: none; color: inherit; border: 2px solid transparent; }
     .au-tile.on { border-color: #3a57e8; background: #fff; }
     .au-tile .v { font-size: 1.45rem; font-weight: 800; line-height: 1.1; }
@@ -51,6 +61,8 @@
     .au-flash.bad { background: rgba(239,68,68,.25); }
     .au-flash.show { opacity: 1; }
     .au-row-actions .btn { padding: 2px 8px; font-size: .75rem; }
+    .au-team-row { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f0f2f7; }
+    .au-team-row:last-child { border-bottom: 0; }
 </style>
 
 <div class="au-flash" id="auFlash"></div>
@@ -64,8 +76,8 @@
         <div>
             <h5 class="mb-1">{{ $audit->title }} <span class="au-chip {{ $chip[$audit->status] ?? 'mute' }} ms-1">{{ $audit->statusLabel() }}</span></h5>
             <small class="text-muted">
-                {{ $audit->audit_no }} · {{ $audit->branch?->branch_name ?? 'Semua cabang' }} · {{ $audit->location_filter ?: 'Semua lokasi' }}
-                · dimulai {{ $audit->created_at->translatedFormat('d M Y H:i') }} oleh {{ $audit->starter?->name }}
+                {{ $audit->audit_no }} · <b>{{ $audit->branch?->branch_name ?? 'Semua cabang' }}</b> · {{ $audit->location_filter ?: 'Semua lokasi' }}
+                · dibuat {{ $audit->created_at->translatedFormat('d M Y H:i') }} oleh {{ $audit->starter?->name }}
                 @if($audit->completed_at) · {{ $audit->statusLabel() }} {{ $audit->completed_at->translatedFormat('d M Y H:i') }} oleh {{ $audit->completer?->name }} @endif
             </small>
         </div>
@@ -88,7 +100,7 @@
         <div class="au-tiles">
             @foreach($tiles as $key => [$label, $value, $icon, $color])
                 <a href="{{ route('asset-audits.show', ['audit' => $audit->id, 'f' => $key]) }}" class="au-tile {{ $filter === $key ? 'on' : '' }}">
-                    <div class="v" style="color: {{ $color }}" id="tile-{{ $key }}">{{ $value }}</div>
+                    <div class="v" style="color: {{ $color }}" id="tile-{{ $key }}">{{ $value ?? '›' }}</div>
                     <div class="l"><i class="bi {{ $icon }}"></i> {{ $label }}</div>
                 </a>
             @endforeach
@@ -98,18 +110,26 @@
 </div>
 
 <div class="row g-4">
-    {{-- PANEL SCAN --}}
-    @if($canScan)
     <div class="col-xl-4 order-xl-2">
-        <div class="card au-scan">
+        {{-- PANEL SCAN --}}
+        @if($canScan)
+        <div class="card au-scan mb-4">
             <div class="card-body">
                 <h5 class="text-white mb-3"><i class="bi bi-qr-code-scan me-1"></i> Scan aset</h5>
 
                 <div class="mb-2">
-                    <label class="mb-1">Lokasi saya sekarang</label>
-                    <input type="text" id="scanLocation" class="form-control" list="knownLocations" placeholder="Mis. Lantai 2 — Ruang Finance">
-                    <datalist id="knownLocations">@foreach($locations as $loc)<option value="{{ $loc }}">@endforeach</datalist>
-                    <small style="color:#93a4d8">Isi agar aset yang berada di lokasi lain otomatis ditandai "salah lokasi".</small>
+                    <label class="mb-1">Saya sedang berada di</label>
+                    <select id="scanLocation" class="form-select">
+                        <option value="">— Tidak cek lokasi (cek keberadaan saja) —</option>
+                        @foreach($locGroups as $branchName => $locs)
+                            <optgroup label="{{ $branchName }}">
+                                @foreach($locs as $l)
+                                    <option value="{{ $l->id }}" @selected($myDefaultLocation == $l->id)>{{ $l->name }}</option>
+                                @endforeach
+                            </optgroup>
+                        @endforeach
+                    </select>
+                    <small style="color:#93a4d8">Pilih ruangan tempat Anda berdiri. Aset yang tercatat di ruangan lain otomatis ditandai <b>salah lokasi</b>; aset milik cabang lain ditandai <b>beda cabang</b>.</small>
                 </div>
                 <div class="mb-3">
                     <label class="mb-1">Kondisi aset</label>
@@ -124,7 +144,7 @@
                 <div id="reader" class="mb-2" hidden></div>
 
                 <form id="formScan" class="d-flex gap-2 mb-3" autocomplete="off">
-                    <input type="text" id="scanCode" class="form-control au-code" placeholder="Atau ketik / scanner USB" autofocus>
+                    <input type="text" id="scanCode" class="form-control au-code" placeholder="Atau ketik kode / scanner USB" autofocus>
                     <button class="btn btn-primary"><i class="bi bi-arrow-return-left"></i></button>
                 </form>
 
@@ -138,11 +158,58 @@
                 <div class="au-feed" id="scanFeed"><small style="color:#93a4d8">Belum ada scan.</small></div>
             </div>
         </div>
+        @elseif($audit->isOpen())
+            <div class="alert alert-light border mb-4"><i class="bi bi-info-circle me-1"></i> Audit ini memiliki petugas khusus. Hanya petugas & pengelola audit yang dapat scan.</div>
+        @endif
+
+        {{-- TIM AUDIT --}}
+        <div class="card mb-4">
+            <div class="card-header"><h6 class="mb-0"><i class="bi bi-people-fill text-primary me-1"></i> Tim audit</h6></div>
+            <div class="card-body pt-2" id="teamBox">
+                @forelse($team as $t)
+                    <div class="au-team-row">
+                        <div>
+                            <b>{{ $t['name'] }}</b>
+                            <small class="d-block text-muted">
+                                @if($t['areas'] === null) bukan petugas (pengelola) @elseif(empty($t['areas'])) Area: semua lokasi @else Area: {{ implode(', ', $t['areas']) }} @endif
+                            </small>
+                        </div>
+                        <div class="text-end small">
+                            <b class="text-success">{{ $t['checked'] }}</b> dicek
+                            @if($t['pending'] !== null)<div class="text-muted">{{ $t['pending'] }} sisa di area</div>@endif
+                        </div>
+                    </div>
+                @empty
+                    <div class="text-muted small">Tanpa petugas khusus — semua user berizin scan audit dapat ikut scan.</div>
+                @endforelse
+            </div>
+        </div>
+
+        {{-- TANDAI MASSAL --}}
+        @if($canScan && $scanLocations->isNotEmpty())
+        <div class="card mb-4">
+            <div class="card-body">
+                <h6 class="mb-1"><i class="bi bi-check2-all text-success me-1"></i> Tandai massal per lokasi</h6>
+                <p class="small text-muted mb-2">Untuk aset tanpa label QR (meja, kursi): semua aset <b>belum dicek</b> yang tercatat di lokasi ini ditandai ditemukan.</p>
+                <form method="POST" action="{{ route('asset-audits.mark-location', $audit->id) }}" id="formBulk" class="d-flex gap-2">
+                    @csrf
+                    <select name="location_id" class="form-select form-select-sm" required>
+                        <option value="">Pilih lokasi…</option>
+                        @foreach($locGroups as $branchName => $locs)
+                            <optgroup label="{{ $branchName }}">
+                                @foreach($locs as $l)<option value="{{ $l->id }}">{{ $l->name }}</option>@endforeach
+                            </optgroup>
+                        @endforeach
+                    </select>
+                    <button class="btn btn-sm btn-outline-success text-nowrap">Tandai</button>
+                </form>
+            </div>
+        </div>
+        @endif
     </div>
-    @endif
 
     {{-- DAFTAR ASET --}}
-    <div class="{{ $canScan ? 'col-xl-8 order-xl-1' : 'col-12' }}">
+    <div class="col-xl-8 order-xl-1">
         <div class="card">
             <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
                 <h6 class="mb-0">Daftar aset · {{ $tiles[$filter][0] ?? 'Total aset' }}</h6>
@@ -158,7 +225,7 @@
                         <thead>
                             <tr>
                                 <th>Aset</th>
-                                <th>Lokasi tercatat</th>
+                                <th>Lokasi</th>
                                 <th>Hasil</th>
                                 <th>Dicek</th>
                                 @if($canScan)<th class="text-end">Tandai manual</th>@endif
@@ -173,8 +240,10 @@
                                         <small class="text-muted">{{ $item->asset_name }}</small>
                                     </td>
                                     <td>
-                                        {{ $item->expected_location ?: '—' }}
-                                        @if($item->location_mismatch)
+                                        {{ $item->expected_location ?: 'Belum diisi' }}
+                                        @if($item->branch_mismatch)
+                                            <small class="d-block" style="color:#0e7490"><i class="bi bi-signpost-split"></i> milik {{ $item->expectedBranch?->branch_name }}</small>
+                                        @elseif($item->location_mismatch)
                                             <small class="d-block text-warning"><i class="bi bi-arrow-return-right"></i> ditemukan di {{ $item->found_location }}</small>
                                         @endif
                                     </td>
@@ -227,12 +296,15 @@
                 </div>
                 <div class="modal-body">
                     <p><b id="cmPending">{{ $stats['pending'] }}</b> aset yang belum dicek akan ditandai <b class="text-danger">Tidak ditemukan</b>. Audit yang sudah selesai tidak bisa di-scan lagi.</p>
-                    <div class="form-check">
+                    <div class="form-check mb-2">
                         <input class="form-check-input" type="checkbox" name="apply_locations" value="1" id="applyLoc" checked>
                         <label class="form-check-label" for="applyLoc">
-                            Perbarui lokasi aset yang <b>salah lokasi</b> (<span id="cmMisplaced">{{ $stats['misplaced'] }}</span> aset) sesuai lokasi saat ditemukan. Perpindahan tercatat di riwayat lokasi aset.
+                            Perbarui lokasi aset yang <b>salah lokasi</b> (<span id="cmMisplaced">{{ $stats['misplaced'] }}</span> aset) sesuai lokasi saat ditemukan. Tercatat di riwayat lokasi aset.
                         </label>
                     </div>
+                    @if($stats['other_branch'] > 0)
+                        <div class="alert alert-info small mb-0"><i class="bi bi-signpost-split me-1"></i> Ada {{ $stats['other_branch'] }} aset <b>beda cabang</b>. Bila memang sudah pindah, buat <b>Mutasi Aset</b> agar tercatat di cabang ini.</div>
+                    @endif
                 </div>
                 <div class="modal-footer justify-content-between">
                     <button type="button" class="btn btn-outline-danger" id="btnCancelAudit">Batalkan audit</button>
@@ -258,11 +330,14 @@
     const csrf = $('meta[name="csrf-token"]').attr('content');
     const scanUrl = @json(route('asset-audits.scan', $audit->id));
     const markUrl = @json(url('dashboard/asset-audits/' . $audit->id . '/items'));
+    const summaryUrl = @json(route('asset-audits.summary', $audit->id));
     const storeKey = 'vasetra-audit-loc-{{ $audit->id }}';
+    const isOpen = @json($audit->isOpen());
     const esc = s => $('<div>').text(s ?? '').html();
     const stateMeta = {
         found: ['Ditemukan', 'ok', 'bi-check-circle-fill', '#22c55e'],
         misplaced: ['Salah lokasi', 'warn', 'bi-geo-alt-fill', '#f59e0b'],
+        other_branch: ['Beda cabang', 'branch', 'bi-signpost-split-fill', '#38bdf8'],
         missing: ['Tidak ditemukan', 'bad', 'bi-x-circle-fill', '#ef4444'],
         extra: ['Di luar daftar', 'extra', 'bi-plus-circle-fill', '#a78bfa'],
         pending: ['Belum dicek', 'mute', 'bi-hourglass-split', '#9ca3af'],
@@ -272,8 +347,9 @@
         if (!s) return;
         $('#stChecked').text(s.checked); $('#stTotal').text(s.total); $('#stPct').text(s.percent);
         $('#stBar').css('width', s.percent + '%');
-        $('#tile-all').text(s.total); $('#tile-pending').text(s.pending); $('#tile-found').text(s.found);
-        $('#tile-misplaced').text(s.misplaced); $('#tile-damaged').text(s.damaged); $('#tile-missing').text(s.missing); $('#tile-extra').text(s.extra);
+        $('#tile-all').text(s.total); $('#tile-pending').text(s.pending); $('#tile-found').text(s.found - s.misplaced);
+        $('#tile-misplaced').text(s.misplaced); $('#tile-other_branch').text(s.other_branch); $('#tile-damaged').text(s.damaged);
+        $('#tile-missing').text(s.missing); $('#tile-extra').text(s.extra);
         $('#cmPending').text(s.pending); $('#cmMisplaced').text(s.misplaced);
     }
 
@@ -283,6 +359,11 @@
         const m = stateMeta[item.state] || stateMeta.pending;
         row.find('[data-state]').attr('class', 'au-chip ' + m[1]).text(m[0]);
         row.find('[data-checked]').text(item.checked_at || '—');
+    }
+
+    // Beberapa petugas scan bersamaan: progres diperbarui tiap 20 detik.
+    if (isOpen) {
+        setInterval(() => { if (!document.hidden) $.getJSON(summaryUrl, r => updateStats(r.stats)); }, 20000);
     }
 
     // ---------- umpan balik ----------
@@ -321,24 +402,24 @@
 
         $.ajax({
             url: scanUrl, type: 'POST', headers: { 'Accept': 'application/json' },
-            data: { _token: csrf, code: code, location: $('#scanLocation').val(), condition: $('#scanCondition').val() },
+            data: { _token: csrf, code: code, location_id: $('#scanLocation').val(), condition: $('#scanCondition').val() },
         }).done(res => {
             const it = res.item, m = stateMeta[it.state] || stateMeta.found;
             const good = it.state === 'found';
-            beep(good || it.state !== 'missing'); flash(good);
+            beep(good); flash(good);
             feed(m[2], m[3], esc(it.code) + ' · ' + esc(it.name), esc(res.message) + (it.condition && it.condition !== 'Baik' ? ' · ' + esc(it.condition) : ''));
             updateStats(res.stats); updateRow(it);
             $('#scanCondition').val('good');
         }).fail(xhr => {
             beep(false); flash(false);
-            feed('bi-exclamation-triangle-fill', '#ef4444', 'Tidak dikenali', esc(xhr.responseJSON?.message || 'Gagal memproses scan.'));
+            feed('bi-exclamation-triangle-fill', '#ef4444', 'Gagal', esc(xhr.responseJSON?.message || 'Gagal memproses scan.'));
         }).always(() => { busy = false; $('#scanCode').val('').trigger('focus'); });
     }
 
     $('#formScan').on('submit', function (e) { e.preventDefault(); submitCode($('#scanCode').val()); });
 
     // Lokasi diingat per audit di browser ini.
-    try { $('#scanLocation').val(localStorage.getItem(storeKey) || ''); } catch (e) {}
+    try { const saved = localStorage.getItem(storeKey); if (saved !== null && $('#scanLocation option[value="' + saved + '"]').length) $('#scanLocation').val(saved); } catch (e) {}
     $('#scanLocation').on('change', function () { try { localStorage.setItem(storeKey, this.value); } catch (e) {} });
 
     // ---------- kamera ----------
@@ -374,6 +455,14 @@
                 updateRow(res.item);
             })
             .fail(xhr => Swal.fire({ icon: 'error', title: 'Gagal', text: xhr.responseJSON?.message || 'Terjadi kesalahan.' }));
+    });
+
+    // ---------- tandai massal ----------
+    $('#formBulk').on('submit', function (e) {
+        e.preventDefault();
+        const form = this, name = $(form).find('select option:selected').text();
+        Swal.fire({ icon: 'question', title: 'Tandai massal?', html: 'Semua aset <b>belum dicek</b> di <b>' + esc(name) + '</b> akan ditandai ditemukan.', showCancelButton: true, confirmButtonText: 'Ya, tandai', cancelButtonText: 'Batal' })
+            .then(r => { if (r.isConfirmed) form.submit(); });
     });
 
     // ---------- batalkan audit ----------

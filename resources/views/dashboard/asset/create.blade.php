@@ -1176,12 +1176,14 @@
                                 Location
                             </label>
 
-                            <input
-                                type="text"
+                            {{-- Master lokasi per cabang (Master Data > Lokasi) --}}
+                            <select
                                 name="location"
-                                class="form-control"
-                                placeholder="Example: Warehouse, Office, Room 01"
-                            >
+                                id="assetLocation"
+                                class="form-select"
+                                data-location-picker
+                                data-branch="{{ $defaultBranchId }}"
+                            ></select>
 
                         </div>
 
@@ -1189,9 +1191,10 @@
                             <!-- Branch -->
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Cabang</label>
-                                <select name="branch_id" class="form-select">
+                                <select name="branch_id" id="assetBranch" class="form-select"
+                                        onchange="const l = document.getElementById('assetLocation'); l.dataset.branch = this.value; l.dataset.value = ''; VasetraLocation.load(l);">
                                     @foreach($branches as $branch)
-                                        <option value="{{ $branch->id }}">{{ $branch->label() }}</option>
+                                        <option value="{{ $branch->id }}" @selected($branch->id == $defaultBranchId)>{{ $branch->label() }}</option>
                                     @endforeach
                                 </select>
                                 <small class="text-muted">Setelah tersimpan, pindah cabang lewat menu Mutasi Aset.</small>
@@ -1443,6 +1446,7 @@
 
 
 @section('js')
+@include('dashboard.components.location-picker')
 
 <!-- ============================================================ -->
 <!-- SELECT2 -->
