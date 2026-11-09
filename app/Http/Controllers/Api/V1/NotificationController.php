@@ -106,6 +106,15 @@ class NotificationController extends ApiController
             }
         }
 
+        // Audit fisik & mutasi antar-cabang (dicek sebelum asset_id).
+        if (!empty($data['asset_audit_id'])) {
+            return ['screen' => 'asset_audit', 'id' => (int) $data['asset_audit_id']];
+        }
+
+        if (!empty($data['branch_transfer_id'])) {
+            return ['screen' => 'branch_transfer', 'id' => (int) $data['branch_transfer_id']];
+        }
+
         if (!empty($data['asset_id'])) {
             return ['screen' => 'asset', 'id' => (int) $data['asset_id']];
         }

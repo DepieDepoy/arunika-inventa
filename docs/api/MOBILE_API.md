@@ -304,12 +304,13 @@ Nilai `target.screen`: `calendar_event`, `calendar`, `maintenance_request`, `mai
 | `category_id` | ✔ | dari `/lookups/categories` |
 | `sub_category_id` | | harus milik kategori terpilih |
 | `vendor_id` | ✔ | dari `/lookups/vendors` |
-| `responsible_user_id` | | dari `/lookups/users` (hanya saat tambah) |
+| `branch_id` | | hanya saat **tambah**. Kantor pusat boleh memilih cabang (dari `/branches`); user cabang otomatis cabangnya. Kosong = cabang user / Kantor Pusat. Pindah cabang setelahnya lewat Mutasi |
+| `responsible_user_id` | | dari `/lookups/users?branch_id={cabang aset}` (hanya saat tambah; harus user di cabang aset) |
 | `status` | ✔ | `1` aktif / `0` tidak aktif (`2` = dihapuskan, hanya lewat dashboard) |
 | `maintenance_required` | ✔ (tambah) | `0`/`1`. Jika `1`: `maintenance_type`, `maintenance_trigger`, `maintenance_interval`, `maintenance_interval_unit`, `maintenance_start_date` wajib |
 | `asset_condition` | | `new`/`used` |
 | `brand`, `model`, `serial_number`, `description` | | |
-| `location` | | hanya saat **tambah**; setelah itu pakai `POST /assets/{id}/location` agar tercatat di riwayat |
+| `location` | | nama lokasi dari `GET /locations?branch_id=` (cabang aset). Hanya saat **tambah**; setelah itu pakai `POST /assets/{id}/location` agar tercatat di riwayat |
 | `purchase_date`, `purchase_price`, `purchase_invoice` | | |
 | `warranty_start`, `warranty_end`, `warranty_note` | | `warranty_end` ≥ `warranty_start` |
 | `depreciation_method`, `useful_life`, `residual_value`, `depreciation_start_date` | | |
@@ -318,6 +319,10 @@ Nilai `target.screen`: `calendar_event`, `calendar`, `maintenance_request`, `mai
 | `delete_images[]`, `delete_invoice_documents[]` | | hanya saat ubah: id foto/dokumen yang dihapus |
 
 Saat **ubah**, kirim ulang semua nilai lama (form terisi dari `GET /assets/{id}`). Jadwal maintenance tidak diubah lewat endpoint ini.
+
+`GET /assets/{id}` (juga respons POST/PUT) berisi nilai lama untuk form ubah: `vendor` `{id, name}`, `purchase_price`, `purchase_invoice`,
+`depreciation_method`, `useful_life`, `residual_value`, `depreciation_start_date`, `branch`, `location`. Field pembelian bernilai `null`
+bila user tidak punya izin `asset.view` / `asset.edit` (mis. pemegang aset biasa).
 
 **Status aset, garansi & penghapusan** (ada di daftar dan detail aset):
 
@@ -425,7 +430,7 @@ Agenda dalam daftar memiliki `source`:
 |---|---|---|
 | GET | `/lookups/categories` | Kategori aktif + `sub_categories` |
 | GET | `/lookups/vendors?search=` | Vendor aktif (maks. 200) |
-| GET | `/lookups/users?search=&limit=` | User aktif (penanggung jawab, peserta meeting) |
+| GET | `/lookups/users?search=&limit=&branch_id=&asset_id=` | User aktif (penanggung jawab, peserta meeting). `asset_id` = hanya user di cabang aset (serah terima); `branch_id` = filter cabang (mis. penanggung jawab saat tambah aset). User cabang selalu tersaring ke cabangnya |
 | GET | `/lookups/options` | Enum (kondisi aset, tipe/interval maintenance, jenis agenda) + batas upload |
 
 Simpan `/lookups/options` di cache. Data ini jarang berubah.

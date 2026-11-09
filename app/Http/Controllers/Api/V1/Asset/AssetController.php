@@ -880,6 +880,27 @@ class AssetController extends Controller
     |--------------------------------------------------------------------------
     */
 
+    /**
+     * vendor, harga beli, faktur, penyusutan (null bila user tidak berhak).
+     */
+    private function purchaseFields(Asset $asset): array
+    {
+        $user = request()->user();
+        $allowed = $user && ($user->hasPermission('asset.view') || $user->hasPermission('asset.edit'));
+
+        $asset->loadMissing('vendor:id,vendor_name');
+
+        return [
+            'vendor' => $allowed && $asset->vendor ? ['id' => $asset->vendor->id, 'name' => $asset->vendor->vendor_name] : null,
+            'purchase_price' => $allowed && $asset->purchase_price !== null ? (float) $asset->purchase_price : null,
+            'purchase_invoice' => $allowed ? $asset->purchase_invoice : null,
+            'depreciation_method' => $allowed ? $asset->depreciation_method : null,
+            'useful_life' => $allowed && $asset->useful_life !== null ? (int) $asset->useful_life : null,
+            'residual_value' => $allowed && $asset->residual_value !== null ? (float) $asset->residual_value : null,
+            'depreciation_start_date' => $allowed ? $asset->depreciation_start_date?->toDateString() : null,
+        ];
+    }
+
     private function formatAssetDetail(
         Asset $asset
     ): array {
@@ -1038,6 +1059,14 @@ class AssetController extends Controller
 
             'purchase_date' =>
                 $asset->purchase_date,
+
+            /*
+             * Data pembelian & penyusutan: dibutuhkan form ubah aset di aplikasi
+             * (PUT /assets/{id} menimpa field ini dengan nilai yang dikirim).
+             * Hanya untuk user yang boleh melihat/mengubah aset; pemegang aset
+             * biasa menerima null.
+             */
+            ...$this->purchaseFields($asset),
 
             'warranty' => $this->formatWarranty($asset) + [
                 'note' =>
