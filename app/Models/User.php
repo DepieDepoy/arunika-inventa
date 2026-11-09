@@ -59,6 +59,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'last_login_device',
         'role_id',
         'email_verified_at',
+        // Bahasa pilihan di aplikasi mobile (id/en), untuk teks notifikasi.
+        'locale',
     ];
 
     /**

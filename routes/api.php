@@ -45,6 +45,7 @@ Route::prefix('v1')->group(function () {
         'auth:sanctum',
         'api.company',
         'api.security',
+        'api.locale',
     ])->group(function () {
 
         /*

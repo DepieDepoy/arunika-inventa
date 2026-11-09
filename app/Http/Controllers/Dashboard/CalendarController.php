@@ -12,6 +12,7 @@ use App\Notifications\CalendarMeetingCancellation;
 use App\Notifications\CalendarMeetingInvitation;
 use App\Notifications\GlobalNotification;
 use App\Services\Calendar\CalendarFeed;
+use App\Support\NotificationText;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -322,12 +323,13 @@ class CalendarController extends Controller
                             $recipient->notify(
                                 new GlobalNotification(
                                     type: 'company_announcement',
-                                    title: $action === 'updated'
-                                        ? 'Info Perusahaan Diperbarui'
-                                        : 'Info Perusahaan',
-                                    message: $organizer->name
-                                        . ' membuat pengumuman: '
-                                        . $event->title,
+                                    title: NotificationText::make($action === 'updated'
+                                        ? 'Info perusahaan diperbarui'
+                                        : 'Info perusahaan'),
+                                    message: NotificationText::make(':name membuat pengumuman: :event', [
+                                        'name' => $organizer->name,
+                                        'event' => $event->title,
+                                    ]),
                                     url: '/dashboard/calendar',
                                     extra: [
                                         'event_id' => $event->id,
@@ -376,10 +378,11 @@ class CalendarController extends Controller
                         $recipient->notify(
                             new GlobalNotification(
                                 type: 'calendar_invitation',
-                                title: 'Meeting Dibatalkan',
-                                message: $organizer->name
-                                    . ' membatalkan meeting: '
-                                    . $event->title,
+                                title: NotificationText::make('Rapat dibatalkan'),
+                                message: NotificationText::make(':name membatalkan rapat: :event', [
+                                    'name' => $organizer->name,
+                                    'event' => $event->title,
+                                ]),
                                 url: '/dashboard/calendar',
                                 extra: [
                                     'event_id' => $event->id,
@@ -394,16 +397,15 @@ class CalendarController extends Controller
                     $recipient->notify(
                         new GlobalNotification(
                             type: 'calendar_invitation',
-                            title: $action === 'updated'
-                                ? 'Meeting Diperbarui'
-                                : 'Undangan Meeting',
-                            message: $organizer->name
-                                . (
-                                    $action === 'updated'
-                                        ? ' memperbarui meeting: '
-                                        : ' mengundang Anda ke meeting: '
-                                )
-                                . $event->title,
+                            title: NotificationText::make($action === 'updated'
+                                ? 'Rapat diperbarui'
+                                : 'Undangan rapat'),
+                            message: NotificationText::make($action === 'updated'
+                                ? ':name memperbarui rapat: :event'
+                                : ':name mengundang Anda ke rapat: :event', [
+                                    'name' => $organizer->name,
+                                    'event' => $event->title,
+                                ]),
                             url: '/dashboard/calendar',
                             extra: [
                                 'event_id' => $event->id,

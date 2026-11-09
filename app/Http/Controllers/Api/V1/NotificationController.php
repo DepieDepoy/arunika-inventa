@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Support\NotificationText;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
@@ -23,8 +24,9 @@ class NotificationController extends ApiController
             : $user->notifications();
 
         $page = $query->paginate($this->perPage($request));
+        $locale = $user->locale;
 
-        $response = $this->paginated('notifications', $page, fn (DatabaseNotification $n) => $this->format($n));
+        $response = $this->paginated('notifications', $page, fn (DatabaseNotification $n) => $this->format($n, $locale));
 
         $payload = $response->getData(true);
         $payload['data']['unread_count'] = $user->unreadNotifications()->count();
@@ -45,7 +47,7 @@ class NotificationController extends ApiController
         $notification->markAsRead();
 
         return $this->ok([
-            'notification' => $this->format($notification),
+            'notification' => $this->format($notification, $request->user()->locale),
             'unread_count' => $request->user()->unreadNotifications()->count(),
         ]);
     }
@@ -68,16 +70,22 @@ class NotificationController extends ApiController
      * `target` membantu Flutter membuka layar yang tepat
      * (mis. detail request / kalender) tanpa mem-parsing URL web.
      */
-    protected function format(DatabaseNotification $notification): array
+    protected function format(DatabaseNotification $notification, ?string $locale = null): array
     {
         $data = (array) $notification->data;
-        $extra = collect($data)->except(['type', 'title', 'message', 'url'])->all();
+        $extra = collect($data)->except(['type', 'title', 'message', 'url', 'i18n'])->all();
 
+        // Judul & pesan mengikuti bahasa pilihan user di aplikasi (users.locale).
         return [
             'id' => $notification->id,
             'type' => $data['type'] ?? class_basename($notification->type),
-            'title' => $data['title'] ?? 'Notifikasi',
-            'message' => $data['message'] ?? '',
+            'title' => NotificationText::fromData(
+                $data,
+                'title',
+                $locale,
+                NotificationText::render(NotificationText::make('Notifikasi'), $locale)
+            ),
+            'message' => NotificationText::fromData($data, 'message', $locale),
             'target' => $this->target($data),
             'data' => $extra,
             'is_read' => $notification->read_at !== null,

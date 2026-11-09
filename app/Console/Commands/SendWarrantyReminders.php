@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Asset;
 use App\Models\User;
 use App\Notifications\GlobalNotification;
+use App\Support\NotificationText;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 
@@ -74,12 +75,22 @@ class SendWarrantyReminders extends Command
 
     protected function notification(Asset $asset, int $days): GlobalNotification
     {
-        $label = trim($asset->asset_name . ' (' . $asset->asset_code . ')');
-        $date = $asset->warranty_end->translatedFormat('d M Y');
+        $params = [
+            'asset' => trim($asset->asset_name . ' (' . $asset->asset_code . ')'),
+            'date' => ['date' => $asset->warranty_end->toDateString()],
+            'days' => $days,
+        ];
 
+        // Teks dua bahasa: terjemahan Inggris ada di lang/en.json.
         [$title, $message] = $days === 0
-            ? ['Garansi aset berakhir hari ini', "Garansi {$label} berakhir hari ini ({$date}). Perpanjang garansi atau catat bila sudah tidak berlaku."]
-            : ["Garansi aset habis {$days} hari lagi", "Garansi {$label} berakhir pada {$date}. Klaim kerusakan atau perpanjang sebelum tanggal tersebut."];
+            ? [
+                NotificationText::make('Garansi aset berakhir hari ini'),
+                NotificationText::make('Garansi :asset berakhir hari ini (:date). Perpanjang garansi atau catat bila sudah tidak berlaku.', $params),
+            ]
+            : [
+                NotificationText::make('Garansi aset habis :days hari lagi', $params),
+                NotificationText::make('Garansi :asset berakhir pada :date. Klaim kerusakan atau perpanjang sebelum tanggal tersebut.', $params),
+            ];
 
         return new GlobalNotification(
             type: 'asset_warranty',

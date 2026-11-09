@@ -45,7 +45,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         ->middleware('throttle:5,1')
         ->name('forgot-password');
 
-    Route::middleware(['auth:sanctum', 'api.company', 'api.security'])->group(function () {
+    Route::middleware(['auth:sanctum', 'api.company', 'api.security', 'api.locale'])->group(function () {
 
         /*
         |------------------------------------------------------------------

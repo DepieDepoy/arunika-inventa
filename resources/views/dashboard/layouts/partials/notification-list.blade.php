@@ -8,15 +8,18 @@
             'general'
         );
 
-        $notificationTitle = data_get(
-            $notification->data,
+        // Dasbor web selalu berbahasa Indonesia.
+        $notificationTitle = \App\Support\NotificationText::fromData(
+            (array) $notification->data,
             'title',
+            'id',
             'Notifikasi Vasetra'
         );
 
-        $notificationMessage = data_get(
-            $notification->data,
+        $notificationMessage = \App\Support\NotificationText::fromData(
+            (array) $notification->data,
             'message',
+            'id',
             'Anda memiliki notifikasi baru.'
         );
 

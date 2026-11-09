@@ -86,6 +86,20 @@ token push: `POST /devices` hanya menerima `android`/`ios`, jadi **lewati pendaf
 
 `X-App-Version` sebaiknya diambil otomatis dari `package_info_plus` (`PackageInfo.version`) agar selalu sama dengan `pubspec.yaml`.
 
+### Bahasa (`X-App-Locale`)
+
+```
+X-App-Locale: id               # id | en — bahasa yang dipilih user di aplikasi
+```
+
+Pada request yang sudah login, server menyimpan nilainya ke `users.locale` (hanya bila berubah). Dipakai untuk:
+
+- **Push notification**: judul & isi dikirim dalam bahasa penerima.
+- **`GET /notifications`**: `title` & `message` diterjemahkan sesuai bahasa user saat ini.
+
+Notifikasi lama (sebelum fitur ini) tetap tampil dengan teks aslinya. Dasbor web selalu berbahasa Indonesia.
+Menambah teks notifikasi baru: pakai `App\Support\NotificationText::make()` lalu tambahkan terjemahannya di `lang/en.json`.
+
 ### Tanggal & angka
 
 - Tanggal saja: `YYYY-MM-DD`. Tanggal+jam: ISO 8601 dengan zona waktu (`2026-11-05T13:35:57+07:00`).

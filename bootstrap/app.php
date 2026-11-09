@@ -39,6 +39,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'subscription.active' => CheckSubscriptionActive::class,
             'api.company' => EnsureUserCompany::class,
             'api.security' => \App\Http\Middleware\ApiSecurityHeaders::class,
+            'api.locale' => \App\Http\Middleware\RememberAppLocale::class,
             'administrator' => \App\Http\Middleware\EnsureAdministrator::class,
             'backoffice' => \App\Http\Middleware\EnsureBackofficeAdmin::class,
             'track' => \App\Http\Middleware\TrackPageView::class,

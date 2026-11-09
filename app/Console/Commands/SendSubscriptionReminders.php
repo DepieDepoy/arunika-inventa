@@ -7,6 +7,7 @@ use App\Models\SubscriptionAddon;
 use App\Models\User;
 use App\Notifications\GlobalNotification;
 use App\Services\Subscription\SubscriptionService;
+use App\Support\NotificationText;
 use Illuminate\Console\Command;
 
 /**
@@ -49,10 +50,14 @@ class SendSubscriptionReminders extends Command
 
                     $sent += $this->notifyAdmins(
                         (int) $upgrade->company_id,
-                        'Upgrade ' . ($upgrade->plan?->plan_name ?? '') . ' berakhir ' . $this->when($days),
-                        'Mulai ' . $upgrade->end_date->copy()->addDay()->format('d M Y')
-                            . ' paket kembali ke ' . ($parent->plan?->plan_name ?? 'paket dasar')
-                            . '. Perpanjang upgrade bila kapasitas masih dibutuhkan.'
+                        $this->endsTitle($days, 'Upgrade :plan berakhir', ['plan' => $upgrade->plan?->plan_name ?? '']),
+                        NotificationText::make(
+                            'Mulai :date paket kembali ke :base. Perpanjang upgrade bila kapasitas masih dibutuhkan.',
+                            [
+                                'date' => ['date' => $upgrade->end_date->copy()->addDay()->toDateString()],
+                                'base' => $parent->plan?->plan_name ?? ['t' => 'paket dasar'],
+                            ]
+                        )
                     );
                 });
 
@@ -69,9 +74,11 @@ class SendSubscriptionReminders extends Command
 
                     $sent += $this->notifyAdmins(
                         (int) $addons->first()->company_id,
-                        'Kapasitas tambahan berakhir ' . $this->when($days),
-                        'Add-on ' . $items . ' berakhir ' . $addons->first()->end_date->format('d M Y')
-                            . '. Data tetap aman, tetapi penambahan baru diblokir bila melebihi kuota.'
+                        $this->endsTitle($days, 'Kapasitas tambahan berakhir'),
+                        NotificationText::make(
+                            'Kapasitas tambahan :items berakhir :date. Data tetap aman, tetapi penambahan baru diblokir bila melebihi kuota.',
+                            ['items' => $items, 'date' => ['date' => $addons->first()->end_date->toDateString()]]
+                        )
                     );
                 });
 
@@ -91,9 +98,11 @@ class SendSubscriptionReminders extends Command
 
                     $sent += $this->notifyAdmins(
                         (int) $subscription->company_id,
-                        'Paket ' . ($subscription->plan?->plan_name ?? '') . ' berakhir ' . $this->when($days),
-                        'Paket Anda berakhir ' . $subscription->end_date->format('d M Y')
-                            . '. Perpanjang sekarang agar layanan tidak terhenti.'
+                        $this->endsTitle($days, 'Paket :plan berakhir', ['plan' => $subscription->plan?->plan_name ?? '']),
+                        NotificationText::make(
+                            'Paket Anda berakhir :date. Perpanjang sekarang agar layanan tidak terhenti.',
+                            ['date' => ['date' => $subscription->end_date->toDateString()]]
+                        )
                     );
                 });
         }
@@ -103,12 +112,18 @@ class SendSubscriptionReminders extends Command
         return self::SUCCESS;
     }
 
-    protected function when(int $days): string
+    /**
+     * Judul "... berakhir besok" / "... berakhir dalam N hari" (dua bahasa).
+     * Kunci terjemahan: "<awal> besok" dan "<awal> dalam :days hari".
+     */
+    protected function endsTitle(int $days, string $start, array $params = []): array
     {
-        return $days === 1 ? 'besok' : "dalam {$days} hari";
+        return $days === 1
+            ? NotificationText::make($start . ' besok', $params)
+            : NotificationText::make($start . ' dalam :days hari', $params + ['days' => $days]);
     }
 
-    protected function notifyAdmins(int $companyId, string $title, string $message): int
+    protected function notifyAdmins(int $companyId, array $title, array $message): int
     {
         $admins = User::query()
             ->where('company_id', $companyId)

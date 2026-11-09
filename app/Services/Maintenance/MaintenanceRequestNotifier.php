@@ -6,6 +6,7 @@ use App\Models\Maintenance;
 use App\Models\MaintenanceRequest;
 use App\Models\User;
 use App\Notifications\GlobalNotification;
+use App\Support\NotificationText;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Collection;
 use Throwable;
@@ -40,6 +41,17 @@ class MaintenanceRequestNotifier
         'other' => 'Permintaan Lain',
     ];
 
+    /**
+     * Nama jenis permintaan untuk teks notifikasi (diterjemahkan lewat
+     * lang/en.json): [huruf besar untuk judul, huruf kecil untuk kalimat].
+     */
+    public const TYPE_TEXT = [
+        'maintenance' => ['Perawatan', 'perawatan'],
+        'repair' => ['Perbaikan', 'perbaikan'],
+        'problem' => ['Laporan masalah', 'laporan masalah'],
+        'other' => ['Lainnya', 'lainnya'],
+    ];
+
     public function created(MaintenanceRequest $request): void
     {
         $this->safely(function () use ($request) {
@@ -52,12 +64,14 @@ class MaintenanceRequestNotifier
                 $recipient->notify($this->notification(
                     $request,
                     'created',
-                    'Request ' . $this->typeLabel($request) . ' baru',
-                    sprintf(
-                        '%s mengajukan %s untuk %s. Ambil request untuk mulai mengerjakan.',
-                        $request->requester?->name ?? 'User',
-                        strtolower($this->typeLabel($request)),
-                        $this->assetLabel($request)
+                    NotificationText::make('Permintaan baru: :type', ['type' => $this->typeText($request)]),
+                    NotificationText::make(
+                        ':name mengajukan permintaan :type untuk :asset. Ambil permintaan untuk mulai mengerjakan.',
+                        [
+                            'name' => $request->requester?->name ?? 'Pengguna',
+                            'type' => $this->typeText($request, lower: true),
+                            'asset' => $this->assetLabel($request),
+                        ]
                     ),
                     $this->teamUrl()
                 ));
@@ -74,21 +88,23 @@ class MaintenanceRequestNotifier
                 $request->requester->notify($this->notification(
                     $request,
                     'taken',
-                    'Request sedang dikerjakan',
-                    sprintf(
-                        'Request %s untuk %s sedang dikerjakan oleh %s.',
-                        strtolower($this->typeLabel($request)),
-                        $this->assetLabel($request),
-                        $handler->name
-                    ),
+                    NotificationText::make('Permintaan sedang dikerjakan'),
+                    NotificationText::make('Permintaan :type untuk :asset sedang dikerjakan oleh :handler.', [
+                        'type' => $this->typeText($request, lower: true),
+                        'asset' => $this->assetLabel($request),
+                        'handler' => $handler->name,
+                    ]),
                     $this->requesterUrl()
                 ));
             }
 
             $this->closeTeamNotifications(
                 $request,
-                'Request ' . $this->typeLabel($request) . ' sudah diambil',
-                sprintf('%s — sedang dikerjakan oleh %s.', $this->assetLabel($request), $handler->name),
+                NotificationText::make('Permintaan :type sudah diambil', ['type' => $this->typeText($request, lower: true)]),
+                NotificationText::make(':asset — sedang dikerjakan oleh :handler.', [
+                    'asset' => $this->assetLabel($request),
+                    'handler' => $handler->name,
+                ]),
                 ['status' => 'in_progress', 'handler_id' => $handler->id, 'handler_name' => $handler->name]
             );
         });
@@ -106,7 +122,8 @@ class MaintenanceRequestNotifier
             $request->requester->notify($this->notification(
                 $request,
                 'progress',
-                'Update progress ' . $this->assetLabel($request),
+                NotificationText::make('Progres baru: :asset', ['asset' => $this->assetLabel($request)]),
+                // Catatan teknisi ditampilkan apa adanya (tidak diterjemahkan).
                 sprintf('%s: %s', $handler->name, \Illuminate\Support\Str::limit($note, 140)),
                 $this->requesterUrl()
             ));
@@ -125,13 +142,12 @@ class MaintenanceRequestNotifier
             $request->requester->notify($this->notification(
                 $request,
                 'completed',
-                'Request selesai',
-                sprintf(
-                    'Request %s untuk %s telah diselesaikan oleh %s.',
-                    strtolower($this->typeLabel($request)),
-                    $this->assetLabel($request),
-                    $handler->name
-                ),
+                NotificationText::make('Permintaan selesai'),
+                NotificationText::make('Permintaan :type untuk :asset telah diselesaikan oleh :handler.', [
+                    'type' => $this->typeText($request, lower: true),
+                    'asset' => $this->assetLabel($request),
+                    'handler' => $handler->name,
+                ]),
                 $this->requesterUrl(),
                 ['maintenance_id' => $maintenance?->id]
             ));
@@ -145,11 +161,21 @@ class MaintenanceRequestNotifier
 
             $this->closeTeamNotifications(
                 $request,
-                'Request ' . $this->typeLabel($request) . ' dibatalkan',
-                sprintf('%s — request dibatalkan oleh pemohon.', $this->assetLabel($request)),
+                NotificationText::make('Permintaan :type dibatalkan', ['type' => $this->typeText($request, lower: true)]),
+                NotificationText::make(':asset — permintaan dibatalkan oleh pemohon.', [
+                    'asset' => $this->assetLabel($request),
+                ]),
                 ['status' => 'cancelled']
             );
         });
+    }
+
+    /** Parameter jenis permintaan yang ikut diterjemahkan. */
+    protected function typeText(MaintenanceRequest $request, bool $lower = false): array
+    {
+        $text = self::TYPE_TEXT[$request->request_type] ?? self::TYPE_TEXT['other'];
+
+        return ['t' => $text[$lower ? 1 : 0]];
     }
 
     /**
@@ -189,7 +215,7 @@ class MaintenanceRequestNotifier
      * Notifikasi "request baru" yang masih terbuka di tim diperbarui
      * keterangannya lalu ditandai terbaca agar tidak lagi menunggu diambil.
      */
-    protected function closeTeamNotifications(MaintenanceRequest $request, string $title, string $message, array $extra): void
+    protected function closeTeamNotifications(MaintenanceRequest $request, array $title, array $message, array $extra): void
     {
         DatabaseNotification::query()
             ->where('notifiable_type', User::class)
@@ -199,8 +225,9 @@ class MaintenanceRequestNotifier
             ->get()
             ->each(function (DatabaseNotification $notification) use ($title, $message, $extra) {
                 $data = (array) $notification->data;
-                $data['title'] = $title;
-                $data['message'] = $message;
+                $data['title'] = NotificationText::render($title, NotificationText::DEFAULT_LOCALE);
+                $data['message'] = NotificationText::render($message, NotificationText::DEFAULT_LOCALE);
+                $data['i18n'] = ['title' => $title, 'message' => $message];
                 $data['action'] = 'closed';
 
                 $notification->forceFill([
@@ -213,8 +240,8 @@ class MaintenanceRequestNotifier
     protected function notification(
         MaintenanceRequest $request,
         string $action,
-        string $title,
-        string $message,
+        string|array $title,
+        string|array $message,
         string $url,
         array $extra = []
     ): GlobalNotification {
@@ -238,7 +265,7 @@ class MaintenanceRequestNotifier
         $asset = $request->asset;
 
         if (!$asset) {
-            return 'aset #' . $request->asset_id;
+            return '#' . $request->asset_id;
         }
 
         return trim($asset->asset_name . ' (' . $asset->asset_code . ')');
