@@ -35,10 +35,12 @@ class AssetController extends Controller
                 'category:id,category_name',
                 'subCategory:id,sub_category_name',
                 'photos:id,asset_id,file_path,original_name,sort_order',
+                'branch:id,branch_code,branch_name,is_head_office',
             ])
             ->select([
                 'id',
                 'company_id',
+                'branch_id',
                 'responsible_user_id',
                 'category_id',
                 'sub_category_id',
@@ -66,6 +68,13 @@ class AssetController extends Controller
                 'next_maintenance_date',
             ])
             ->orderByDesc('id');
+
+        // ?branch_id= : filter per cabang, hanya untuk user yang melihat semua
+        // cabang (Administrator Kantor Pusat). User cabang sudah otomatis
+        // dibatasi oleh BranchScope, jadi parameter ini diabaikan.
+        if ($request->filled('branch_id') && \App\Support\BranchAccess::seesAll($user)) {
+            $query->where('branch_id', (int) $request->query('branch_id'));
+        }
 
         // ?status=0|1|2 memfilter status; tanpa itu aset dihapuskan (2) disembunyikan.
         if ($request->filled('status') && in_array((string) $request->query('status'), ['0', '1', '2'], true)) {
@@ -131,10 +140,12 @@ class AssetController extends Controller
                 'category:id,category_name',
                 'subCategory:id,sub_category_name',
                 'photos:id,asset_id,file_path,original_name,sort_order',
+                'branch:id,branch_code,branch_name,is_head_office',
             ])
             ->select([
                 'id',
                 'company_id',
+                'branch_id',
                 'responsible_user_id',
                 'category_id',
                 'sub_category_id',
