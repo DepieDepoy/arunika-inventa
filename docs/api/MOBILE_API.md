@@ -280,7 +280,7 @@ Nilai `target.screen`: `calendar_event`, `calendar`, `maintenance_request`, `mai
 
 | Method | Path | Izin | Keterangan |
 |---|---|---|---|
-| GET | `/assets?search=` | asset.view | Semua aset perusahaan (cari kode/nama/merek/model/serial). Aset **dihapuskan** disembunyikan; tampilkan dengan `status=2` atau `include_disposed=1`. `status` = `0`/`1`/`2` memfilter status |
+| GET | `/assets?search=&branch_id=` | asset.view | Semua aset perusahaan (cari kode/nama/merek/model/serial). `branch_id` = filter cabang, hanya berlaku untuk `user.branch_restricted = false` (user cabang otomatis cabangnya). Tiap aset berisi `branch`. Aset **dihapuskan** disembunyikan; tampilkan dengan `status=2` atau `include_disposed=1`. `status` = `0`/`1`/`2` memfilter status |
 | GET | `/assets/{id}` | asset.view | Detail + foto + riwayat maintenance |
 | GET | `/assets/qr/{qrToken}` | asset.view / asset.my / maintenance.create | Hasil scan QR. `data.access` = `full` (pemegang, atau user dengan izin asset.view seperti administrator & teknisi: `asset` berisi detail lengkap) atau `limited` (user lain: `asset` hanya kode, nama, kategori, merek, model, kondisi, lokasi, status, `responsible_user.name`, `has_active_request`). `data.is_mine` = aset dipegang user. |
 | GET | `/assets/photos/{photoId}` | asset.view | File foto (kirim header Authorization) |
