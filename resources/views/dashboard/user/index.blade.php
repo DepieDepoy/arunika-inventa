@@ -277,6 +277,18 @@
                         </div>
 
 
+                        {{-- CABANG --}}
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Cabang</label>
+                            <select name="branch_id" id="add_branch" class="form-select" required @disabled($branchRestricted)>
+                                @foreach($branches as $branch)
+                                    <option value="{{ $branch->id }}">{{ $branch->label() }}</option>
+                                @endforeach
+                            </select>
+                            <small class="text-muted">User hanya melihat data cabangnya. Administrator (atau role dengan izin "All Branches") melihat semua cabang.</small>
+                        </div>
+
+
                         {{-- STATUS --}}
                         <div class="col-md-6 mb-3">
 
@@ -523,6 +535,17 @@
 
                             </select>
 
+                        </div>
+
+
+                        {{-- CABANG --}}
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Cabang</label>
+                            <select name="branch_id" id="edit_branch" class="form-select" required @disabled($branchRestricted)>
+                                @foreach($branches as $branch)
+                                    <option value="{{ $branch->id }}">{{ $branch->label() }}</option>
+                                @endforeach
+                            </select>
                         </div>
 
 
@@ -952,6 +975,10 @@ $(function () {
 
                     $('#edit_status')
                         .val(response.status);
+
+                    @unless($branchRestricted)
+                        $('#edit_branch').val(response.branch_id ? String(response.branch_id) : '');
+                    @endunless
 
 
                     if (

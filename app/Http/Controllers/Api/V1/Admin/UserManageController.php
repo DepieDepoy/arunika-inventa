@@ -152,8 +152,8 @@ class UserManageController extends ApiController
 
     protected function findUser(User $actor, int $id): User
     {
-        return User::query()
-            ->where('company_id', $actor->company_id)
+        return \App\Support\BranchAccess::scopeUsers(User::query()
+            ->where('company_id', $actor->company_id), $actor, 'branch_id')
             ->with('role')
             ->findOrFail($id);
     }
@@ -199,6 +199,8 @@ class UserManageController extends ApiController
                 'name' => $u->role->role_name,
                 'code' => $u->role->role_code,
             ] : null,
+            // NULL = semua cabang (kantor pusat).
+            'branch' => \App\Http\Controllers\Api\V1\Branch\BranchController::presentBranch($u->branch),
         ];
     }
 }

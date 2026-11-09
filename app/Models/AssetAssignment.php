@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class AssetAssignment extends Model
 {
     use \App\Models\Concerns\Auditable;
+    use \App\Models\Concerns\ScopedByAssetBranch;
 
     protected string $auditModule = 'asset_assignment';
 

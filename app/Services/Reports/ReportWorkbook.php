@@ -86,7 +86,7 @@ class ReportWorkbook
             ['key' => 'holder', 'label' => 'Pemegang', 'width' => 20],
             ['key' => 'purchase_date', 'label' => 'Tgl. beli', 'type' => 'date', 'width' => 12],
             ['key' => 'purchase_price', 'label' => 'Harga beli', 'type' => 'money', 'width' => 16],
-        ], $this->report->newAssetRows($cid, $period), $sub . $limitNote);
+        ], $this->report->forBranch($r["meta"]["branch_id"] ?? null)->newAssetRows($cid, $period), $sub . $limitNote);
 
         $excel->table('Maintenance', 'Pekerjaan maintenance', [
             ['key' => 'maintenance_date', 'label' => 'Tanggal', 'type' => 'date', 'width' => 12],
@@ -100,7 +100,7 @@ class ReportWorkbook
             ['key' => 'cost', 'label' => 'Biaya', 'type' => 'money', 'width' => 15],
             ['key' => 'problem_description', 'label' => 'Masalah', 'width' => 32],
             ['key' => 'action_taken', 'label' => 'Tindakan', 'width' => 32],
-        ], $this->report->maintenanceRows($cid, $period), $sub . $limitNote);
+        ], $this->report->forBranch($r["meta"]["branch_id"] ?? null)->maintenanceRows($cid, $period), $sub . $limitNote);
 
         $excel->table('Request', 'Request perbaikan', [
             ['key' => 'created_at', 'label' => 'Dibuat', 'type' => 'datetime', 'width' => 16],
@@ -112,7 +112,7 @@ class ReportWorkbook
             ['key' => 'handler', 'label' => 'Dikerjakan oleh', 'width' => 20],
             ['key' => 'completed_at', 'label' => 'Selesai', 'type' => 'datetime', 'width' => 16],
             ['key' => 'description', 'label' => 'Keterangan', 'width' => 40],
-        ], $this->report->requestRows($cid, $period), $sub . $limitNote);
+        ], $this->report->forBranch($r["meta"]["branch_id"] ?? null)->requestRows($cid, $period), $sub . $limitNote);
 
         return $excel;
     }

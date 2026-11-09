@@ -18,8 +18,29 @@ class Asset extends Model
 
     use SoftDeletes;
 
+    /**
+     * Multi-cabang: user cabang hanya melihat aset cabangnya (BranchScope),
+     * dan aset baru otomatis masuk cabang user / Kantor Pusat.
+     */
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new \App\Models\Scopes\BranchScope());
+
+        static::creating(function (Asset $asset) {
+            if (!$asset->branch_id && $asset->company_id) {
+                $asset->branch_id = \App\Support\BranchAccess::defaultBranchId((int) $asset->company_id);
+            }
+        });
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class)->withTrashed();
+    }
+
     protected $fillable = [
         'company_id',
+        'branch_id',
         'category_id',
         'sub_category_id',
         'vendor_id',

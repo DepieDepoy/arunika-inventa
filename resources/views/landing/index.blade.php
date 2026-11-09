@@ -1110,6 +1110,7 @@ footer{background:#fff;border-top:1px solid var(--line);padding:56px 0 28px;font
             <ul>
               <li class="hl"><i class="bi bi-people-fill"></i>{{ $limit($plan->max_users, 'user') }}</li>
               <li class="hl"><i class="bi bi-box-seam-fill"></i>{{ $limit($plan->max_assets, 'aset') }}</li>
+              <li class="hl"><i class="bi bi-diagram-3-fill"></i>{{ $plan->max_branches !== null && $plan->max_branches <= 1 ? __('1 kantor (tanpa cabang)') : $limit($plan->max_branches, 'cabang') }}</li>
               <li class="hl"><i class="bi bi-hdd-fill"></i>{{ __('Penyimpanan :size', ['size' => $storage($plan->max_storage_bytes)]) }}</li>
               @foreach($pr['plan_features'] as $feature)<li><i class="bi bi-check2"></i>{{ $feature }}</li>@endforeach
             </ul>

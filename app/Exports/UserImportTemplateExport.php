@@ -27,6 +27,7 @@ class UserImportTemplateExport implements
             'ID Person (NIK)',
             'Email',
             'Phone',
+            'Cabang',
         ];
     }
 
@@ -42,6 +43,7 @@ class UserImportTemplateExport implements
                 '3201234567890001',
                 'budi.santoso@example.com',
                 '081234567890',
+                '',
             ],
 
             [
@@ -50,6 +52,7 @@ class UserImportTemplateExport implements
                 '3201234567890002',
                 'andi.pratama@example.com',
                 '081298765432',
+                'Kantor Pusat',
             ],
         ];
     }
@@ -60,7 +63,7 @@ class UserImportTemplateExport implements
     public function styles(Worksheet $sheet): array
     {
         // Header
-        $sheet->getStyle('A1:E1')->applyFromArray([
+        $sheet->getStyle('A1:F1')->applyFromArray([
             'font' => [
                 'bold' => true,
                 'color' => [
@@ -80,7 +83,7 @@ class UserImportTemplateExport implements
         ]);
 
         // Contoh data
-        $sheet->getStyle('A2:E3')->applyFromArray([
+        $sheet->getStyle('A2:F3')->applyFromArray([
             'alignment' => [
                 'vertical' => Alignment::VERTICAL_TOP,
             ],
@@ -116,6 +119,7 @@ class UserImportTemplateExport implements
             'C' => 22,
             'D' => 35,
             'E' => 20,
+            'F' => 24,
         ];
     }
 }

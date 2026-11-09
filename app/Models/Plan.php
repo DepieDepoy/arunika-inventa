@@ -17,6 +17,7 @@ class Plan extends Model
         'trial_days',
         'max_users',
         'max_assets',
+        'max_branches',
         'max_storage_bytes',
         'status',
     ];
@@ -29,6 +30,7 @@ class Plan extends Model
             'trial_days' => 'integer',
             'max_users' => 'integer',
             'max_assets' => 'integer',
+            'max_branches' => 'integer',
             'status' => 'integer',
         ];
     }

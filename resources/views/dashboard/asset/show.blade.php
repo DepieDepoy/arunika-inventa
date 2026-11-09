@@ -243,6 +243,9 @@
                                 </b>
                             </div>
                             <div class="ad-tile"><small>Lokasi</small><b title="{{ $asset->location }}">{{ $asset->location ?: '—' }}</b></div>
+                            @if($asset->branch && \App\Support\BranchAccess::hasMultiple((int) $asset->company_id))
+                                <div class="ad-tile"><small>Cabang</small><b title="{{ $asset->branch->branch_name }}">{{ $asset->branch->branch_name }}</b></div>
+                            @endif
                             <div class="ad-tile"><small>Merek</small><b>{{ $asset->brand ?: '—' }}</b></div>
                             <div class="ad-tile"><small>Model</small><b title="{{ $asset->model }}">{{ $asset->model ?: '—' }}</b></div>
                             <div class="ad-tile"><small>Nomor seri</small><b title="{{ $asset->serial_number }}">{{ $asset->serial_number ?: '—' }}</b></div>
@@ -399,6 +402,11 @@
                         <div>
                             <small class="text-muted d-block">Lokasi saat ini</small>
                             <b class="fs-6"><i class="bi bi-geo-alt-fill text-primary me-1"></i>{{ $asset->location ?: 'Belum diisi' }}</b>
+                            @if($asset->branch && \App\Support\BranchAccess::hasMultiple((int) $asset->company_id))
+                                <small class="d-block text-muted mt-1"><i class="bi bi-diagram-3 me-1"></i>{{ $asset->branch->branch_name }}
+                                    @if(auth()->user()->hasPermission('branch.transfer') && !$disposed) · <a href="{{ route('branch-transfers.create') }}">Pindah cabang &rarr;</a>@endif
+                                </small>
+                            @endif
                         </div>
                         @if($canMove && !$disposed)
                             <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#moveLocationModal">

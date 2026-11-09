@@ -30,7 +30,7 @@ class SendWarrantyReminders extends Command
             ->where('status', Asset::STATUS_ACTIVE)
             ->whereIn('warranty_end', $dates->keys())
             ->with('responsibleUser:id,name')
-            ->get(['id', 'company_id', 'asset_code', 'asset_name', 'warranty_end', 'responsible_user_id']);
+            ->get(['id', 'company_id', 'branch_id', 'asset_code', 'asset_name', 'warranty_end', 'responsible_user_id']);
 
         $sent = 0;
 
@@ -46,6 +46,11 @@ class SendWarrantyReminders extends Command
                 $notification = $this->notification($asset, $days);
 
                 foreach ($recipients as $user) {
+                    // Multi-cabang: user cabang hanya menerima pengingat aset cabangnya.
+                    if (!\App\Support\BranchAccess::seesAll($user) && (int) $user->branch_id !== (int) $asset->branch_id) {
+                        continue;
+                    }
+
                     try {
                         $user->notify($notification);
                         $sent++;

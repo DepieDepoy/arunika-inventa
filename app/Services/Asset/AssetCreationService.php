@@ -156,6 +156,17 @@ class AssetCreationService
                 );
             }
 
+            // Multi-cabang: aset baru masuk cabang pembuat (atau Kantor Pusat);
+            // penanggung jawab harus di cabang yang sama.
+            $assetBranchId = \App\Support\BranchAccess::find((int) $companyId, $data['branch_id'] ?? null)?->id
+                ?? \App\Support\BranchAccess::defaultBranchId((int) $companyId);
+
+            if ((int) $responsibleUser->branch_id !== (int) $assetBranchId) {
+                throw new RuntimeException(
+                    'Penanggung jawab harus berada di cabang yang sama dengan aset.'
+                );
+            }
+
             $responsibleUserId = $responsibleUser->id;
         }
 
@@ -231,6 +242,10 @@ class AssetCreationService
             $asset = Asset::create([
                 'company_id' =>
                     $companyId,
+
+                // Opsional; kosong = cabang pembuat / Kantor Pusat (Asset::booted).
+                'branch_id' =>
+                    \App\Support\BranchAccess::find((int) $companyId, $data['branch_id'] ?? null)?->id,
 
                 'category_id' =>
                     $category->id,

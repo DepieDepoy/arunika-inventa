@@ -398,6 +398,23 @@ class PermissionSeeder extends Seeder
                 'description'     => 'Mengunduh laporan dalam Excel dan PowerPoint',
             ],
 
+            /*
+            | CABANG & MUTASI ASET
+            */
+            ['permission_name' => 'View Branch', 'permission_code' => 'branch.view', 'module' => 'branch', 'action' => 'view', 'description' => 'Melihat daftar cabang'],
+            ['permission_name' => 'Create Branch', 'permission_code' => 'branch.create', 'module' => 'branch', 'action' => 'create', 'description' => 'Menambah cabang (mengikuti batas paket)'],
+            ['permission_name' => 'Edit Branch', 'permission_code' => 'branch.edit', 'module' => 'branch', 'action' => 'edit', 'description' => 'Mengubah data cabang'],
+            ['permission_name' => 'Delete Branch', 'permission_code' => 'branch.delete', 'module' => 'branch', 'action' => 'delete', 'description' => 'Menghapus cabang yang sudah kosong'],
+            ['permission_name' => 'Transfer Asset', 'permission_code' => 'branch.transfer', 'module' => 'branch', 'action' => 'transfer', 'description' => 'Membuat & membatalkan mutasi aset antar-cabang'],
+            ['permission_name' => 'Receive Transfer', 'permission_code' => 'branch.receive', 'module' => 'branch', 'action' => 'receive', 'description' => 'Menerima mutasi aset di cabang tujuan'],
+
+            /*
+            | AUDIT FISIK ASET
+            */
+            ['permission_name' => 'View Asset Audit', 'permission_code' => 'asset_audit.view', 'module' => 'asset_audit', 'action' => 'view', 'description' => 'Melihat sesi & laporan audit fisik aset'],
+            ['permission_name' => 'Manage Asset Audit', 'permission_code' => 'asset_audit.create', 'module' => 'asset_audit', 'action' => 'create', 'description' => 'Membuat, menyelesaikan, dan membatalkan sesi audit fisik'],
+            ['permission_name' => 'Scan Asset Audit', 'permission_code' => 'asset_audit.scan', 'module' => 'asset_audit', 'action' => 'scan', 'description' => 'Scan QR / mencentang aset saat audit fisik'],
+
         ];
 
         foreach ($permissions as $permission) {

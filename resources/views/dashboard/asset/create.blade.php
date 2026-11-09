@@ -1185,6 +1185,19 @@
 
                         </div>
 
+                        @if(($branches ?? collect())->count() > 0)
+                            <!-- Branch -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Cabang</label>
+                                <select name="branch_id" class="form-select">
+                                    @foreach($branches as $branch)
+                                        <option value="{{ $branch->id }}">{{ $branch->label() }}</option>
+                                    @endforeach
+                                </select>
+                                <small class="text-muted">Setelah tersimpan, pindah cabang lewat menu Mutasi Aset.</small>
+                            </div>
+                        @endif
+
                     </div>
 
                 </div>

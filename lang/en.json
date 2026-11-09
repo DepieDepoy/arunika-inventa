@@ -298,5 +298,13 @@
     "Rapat diperbarui": "Meeting updated",
     ":name memperbarui rapat: :event": ":name updated the meeting: :event",
     "Undangan rapat": "Meeting invitation",
-    ":name mengundang Anda ke rapat: :event": ":name invited you to the meeting: :event"
+    ":name mengundang Anda ke rapat: :event": ":name invited you to the meeting: :event",
+    "cabang": "branches",
+    "1 kantor (tanpa cabang)": "1 office (no branches)",
+    "Mutasi aset masuk: :no": "Incoming asset transfer: :no",
+    ":name mengirim :count aset dari :from ke :to. Konfirmasi setelah aset diterima.": ":name sent :count assets from :from to :to. Confirm once the assets arrive.",
+    "Mutasi :no sudah diterima": "Transfer :no has been received",
+    ":name di :to sudah menerima aset yang Anda kirim.": ":name at :to has received the assets you sent.",
+    "Mutasi :no dibatalkan": "Transfer :no was cancelled",
+    "Pengiriman aset dari :from dibatalkan oleh pengirim.": "The asset shipment from :from was cancelled by the sender."
 }

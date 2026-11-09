@@ -80,12 +80,18 @@ class AssetController extends Controller
             ->where('status', Asset::STATUS_DISPOSED)
             ->count();
 
+        // Filter cabang hanya untuk user kantor pusat & perusahaan multi-cabang.
+        $branches = \App\Support\BranchAccess::hasMultiple((int) $companyId) && !\App\Support\BranchAccess::isRestricted()
+            ? \App\Support\BranchAccess::options((int) $companyId, null, false)
+            : collect();
+
         return view('dashboard.asset.index', compact(
             'categories',
             'subCategories',
             'vendors',
             'users',
-            'stats'
+            'stats',
+            'branches'
         ));
     }
 
@@ -117,11 +123,17 @@ class AssetController extends Controller
             ->orderBy('name')
             ->get();
 
+        // Pilihan cabang hanya tampil bila perusahaan punya > 1 cabang.
+        $branches = \App\Support\BranchAccess::hasMultiple((int) $companyId)
+            ? \App\Support\BranchAccess::options((int) $companyId, Auth::user())
+            : collect();
+
         return view('dashboard.asset.create', compact(
             'categories',
             'subCategories',
             'vendors',
-            'users'
+            'users',
+            'branches'
         ));
     }
 
@@ -140,7 +152,13 @@ class AssetController extends Controller
                 'subCategory',
                 'vendor',
                 'responsibleUser',
+                'branch',
             ]);
+
+        // Filter cabang (user cabang sudah otomatis tersaring BranchScope).
+        if ($request->filled('branch_id')) {
+            $query->where('branch_id', (int) $request->branch_id);
+        }
 
         /*
         |--------------------------------------------------------------------------
@@ -299,7 +317,14 @@ class AssetController extends Controller
                     . e($initials) . '</span>' . e($user->name) . '</span>';
             })
             ->editColumn('location', function ($asset) {
-                return $asset->location ? e($asset->location) : '<span class="al-muted">—</span>';
+                $location = $asset->location ? e($asset->location) : '<span class="al-muted">—</span>';
+
+                // Nama cabang ditampilkan bila perusahaan punya lebih dari satu cabang.
+                if ($asset->branch && !$asset->branch->is_head_office) {
+                    $location .= '<div class="al-muted small"><i class="bi bi-diagram-3"></i> ' . e($asset->branch->branch_name) . '</div>';
+                }
+
+                return $location;
             })
             ->addColumn('vendor_name', function ($asset) {
                 return $asset->vendor ? e($asset->vendor->vendor_name) : '<span class="al-muted">—</span>';
@@ -1059,6 +1084,10 @@ class AssetController extends Controller
             |--------------------------------------------------------------------------
             */
 
+            // Cabang aset baru: pilihan form (bila valid) atau cabang user / Kantor Pusat.
+            $assetBranchId = \App\Support\BranchAccess::find((int) $companyId, $request->branch_id)?->id
+                ?? \App\Support\BranchAccess::defaultBranchId((int) $companyId);
+
             if ($request->filled('responsible_user_id')) {
 
                 $userExists =
@@ -1066,6 +1095,8 @@ class AssetController extends Controller
                         'company_id',
                         $companyId
                     )
+                        // Penanggung jawab harus di cabang aset.
+                        ->where('branch_id', $assetBranchId)
                         ->where(
                             'id',
                             $request->responsible_user_id
@@ -1079,7 +1110,7 @@ class AssetController extends Controller
                     return response()->json([
                         'success' => false,
                         'message' =>
-                            'Responsible user tidak valid.'
+                            'Penanggung jawab tidak valid atau tidak berada di cabang aset.'
                     ], 422);
                 }
             }
@@ -1262,6 +1293,11 @@ class AssetController extends Controller
 
                 'location' =>
                     $request->location,
+
+                // Cabang dari form (bila valid); selain itu otomatis
+                // cabang user / Kantor Pusat (lihat Asset::booted).
+                'branch_id' =>
+                    $assetBranchId,
 
                 'status' =>
                     $request->status,

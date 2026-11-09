@@ -30,7 +30,7 @@ Route::prefix('dashboard')
         Route::post('/intelligence/ask', [
             IntelligenceController::class,
             'ask'
-        ])->name('intelligence.ask');
+        ])->middleware('head-office')->name('intelligence.ask');
 
 
         /*
@@ -42,7 +42,7 @@ Route::prefix('dashboard')
         Route::post('/intelligence/confirm', [
             IntelligenceController::class,
             'confirm'
-        ])->name('intelligence.confirm');
+        ])->middleware('head-office')->name('intelligence.confirm');
 
 
         /*

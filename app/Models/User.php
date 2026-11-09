@@ -46,6 +46,8 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     protected $fillable = [
         'company_id',
+        // Cabang user. NULL = melihat semua cabang (kantor pusat).
+        'branch_id',
         'name',
         'nik',
         'phone',
@@ -84,6 +86,26 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Cabang user. NULL = melihat semua cabang.
+     */
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class)->withTrashed();
+    }
+
+    /**
+     * Setiap user wajib punya cabang: tanpa pilihan -> Kantor Pusat.
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (User $user) {
+            if (!$user->branch_id && $user->company_id) {
+                $user->branch_id = \App\Support\BranchAccess::headOffice((int) $user->company_id)->id;
+            }
+        });
+    }
+
+    /**
      * Relasi ke role.
      */
     public function role(): BelongsTo
@@ -102,11 +124,57 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Cek permission user.
      */
+    /**
+     * Permission tingkat PERUSAHAAN (berlaku untuk semua cabang). Hanya untuk
+     * user Kantor Pusat; Administrator cabang tidak memilikinya.
+     */
+    public const COMPANY_PERMISSIONS = [
+        'subscription.view',
+        'subscription.create',
+        'subscription.history',
+        'subscription.usage',
+        'role.view',
+        'role.create',
+        'role.edit',
+        'role.delete',
+        'role.permission',
+        'branch.create',
+        'branch.delete',
+    ];
+
+    /**
+     * User terdaftar di Kantor Pusat? (tanpa cabang = Kantor Pusat)
+     */
+    public function isHeadOffice(): bool
+    {
+        if (!$this->branch_id) {
+            return true;
+        }
+
+        return (bool) ($this->branch?->is_head_office ?? true);
+    }
+
+    /**
+     * Administrator Kantor Pusat = admin perusahaan: melihat semua cabang,
+     * mengatur paket, role, cabang, profil perusahaan, audit trail.
+     * Administrator di cabang = admin cabang (data cabangnya saja).
+     */
+    public function isCompanyAdmin(): bool
+    {
+        return $this->isAdministrator() && $this->isHeadOffice();
+    }
+
     public function hasPermission(string $permission): bool
     {
-        // Administrator memiliki seluruh permission
+        // Administrator memiliki seluruh permission; Administrator cabang
+        // tanpa permission tingkat perusahaan.
         if ($this->role && $this->role->role_code === 'administrator') {
-            return true;
+            return $this->isHeadOffice() || !in_array($permission, self::COMPANY_PERMISSIONS, true);
+        }
+
+        // Permission tingkat perusahaan hanya untuk user Kantor Pusat.
+        if (in_array($permission, self::COMPANY_PERMISSIONS, true) && !$this->isHeadOffice()) {
+            return false;
         }
 
         // Role tidak aktif = tidak memiliki permission

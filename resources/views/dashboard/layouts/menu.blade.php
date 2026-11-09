@@ -412,11 +412,13 @@
                     auth()->user()->hasPermission('asset.view') ||
                     auth()->user()->hasPermission('asset.import') ||
                     auth()->user()->hasPermission('asset.dispose') ||
-                    auth()->user()->hasPermission('asset.my')
+                    auth()->user()->hasPermission('asset.my') ||
+                    auth()->user()->hasPermission('asset_audit.view') ||
+                    auth()->user()->hasPermission('asset_audit.scan')
                 )
 
                     @php
-                        $assetActive = request()->routeIs('assets.*') || request()->routeIs('my-assets.*');
+                        $assetActive = request()->routeIs('assets.*') || request()->routeIs('my-assets.*') || request()->routeIs('asset-audits.*');
                     @endphp
 
                     <li class="nav-item">
@@ -559,6 +561,28 @@
                                         </i>
 
                                         <span class="item-name">Penghapusan</span>
+
+                                    </a>
+
+                                </li>
+
+                            @endif
+
+                            {{-- AUDIT FISIK ASET --}}
+                            @if(auth()->user()->hasPermission('asset_audit.view') || auth()->user()->hasPermission('asset_audit.scan'))
+
+                                <li class="nav-item">
+
+                                    <a class="nav-link {{ request()->routeIs('asset-audits.*') ? 'active' : '' }}"
+                                       href="{{ route('asset-audits.index') }}">
+
+                                        <i class="icon">
+                                            <svg class="icon-10" xmlns="http://www.w3.org/2000/svg" width="10" viewBox="0 0 24 24" fill="currentColor">
+                                                <circle cx="12" cy="12" r="8" fill="currentColor"/>
+                                            </svg>
+                                        </i>
+
+                                        <span class="item-name">Audit Fisik</span>
 
                                     </a>
 
@@ -864,7 +888,7 @@
                             </li>
 
                             {{-- AUDIT TRAIL (khusus Administrator) --}}
-                            @if(auth()->user()->isAdministrator())
+                            @if(auth()->user()->isCompanyAdmin())
 
                                 <li class="nav-item">
 
@@ -1094,8 +1118,67 @@
                 </li>
 
 
-                {{-- PROFIL PERUSAHAAN (khusus Administrator) --}}
-                @if(auth()->user()->isAdministrator())
+                {{-- CABANG & MUTASI ASET --}}
+                @if(
+                    auth()->user()->hasPermission('branch.view') ||
+                    auth()->user()->hasPermission('branch.transfer') ||
+                    auth()->user()->hasPermission('branch.receive')
+                )
+                    @php
+                        $branchActive = request()->routeIs('branches.*') || request()->routeIs('branch-transfers.*');
+                        $restrictedBranch = \App\Support\BranchAccess::restrictedBranchId();
+                        $pendingIn = \App\Models\BranchTransfer::query()
+                            ->where('company_id', auth()->user()->company_id)
+                            ->where('status', 'sent')
+                            ->when($restrictedBranch, fn ($q) => $q->where('to_branch_id', $restrictedBranch))
+                            ->count();
+                    @endphp
+                    <li class="nav-item">
+                        <a class="nav-link {{ $branchActive ? 'active' : '' }}"
+                           data-bs-toggle="collapse"
+                           href="#sidebar-branch"
+                           role="button"
+                           aria-expanded="{{ $branchActive ? 'true' : 'false' }}"
+                           aria-controls="sidebar-branch">
+                            <i class="icon">
+                                <svg class="icon-20" width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path opacity="0.4" d="M12 2L3 7V9H21V7L12 2Z" fill="currentColor"/>
+                                    <path d="M5 11V18M9.5 11V18M14.5 11V18M19 11V18M3 21H21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                </svg>
+                            </i>
+                            <span class="item-name">Cabang</span>
+                            @if($pendingIn > 0)<span class="badge rounded-pill bg-danger ms-auto me-2">{{ $pendingIn }}</span>@endif
+                            <i class="right-icon">
+                                <svg class="icon-18" xmlns="http://www.w3.org/2000/svg" width="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </i>
+                        </a>
+                        <ul class="sub-nav collapse {{ $branchActive ? 'show' : '' }}" id="sidebar-branch" data-bs-parent="#sidebar-menu">
+                            @if(auth()->user()->hasPermission('branch.view'))
+                                <li class="nav-item">
+                                    <a class="nav-link {{ request()->routeIs('branches.*') ? 'active' : '' }}" href="{{ route('branches.index') }}">
+                                        <i class="icon"><svg class="icon-10" xmlns="http://www.w3.org/2000/svg" width="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8" fill="currentColor"/></svg></i>
+                                        <span class="item-name">Daftar Cabang</span>
+                                    </a>
+                                </li>
+                            @endif
+                            @if(auth()->user()->hasPermission('branch.transfer') || auth()->user()->hasPermission('branch.receive'))
+                                <li class="nav-item">
+                                    <a class="nav-link {{ request()->routeIs('branch-transfers.*') ? 'active' : '' }}" href="{{ route('branch-transfers.index') }}">
+                                        <i class="icon"><svg class="icon-10" xmlns="http://www.w3.org/2000/svg" width="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8" fill="currentColor"/></svg></i>
+                                        <span class="item-name">Mutasi Aset</span>
+                                        @if($pendingIn > 0)<span class="badge rounded-pill bg-danger ms-auto">{{ $pendingIn }}</span>@endif
+                                    </a>
+                                </li>
+                            @endif
+                        </ul>
+                    </li>
+                @endif
+
+
+                {{-- PROFIL PERUSAHAAN (khusus Administrator Kantor Pusat) --}}
+                @if(auth()->user()->isCompanyAdmin())
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('company.*') ? 'active' : '' }}"
                        aria-current="{{ request()->routeIs('company.*') ? 'page' : 'false' }}"

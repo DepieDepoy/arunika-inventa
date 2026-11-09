@@ -36,10 +36,10 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::where(
+        $users = \App\Support\BranchAccess::scopeUsers(User::where(
             'company_id',
             Auth::user()->company_id
-        )
+        ))
         ->where('status', 1)
         ->orderBy('name')
         ->get();
@@ -57,9 +57,13 @@ class UserController extends Controller
         ->orderBy('role_name')
         ->get();
 
+        // Cabang: user dengan cabang hanya melihat aset cabangnya.
+        $branches = \App\Support\BranchAccess::options((int) Auth::user()->company_id, Auth::user());
+        $branchRestricted = \App\Support\BranchAccess::isRestricted(Auth::user());
+
         return view(
             'dashboard.user.index',
-            compact('users', 'roles')
+            compact('users', 'roles', 'branches', 'branchRestricted')
         );
     }
 
@@ -225,9 +229,19 @@ class UserController extends Controller
         |
         */
 
+        $branchId = $this->resolveBranchId($request);
+
+        if ($branchId === false) {
+            return response()->json([
+                'success' => false,
+                'errors' => ['branch_id' => ['Cabang tidak valid.']],
+            ], 422);
+        }
+
         $sendVerificationEmail = $request->boolean('send_verification_email');
         $user = User::create([
             'company_id' => Auth::user()->company_id,
+            'branch_id'  => $branchId,
             'role_id'    => $request->role_id,
             'name'       => $request->name,
             'nik'        => $request->nik,
@@ -323,8 +337,12 @@ class UserController extends Controller
             ->select(
                 'users.*',
                 'companies.company_name',
-                'roles.role_name'
+                'roles.role_name',
+                'branches.branch_name'
             )
+            ->leftJoin('branches', 'branches.id', '=', 'users.branch_id')
+            // Admin cabang hanya melihat user cabangnya.
+            ->tap(fn ($q) => \App\Support\BranchAccess::scopeUsers($q))
             ->leftJoin(
                 'companies',
                 'companies.id',
@@ -396,7 +414,7 @@ class UserController extends Controller
                         <i class="fa-solid fa-user-shield me-1"></i>
                         ' . e($row->role_name) . '
                     </span>
-                ';
+                ' . ($row->branch_name ? '<div class="small text-muted mt-1"><i class="bi bi-diagram-3"></i> ' . e($row->branch_name) . '</div>' : '');
             })
 
             ->editColumn('status', function ($row) {
@@ -478,10 +496,10 @@ class UserController extends Controller
      */
     public function edit(int $id)
     {
-        $user = User::where(
+        $user = \App\Support\BranchAccess::scopeUsers(User::where(
             'company_id',
             Auth::user()->company_id
-        )
+        ))
         ->findOrFail($id);
 
         return response()->json($user);
@@ -531,10 +549,10 @@ class UserController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $user = User::where(
+        $user = \App\Support\BranchAccess::scopeUsers(User::where(
             'company_id',
             Auth::user()->company_id
-        )
+        ))
         ->findOrFail($request->id);
 
         if ($denied = $this->guardUserChange(Auth::user(), $user, $request->role_id, $request->status)) {
@@ -627,6 +645,27 @@ class UserController extends Controller
         $user->role_id = $request->role_id;
         $user->status  = $request->status;
 
+        if ($request->has('branch_id')) {
+            $branchId = $this->resolveBranchId($request);
+
+            // Cabang akun sendiri tidak boleh diubah (mencegah admin pusat terkunci di cabang).
+            if ((int) $user->id === (int) Auth::id() && $branchId !== false && (int) $branchId !== (int) $user->branch_id) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => ['branch_id' => ['Anda tidak dapat memindahkan cabang akun sendiri.']],
+                ], 403);
+            }
+
+            if ($branchId === false) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => ['branch_id' => ['Cabang tidak valid.']],
+                ], 422);
+            }
+
+            $user->branch_id = $branchId;
+        }
+
 
         /*
         |--------------------------------------------------------------------------
@@ -687,10 +726,10 @@ class UserController extends Controller
      */
     public function destroy($id)
     {
-        $user = User::where(
+        $user = \App\Support\BranchAccess::scopeUsers(User::where(
             'company_id',
             Auth::user()->company_id
-        )
+        ))
         ->findOrFail($id);
 
         if ((int) $user->id === (int) Auth::id()) {
@@ -722,9 +761,11 @@ class UserController extends Controller
     {
         $users = User::query()
             ->leftJoin('roles', 'roles.id', '=', 'users.role_id')
+            ->leftJoin('branches', 'branches.id', '=', 'users.branch_id')
             ->where('users.company_id', Auth::user()->company_id)
+            ->tap(fn ($q) => \App\Support\BranchAccess::scopeUsers($q))
             ->orderBy('users.name')
-            ->get(['users.*', 'roles.role_name']);
+            ->get(['users.*', 'roles.role_name', 'branches.branch_name']);
 
         $excel = \App\Services\Reports\SpreadsheetExporter::forCurrentUser();
         $excel->table('User', 'Daftar User', [
@@ -733,6 +774,7 @@ class UserController extends Controller
             ['key' => 'email', 'label' => 'Email', 'width' => 30],
             ['key' => 'phone', 'label' => 'No. HP', 'width' => 17],
             ['key' => 'role_name', 'label' => 'Role', 'width' => 16],
+            ['key' => 'branch_name', 'label' => 'Cabang', 'width' => 18],
             ['label' => 'Status', 'width' => 11, 'value' => fn ($u) => (int) $u->status === 1 ? 'Aktif' : 'Nonaktif'],
             ['label' => 'Email terverifikasi', 'width' => 13, 'value' => fn ($u) => $u->email_verified_at ? 'Ya' : 'Belum'],
             ['key' => 'last_login_at', 'label' => 'Login terakhir', 'type' => 'datetime', 'width' => 17],
@@ -1559,6 +1601,31 @@ class UserController extends Controller
             )
 
             ->make(true);
+    }
+
+
+    /**
+     * Cabang user dari form (wajib; kosong = Kantor Pusat).
+     * User cabang hanya bisa membuat / mengubah user di cabangnya sendiri.
+     *
+     * @return int|false  false = cabang tidak valid
+     */
+    protected function resolveBranchId(Request $request): int|false
+    {
+        $actor = Auth::user();
+        $restricted = \App\Support\BranchAccess::restrictedBranchId($actor);
+
+        if ($restricted !== null) {
+            return $restricted;
+        }
+
+        if (!$request->filled('branch_id')) {
+            return (int) \App\Support\BranchAccess::headOffice((int) $actor->company_id)->id;
+        }
+
+        $branch = \App\Support\BranchAccess::find((int) $actor->company_id, $request->branch_id, $actor);
+
+        return $branch ? (int) $branch->id : false;
     }
 
 

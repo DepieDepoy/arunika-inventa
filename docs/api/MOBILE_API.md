@@ -50,7 +50,10 @@ Tampilkan `message` ke user. Pakai `code` untuk logika aplikasi. `errors` hanya 
 | 403 | `EMAIL_NOT_VERIFIED` | Minta user verifikasi email (link dikirim via email) |
 | 404 | `NOT_FOUND` | Data tidak ada / milik perusahaan lain |
 | 422 | `VALIDATION_ERROR` dan kode khusus modul | Tampilkan `errors` di field form |
-| 422 | `PLAN_LIMIT_REACHED` | Kuota aset/user paket penuh → info hubungi admin |
+| 422 | `PLAN_LIMIT_REACHED` | Kuota aset/user/**cabang** paket penuh → info hubungi admin / upgrade |
+| 404 | `ASSET_NOT_FOUND` | Scan audit: QR / kode bukan aset perusahaan ini → bunyi gagal, tetap di layar scan |
+| 422 | `BRANCH_MISMATCH` | Serah terima ke user di cabang lain → pilih penerima dari `GET /lookups/users?asset_id=` |
+| 403 | `BRANCH_RESTRICTED` | Fitur khusus kantor pusat (Vasetra AI) dibuka user cabang → sembunyikan tombol bila `user.branch_restricted = true` |
 | 422 | `STORAGE_QUOTA_EXCEEDED` | Kuota penyimpanan penuh |
 | 409 | `ALREADY_TAKEN` | Request sudah diambil teknisi lain (`message` menyebut namanya) → muat ulang daftar |
 | 403 | `NOT_HANDLER` | Request sedang ditangani teknisi lain |
@@ -134,6 +137,9 @@ Untuk endpoint `PUT` yang membawa file, kirim **POST** dengan field tambahan `_m
 | Kategori & subkategori | `category.*`, `subcategory.*` (`view`/`create`/`edit`/`delete`) |
 | Vendor | `vendor.*` (`view`/`create`/`edit`/`delete`) |
 | Audit trail, status langganan | hanya `user.is_administrator = true` |
+| Cabang: lihat / tambah / ubah / hapus | `branch.view` / `branch.create` / `branch.edit` / `branch.delete` |
+| Mutasi aset antar-cabang: kirim & batalkan / terima | `branch.transfer` / `branch.receive` |
+| Audit fisik: lihat & laporan / buat-selesaikan-batalkan / scan | `asset_audit.view` / `asset_audit.create` / `asset_audit.scan` |
 
 Server tetap memeriksa izin; aplikasi hanya menyesuaikan tampilan.
 
@@ -144,6 +150,10 @@ Server tetap memeriksa izin; aplikasi hanya menyesuaikan tampilan.
 | Administrator (`administrator`) | Pengelola aplikasi | Semua (tidak dapat diubah) |
 | Teknisi (`teknisi`) | Mengambil & mengerjakan request | `asset.view`, `asset.my`, `maintenance.view`, `maintenance.create`, `maintenance.edit`, `maintenance.history` |
 | Karyawan (`karyawan`) | Memegang aset & membuat request | `asset.my`, `maintenance.create`, `maintenance.history` |
+
+Role berlaku sama di semua cabang. **Administrator di Kantor Pusat** = admin perusahaan (semua cabang, paket, role, profil perusahaan);
+**Administrator di cabang** = admin cabang (semua menu operasional, data cabangnya saja). `GET /me` → `user.is_company_admin`.
+| Auditor (`auditor`) | Petugas audit fisik | `asset.view`, `asset.my`, `asset_audit.view`, `asset_audit.create`, `asset_audit.scan` |
 
 Admin dapat mengubah permission Teknisi/Karyawan atau menambah role sendiri. Karena itu aplikasi harus selalu
 membaca `permissions`, bukan menebak dari nama role.
@@ -505,6 +515,73 @@ tampilkan ringkasannya lalu kirim `token`-nya ke `/ai/confirm` jika user setuju.
 `range`: `this_week`, `last_week`, `this_month`, `last_month`, `this_quarter`, `this_year`, `last_year`, atau `custom` + `from` & `to` (`YYYY-MM-DD`).
 Unduhan berupa file biner (bukan JSON) — simpan lalu buka dengan `open_filex` / share sheet.
 
+**Laporan per cabang:** user kantor pusat boleh menambah `&branch_id=` (pilihan ada di `data.branches`; kosong = semua cabang). User cabang otomatis hanya cabangnya (parameter diabaikan). `data.report.meta.branch` berisi nama cabang (null = semua). Selalu dalam perusahaan sendiri.
+
+### 3.14 Multi-cabang & mutasi aset 🔐💳
+
+**Konsep**
+- Setiap perusahaan punya **Kantor Pusat** (`is_head_office = true`) + cabang lain. Jumlah cabang dibatasi paket (Kantor Pusat ikut dihitung).
+- **Setiap user terdaftar di satu cabang** (`user.branch` selalu terisi; user lama otomatis Kantor Pusat).
+- `GET /me` → `user.branch` `{id, code, name, is_head_office}` dan `user.branch_restricted`:
+  - `false` → **Administrator di Kantor Pusat** (`user.is_company_admin = true`): melihat **semua cabang** + boleh memfilter per cabang (aset, user, laporan, mutasi, audit).
+  - `true` → semua user lain, **termasuk Administrator di cabang** (admin cabang) serta teknisi/karyawan Kantor Pusat: server otomatis hanya mengembalikan data cabangnya — aset, **user**, maintenance, request, mutasi, audit, laporan, notifikasi. Aplikasi tidak perlu menyaring sendiri.
+- **Role sama untuk semua cabang** (Administrator, Teknisi, Karyawan, Auditor). Tidak ada role khusus cabang: cakupan data ditentukan cabang user.
+- Izin tingkat perusahaan hanya untuk user Kantor Pusat: `subscription.*`, `role.*`, `branch.create`, `branch.delete`, profil perusahaan, audit trail.
+  Administrator cabang tidak menerima kode-kode ini di `permissions` → sembunyikan menunya.
+- **Teknisi** menerima request & notifikasi hanya untuk aset cabang yang dilayaninya:
+  cabang sendiri, ditambah cabang yang **tidak punya teknisi** (otomatis dilayani teknisi Kantor Pusat) atau yang diatur
+  "Maintenance ditangani oleh" (`service_branch_id`). Teknisi pusat **tidak** menerima notifikasi aset cabang yang punya teknisi sendiri.
+  Bila tidak ada teknisi sama sekali → Administrator cabang aset (atau Administrator Kantor Pusat).
+- **Serah terima aset hanya ke user di cabang yang sama dengan aset** → selain itu **422 `BRANCH_MISMATCH`**.
+  Untuk memilih penerima pakai `GET /lookups/users?asset_id={id}` (sudah tersaring ke cabang aset).
+  Saat aset dimutasi ke cabang lain, pemegang lamanya otomatis dilepas (tercatat "return").
+- Data user (`/users`, `/users/{id}`) dan aset berisi `branch`. Tambah / ubah user menerima `branch_id` (kosong = Kantor Pusat;
+  user cabang (termasuk Administrator cabang) selalu otomatis cabangnya). `GET /users?branch_id=` untuk filter (kantor pusat).
+
+| Method | Path | Permission | Keterangan |
+|---|---|---|---|
+| GET | `/branches` | login | Daftar cabang aktif (`?include_inactive=1` untuk semua) + `quota` `{used, max (null = tanpa batas), remaining, can_add, plan}` + `my_branch_id` + `multi_branch`. Tiap cabang: `service_branch_id`, `effective_service_branch_id`, `has_technicians` |
+| POST | `/branches` | branch.create | `branch_name`*, `address`, `phone`, `pic_name`, `status` (0/1), `service_branch_id` (opsional; kosong = otomatis). Kuota penuh → **422 `PLAN_LIMIT_REACHED`** (tampilkan `message` + ajakan upgrade di web) |
+| PUT | `/branches/{id}` | branch.edit | body sama. Kantor Pusat tidak bisa dinonaktifkan |
+| DELETE | `/branches/{id}` | branch.delete | **422 `IN_USE`** bila masih ada aset / user / mutasi tertunda. Kantor Pusat tidak bisa dihapus |
+| GET | `/branch-transfers?status=sent\|received\|cancelled&q=&page=` | branch.transfer \| branch.receive | `data.transfers[]`, `data.counts`, `data.incoming_pending` (badge "perlu diterima") |
+| GET | `/branch-transfers/assets?branch_id=&q=&page=` | branch.transfer | Aset cabang asal yang bisa dikirim (belum dihapuskan & tidak sedang dalam mutasi lain) |
+| POST | `/branch-transfers` | branch.transfer | `from_branch_id`*, `to_branch_id`*, `asset_ids[]`* (1–200), `notes` → **201** |
+| GET | `/branch-transfers/{id}` | branch.transfer \| branch.receive | Detail + `items[]` + `can_receive` + `can_cancel` |
+| POST | `/branch-transfers/{id}/receive` | branch.receive | `location` (opsional, lokasi baru di cabang tujuan), `receive_notes` → `data.moved`, `data.skipped` |
+| POST | `/branch-transfers/{id}/cancel` | branch.transfer | Hanya selama `status = sent` |
+
+**Alur mutasi:** cabang asal **kirim** (`status = sent`, aset masih milik cabang asal) → penerima di cabang tujuan mendapat
+notifikasi (`type = branch_transfer`, `data.branch_transfer_id`) → buka detail → tombol **Terima** bila `can_receive = true`
+→ aset pindah cabang & tercatat di riwayat lokasi. Pengirim bisa **Batalkan** selama belum diterima (`can_cancel`).
+User cabang hanya boleh mengirim dari cabangnya sendiri (`from_branch_id` = `my_branch_id`).
+
+### 3.15 Audit fisik aset (scan QR) 🔐💳
+
+Cek fisik / inventarisasi aset tetap (bukan stok barang). Petugas keliling, scan QR label aset dengan kamera HP.
+
+| Method | Path | Permission | Keterangan |
+|---|---|---|---|
+| GET | `/asset-audits?status=in_progress\|completed\|cancelled&page=` | asset_audit.view \| scan | Daftar sesi + `summary` tiap sesi |
+| GET | `/asset-audits/options` | asset_audit.* | Data form: `branches`, `my_branch_id`, `multi_branch`, `locations`, `conditions` `[{key,label}]`, `filters` |
+| POST | `/asset-audits` | asset_audit.create | `title`*, `branch_id` (kosong = semua cabang; user cabang otomatis cabangnya), `location_filter`, `notes` → **201** |
+| GET | `/asset-audits/{id}` | asset_audit.view \| scan | Detail + `summary` + `can_scan` + `can_manage` |
+| GET | `/asset-audits/{id}/items?filter=&q=&page=` | asset_audit.view \| scan | `filter`: `all`, `pending`, `found`, `misplaced`, `damaged`, `missing`, `extra` |
+| POST | `/asset-audits/{id}/scan` | asset_audit.scan | `code`* (isi QR apa adanya — URL label atau kode aset), `location` (lokasi petugas sekarang), `condition` (`good`/`minor_damage`/`major_damage`), `notes` |
+| POST | `/asset-audits/{id}/items/{itemId}` | asset_audit.scan | `action`: `found` \| `missing` \| `reset` (untuk aset tanpa label QR) |
+| POST | `/asset-audits/{id}/complete` | asset_audit.create | `apply_locations` (bool): perbarui lokasi aset yang salah lokasi. Yang belum dicek → `missing` |
+| POST | `/asset-audits/{id}/cancel` | asset_audit.create | |
+| GET | `/asset-audits/{id}/export` | asset_audit.view | File **Excel** (biner) |
+
+`summary`: `{total, checked, pending, found, missing, misplaced, damaged, extra, percent}` — `found + missing + pending = total`;
+`extra` = aset ditemukan tetapi tidak ada di daftar audit (dihitung terpisah).
+
+Item: `{id, asset_id, code, name, state, in_scope, expected_location, found_location, location_mismatch, condition, condition_label, notes, checked_at, checked_by}`.
+`state`: `pending` (belum dicek), `found`, `misplaced` (ditemukan di lokasi lain), `missing`, `extra`.
+
+Respons **scan**: `message` (tampilkan sebagai toast), `data.item`, `data.already_scanned`, `data.summary` (perbarui progres tanpa reload).
+QR tidak dikenal → **404 `ASSET_NOT_FOUND`**. Kamera membaca QR yang sama berkali-kali → abaikan kode yang sama dalam ±2,5 detik di sisi aplikasi.
+Batas 240 scan/menit.
 ---
 
 ## 4. Langganan & pembayaran di aplikasi

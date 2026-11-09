@@ -8,7 +8,8 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Hanya user dengan role Administrator di PT-nya yang boleh lewat.
+ * Hanya Administrator Kantor Pusat (admin perusahaan) yang boleh lewat:
+ * profil perusahaan, audit trail, status langganan.
  */
 class EnsureAdministrator
 {
@@ -16,7 +17,7 @@ class EnsureAdministrator
     {
         $user = $request->user();
 
-        if (!$user instanceof User || !$user->isAdministrator()) {
+        if (!$user instanceof User || !$user->isCompanyAdmin()) {
             abort(403, 'Halaman ini hanya dapat diakses oleh Administrator.');
         }
 

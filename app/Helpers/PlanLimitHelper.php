@@ -68,7 +68,8 @@ class PlanLimitHelper
         $companyId = self::companyId();
 
         return $companyId
-            ? Asset::query()->where('company_id', $companyId)->count()
+            // Kuota berlaku untuk seluruh perusahaan, termasuk aset cabang lain.
+            ? Asset::query()->withoutGlobalScope(\App\Models\Scopes\BranchScope::class)->where('company_id', $companyId)->count()
             : 0;
     }
 
@@ -123,5 +124,57 @@ class PlanLimitHelper
         }
 
         return max(0, $quota['assets'] - self::currentAssets());
+    }
+    /*
+    |--------------------------------------------------------------------------
+    | CABANG (Kantor Pusat ikut dihitung; NULL = tanpa batas)
+    |--------------------------------------------------------------------------
+    */
+
+    /** 0 = tanpa batas (sama seperti maxUsers/maxAssets). */
+    public static function maxBranches(): int
+    {
+        $quota = self::quota();
+
+        if (!$quota) {
+            return 1;
+        }
+
+        return $quota['branches'] === null ? 0 : (int) $quota['branches'];
+    }
+
+    public static function currentBranches(): int
+    {
+        $companyId = self::companyId();
+
+        return $companyId
+            ? \App\Models\Branch::query()->where('company_id', $companyId)->count()
+            : 0;
+    }
+
+    public static function canAddBranches(int $additional = 1): bool
+    {
+        $quota = self::quota();
+
+        if (!$quota || !$quota['subscription']) {
+            return false;
+        }
+
+        if ($quota['branches'] === null) {
+            return true;
+        }
+
+        return self::currentBranches() + max(1, $additional) <= $quota['branches'];
+    }
+
+    public static function remainingBranches(): ?int
+    {
+        $quota = self::quota();
+
+        if (!$quota || $quota['branches'] === null) {
+            return null;
+        }
+
+        return max(0, $quota['branches'] - self::currentBranches());
     }
 }

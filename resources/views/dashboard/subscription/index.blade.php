@@ -981,6 +981,19 @@
                                                 <div class="plan-feature">
                                                     <i class="bi bi-check-circle-fill"></i>
                                                     <span>
+                                                        @if($plan->max_branches === null)
+                                                            Unlimited Cabang
+                                                        @elseif($plan->max_branches <= 1)
+                                                            1 Kantor (tanpa cabang)
+                                                        @else
+                                                            Maksimal {{ $plan->max_branches }} Cabang
+                                                        @endif
+                                                    </span>
+                                                </div>
+
+                                                <div class="plan-feature">
+                                                    <i class="bi bi-check-circle-fill"></i>
+                                                    <span>
                                                         Storage dasar:
                                                         {{ $formatStorageServer($baseStorageBytes) }}
                                                     </span>

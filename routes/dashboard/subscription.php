@@ -14,11 +14,15 @@ Route::prefix('dashboard')
         */
 
         // Halaman subscription / pilih paket
+        // Halaman langganan hanya untuk user Kantor Pusat dengan izin terkait
+        // (Administrator cabang tidak memiliki izin subscription.*).
         Route::get('/subscription', [SubscriptionController::class, 'index'])
+            ->middleware('permission:subscription.view|subscription.create')
             ->name('subscription.index');
 
         // Subscription history
         Route::get('/subscription/history', [SubscriptionController::class, 'history'])
+            ->middleware('permission:subscription.history')
             ->name('subscription.history');
 
         // Halaman expired
@@ -46,9 +50,11 @@ Route::prefix('dashboard')
 
         // Usage & Limits
         Route::get('/subscription/usage', [SubscriptionController::class,'usage'])
+            ->middleware('permission:subscription.usage')
             ->name('subscription.usage');
         
         Route::get('/subscription/billing/{paymentTransaction}',[SubscriptionController::class, 'printBilling'])
+            ->middleware('permission:subscription.history')
             ->name('subscription.billing.print');
 
     });

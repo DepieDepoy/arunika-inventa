@@ -102,7 +102,7 @@ class AssetAssignmentController extends Controller
 
         $assetId = decryptId($id);
 
-        Asset::query()
+        $asset = Asset::query()
             ->where('company_id', $authUser->company_id)
             ->findOrFail($assetId);
 
@@ -127,6 +127,8 @@ class AssetAssignmentController extends Controller
         $query = User::query()
             ->where('company_id', $authUser->company_id)
             ->where('status', 1)
+            // Multi-cabang: aset hanya diserahkan ke user di cabang aset.
+            ->when($asset->branch_id, fn ($q) => $q->where('branch_id', $asset->branch_id))
             ->when(
                 $search !== '',
                 function ($query) use ($search) {
@@ -303,6 +305,12 @@ class AssetAssignmentController extends Controller
             ->where('id', $validated['user_id'])
             ->where('status', 1)
             ->firstOrFail();
+
+        if ($asset->branch_id && (int) $targetUser->branch_id !== (int) $asset->branch_id) {
+            return redirect()
+                ->route('assets.assignment.index', $encryptedId)
+                ->with('error', 'User penerima harus berada di cabang yang sama dengan aset. Pindahkan aset lewat Mutasi Aset bila perlu.');
+        }
 
         /*
         |--------------------------------------------------------------------------

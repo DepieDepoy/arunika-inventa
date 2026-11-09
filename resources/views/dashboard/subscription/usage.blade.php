@@ -42,6 +42,16 @@
             'icon_style' => 'storage',
             'accent' => '#f0ad32',
         ],
+        [
+            'key' => 'branches',
+            'title' => 'Cabang',
+            'description' => 'Jumlah cabang (termasuk Kantor Pusat)',
+            'used' => $usage['branches']['used'] ?? 0,
+            'limit' => $usage['branches']['limit'] ?? null,
+            'icon' => 'bi-diagram-3-fill',
+            'icon_style' => 'branches',
+            'accent' => '#0ea5e9',
+        ],
     ];
 
     $formatBytes = function ($bytes) {
@@ -192,6 +202,11 @@
     .usage-icon.storage {
         color: #c98908;
         background: rgba(240, 173, 50, .17);
+    }
+
+    .usage-icon.branches {
+        color: #0284c7;
+        background: rgba(14, 165, 233, .13);
     }
 
     .usage-icon.plan {
@@ -480,7 +495,7 @@
                     }
                 @endphp
 
-                <div class="col-xl-4 col-md-6 mb-4">
+                <div class="col-xl-3 col-md-6 mb-4">
                     <div class="card usage-summary-card h-100 {{ $metric['key'] }}-card">
                         <div class="card-body p-4">
 

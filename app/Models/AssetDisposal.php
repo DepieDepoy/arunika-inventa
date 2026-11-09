@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class AssetDisposal extends Model
 {
     use \App\Models\Concerns\Auditable;
+    use \App\Models\Concerns\ScopedByAssetBranch;
 
     protected string $auditModule = 'asset_disposal';
 

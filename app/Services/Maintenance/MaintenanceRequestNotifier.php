@@ -57,7 +57,7 @@ class MaintenanceRequestNotifier
         $this->safely(function () use ($request) {
             $request->loadMissing(['asset', 'requester']);
 
-            $recipients = $this->team($request->company_id)
+            $recipients = $this->team($request->company_id, $request->asset?->branch_id ? (int) $request->asset->branch_id : null)
                 ->reject(fn (User $u) => (int) $u->id === (int) $request->requested_by);
 
             foreach ($recipients as $recipient) {
@@ -183,11 +183,13 @@ class MaintenanceRequestNotifier
      *
      * @return Collection<int, User>
      */
-    public function team(int $companyId): Collection
+    public function team(int $companyId, ?int $assetBranchId = null): Collection
     {
-        $technicians = User::query()
+        $technicians = fn (?int $branchId) => User::query()
             ->where('company_id', $companyId)
             ->where('status', 1)
+            // Multi-cabang: hanya teknisi cabang yang melayani aset tersebut.
+            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
             ->whereHas('role', fn ($role) => $role
                 ->where('status', 1)
                 // Administrator hanya cadangan, agar tidak dibanjiri notifikasi.
@@ -195,15 +197,25 @@ class MaintenanceRequestNotifier
                 ->whereHas('permissions', fn ($p) => $p->where('permission_code', 'maintenance.edit')))
             ->get();
 
-        if ($technicians->isNotEmpty()) {
-            return $technicians;
+        /*
+         * Urutan penerima:
+         *  1. teknisi cabang pelayan aset (cabang sendiri / "Maintenance ditangani oleh");
+         *  2. teknisi Kantor Pusat (cabang tanpa teknisi);
+         *  3. Administrator.
+         */
+        $serviceBranchId = \App\Support\BranchAccess::serviceBranchId($companyId, $assetBranchId);
+        $headOfficeId = (int) \App\Support\BranchAccess::headOffice($companyId)->id;
+
+        foreach (array_unique([$serviceBranchId, $headOfficeId]) as $branchId) {
+            $found = $technicians($branchId);
+
+            if ($found->isNotEmpty()) {
+                return $found;
+            }
         }
 
-        return User::query()
-            ->where('company_id', $companyId)
-            ->where('status', 1)
-            ->whereHas('role', fn ($role) => $role->where('role_code', 'administrator'))
-            ->get();
+        // Tidak ada teknisi sama sekali: Administrator cabang aset (atau Kantor Pusat).
+        return \App\Support\BranchAccess::administrators($companyId, $assetBranchId);
     }
 
     public function typeLabel(MaintenanceRequest $request): string

@@ -44,6 +44,7 @@
                             <th style="min-width:160px">Harga / tahun (Rp)</th>
                             <th style="min-width:125px">Maks. user</th>
                             <th style="min-width:125px">Maks. aset</th>
+                            <th style="min-width:125px" title="Termasuk Kantor Pusat">Maks. cabang</th>
                             <th style="min-width:130px">Storage (MB)</th>
                             <th>Aktif</th>
                         </tr>
@@ -77,6 +78,10 @@
                                 @endif
                                 <td><input type="number" class="form-control form-control-sm" name="{{ $p }}[max_users]" min="1" value="{{ old("plans.{$plan->id}.max_users", $plan->max_users) }}" placeholder="Tanpa batas"></td>
                                 <td><input type="number" class="form-control form-control-sm" name="{{ $p }}[max_assets]" min="1" value="{{ old("plans.{$plan->id}.max_assets", $plan->max_assets) }}" placeholder="Tanpa batas"></td>
+                                <td>
+                                    <input type="number" class="form-control form-control-sm" name="{{ $p }}[max_branches]" min="1" value="{{ old("plans.{$plan->id}.max_branches", $plan->max_branches) }}" placeholder="Tanpa batas">
+                                    <div class="small text-muted mt-1">Termasuk pusat</div>
+                                </td>
                                 <td>
                                     <input type="number" class="form-control form-control-sm" name="{{ $p }}[storage_mb]" min="100" step="1" value="{{ old("plans.{$plan->id}.storage_mb", (int) round($plan->max_storage_bytes / 1048576)) }}" required>
                                     <div class="small text-muted mt-1">≈ {{ $gb($plan->max_storage_bytes) }} GB</div>

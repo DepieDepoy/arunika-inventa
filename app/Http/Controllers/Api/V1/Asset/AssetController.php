@@ -603,6 +603,7 @@ class AssetController extends Controller
             'model' => $asset->model,
             'condition' => $asset->asset_condition,
             'location' => $asset->location,
+            'branch' => \App\Http\Controllers\Api\V1\Branch\BranchController::presentBranch($asset->branch),
             'status' => $asset->status,
             'responsible_user' => $asset->responsibleUser
                 ? ['id' => $asset->responsibleUser->id, 'name' => $asset->responsibleUser->name]
@@ -762,6 +763,8 @@ class AssetController extends Controller
 
             'location' =>
                 $asset->location,
+
+            'branch' => \App\Http\Controllers\Api\V1\Branch\BranchController::presentBranch($asset->branch),
 
             'status' =>
                 $asset->status,
@@ -1032,6 +1035,9 @@ class AssetController extends Controller
 
             'location' =>
                 $asset->location,
+
+            // Cabang aset (multi-cabang).
+            'branch' => \App\Http\Controllers\Api\V1\Branch\BranchController::presentBranch($asset->branch),
 
             'status' =>
                 $asset->status,

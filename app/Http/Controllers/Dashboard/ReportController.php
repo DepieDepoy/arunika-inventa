@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Services\Reports\AssetReport;
+use App\Support\BranchAccess;
 use App\Services\Reports\ReportPeriod;
 use App\Services\Reports\ReportPresentation;
 use App\Services\Reports\ReportWorkbook;
@@ -27,11 +28,17 @@ class ReportController extends Controller
     {
         $period = $this->period($request);
 
+        $branchId = $this->branchId($request);
+        $companyId = (int) Auth::user()->company_id;
+
         return view('dashboard.report.index', [
             'period' => $period,
             'presets' => ReportPeriod::PRESETS,
-            'r' => $this->reports->build((int) Auth::user()->company_id, $period),
-            'query' => $period->toQuery(),
+            'r' => $this->reports->forBranch($branchId)->build($companyId, $period),
+            'query' => $period->toQuery() + array_filter(['branch_id' => BranchAccess::isRestricted() ? null : $branchId]),
+            // Pilihan cabang hanya untuk user kantor pusat di perusahaan multi-cabang.
+            'branches' => !BranchAccess::isRestricted() && BranchAccess::hasMultiple($companyId) ? BranchAccess::options($companyId, null, false) : collect(),
+            'branchId' => $branchId,
         ]);
     }
 
@@ -42,7 +49,7 @@ class ReportController extends Controller
 
         return view('dashboard.report.print', [
             'period' => $period,
-            'r' => $this->reports->build((int) Auth::user()->company_id, $period),
+            'r' => $this->reports->forBranch($this->branchId($request))->build((int) Auth::user()->company_id, $period),
         ]);
     }
 
@@ -50,7 +57,7 @@ class ReportController extends Controller
     {
         $period = $this->period($request);
         $companyId = (int) Auth::user()->company_id;
-        $report = $this->reports->build($companyId, $period);
+        $report = $this->reports->forBranch($this->branchId($request))->build($companyId, $period);
 
         return $workbook->build($report, $companyId, $period, Auth::user()->name)
             ->download($this->filename($report, $period, 'xlsx'));
@@ -59,7 +66,7 @@ class ReportController extends Controller
     public function pptx(Request $request, ReportPresentation $presentation): BinaryFileResponse
     {
         $period = $this->period($request);
-        $report = $this->reports->build((int) Auth::user()->company_id, $period);
+        $report = $this->reports->forBranch($this->branchId($request))->build((int) Auth::user()->company_id, $period);
 
         $path = self::tempPath();
         $presentation->build($report, $path, \App\Services\CompanyBranding::logoPath(Auth::user()->company));
@@ -88,6 +95,18 @@ class ReportController extends Controller
         }
 
         return $dir . '/report-' . Str::uuid() . '.pptx';
+    }
+
+    /**
+     * Cabang laporan. User cabang selalu cabangnya sendiri; user kantor pusat
+     * boleh memilih cabang (?branch_id=) atau semua cabang. Selalu di dalam PT sendiri.
+     */
+    protected function branchId(Request $request): ?int
+    {
+        $user = Auth::user();
+
+        return BranchAccess::restrictedBranchId($user)
+            ?? BranchAccess::find((int) $user->company_id, $request->query('branch_id'), $user)?->id;
     }
 
     protected function period(Request $request): ReportPeriod

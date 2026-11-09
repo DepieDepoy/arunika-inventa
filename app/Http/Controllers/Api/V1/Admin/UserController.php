@@ -19,8 +19,9 @@ class UserController extends ApiController
      */
     public function index(Request $request): JsonResponse
     {
-        $query = User::query()
-            ->where('company_id', $request->user()->company_id)
+        $query = \App\Support\BranchAccess::scopeUsers(User::query()
+            ->where('company_id', $request->user()->company_id), $request->user(), 'branch_id')
+            ->when($request->filled('branch_id'), fn ($q) => $q->where('branch_id', $request->integer('branch_id')))
             ->with('role:id,role_name,role_code')
             ->withCount('assets')
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->integer('status')))
@@ -42,8 +43,8 @@ class UserController extends ApiController
     {
         $companyId = $request->user()->company_id;
 
-        $user = User::query()
-            ->where('company_id', $companyId)
+        $user = \App\Support\BranchAccess::scopeUsers(User::query()
+            ->where('company_id', $companyId), $request->user(), 'branch_id')
             ->with('role:id,role_name,role_code')
             ->findOrFail($id);
 
@@ -87,6 +88,8 @@ class UserController extends ApiController
                 'name' => $u->role->role_name,
                 'code' => $u->role->role_code,
             ] : null,
+            // NULL = semua cabang (kantor pusat).
+            'branch' => \App\Http\Controllers\Api\V1\Branch\BranchController::presentBranch($u->branch),
             'assets_count' => $u->assets_count ?? null,
         ];
     }

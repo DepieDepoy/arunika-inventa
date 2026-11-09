@@ -209,6 +209,40 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                 Route::delete('/{id}', [VendorController::class, 'destroy'])->whereNumber('id')->middleware('permission:vendor.delete')->name('destroy');
             });
 
+            // Cabang (multi-cabang). Daftar dipakai juga untuk dropdown cabang.
+            Route::prefix('branches')->name('branches.')->group(function () {
+                Route::get('/', [\App\Http\Controllers\Api\V1\Branch\BranchController::class, 'index'])->name('index');
+                Route::post('/', [\App\Http\Controllers\Api\V1\Branch\BranchController::class, 'store'])->middleware('permission:branch.create')->name('store');
+                Route::put('/{id}', [\App\Http\Controllers\Api\V1\Branch\BranchController::class, 'update'])->whereNumber('id')->middleware('permission:branch.edit')->name('update');
+                Route::delete('/{id}', [\App\Http\Controllers\Api\V1\Branch\BranchController::class, 'destroy'])->whereNumber('id')->middleware('permission:branch.delete')->name('destroy');
+            });
+
+            // Mutasi aset antar-cabang.
+            Route::prefix('branch-transfers')->name('branch-transfers.')->group(function () {
+                $c = \App\Http\Controllers\Api\V1\Branch\BranchTransferController::class;
+                Route::get('/', [$c, 'index'])->middleware('permission:branch.transfer|branch.receive')->name('index');
+                Route::get('/assets', [$c, 'assets'])->middleware('permission:branch.transfer')->name('assets');
+                Route::post('/', [$c, 'store'])->middleware('permission:branch.transfer')->name('store');
+                Route::get('/{id}', [$c, 'show'])->whereNumber('id')->middleware('permission:branch.transfer|branch.receive')->name('show');
+                Route::post('/{id}/receive', [$c, 'receive'])->whereNumber('id')->middleware('permission:branch.receive')->name('receive');
+                Route::post('/{id}/cancel', [$c, 'cancel'])->whereNumber('id')->middleware('permission:branch.transfer')->name('cancel');
+            });
+
+            // Audit fisik aset (scan QR).
+            Route::prefix('asset-audits')->name('asset-audits.')->group(function () {
+                $c = \App\Http\Controllers\Api\V1\Asset\AssetAuditController::class;
+                Route::get('/', [$c, 'index'])->middleware('permission:asset_audit.view|asset_audit.scan')->name('index');
+                Route::get('/options', [$c, 'options'])->middleware('permission:asset_audit.view|asset_audit.create|asset_audit.scan')->name('options');
+                Route::post('/', [$c, 'store'])->middleware('permission:asset_audit.create')->name('store');
+                Route::get('/{id}', [$c, 'show'])->whereNumber('id')->middleware('permission:asset_audit.view|asset_audit.scan')->name('show');
+                Route::get('/{id}/items', [$c, 'items'])->whereNumber('id')->middleware('permission:asset_audit.view|asset_audit.scan')->name('items');
+                Route::post('/{id}/scan', [$c, 'scan'])->whereNumber('id')->middleware(['permission:asset_audit.scan', 'throttle:240,1'])->name('scan');
+                Route::post('/{id}/items/{itemId}', [$c, 'mark'])->whereNumber(['id', 'itemId'])->middleware('permission:asset_audit.scan')->name('mark');
+                Route::post('/{id}/complete', [$c, 'complete'])->whereNumber('id')->middleware('permission:asset_audit.create')->name('complete');
+                Route::post('/{id}/cancel', [$c, 'cancel'])->whereNumber('id')->middleware('permission:asset_audit.create')->name('cancel');
+                Route::get('/{id}/export', [$c, 'export'])->whereNumber('id')->middleware(['permission:asset_audit.view', 'throttle:20,1'])->name('export');
+            });
+
             // Laporan mingguan / bulanan / tahunan.
             Route::get('/reports', [\App\Http\Controllers\Api\V1\ReportController::class, 'show'])
                 ->middleware('permission:report.view')->name('reports.show');
@@ -216,7 +250,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                 ->middleware(['permission:report.export', 'throttle:20,1'])->name('reports.download');
 
             // Vasetra AI.
-            Route::prefix('ai')->name('ai.')->middleware('throttle:20,1')->group(function () {
+            Route::prefix('ai')->name('ai.')->middleware(['throttle:20,1', 'head-office'])->group(function () {
                 Route::post('/ask', [IntelligenceController::class, 'ask'])->name('ask');
                 Route::post('/confirm', [IntelligenceController::class, 'confirm'])->name('confirm');
             });

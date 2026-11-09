@@ -50,6 +50,8 @@ require __DIR__.'/dashboard/notification.php';
 require __DIR__.'/dashboard/audit.php';
 require __DIR__.'/dashboard/report.php';
 require __DIR__.'/dashboard/company.php';
+require __DIR__.'/dashboard/branch.php';
+require __DIR__.'/dashboard/asset-audit.php';
 
 
 /*

@@ -436,6 +436,10 @@
                                         Phone
                                     </th>
 
+                                    <th>
+                                        Cabang
+                                    </th>
+
                                     <th style="width: 100px;">
                                         Role
                                     </th>
@@ -454,6 +458,7 @@
                                         $nik = $row[2] ?? '';
                                         $email = $row[3] ?? '';
                                         $phone = $row[4] ?? '';
+                                        $branchName = trim((string) ($row[5] ?? ''));
                                     @endphp
 
                                     <tr>
@@ -476,6 +481,10 @@
 
                                         <td>
                                             {{ $phone }}
+                                        </td>
+
+                                        <td>
+                                            {{ $branchName !== '' ? $branchName : 'Kantor Pusat' }}
                                         </td>
 
                                         <td>

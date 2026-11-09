@@ -14,6 +14,12 @@ use Illuminate\Support\Facades\DB;
  *  - Teknisi       : menerima, mengambil, dan mengerjakan request maintenance.
  *  - Karyawan      : memegang aset dan membuat request maintenance/perbaikan.
  *
+ *  - Auditor       : audit fisik aset (scan QR).
+ *
+ * Role SAMA untuk semua cabang. Cakupan data ditentukan cabang user:
+ * Administrator di Kantor Pusat = admin perusahaan (semua cabang);
+ * Administrator di cabang = admin cabang (data cabangnya saja).
+ *
  * Perusahaan tetap bisa menambah role sendiri (mis. "Staf Gudang") dari menu Role.
  */
 class DefaultRoles
@@ -21,6 +27,7 @@ class DefaultRoles
     public const ADMINISTRATOR = 'administrator';
     public const TECHNICIAN = 'teknisi';
     public const EMPLOYEE = 'karyawan';
+    public const AUDITOR = 'auditor';
 
     /**
      * role_code => [nama, permission bawaan]. Administrator mendapat semua permission.
@@ -50,6 +57,17 @@ class DefaultRoles
                     'asset.my',
                     'maintenance.create',
                     'maintenance.history',
+                ],
+            ],
+            // Petugas audit fisik: melihat aset, membuat sesi audit, scan QR.
+            self::AUDITOR => [
+                'name' => 'Auditor',
+                'permissions' => [
+                    'asset.view',
+                    'asset.my',
+                    'asset_audit.view',
+                    'asset_audit.create',
+                    'asset_audit.scan',
                 ],
             ],
         ];

@@ -52,6 +52,7 @@ class PlanController extends Controller
             'plans.*.price_yearly' => ['required', 'integer', 'min:0', 'max:10000000000'],
             'plans.*.max_users' => ['nullable', 'integer', 'min:1', 'max:1000000'],
             'plans.*.max_assets' => ['nullable', 'integer', 'min:1', 'max:10000000'],
+            'plans.*.max_branches' => ['nullable', 'integer', 'min:1', 'max:100000'],
             'plans.*.storage_mb' => ['required', 'integer', 'min:100', 'max:10485760'],
             'plans.*.trial_days' => ['nullable', 'integer', 'min:1', 'max:90'],
             'plans.*.status' => ['nullable', 'in:0,1'],
@@ -88,6 +89,7 @@ class PlanController extends Controller
                     'price_yearly' => $isFree ? 0 : $data['price_yearly'],
                     'max_users' => $data['max_users'] ?? null,
                     'max_assets' => $data['max_assets'] ?? null,
+                    'max_branches' => $data['max_branches'] ?? null,
                     'max_storage_bytes' => (int) $data['storage_mb'] * 1048576,
                     'status' => $isFree ? 1 : (int) ($data['status'] ?? 0),
                 ]);

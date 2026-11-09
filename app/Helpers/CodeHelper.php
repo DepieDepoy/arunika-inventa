@@ -44,7 +44,7 @@ class CodeHelper
         // withTrashed() membuat data yang sudah soft-delete
         // tetap dianggap pernah menggunakan code tersebut.
         while (
-            $modelClass::withTrashed()
+            $modelClass::withoutGlobalScopes()
                 ->where('company_id', $companyId)
                 ->where($codeColumn, $code)
                 ->exists()
@@ -80,7 +80,7 @@ class CodeHelper
                 STR_PAD_LEFT
             );
 
-            $exists = $modelClass::withTrashed()
+            $exists = $modelClass::withoutGlobalScopes()
                 ->where('company_id', $companyId)
                 ->where($codeColumn, $code)
                 ->exists();

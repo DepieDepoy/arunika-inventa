@@ -43,6 +43,11 @@ class AccountPresenter
             'role' => $user->role?->role_name,
             'role_code' => $user->role?->role_code,
             'is_administrator' => $user->isAdministrator(),
+            // Administrator Kantor Pusat (admin perusahaan: semua cabang, paket, role, profil perusahaan).
+            'is_company_admin' => $user->isCompanyAdmin(),
+            // Cabang user; NULL = melihat semua cabang (kantor pusat).
+            'branch' => \App\Http\Controllers\Api\V1\Branch\BranchController::presentBranch($user->branch),
+            'branch_restricted' => \App\Support\BranchAccess::isRestricted($user),
             'must_change_password' => (bool) $user->must_change_password,
             'email_verified' => $user->hasVerifiedEmail(),
             'last_login_at' => $user->last_login_at
@@ -69,18 +74,18 @@ class AccountPresenter
      */
     public function permissions(User $user): array
     {
-        if ($user->isAdministrator()) {
-            return Permission::query()->orderBy('permission_code')->pluck('permission_code')->all();
+        $codes = $user->isAdministrator()
+            ? Permission::query()->orderBy('permission_code')->pluck('permission_code')->all()
+            : (!$user->role || (int) $user->role->status !== 1
+                ? []
+                : $user->role->permissions()->orderBy('permission_code')->pluck('permission_code')->all());
+
+        // User cabang (termasuk Administrator cabang) tanpa izin tingkat perusahaan.
+        if (!$user->isHeadOffice()) {
+            $codes = array_values(array_diff($codes, User::COMPANY_PERMISSIONS));
         }
 
-        if (!$user->role || (int) $user->role->status !== 1) {
-            return [];
-        }
-
-        return $user->role->permissions()
-            ->orderBy('permission_code')
-            ->pluck('permission_code')
-            ->all();
+        return $codes;
     }
 
     /**

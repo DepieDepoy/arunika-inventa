@@ -57,6 +57,25 @@ class AssetImport implements
      * CONSTRUCTOR
      * ============================================================
      */
+    private ?int $branchIdCache = null;
+
+    /**
+     * Cabang tujuan aset hasil import: cabang user pengimpor bila dibatasi,
+     * selain itu Kantor Pusat.
+     */
+    protected function branchId(): int
+    {
+        if ($this->branchIdCache === null) {
+            $user = $this->history->user_id
+                ? \App\Models\User::query()->find($this->history->user_id)
+                : null;
+
+            $this->branchIdCache = \App\Support\BranchAccess::defaultBranchId($this->companyId, $user);
+        }
+
+        return $this->branchIdCache;
+    }
+
     public function __construct(ImportHistory $history)
     {
         $this->history = $history;
@@ -145,7 +164,7 @@ class AssetImport implements
         $existingSerialNumbers = [];
 
         if (!empty($serialNumbersToCheck)) {
-            $existingAssets = Asset::where(
+            $existingAssets = Asset::withoutGlobalScope(\App\Models\Scopes\BranchScope::class)->where(
                 'company_id',
                 $this->companyId
             )
@@ -594,6 +613,10 @@ class AssetImport implements
                 'responsible_user_id' =>
                     $responsibleUserId,
 
+                // Cabang pengimpor (bila dibatasi) atau Kantor Pusat.
+                'branch_id' =>
+                    $this->branchId(),
+
                 'asset_code' =>
                     $assetCode,
 
@@ -735,7 +758,7 @@ class AssetImport implements
                 );
 
             $insertedAssets =
-                Asset::where(
+                Asset::withoutGlobalScope(\App\Models\Scopes\BranchScope::class)->where(
                     'company_id',
                     $this->companyId
                 )
@@ -1387,7 +1410,7 @@ class AssetImport implements
     {
         if (!$this->assetCodeInitialized) {
             $lastAssetCode =
-                Asset::withTrashed()
+                Asset::withoutGlobalScopes()
                     ->where(
                         'company_id',
                         $this->companyId
@@ -1434,7 +1457,7 @@ class AssetImport implements
                 );
 
             $exists =
-                Asset::withTrashed()
+                Asset::withoutGlobalScopes()
                     ->where(
                         'company_id',
                         $this->companyId

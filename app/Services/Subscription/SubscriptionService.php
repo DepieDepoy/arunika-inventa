@@ -222,6 +222,7 @@ class SubscriptionService
                 'plan' => null,
                 'users' => 0,
                 'assets' => 0,
+                'branches' => 1,
                 'storage' => 536870912, // 512 MB default
                 'addons' => $addons,
             ];
@@ -245,6 +246,8 @@ class SubscriptionService
             'plan' => $plan,
             'users' => $users,
             'assets' => $assets,
+            // Batas cabang (Kantor Pusat ikut dihitung). NULL = tanpa batas.
+            'branches' => $plan->max_branches === null ? null : max(1, (int) $plan->max_branches),
             'storage' => $baseStorage + $addons['storage'],
             'addons' => $addons,
         ];
@@ -259,7 +262,9 @@ class SubscriptionService
     {
         return [
             'users' => User::query()->where('company_id', $companyId)->count(),
-            'assets' => Asset::query()->where('company_id', $companyId)->count(),
+            // Kuota dihitung untuk seluruh perusahaan, bukan per cabang.
+            'assets' => Asset::query()->withoutGlobalScope(\App\Models\Scopes\BranchScope::class)->where('company_id', $companyId)->count(),
+            'branches' => \App\Models\Branch::query()->where('company_id', $companyId)->count(),
             'storage' => \App\Services\CompanyStorage::usedBytes($companyId),
         ];
     }
@@ -450,6 +455,7 @@ class SubscriptionService
                     'plan_name' => $quote['plan_name'],
                     'max_assets' => $plan->max_assets,
                     'max_users' => $plan->max_users,
+                    'max_branches' => $plan->max_branches,
                     'max_storage_bytes' => (int) $plan->max_storage_bytes,
                     'months' => $months,
                     'start' => $quote['start']->translatedFormat('d M Y'),

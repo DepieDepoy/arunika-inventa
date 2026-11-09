@@ -107,6 +107,7 @@
                             <li>
                                 Kolom yang diperlukan:
                                 <strong>Name, ID Person (NIK), Email, Phone</strong>.
+                                Kolom <strong>Cabang</strong> opsional: isi nama / kode cabang, kosongkan untuk Kantor Pusat (atau cabang Anda bila Anda admin cabang).
                             </li>
                             <li>
                                 Data akan diperiksa terlebih dahulu melalui halaman

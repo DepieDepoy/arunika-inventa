@@ -77,9 +77,16 @@ class LookupController extends ApiController
      */
     public function users(Request $request): JsonResponse
     {
-        $users = User::query()
-            ->where('company_id', $request->user()->company_id)
+        // asset_id: hanya user di cabang aset (untuk serah terima). branch_id: filter cabang.
+        $assetBranch = $request->filled('asset_id')
+            ? \App\Models\Asset::query()->where('company_id', $request->user()->company_id)->whereKey($request->integer('asset_id'))->value('branch_id')
+            : null;
+
+        $users = \App\Support\BranchAccess::scopeUsers(User::query()
+            ->where('company_id', $request->user()->company_id), $request->user(), 'branch_id')
             ->where('status', 1)
+            ->when($assetBranch, fn ($q) => $q->where('branch_id', $assetBranch))
+            ->when(!$assetBranch && $request->filled('branch_id'), fn ($q) => $q->where('branch_id', $request->integer('branch_id')))
             ->when($request->filled('search'), function ($q) use ($request) {
                 $term = '%' . trim((string) $request->query('search')) . '%';
                 $q->where(fn ($w) => $w->where('name', 'like', $term)->orWhere('email', 'like', $term));

@@ -30,6 +30,14 @@ class UserImport implements ToCollection, WithHeadingRow, WithChunkReading
     protected array $seenEmails = [];
     protected array $seenPhones = [];
 
+    /** nama/kode cabang (huruf kecil) => id */
+    protected array $branchMap = [];
+
+    protected ?int $forcedBranchId = null;
+
+    /** Cabang default bila kolom Cabang kosong. */
+    protected int $headOfficeId = 0;
+
     public function __construct(
         ImportHistory $history,
         bool $sendVerificationEmail = false
@@ -45,6 +53,19 @@ class UserImport implements ToCollection, WithHeadingRow, WithChunkReading
             ->firstOrFail();
 
         $this->staffRoleId = (int) $staffRole->id;
+
+        /*
+         * Cabang: kolom "Cabang" (opsional) berisi nama / kode cabang.
+         * Pengimpor yang terikat cabang selalu mengimpor ke cabangnya sendiri.
+         */
+        $importer = $history->user_id ? User::query()->find($history->user_id) : null;
+        $this->forcedBranchId = \App\Support\BranchAccess::restrictedBranchId($importer);
+        $this->headOfficeId = (int) \App\Support\BranchAccess::headOffice($this->companyId)->id;
+
+        foreach (\App\Models\Branch::query()->where('company_id', $this->companyId)->get(['id', 'branch_code', 'branch_name']) as $branch) {
+            $this->branchMap[mb_strtolower(trim($branch->branch_name))] = (int) $branch->id;
+            $this->branchMap[mb_strtolower(trim($branch->branch_code))] = (int) $branch->id;
+        }
 
         $this->defaultPassword = (string) config('auth.default_user_password', 'Vasetra@123');
 
@@ -98,6 +119,7 @@ class UserImport implements ToCollection, WithHeadingRow, WithChunkReading
                 'phone_key' => $phone !== ''
                     ? $this->normalizePhone($phone)
                     : null,
+                'branch' => trim((string) ($row['cabang'] ?? '')),
                 'original_data' => $row->toArray(),
             ];
         }
@@ -263,6 +285,22 @@ class UserImport implements ToCollection, WithHeadingRow, WithChunkReading
             }
 
             /*
+             * Cabang (opsional).
+             */
+            $branchId = $this->forcedBranchId;
+
+            if ($branchId === null && ($row['branch'] ?? '') !== '') {
+                $branchId = $this->branchMap[mb_strtolower($row['branch'])] ?? null;
+
+                if ($branchId === null) {
+                    $errors[] = 'Cabang "' . $row['branch'] . '" tidak ditemukan.';
+                }
+            }
+
+            // Setiap user wajib punya cabang; kosong = Kantor Pusat.
+            $branchId ??= $this->headOfficeId;
+
+            /*
              * Baris gagal: catat ke tabel import_errors.
              */
             if ($errors !== []) {
@@ -286,6 +324,7 @@ class UserImport implements ToCollection, WithHeadingRow, WithChunkReading
              */
             $insertRows[] = [
                 'company_id' => $this->companyId,
+                'branch_id' => $branchId,
                 'role_id' => $this->staffRoleId,
                 'name' => $row['name'],
                 'nik' => $nik,

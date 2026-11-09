@@ -707,7 +707,7 @@ class SubscriptionController extends Controller
     {
         $user = Auth::user();
 
-        if (!$user instanceof User || !$user->isAdministrator()) {
+        if (!$user instanceof User || !$user->isCompanyAdmin()) {
             abort(403, 'Only Administrator can manage subscription.');
         }
     }
@@ -1741,7 +1741,7 @@ class SubscriptionController extends Controller
             'activeUpgrade' => $this->subscriptions->activeUpgrade((int) $companyId),
             'activeAddons' => $this->subscriptions->activeAddons((int) $companyId),
             'addonTotals' => $quota['addons'],
-            'canManage' => $user->isAdministrator(),
+            'canManage' => $user->isCompanyAdmin(),
             'usage' => [
                 'users' => [
                     'used' => $used['users'],
@@ -1754,6 +1754,10 @@ class SubscriptionController extends Controller
                 'storage' => [
                     'used' => $used['storage'],
                     'limit' => $quota['storage'],
+                ],
+                'branches' => [
+                    'used' => $used['branches'],
+                    'limit' => $quota['branches'],
                 ],
             ],
         ]);

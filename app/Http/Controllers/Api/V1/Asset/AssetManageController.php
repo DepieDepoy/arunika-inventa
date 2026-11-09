@@ -154,6 +154,13 @@ class AssetManageController extends ApiController
             return $this->fail('Aset sudah dipegang oleh user tersebut.', 'ALREADY_ASSIGNED');
         }
 
+        // Multi-cabang: penerima harus di cabang aset.
+        if ($asset->branch_id && (int) $target->branch_id !== (int) $asset->branch_id) {
+            return $this->fail('User penerima harus berada di cabang yang sama dengan aset.', 'BRANCH_MISMATCH', 422, [
+                'user_id' => ['User penerima harus berada di cabang yang sama dengan aset.'],
+            ]);
+        }
+
         $startAt = $validated['start_at'] ?? now();
 
         $type = DB::transaction(function () use ($asset, $target, $validated, $authUser, $startAt) {

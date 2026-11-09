@@ -27,9 +27,51 @@ class AssetReport
     public const REQUEST_TYPES = ['maintenance' => 'Maintenance', 'repair' => 'Perbaikan', 'problem' => 'Laporan masalah', 'other' => 'Lainnya'];
     public const REQUEST_STATUS = ['pending' => 'Menunggu', 'in_progress' => 'Dikerjakan', 'completed' => 'Selesai', 'cancelled' => 'Dibatalkan'];
 
+    /** Cabang yang dilaporkan; NULL = seluruh cabang perusahaan. */
+    protected ?int $branchId = null;
+
+    /**
+     * Laporan untuk satu cabang (tetap di dalam perusahaan yang sama).
+     */
+    public function forBranch(?int $branchId): static
+    {
+        $clone = clone $this;
+        $clone->branchId = $branchId ?: null;
+
+        return $clone;
+    }
+
+    public function branchId(): ?int
+    {
+        return $this->branchId;
+    }
+
+    protected function cacheKey(int $companyId, ReportPeriod $period): string
+    {
+        return sprintf('report:%s:%d:b%d:%s', self::VERSION, $companyId, (int) $this->branchId, $period->slug());
+    }
+
+    /** Filter tabel assets (atau query yang join assets) ke cabang terpilih. */
+    protected function onAssets(Builder $q, string $table = 'assets'): Builder
+    {
+        return $this->branchId ? $q->where("{$table}.branch_id", $this->branchId) : $q;
+    }
+
+    /** Filter tabel turunan aset (punya asset_id) ke cabang terpilih. */
+    protected function viaAsset(Builder $q, string $table): Builder
+    {
+        if (!$this->branchId) {
+            return $q;
+        }
+
+        $branchId = $this->branchId;
+
+        return $q->whereIn("{$table}.asset_id", fn ($s) => $s->select('id')->from('assets')->where('branch_id', $branchId));
+    }
+
     public function build(int $companyId, ReportPeriod $period): array
     {
-        $key = sprintf('report:%s:%d:%s', self::VERSION, $companyId, $period->slug());
+        $key = $this->cacheKey($companyId, $period);
         // Periode yang sudah lewat tidak berubah -> cache lebih lama.
         $ttl = $period->to->lt(CarbonImmutable::today()) ? now()->addHours(6) : now()->addMinutes(10);
 
@@ -38,7 +80,7 @@ class AssetReport
 
     public function forget(int $companyId, ReportPeriod $period): void
     {
-        Cache::forget(sprintf('report:%s:%d:%s', self::VERSION, $companyId, $period->slug()));
+        Cache::forget($this->cacheKey($companyId, $period));
     }
 
     protected function compute(int $companyId, ReportPeriod $period): array
@@ -51,7 +93,11 @@ class AssetReport
 
         $report = [
             'meta' => [
-                'company' => Company::query()->whereKey($companyId)->value('company_name'),
+                // Laporan cabang: nama cabang ikut tampil di judul web, PDF, Excel, PPT.
+                'company' => trim(Company::query()->whereKey($companyId)->value('company_name')
+                    . ($this->branchId ? ' · ' . DB::table('branches')->where('company_id', $companyId)->where('id', $this->branchId)->value('branch_name') : '')),
+                'branch' => $this->branchId ? DB::table('branches')->where('company_id', $companyId)->where('id', $this->branchId)->value('branch_name') : null,
+                'branch_id' => $this->branchId,
                 'title' => $period->title(),
                 'period' => $period->label(),
                 'from' => $period->from->toDateString(),
@@ -86,7 +132,7 @@ class AssetReport
 
     protected function aliveAssets(int $companyId, CarbonImmutable $at): Builder
     {
-        return DB::table('assets')
+        return $this->onAssets(DB::table('assets'))
             ->where('assets.company_id', $companyId)
             ->where('assets.created_at', '<=', $at)
             ->where(fn ($q) => $q->whereNull('assets.deleted_at')->orWhere('assets.deleted_at', '>', $at))
@@ -109,7 +155,7 @@ class AssetReport
             'book_value' => round((float) $portfolio->book),
             'unassigned' => (int) $portfolio->unassigned,
         ] + $this->periodKpis($companyId, $period) + [
-            'requests_open' => DB::table('maintenance_requests')
+            'requests_open' => $this->viaAsset(DB::table('maintenance_requests'), 'maintenance_requests')
                 ->where('company_id', $companyId)
                 ->where('created_at', '<=', $at)
                 ->where('status', '!=', 'cancelled')
@@ -125,32 +171,32 @@ class AssetReport
     {
         $range = [$period->from, $period->to];
 
-        $new = DB::table('assets')->where('company_id', $companyId)->whereBetween('created_at', $range)
+        $new = $this->onAssets(DB::table('assets'))->where('company_id', $companyId)->whereBetween('created_at', $range)
             ->selectRaw('COUNT(*) as n, COALESCE(SUM(purchase_price), 0) as v')->first();
 
-        $maint = DB::table('maintenances')->where('company_id', $companyId)->whereNull('deleted_at')
+        $maint = $this->viaAsset(DB::table('maintenances'), 'maintenances')->where('company_id', $companyId)->whereNull('deleted_at')
             ->whereBetween('maintenance_date', [$period->from->toDateString(), $period->to->toDateString()])
             ->where('status', '!=', 'cancelled')
             ->selectRaw("COUNT(*) as n, SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as done, COALESCE(SUM(CASE WHEN status = 'completed' THEN cost ELSE 0 END), 0) as cost")
             ->first();
 
-        $completed = DB::table('maintenance_requests')->where('company_id', $companyId)->whereBetween('completed_at', $range)
+        $completed = $this->viaAsset(DB::table('maintenance_requests'), 'maintenance_requests')->where('company_id', $companyId)->whereBetween('completed_at', $range)
             ->selectRaw('COUNT(*) as n, AVG(TIMESTAMPDIFF(MINUTE, created_at, completed_at)) as mins')->first();
 
         return [
             'new_assets' => (int) $new->n,
             'new_assets_value' => (float) $new->v,
-            'disposed_assets' => DB::table('assets')->where('company_id', $companyId)->whereBetween('deleted_at', $range)->count()
-                + DB::table('asset_disposals')->where('company_id', $companyId)->whereNull('cancelled_at')
+            'disposed_assets' => $this->onAssets(DB::table('assets'))->where('company_id', $companyId)->whereBetween('deleted_at', $range)->count()
+                + $this->viaAsset(DB::table('asset_disposals'), 'asset_disposals')->where('company_id', $companyId)->whereNull('cancelled_at')
                     ->whereBetween('disposal_date', [$period->from->toDateString(), $period->to->toDateString()])->count(),
             'maintenance_count' => (int) $maint->n,
             'maintenance_done' => (int) $maint->done,
             'maintenance_cost' => (float) $maint->cost,
-            'requests_created' => DB::table('maintenance_requests')->where('company_id', $companyId)->whereBetween('created_at', $range)->count(),
+            'requests_created' => $this->viaAsset(DB::table('maintenance_requests'), 'maintenance_requests')->where('company_id', $companyId)->whereBetween('created_at', $range)->count(),
             'requests_completed' => (int) $completed->n,
             'avg_resolution_hours' => $completed->mins !== null ? round($completed->mins / 60, 1) : null,
-            'assignments' => DB::table('asset_assignments')
-                ->join('assets', 'assets.id', '=', 'asset_assignments.asset_id')
+            'assignments' => $this->onAssets(DB::table('asset_assignments')
+                ->join('assets', 'assets.id', '=', 'asset_assignments.asset_id'))
                 ->where('assets.company_id', $companyId)
                 ->whereBetween('asset_assignments.start_at', $range)
                 ->count(),
@@ -167,17 +213,17 @@ class AssetReport
         $dateRange = [$period->from->toDateString(), $period->to->toDateString()];
 
         $series = [
-            'new_assets' => DB::table('assets')->where('company_id', $companyId)->whereBetween('created_at', $range)
+            'new_assets' => $this->onAssets(DB::table('assets'))->where('company_id', $companyId)->whereBetween('created_at', $range)
                 ->selectRaw($period->bucketSql('created_at') . ' as b, COUNT(*) as n')->groupBy('b')->pluck('n', 'b'),
-            'maintenance_count' => DB::table('maintenances')->where('company_id', $companyId)->whereNull('deleted_at')->where('status', '!=', 'cancelled')
+            'maintenance_count' => $this->viaAsset(DB::table('maintenances'), 'maintenances')->where('company_id', $companyId)->whereNull('deleted_at')->where('status', '!=', 'cancelled')
                 ->whereBetween('maintenance_date', $dateRange)
                 ->selectRaw($period->bucketSql('maintenance_date') . ' as b, COUNT(*) as n')->groupBy('b')->pluck('n', 'b'),
-            'maintenance_cost' => DB::table('maintenances')->where('company_id', $companyId)->whereNull('deleted_at')->where('status', 'completed')
+            'maintenance_cost' => $this->viaAsset(DB::table('maintenances'), 'maintenances')->where('company_id', $companyId)->whereNull('deleted_at')->where('status', 'completed')
                 ->whereBetween('maintenance_date', $dateRange)
                 ->selectRaw($period->bucketSql('maintenance_date') . ' as b, SUM(cost) as n')->groupBy('b')->pluck('n', 'b'),
-            'requests_created' => DB::table('maintenance_requests')->where('company_id', $companyId)->whereBetween('created_at', $range)
+            'requests_created' => $this->viaAsset(DB::table('maintenance_requests'), 'maintenance_requests')->where('company_id', $companyId)->whereBetween('created_at', $range)
                 ->selectRaw($period->bucketSql('created_at') . ' as b, COUNT(*) as n')->groupBy('b')->pluck('n', 'b'),
-            'requests_completed' => DB::table('maintenance_requests')->where('company_id', $companyId)->whereBetween('completed_at', $range)
+            'requests_completed' => $this->viaAsset(DB::table('maintenance_requests'), 'maintenance_requests')->where('company_id', $companyId)->whereBetween('completed_at', $range)
                 ->selectRaw($period->bucketSql('completed_at') . ' as b, COUNT(*) as n')->groupBy('b')->pluck('n', 'b'),
         ];
 
@@ -229,7 +275,7 @@ class AssetReport
 
     protected function maintenanceBy(int $companyId, ReportPeriod $period, string $column, array $labels): array
     {
-        return DB::table('maintenances')->where('company_id', $companyId)->whereNull('deleted_at')
+        return $this->viaAsset(DB::table('maintenances'), 'maintenances')->where('company_id', $companyId)->whereNull('deleted_at')
             ->whereBetween('maintenance_date', [$period->from->toDateString(), $period->to->toDateString()])
             ->selectRaw("{$column} as k, COUNT(*) as total, COALESCE(SUM(cost), 0) as cost")
             ->groupBy('k')->orderByDesc('total')->get()
@@ -239,7 +285,7 @@ class AssetReport
 
     protected function requestsBy(int $companyId, ReportPeriod $period, string $column, array $labels): array
     {
-        return DB::table('maintenance_requests')->where('company_id', $companyId)
+        return $this->viaAsset(DB::table('maintenance_requests'), 'maintenance_requests')->where('company_id', $companyId)
             ->whereBetween('created_at', [$period->from, $period->to])
             ->selectRaw("{$column} as k, COUNT(*) as total")
             ->groupBy('k')->orderByDesc('total')->get()
@@ -249,8 +295,8 @@ class AssetReport
 
     protected function topCostAssets(int $companyId, ReportPeriod $period): array
     {
-        return DB::table('maintenances')
-            ->join('assets', 'assets.id', '=', 'maintenances.asset_id')
+        return $this->onAssets(DB::table('maintenances')
+            ->join('assets', 'assets.id', '=', 'maintenances.asset_id'))
             ->where('maintenances.company_id', $companyId)->whereNull('maintenances.deleted_at')
             ->where('maintenances.status', '!=', 'cancelled')
             ->whereBetween('maintenances.maintenance_date', [$period->from->toDateString(), $period->to->toDateString()])
@@ -264,7 +310,7 @@ class AssetReport
 
     protected function topTechnicians(int $companyId, ReportPeriod $period): array
     {
-        return DB::table('maintenance_requests')
+        return $this->viaAsset(DB::table('maintenance_requests'), 'maintenance_requests')
             ->join('users', 'users.id', '=', 'maintenance_requests.handled_by')
             ->where('maintenance_requests.company_id', $companyId)
             ->whereBetween('maintenance_requests.completed_at', [$period->from, $period->to])
@@ -402,7 +448,7 @@ class AssetReport
 
     public function newAssetRows(int $companyId, ReportPeriod $period): Collection
     {
-        return DB::table('assets')
+        return $this->onAssets(DB::table('assets'))
             ->leftJoin('categories', 'categories.id', '=', 'assets.category_id')
             ->leftJoin('users', 'users.id', '=', 'assets.responsible_user_id')
             ->where('assets.company_id', $companyId)
@@ -414,8 +460,8 @@ class AssetReport
 
     public function maintenanceRows(int $companyId, ReportPeriod $period): Collection
     {
-        return DB::table('maintenances')
-            ->join('assets', 'assets.id', '=', 'maintenances.asset_id')
+        return $this->onAssets(DB::table('maintenances')
+            ->join('assets', 'assets.id', '=', 'maintenances.asset_id'))
             ->leftJoin('vendors', 'vendors.id', '=', 'maintenances.vendor_id')
             ->where('maintenances.company_id', $companyId)->whereNull('maintenances.deleted_at')
             ->whereBetween('maintenances.maintenance_date', [$period->from->toDateString(), $period->to->toDateString()])
@@ -426,8 +472,8 @@ class AssetReport
 
     public function requestRows(int $companyId, ReportPeriod $period): Collection
     {
-        return DB::table('maintenance_requests')
-            ->join('assets', 'assets.id', '=', 'maintenance_requests.asset_id')
+        return $this->onAssets(DB::table('maintenance_requests')
+            ->join('assets', 'assets.id', '=', 'maintenance_requests.asset_id'))
             ->leftJoin('users as req', 'req.id', '=', 'maintenance_requests.requested_by')
             ->leftJoin('users as tech', 'tech.id', '=', 'maintenance_requests.handled_by')
             ->where('maintenance_requests.company_id', $companyId)

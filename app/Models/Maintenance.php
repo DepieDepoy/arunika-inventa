@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Maintenance extends Model
 {
     use \App\Models\Concerns\Auditable;
+    use \App\Models\Concerns\ScopedByAssetBranch;
 
     protected string $auditModule = 'maintenance';
 

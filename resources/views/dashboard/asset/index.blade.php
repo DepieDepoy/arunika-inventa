@@ -317,6 +317,19 @@
 
                             </div>
 
+                            @if(($branches ?? collect())->count() > 0)
+                                <!-- CABANG -->
+                                <div class="col-md-4">
+                                    <label class="form-label filter-label">Cabang</label>
+                                    <select id="branch_id" class="form-select">
+                                        <option value="">Semua cabang</option>
+                                        @foreach($branches as $branch)
+                                            <option value="{{ $branch->id }}">{{ $branch->label() }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endif
+
 
                             <!-- CREATED FROM -->
 
@@ -550,6 +563,9 @@ $(function () {
                 d.status =
                     $('#status').val();
 
+                d.branch_id =
+                    $('#branch_id').val() || '';
+
                 d.created_from =
                     $('#created_from').val();
 
@@ -749,6 +765,8 @@ $(function () {
             $('#vendor_id').val('');
 
             $('#status').val('');
+
+            $('#branch_id').val('');
 
             $('#created_from').val('');
 

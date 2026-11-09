@@ -92,7 +92,7 @@
                     <div class="rp-kicker">{{ $r['meta']['title'] }}</div>
                     <h4 class="mt-1">{{ $r['meta']['company'] }}</h4>
                     <div class="sub">{{ $r['meta']['period'] }} · dibanding {{ $r['meta']['previous'] }}</div>
-                    @if(!$companyLogo && auth()->user()->isAdministrator())
+                    @if(!$companyLogo && auth()->user()->isCompanyAdmin())
                         <a href="{{ route('company.edit') }}" class="d-inline-block mt-2 small fw-bold" style="color:#67e8f9"><i class="bi bi-image me-1"></i>Pasang logo perusahaan untuk laporan</a>
                     @endif
                 </div>
@@ -115,12 +115,31 @@
                     @if($key === 'custom')
                         <button type="button" class="{{ $period->preset === 'custom' ? 'on' : '' }}" id="rpCustomBtn"><i class="bi bi-calendar-range me-1"></i>{{ $label }}</button>
                     @else
-                        <a href="{{ route('reports.index', ['range' => $key]) }}" class="{{ $period->preset === $key ? 'on' : '' }}">{{ $label }}</a>
+                        <a href="{{ route('reports.index', ['range' => $key] + array_filter(['branch_id' => $query['branch_id'] ?? null])) }}" class="{{ $period->preset === $key ? 'on' : '' }}">{{ $label }}</a>
                     @endif
                 @endforeach
             </div>
+            @if(($branches ?? collect())->count() > 0)
+                {{-- Laporan per cabang (kantor pusat) --}}
+                <select class="form-select form-select-sm" style="width:auto" id="rpBranch" aria-label="Cabang">
+                    <option value="">Semua cabang</option>
+                    @foreach($branches as $b)
+                        <option value="{{ $b->id }}" @selected((int) ($branchId ?? 0) === (int) $b->id)>{{ $b->label() }}</option>
+                    @endforeach
+                </select>
+                <script>
+                    document.getElementById('rpBranch').addEventListener('change', function () {
+                        const q = new URLSearchParams(@json(\Illuminate\Support\Arr::except($query, ['branch_id'])));
+                        if (this.value) q.set('branch_id', this.value);
+                        window.location.href = @json(route('reports.index')) + '?' + q.toString();
+                    });
+                </script>
+            @elseif(!empty($r['meta']['branch']))
+                <span class="badge bg-primary-subtle text-primary px-3 py-2"><i class="bi bi-diagram-3 me-1"></i>{{ $r['meta']['branch'] }}</span>
+            @endif
             <div class="d-flex gap-2 align-items-center ms-auto {{ $period->preset === 'custom' ? '' : 'd-none' }}" id="rpCustom">
                 <input type="hidden" name="range" value="custom">
+                @if(!empty($query['branch_id']))<input type="hidden" name="branch_id" value="{{ $query['branch_id'] }}">@endif
                 <input type="date" name="from" value="{{ $period->from->toDateString() }}" class="form-control form-control-sm" style="width:auto">
                 <span class="text-muted small">s/d</span>
                 <input type="date" name="to" value="{{ $period->to->toDateString() }}" class="form-control form-control-sm" style="width:auto">
