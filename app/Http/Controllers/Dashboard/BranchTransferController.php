@@ -86,11 +86,7 @@ class BranchTransferController extends Controller
         $term = trim((string) $request->q);
 
         $assets = $this->transfers->movableAssets($companyId, $branch->id)
-            ->when($term !== '', fn ($q) => $q->where(fn ($w) => $w
-                ->where('asset_code', 'like', "%{$term}%")
-                ->orWhere('asset_name', 'like', "%{$term}%")
-                ->orWhere('location', 'like', "%{$term}%")
-                ->orWhere('serial_number', 'like', "%{$term}%")))
+            ->when($term !== '', fn ($q) => \App\Services\Asset\AssetSearch::apply($q, $companyId, $term))
             ->with('responsibleUser:id,name')
             ->orderBy('asset_code')
             ->limit(50)

@@ -29,7 +29,7 @@ class AssetManageController extends ApiController
      * purchase_date?, purchase_price?, purchase_invoice?, warranty_start?, warranty_end?,
      * depreciation_method?, useful_life?, residual_value?, depreciation_start_date?,
      * maintenance_required (0/1) + maintenance_* bila 1, status (0/1),
-     * asset_photos[] (maks 3, jpg/png ≤5MB), invoice_documents[] (maks 5, pdf/jpg/png ≤10MB).
+     * asset_photos[] (maks 6, jpg/png ≤5MB), invoice_documents[] (maks 5, pdf/jpg/png ≤10MB).
      */
     public function store(Request $request, WebAssetController $web, AssetController $api): JsonResponse
     {

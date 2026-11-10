@@ -26,6 +26,13 @@ class Asset extends Model
     {
         static::addGlobalScope(new \App\Models\Scopes\BranchScope());
 
+        // Angka ringkasan aset (dashboard, daftar) di-cache; setiap perubahan
+        // aset menaikkan versi agar angka langsung dihitung ulang.
+        $bump = fn (Asset $asset) => \App\Services\Asset\AssetStats::bump((int) $asset->company_id);
+        static::saved($bump);
+        static::deleted($bump);
+        static::restored($bump);
+
         static::creating(function (Asset $asset) {
             if (!$asset->branch_id && $asset->company_id) {
                 $asset->branch_id = \App\Support\BranchAccess::defaultBranchId((int) $asset->company_id);

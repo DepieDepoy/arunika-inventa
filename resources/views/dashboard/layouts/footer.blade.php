@@ -203,19 +203,41 @@
     <script src="{{ asset('assets/js/plugins/form-wizard.js') }}"></script>
     <!-- AOS Animation Plugin-->
     <script src="{{ asset('assets/vendor/aos/dist/aos.js') }}"></script>
+    <script>
+    /* HP & tablet: cegah smooth-scrollbar dipasang di sidebar. hope-ui.js hanya
+       memasangnya pada elemen .data-scrollbar; pustaka itu menahan gerakan sentuh
+       (touchmove di-preventDefault) dan destroy() tidak melepas pengaitnya, sehingga
+       menu tidak bisa digeser jari. Tanpa class ini, menu memakai scroll bawaan browser. */
+    if (window.matchMedia('(max-width: 1199.98px)').matches) {
+        var vxSidebarBody = document.querySelector('.sidebar .sidebar-body');
+        if (vxSidebarBody) vxSidebarBody.classList.remove('data-scrollbar');
+    }
+    </script>
     <!-- App Script -->
     <script src="{{ asset('assets/js/hope-ui.js') }}" defer></script>
     <script>
     /* HP & tablet: matikan smooth-scrollbar di sidebar agar memakai scroll sentuh
-       bawaan browser (menu bisa digulir sampai paling bawah). */
-    window.addEventListener('load', function () {
-        var body = document.querySelector('.sidebar .sidebar-body');
-        if (!body || !window.matchMedia('(max-width: 1199.98px)').matches) return;
-        try {
-            if (window.Scrollbar && window.Scrollbar.has(body)) window.Scrollbar.destroy(body);
-        } catch (e) {}
-        body.style.overflowY = 'auto';
-    });
+       bawaan browser (menu bisa digulir sampai paling bawah).
+       Dijalankan SEDINI mungkin (DOMContentLoaded, setelah hope-ui.js yang defer
+       memasang Scrollbar) — bukan menunggu 'load' yang bisa lama di halaman berat
+       atau sinyal lambat — lalu diulang saat load & saat layar diputar/diubah. */
+    (function () {
+        var mq = window.matchMedia('(max-width: 1199.98px)');
+        function nativeScroll() {
+            var body = document.querySelector('.sidebar .sidebar-body');
+            if (!body || !mq.matches) return;
+            try {
+                if (window.Scrollbar && window.Scrollbar.has(body)) window.Scrollbar.destroy(body);
+            } catch (e) {}
+            body.style.overflowY = 'auto';
+            body.style.webkitOverflowScrolling = 'touch';
+        }
+        document.addEventListener('DOMContentLoaded', nativeScroll);
+        window.addEventListener('load', nativeScroll);
+        var t;
+        window.addEventListener('resize', function () { clearTimeout(t); t = setTimeout(nativeScroll, 200); });
+        if (mq.addEventListener) mq.addEventListener('change', nativeScroll);
+    })();
     </script>
 
     @yield('js')

@@ -69,7 +69,7 @@ class PlanLimitHelper
 
         return $companyId
             // Kuota berlaku untuk seluruh perusahaan, termasuk aset cabang lain.
-            ? Asset::query()->withoutGlobalScope(\App\Models\Scopes\BranchScope::class)->where('company_id', $companyId)->count()
+            ? (int) \App\Services\Asset\AssetStats::remember((int) $companyId, 'quota-assets', fn () => Asset::query()->withoutGlobalScope(\App\Models\Scopes\BranchScope::class)->where('company_id', $companyId)->count())
             : 0;
     }
 

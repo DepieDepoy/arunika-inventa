@@ -606,12 +606,30 @@
                             @endif
                         </div>
 
-                        @if($pendingPayment->payment_url)
-                            <a href="{{ $pendingPayment->payment_url }}"
-                               class="btn btn-warning btn-sm fw-semibold">
-                                <i class="bi bi-credit-card me-1"></i> Lanjutkan Pembayaran
-                            </a>
-                        @endif
+                        <div class="d-flex flex-wrap gap-2">
+                            @if($pendingPayment->payment_url)
+                                <button type="button"
+                                        class="btn btn-warning btn-sm fw-semibold"
+                                        id="btnResumeDokuPayment"
+                                        data-payment-url="{{ $pendingPayment->payment_url }}">
+                                    <i class="bi bi-credit-card me-1"></i>
+                                    Lanjutkan Pembayaran
+                                </button>
+                            @endif
+
+                            {{-- Batalkan transaksi menggantung lalu buat yang baru --}}
+                            @if(auth()->user()->isCompanyAdmin())
+                                <form method="POST"
+                                      action="{{ route('subscription.payment.cancel', $pendingPayment->id) }}"
+                                      id="formCancelPendingPayment">
+                                    @csrf
+                                    <button type="submit" class="btn btn-outline-danger btn-sm fw-semibold">
+                                        <i class="bi bi-x-circle me-1"></i>
+                                        Batalkan
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1201,27 +1219,119 @@
     </div>
 </div>
 
+{{-- =========================================================
+     DOKU JOKUL CHECKOUT
+========================================================= --}}
 <script src="{{ config('services.doku.checkout_js') }}"></script>
 
+{{-- URL pembayaran dari controller (renewdoku / upgrade / addon -> back()->with('doku_checkout_url')).
+     Wajib ada agar popup DOKU otomatis terbuka setelah transaksi dibuat. --}}
 @if(session('doku_checkout_url'))
     <div id="dokuCheckoutConfig"
          data-payment-url="{{ session('doku_checkout_url') }}"
          hidden></div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const config = document.getElementById('dokuCheckoutConfig');
-            const paymentUrl = config ? config.dataset.paymentUrl : null;
-
-            if (paymentUrl && typeof loadJokulCheckout === 'function') {
-                loadJokulCheckout(paymentUrl);
-            }
-        });
-    </script>
 @endif
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+
+    /**
+     * Membuka popup DOKU Jokul Checkout.
+     */
+    window.openDokuCheckout = function (paymentUrl) {
+
+        if (!paymentUrl) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'URL Pembayaran Tidak Ditemukan',
+                text: 'Silakan buat transaksi pembayaran baru.'
+            });
+            return;
+        }
+
+        if (typeof window.loadJokulCheckout !== 'function') {
+            console.error('DOKU Jokul Checkout JS tidak berhasil dimuat.');
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Checkout DOKU Tidak Tersedia',
+                text: 'Komponen pembayaran DOKU gagal dimuat. Silakan refresh halaman dan coba kembali.'
+            });
+
+            return;
+        }
+
+        try {
+            window.loadJokulCheckout(paymentUrl);
+        } catch (error) {
+            console.error('DOKU Checkout Error:', error);
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal Membuka Pembayaran',
+                text: 'Popup pembayaran DOKU tidak dapat dibuka. Silakan coba kembali.'
+            });
+        }
+    };
+
+
+    /**
+     * Melanjutkan pembayaran pending.
+     * Menggunakan URL transaksi yang sudah tersimpan.
+     */
+    // Konfirmasi batalkan transaksi pending.
+    const cancelPendingForm = document.getElementById('formCancelPendingPayment');
+
+    if (cancelPendingForm) {
+        cancelPendingForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'warning',
+                title: 'Batalkan transaksi ini?',
+                text: 'Link pembayaran lama tidak bisa dipakai lagi. Setelah dibatalkan, Anda bisa membuat transaksi baru.',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, batalkan',
+                cancelButtonText: 'Tidak',
+                confirmButtonColor: '#dc3545'
+            }).then(function (r) {
+                if (r.isConfirmed) cancelPendingForm.submit();
+            });
+        });
+    }
+
+    const resumeButton = document.getElementById('btnResumeDokuPayment');
+
+    if (resumeButton) {
+        resumeButton.addEventListener('click', function () {
+            window.openDokuCheckout(this.dataset.paymentUrl);
+        });
+    }
+
+
+    /**
+     * Membuka checkout setelah transaksi baru dibuat
+     * atau transaksi pending digunakan kembali oleh controller.
+     */
+    const checkoutConfig = document.getElementById('dokuCheckoutConfig');
+
+    if (checkoutConfig) {
+        const paymentUrl = checkoutConfig.dataset.paymentUrl;
+
+        if (paymentUrl) {
+            window.openDokuCheckout(paymentUrl);
+        }
+    }
+
+});
+</script>
+
+
+{{-- =========================================================
+     SUBSCRIPTION, UPGRADE & ADDON
+========================================================= --}}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
     const billingMonthly = document.getElementById('billing_monthly');
     const billingYearly = document.getElementById('billing_yearly');
     const billingCycleInput = document.getElementById('billing_cycle');
@@ -1234,12 +1344,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const storageSlider = document.getElementById('storageSlider');
     const extraStorageInput = document.getElementById('extra_storage_bytes');
 
-    // Semua konfigurasi storage berasal dari database.
+    // Konfigurasi storage dari database.
     const storageUnitBytes = Number('{{ $storageAddonUnitBytes }}');
     const storagePriceMonthly = Number('{{ $storageAddonPriceMonthly }}');
     const storagePriceYearly = Number('{{ $storageAddonPriceYearly }}');
     const maxExtraSteps = Number('{{ $storageAddonMaxSteps }}');
-
 
     const bytesPerGb = 1024 * 1024 * 1024;
     const bytesPerMb = 1024 * 1024;
@@ -1314,7 +1423,6 @@ document.addEventListener('DOMContentLoaded', function () {
             element.classList.toggle('d-none', !yearly);
         });
 
-        // Perkiraan periode paket baru mengikuti billing cycle.
         const preview = document.getElementById('periodPreview');
         const previewStart = document.getElementById('periodPreviewStart');
         const previewEnd = document.getElementById('periodPreviewEnd');
@@ -1482,14 +1590,19 @@ document.addEventListener('DOMContentLoaded', function () {
                         '<div class="text-muted mb-1">Billing Cycle: ' + cycle + '</div>' +
                         (function () {
                             const p = document.getElementById('periodPreview');
+
                             if (!p) {
                                 return '<div class="mb-3"></div>';
                             }
+
                             const key = yearly ? 'yearly' : 'monthly';
                             const queued = p.dataset.queued === '1';
-                            return '<div class="small mb-3 ' + (queued ? 'text-warning-emphasis' : 'text-success') + '">' +
+
+                            return '<div class="small mb-3 ' +
+                                (queued ? 'text-warning-emphasis' : 'text-success') + '">' +
                                 (queued ? 'Masuk antrean, aktif ' : 'Aktif ') +
-                                (p.dataset[key + 'Start'] || '') + ' s/d ' + (p.dataset[key + 'End'] || '') +
+                                (p.dataset[key + 'Start'] || '') + ' s/d ' +
+                                (p.dataset[key + 'End'] || '') +
                                 '</div>';
                         })() +
                         '<div class="d-flex justify-content-between mb-2">' +
@@ -1505,8 +1618,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         '<hr>' +
                         '<div class="d-flex justify-content-between align-items-center">' +
                             '<span class="fw-bold">Total</span>' +
-                            '<strong class="text-primary fs-4">' +
-                                rupiah(totalPrice) + '</strong>' +
+                            '<strong class="text-primary fs-4">' + rupiah(totalPrice) + '</strong>' +
                         '</div>' +
                         '<hr>' +
                         '<small class="text-muted">' +
@@ -1542,18 +1654,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
     updatePrices();
     updateSelectedPlan();
+
+
     /*
     |--------------------------------------------------------------------------
     | UPGRADE SEKARANG
     |--------------------------------------------------------------------------
-    | Angka di sini untuk tampilan; nominal final dihitung ulang server.
     */
+
     const upgradeForm = document.getElementById('upgradeForm');
 
     if (upgradeForm) {
         const options = @json($upgradeOptions);
         const basePlanName = @json($paidSubscription?->plan?->plan_name ?? '');
         const baseEnd = @json($paidSubscription?->end_date?->translatedFormat('d M Y') ?? '');
+
         const planBox = document.getElementById('upgradePlanChoices');
         const durationBox = document.getElementById('upgradeDurationChoices');
         const timeline = document.getElementById('upgradeTimeline');
@@ -1562,22 +1677,31 @@ document.addEventListener('DOMContentLoaded', function () {
         const upgradeButton = document.getElementById('btnUpgrade');
 
         const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({
-            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
         }[c]));
 
-        const durationLabel = months => months === null ? 'Sampai akhir paket' : months + ' bulan';
+        const durationLabel = months =>
+            months === null ? 'Sampai akhir paket' : months + ' bulan';
+
         const plansSeen = [...new Map(options.map(o => [o.plan_id, o])).values()];
 
         let selectedPlan = plansSeen.length ? plansSeen[0].plan_id : null;
         let selectedMonths = null;
 
         function currentOption() {
-            return options.find(o => o.plan_id === selectedPlan && o.months === selectedMonths) || null;
+            return options.find(o =>
+                o.plan_id === selectedPlan && o.months === selectedMonths
+            ) || null;
         }
 
         function renderPlans() {
             planBox.innerHTML = plansSeen.map(p => `
-                <button type="button" class="btn btn-sm ${p.plan_id === selectedPlan ? 'btn-primary' : 'btn-outline-primary'} upgrade-plan-btn"
+                <button type="button"
+                        class="btn btn-sm ${p.plan_id === selectedPlan ? 'btn-primary' : 'btn-outline-primary'} upgrade-plan-btn"
                         data-plan="${p.plan_id}">
                     ${esc(p.plan_name)}
                     <small class="d-block opacity-75">
@@ -1596,7 +1720,8 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             durationBox.innerHTML = durations.map(o => `
-                <button type="button" class="btn btn-sm ${o.months === selectedMonths ? 'btn-dark' : 'btn-outline-secondary'} upgrade-duration-btn"
+                <button type="button"
+                        class="btn btn-sm ${o.months === selectedMonths ? 'btn-dark' : 'btn-outline-secondary'} upgrade-duration-btn"
                         data-months="${o.months === null ? 'end' : o.months}">
                     ${esc(durationLabel(o.months))}
                     <small class="d-block opacity-75">${rupiah(o.price)}</small>
@@ -1618,37 +1743,53 @@ document.addEventListener('DOMContentLoaded', function () {
 
             document.getElementById('upgradeNewLabel').textContent =
                 'Harga ' + o.plan_name + ' (' + o.days + ' hari)';
-            document.getElementById('upgradeNewPrice').textContent = rupiah(o.new_price);
-            document.getElementById('upgradeCredit').textContent = '−' + rupiah(o.credit);
-            document.getElementById('upgradeTotal').textContent = rupiah(o.price);
+
+            document.getElementById('upgradeNewPrice').textContent =
+                rupiah(o.new_price);
+
+            document.getElementById('upgradeCredit').textContent =
+                '−' + rupiah(o.credit);
+
+            document.getElementById('upgradeTotal').textContent =
+                rupiah(o.price);
 
             timeline.innerHTML = `
                 <div class="sub-timeline-item active">
                     <div class="sub-timeline-dot"></div>
                     <div>
                         <div class="fw-semibold">${esc(o.plan_name)}</div>
-                        <small class="text-muted">${esc(o.start)} s/d ${esc(o.end)} · aktif setelah pembayaran</small>
+                        <small class="text-muted">
+                            ${esc(o.start)} s/d ${esc(o.end)} · aktif setelah pembayaran
+                        </small>
                     </div>
                 </div>
+
                 ${o.revert_date ? `
-                <div class="sub-timeline-item">
-                    <div class="sub-timeline-dot"></div>
-                    <div>
-                        <div class="fw-semibold">Kembali ke ${esc(basePlanName)}</div>
-                        <small class="text-muted">${esc(o.revert_date)} s/d ${esc(baseEnd)} · otomatis</small>
-                        <div class="small text-warning-emphasis mt-1">
-                            <i class="bi bi-exclamation-triangle me-1"></i>
-                            Kuota kembali ke paket ${esc(basePlanName)}. Data tetap aman, penambahan diblokir jika melebihi kuota.
+                    <div class="sub-timeline-item">
+                        <div class="sub-timeline-dot"></div>
+                        <div>
+                            <div class="fw-semibold">Kembali ke ${esc(basePlanName)}</div>
+                            <small class="text-muted">
+                                ${esc(o.revert_date)} s/d ${esc(baseEnd)} · otomatis
+                            </small>
+                            <div class="small text-warning-emphasis mt-1">
+                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                Kuota kembali ke paket ${esc(basePlanName)}.
+                                Data tetap aman, penambahan diblokir jika melebihi kuota.
+                            </div>
                         </div>
                     </div>
-                </div>` : `
-                <div class="sub-timeline-item">
-                    <div class="sub-timeline-dot"></div>
-                    <div>
-                        <div class="fw-semibold">Berlaku sampai akhir paket</div>
-                        <small class="text-muted">Tidak kembali ke ${esc(basePlanName)}</small>
+                ` : `
+                    <div class="sub-timeline-item">
+                        <div class="sub-timeline-dot"></div>
+                        <div>
+                            <div class="fw-semibold">Berlaku sampai akhir paket</div>
+                            <small class="text-muted">
+                                Tidak kembali ke ${esc(basePlanName)}
+                            </small>
+                        </div>
                     </div>
-                </div>`}
+                `}
             `;
         }
 
@@ -1660,36 +1801,61 @@ document.addEventListener('DOMContentLoaded', function () {
 
         planBox.addEventListener('click', function (event) {
             const btn = event.target.closest('.upgrade-plan-btn');
+
             if (!btn) return;
+
             selectedPlan = Number(btn.dataset.plan);
             renderAll();
         });
 
         durationBox.addEventListener('click', function (event) {
             const btn = event.target.closest('.upgrade-duration-btn');
+
             if (!btn) return;
-            selectedMonths = btn.dataset.months === 'end' ? null : Number(btn.dataset.months);
+
+            selectedMonths = btn.dataset.months === 'end'
+                ? null
+                : Number(btn.dataset.months);
+
             renderAll();
         });
 
         upgradeForm.addEventListener('submit', function (event) {
             event.preventDefault();
+
             const o = currentOption();
+
             if (!o) return;
 
             Swal.fire({
                 title: 'Konfirmasi Upgrade',
                 html:
                     '<div class="text-start">' +
-                        '<div class="fw-bold fs-5 mb-1">' + esc(basePlanName) + ' → ' + esc(o.plan_name) + '</div>' +
-                        '<div class="small text-muted mb-3">' + esc(o.start) + ' s/d ' + esc(o.end) + ' (' + o.days + ' hari)</div>' +
+                        '<div class="fw-bold fs-5 mb-1">' +
+                            esc(basePlanName) + ' → ' + esc(o.plan_name) +
+                        '</div>' +
+                        '<div class="small text-muted mb-3">' +
+                            esc(o.start) + ' s/d ' + esc(o.end) +
+                            ' (' + o.days + ' hari)' +
+                        '</div>' +
                         (o.revert_date
-                            ? '<div class="small mb-3">Kembali ke ' + esc(basePlanName) + ' mulai <strong>' + esc(o.revert_date) + '</strong>.</div>'
+                            ? '<div class="small mb-3">Kembali ke ' +
+                                esc(basePlanName) + ' mulai <strong>' +
+                                esc(o.revert_date) + '</strong>.</div>'
                             : '') +
-                        '<div class="d-flex justify-content-between"><span>Harga paket baru</span><strong>' + rupiah(o.new_price) + '</strong></div>' +
-                        '<div class="d-flex justify-content-between"><span>Kredit</span><strong class="text-success">−' + rupiah(o.credit) + '</strong></div>' +
-                        '<hr><div class="d-flex justify-content-between align-items-center"><span class="fw-bold">Bayar</span>' +
-                        '<strong class="fs-4 text-primary">' + rupiah(o.price) + '</strong></div>' +
+                        '<div class="d-flex justify-content-between">' +
+                            '<span>Harga paket baru</span>' +
+                            '<strong>' + rupiah(o.new_price) + '</strong>' +
+                        '</div>' +
+                        '<div class="d-flex justify-content-between">' +
+                            '<span>Kredit</span>' +
+                            '<strong class="text-success">−' + rupiah(o.credit) + '</strong>' +
+                        '</div>' +
+                        '<hr>' +
+                        '<div class="d-flex justify-content-between align-items-center">' +
+                            '<span class="fw-bold">Bayar</span>' +
+                            '<strong class="fs-4 text-primary">' + rupiah(o.price) + '</strong>' +
+                        '</div>' +
                     '</div>',
                 icon: 'question',
                 showCancelButton: true,
@@ -1697,11 +1863,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 cancelButtonText: 'Batal',
                 reverseButtons: true,
                 buttonsStyling: false,
-                customClass: { confirmButton: 'btn btn-primary px-4 ms-2', cancelButton: 'btn btn-secondary px-4' }
+                customClass: {
+                    confirmButton: 'btn btn-primary px-4 ms-2',
+                    cancelButton: 'btn btn-secondary px-4'
+                }
             }).then(function (result) {
                 if (result.isConfirmed) {
                     upgradeButton.disabled = true;
-                    upgradeButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Menghubungkan ke DOKU...';
+
+                    upgradeButton.innerHTML =
+                        '<span class="spinner-border spinner-border-sm me-2"></span>' +
+                        'Menghubungkan ke DOKU...';
+
                     upgradeForm.submit();
                 }
             });
@@ -1710,68 +1883,99 @@ document.addEventListener('DOMContentLoaded', function () {
         renderAll();
     }
 
+
     /*
     |--------------------------------------------------------------------------
     | TAMBAH KAPASITAS
     |--------------------------------------------------------------------------
     */
+
     const addonForm = document.getElementById('addonForm');
 
     if (addonForm) {
         const rates = @json($addonOffer['rates'] ?? []);
         const prices = @json($addonOffer['prices'] ?? []);
+
         const durationInput = document.getElementById('addon_duration');
         const totalLabel = document.getElementById('addonTotal');
         const periodLabel = document.getElementById('addonPeriodLabel');
         const addonButton = document.getElementById('btnAddon');
 
-        const durationKey = () => durationInput.value === 'end' ? 'end' : '1';
+        const durationKey = () =>
+            durationInput.value === 'end' ? 'end' : '1';
 
         function describe(type, units) {
             const rate = rates[type];
             const total = units * rate.unit_value;
-            if (type === 'storage') return '+' + formatStorage(total);
-            return '+' + total.toLocaleString('id-ID') + (type === 'asset' ? ' asset' : ' user');
+
+            if (type === 'storage') {
+                return '+' + formatStorage(total);
+            }
+
+            return '+' + total.toLocaleString('id-ID') +
+                (type === 'asset' ? ' asset' : ' user');
         }
 
         function update() {
             const key = durationKey();
-            const info = prices[key] || { unit_price: {}, days: 0, end: '' };
+
+            const info = prices[key] || {
+                unit_price: {},
+                days: 0,
+                end: ''
+            };
+
             let total = 0;
             const lines = [];
 
             addonForm.querySelectorAll('.addon-tile').forEach(function (tile) {
                 const type = tile.dataset.type;
                 const slider = tile.querySelector('.addon-slider');
+
                 if (!slider) return;
 
                 const units = Number(slider.value || 0);
                 const price = units * Number(info.unit_price[type] || 0);
 
                 tile.querySelector('.addon-units-input').value = String(units);
-                tile.querySelector('.addon-amount').textContent = describe(type, units);
-                tile.querySelector('.addon-price').textContent = rupiah(price);
+                tile.querySelector('.addon-amount').textContent =
+                    describe(type, units);
+
+                tile.querySelector('.addon-price').textContent =
+                    rupiah(price);
+
                 tile.classList.toggle('is-selected', units > 0);
 
-                if (units > 0) lines.push(describe(type, units));
+                if (units > 0) {
+                    lines.push(describe(type, units));
+                }
+
                 total += price;
             });
 
             totalLabel.textContent = rupiah(total);
-            periodLabel.textContent = 'Aktif hari ini s/d ' + info.end + ' (' + info.days + ' hari)';
+
+            periodLabel.textContent =
+                'Aktif hari ini s/d ' + info.end +
+                ' (' + info.days + ' hari)';
+
             addonButton.disabled = total <= 0;
+
             addonForm.dataset.summary = lines.join(', ');
             addonForm.dataset.total = String(total);
         }
 
-        addonForm.querySelectorAll('.addon-slider').forEach(s => s.addEventListener('input', update));
-
-        document.querySelectorAll('input[name="addon_duration_display"]').forEach(function (radio) {
-            radio.addEventListener('change', function () {
-                durationInput.value = this.value;
-                update();
-            });
+        addonForm.querySelectorAll('.addon-slider').forEach(slider => {
+            slider.addEventListener('input', update);
         });
+
+        document.querySelectorAll('input[name="addon_duration_display"]')
+            .forEach(function (radio) {
+                radio.addEventListener('change', function () {
+                    durationInput.value = this.value;
+                    update();
+                });
+            });
 
         addonForm.addEventListener('submit', function (event) {
             event.preventDefault();
@@ -1780,10 +1984,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 title: 'Konfirmasi Tambah Kapasitas',
                 html:
                     '<div class="text-start">' +
-                        '<div class="mb-2">' + (addonForm.dataset.summary || '-') + '</div>' +
-                        '<div class="small text-muted mb-3">' + periodLabel.textContent + '</div>' +
-                        '<div class="d-flex justify-content-between align-items-center"><span class="fw-bold">Total</span>' +
-                        '<strong class="fs-4 text-success">' + rupiah(Number(addonForm.dataset.total || 0)) + '</strong></div>' +
+                        '<div class="mb-2">' +
+                            (addonForm.dataset.summary || '-') +
+                        '</div>' +
+                        '<div class="small text-muted mb-3">' +
+                            periodLabel.textContent +
+                        '</div>' +
+                        '<div class="d-flex justify-content-between align-items-center">' +
+                            '<span class="fw-bold">Total</span>' +
+                            '<strong class="fs-4 text-success">' +
+                                rupiah(Number(addonForm.dataset.total || 0)) +
+                            '</strong>' +
+                        '</div>' +
                     '</div>',
                 icon: 'question',
                 showCancelButton: true,
@@ -1791,11 +2003,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 cancelButtonText: 'Batal',
                 reverseButtons: true,
                 buttonsStyling: false,
-                customClass: { confirmButton: 'btn btn-success px-4 ms-2', cancelButton: 'btn btn-secondary px-4' }
+                customClass: {
+                    confirmButton: 'btn btn-success px-4 ms-2',
+                    cancelButton: 'btn btn-secondary px-4'
+                }
             }).then(function (result) {
                 if (result.isConfirmed) {
                     addonButton.disabled = true;
-                    addonButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Menghubungkan ke DOKU...';
+
+                    addonButton.innerHTML =
+                        '<span class="spinner-border spinner-border-sm me-2"></span>' +
+                        'Menghubungkan ke DOKU...';
+
                     addonForm.submit();
                 }
             });
@@ -1803,6 +2022,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         update();
     }
+
 });
 </script>
 

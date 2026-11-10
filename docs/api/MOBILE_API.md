@@ -281,8 +281,8 @@ Nilai `target.screen`: `calendar_event`, `calendar`, `maintenance_request`, `mai
 
 | Method | Path | Izin | Keterangan |
 |---|---|---|---|
-| GET | `/assets?search=&branch_id=` | asset.view | Semua aset perusahaan (cari kode/nama/merek/model/serial). `branch_id` = filter cabang, hanya berlaku untuk `user.branch_restricted = false` (user cabang otomatis cabangnya). Tiap aset berisi `branch`. Aset **dihapuskan** disembunyikan; tampilkan dengan `status=2` atau `include_disposed=1`. `status` = `0`/`1`/`2` memfilter status |
-| GET | `/assets/{id}` | asset.view | Detail + foto + riwayat maintenance |
+| GET | `/assets?search=&branch_id=&category_id=` | asset.view | Semua aset perusahaan (cari **awalan** kode / kata di nama, merek, nomor seri). `category_id` = chip kategori (hanya menyaring daftar). `branch_id` = filter cabang, hanya berlaku untuk `user.branch_restricted = false` (user cabang otomatis cabangnya). Tiap aset berisi `branch`. Aset **dihapuskan** disembunyikan; tampilkan dengan `status=2` atau `include_disposed=1`. `status` = `0`/`1`/`2` memfilter status |
+| GET | `/assets/{id}` | asset.view | Detail + foto (maks. 6) + riwayat maintenance |
 | GET | `/assets/qr/{qrToken}` | asset.view / asset.my / maintenance.create | Hasil scan QR. `data.access` = `full` (pemegang, atau user dengan izin asset.view seperti administrator & teknisi: `asset` berisi detail lengkap) atau `limited` (user lain: `asset` hanya kode, nama, kategori, merek, model, kondisi, lokasi, status, `responsible_user.name`, `has_active_request`). `data.is_mine` = aset dipegang user. |
 | GET | `/assets/photos/{photoId}` | asset.view | File foto (kirim header Authorization) |
 | GET | `/assets/{id}/maintenances` | asset.view | Riwayat maintenance aset |
@@ -295,6 +295,22 @@ Nilai `target.screen`: `calendar_event`, `calendar`, `maintenance_request`, `mai
 | POST | `/assets/{id}/return` | asset.edit | `end_at`?, `reason`?, `notes`? |
 | GET | `/assets/{id}/locations` | asset.view / asset.move | Riwayat pindah lokasi (`history[]`: `from`, `to`, `moved_at`, `notes`, `created_by`) + `known_locations[]` untuk saran isian |
 | POST | `/assets/{id}/location` | asset.move | `location` (wajib, maks. 255), `moved_at`? (Y-m-d, default hari ini, tidak boleh masa depan), `notes`? |
+
+**Ringkasan di `GET /assets`** (dihitung dari SELURUH data, bukan hanya halaman yang dimuat — HP tidak perlu memuat semua aset):
+
+```json
+"data": {
+  "assets": [ ... ],
+  "summary": { "total": 120, "in_use": 80, "available": 40, "maintenance": 5, "disposed": 3 },
+  "categories": [ { "id": 2, "name": "ELECTRICAL", "total": 64 }, { "id": null, "name": "Tanpa kategori", "total": 1 } ]
+}
+```
+
+- `summary.total` = aset belum dihapuskan; `in_use` (ada pemegang) + `available` (belum dipegang) = `total`;
+  `maintenance` = aset dengan request maintenance aktif (menunggu / dikerjakan); `disposed` = aset dihapuskan.
+- `categories` = jumlah aset (tanpa yang dihapuskan) per kategori, urut terbanyak → untuk chip kategori; kirim `category_id` saat chip dipilih.
+- `summary` & `categories` mengikuti cabang (`branch_id` / cabang user) dan `search`, tetapi **tidak** berubah oleh `category_id` / `status`,
+  sehingga angka di chip tetap terlihat walau satu chip dipilih. Tanpa pencarian, angka di-cache dan otomatis segar saat ada perubahan aset.
 
 **Field tambah/ubah aset** (sama dengan form web):
 
@@ -314,14 +330,16 @@ Nilai `target.screen`: `calendar_event`, `calendar`, `maintenance_request`, `mai
 | `purchase_date`, `purchase_price`, `purchase_invoice` | | |
 | `warranty_start`, `warranty_end`, `warranty_note` | | `warranty_end` ≥ `warranty_start` |
 | `depreciation_method`, `useful_life`, `residual_value`, `depreciation_start_date` | | |
-| `asset_photos[]` | | maks. 3, jpg/png, ≤ 5 MB |
+| `asset_condition` | ✔ (tambah) | `new` (baru) / `used` (bekas) |
+| `asset_photos[]` | | maks. **6** foto per aset (tambah: maks. 6 file; ubah: foto lama + baru maks. 6), jpg/png, ≤ 5 MB |
 | `invoice_documents[]` | | maks. 5, pdf/jpg/png, ≤ 10 MB |
 | `delete_images[]`, `delete_invoice_documents[]` | | hanya saat ubah: id foto/dokumen yang dihapus |
 
 Saat **ubah**, kirim ulang semua nilai lama (form terisi dari `GET /assets/{id}`). Jadwal maintenance tidak diubah lewat endpoint ini.
 
 `GET /assets/{id}` (juga respons POST/PUT) berisi nilai lama untuk form ubah: `vendor` `{id, name}`, `purchase_price`, `purchase_invoice`,
-`depreciation_method`, `useful_life`, `residual_value`, `depreciation_start_date`, `branch`, `location`. Field pembelian bernilai `null`
+`depreciation_method`, `useful_life`, `residual_value`, `depreciation_start_date`, `branch`, `location`, dan
+`invoice_documents` `[{id, original_name, url}]` (hapus dokumen lama: kirim id-nya di `delete_invoice_documents[]`). Field pembelian bernilai `null`
 bila user tidak punya izin `asset.view` / `asset.edit` (mis. pemegang aset biasa).
 
 **Status aset, garansi & penghapusan** (ada di daftar dan detail aset):

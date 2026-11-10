@@ -44,6 +44,12 @@ Route::prefix('dashboard')
         Route::post('/subscription/addon', [SubscriptionController::class, 'buyAddon'])
             ->name('subscription.addon');
 
+        // Batalkan transaksi pembayaran yang belum selesai (lalu bisa buat baru)
+        Route::post('/subscription/payment/{paymentTransaction}/cancel', [SubscriptionController::class, 'cancelPendingPayment'])
+            ->whereNumber('paymentTransaction')
+            ->middleware('permission:subscription.create')
+            ->name('subscription.payment.cancel');
+
         // Halaman setelah pembayaran selesai
         Route::get('/subscription/payment/finish', [SubscriptionController::class, 'paymentFinish'])
             ->name('subscription.payment.finish');

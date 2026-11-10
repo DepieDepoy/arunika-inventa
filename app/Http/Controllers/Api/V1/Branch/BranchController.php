@@ -37,13 +37,13 @@ class BranchController extends ApiController
         $rows = Branch::query()
             ->where('company_id', $companyId)
             ->when(!$request->boolean('include_inactive'), fn ($q) => $q->where('status', 1))
-            ->withCount([
-                'assets' => fn ($q) => $q->withoutGlobalScope(BranchScope::class)->inService(),
-                'users',
-            ])
+            ->withCount('users')
             ->orderByDesc('is_head_office')
             ->orderBy('branch_name')
             ->get();
+
+        $assetCounts = \App\Http\Controllers\Dashboard\BranchController::assetCountsByBranch($companyId);
+        $rows->each(fn ($b) => $b->setAttribute('assets_count', (int) ($assetCounts[$b->id] ?? 0)));
 
         return $this->ok([
             'branches' => $rows->map(fn (Branch $b) => $this->present($b, $restricted))->values(),

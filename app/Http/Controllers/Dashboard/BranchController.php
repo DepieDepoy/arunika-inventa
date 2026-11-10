@@ -37,13 +37,14 @@ class BranchController extends Controller
             ->with('serviceBranch')
             // Admin cabang hanya melihat cabangnya sendiri.
             ->when(BranchAccess::restrictedBranchId($user), fn ($q, $id) => $q->whereKey($id))
-            ->withCount([
-                'assets' => fn ($q) => $q->withoutGlobalScope(BranchScope::class)->inService(),
-                'users',
-            ])
+            ->withCount('users')
             ->orderByDesc('is_head_office')
             ->orderBy('branch_name')
             ->get();
+
+        // Jumlah aset per cabang: satu query kelompok ber-index + cache.
+        $assetCounts = self::assetCountsByBranch($companyId);
+        $branches->each(fn ($b) => $b->setAttribute('assets_count', (int) ($assetCounts[$b->id] ?? 0)));
 
         $quota = $this->branches->quota();
 
@@ -65,6 +66,22 @@ class BranchController extends Controller
                 ->where('status', BranchTransfer::STATUS_SENT)
                 ->count(),
         ]);
+    }
+
+    /**
+     * [branch_id => jumlah aset aktif/tidak aktif] (tanpa yang dihapuskan).
+     */
+    public static function assetCountsByBranch(int $companyId): array
+    {
+        return \App\Services\Asset\AssetStats::remember($companyId, 'branch-asset-counts', fn () => \App\Models\Asset::query()
+            ->withoutGlobalScope(BranchScope::class)
+            ->where('company_id', $companyId)
+            ->inService()
+            ->toBase()
+            ->selectRaw('branch_id, COUNT(*) AS c')
+            ->groupBy('branch_id')
+            ->pluck('c', 'branch_id')
+            ->all());
     }
 
     public function store(Request $request): JsonResponse

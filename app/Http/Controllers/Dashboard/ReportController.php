@@ -86,7 +86,11 @@ class ReportController extends Controller
     public static function tempPath(): string
     {
         $dir = storage_path('app/private/tmp');
-        @mkdir($dir, 0755, true);
+
+        // Buat folder hanya bila belum ada (hindari peringatan "File exists").
+        if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
+            throw new \RuntimeException('Folder sementara laporan tidak dapat dibuat: ' . $dir);
+        }
 
         foreach (glob($dir . '/report-*.pptx') ?: [] as $old) {
             if (@filemtime($old) < time() - 3600) {

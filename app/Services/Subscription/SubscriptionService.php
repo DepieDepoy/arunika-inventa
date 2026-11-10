@@ -263,7 +263,7 @@ class SubscriptionService
         return [
             'users' => User::query()->where('company_id', $companyId)->count(),
             // Kuota dihitung untuk seluruh perusahaan, bukan per cabang.
-            'assets' => Asset::query()->withoutGlobalScope(\App\Models\Scopes\BranchScope::class)->where('company_id', $companyId)->count(),
+            'assets' => (int) \App\Services\Asset\AssetStats::remember($companyId, 'quota-assets', fn () => Asset::query()->withoutGlobalScope(\App\Models\Scopes\BranchScope::class)->where('company_id', $companyId)->count()),
             'branches' => \App\Models\Branch::query()->where('company_id', $companyId)->count(),
             'storage' => \App\Services\CompanyStorage::usedBytes($companyId),
         ];

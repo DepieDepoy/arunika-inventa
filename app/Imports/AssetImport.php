@@ -742,6 +742,9 @@ class AssetImport implements
 
             // Hubungkan teks lokasi hasil import ke master lokasi cabang.
             \App\Services\Asset\LocationService::syncMissing($this->companyId);
+
+            // Angka ringkasan aset dihitung ulang.
+            \App\Services\Asset\AssetStats::bump($this->companyId);
         }
 
         /**

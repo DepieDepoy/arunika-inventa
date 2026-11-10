@@ -66,19 +66,17 @@ class AssetController extends Controller
             ->orderBy('name')
             ->get();
 
-        $stats = Asset::query()
+        // Di-cache & segar otomatis saat aset berubah (ringan walau jutaan aset).
+        $stats = (object) \App\Services\Asset\AssetStats::remember((int) $companyId, 'list-stats', fn () => (array) Asset::query()
             ->where('company_id', $companyId)
-            ->inService()
-            ->selectRaw('COUNT(*) AS total')
+            ->toBase()
+            ->whereNull('deleted_at')
+            ->selectRaw('SUM(status <> ' . Asset::STATUS_DISPOSED . ') AS total')
             ->selectRaw('SUM(status = 1) AS active')
-            ->selectRaw('SUM(responsible_user_id IS NOT NULL) AS assigned')
-            ->selectRaw('COALESCE(SUM(purchase_price), 0) AS value')
-            ->first();
-
-        $stats->disposed = Asset::query()
-            ->where('company_id', $companyId)
-            ->where('status', Asset::STATUS_DISPOSED)
-            ->count();
+            ->selectRaw('SUM(status <> ' . Asset::STATUS_DISPOSED . ' AND responsible_user_id IS NOT NULL) AS assigned')
+            ->selectRaw('COALESCE(SUM(CASE WHEN status <> ' . Asset::STATUS_DISPOSED . ' THEN purchase_price END), 0) AS value')
+            ->selectRaw('SUM(status = ' . Asset::STATUS_DISPOSED . ') AS disposed')
+            ->first());
 
         // Filter cabang hanya untuk user kantor pusat & perusahaan multi-cabang.
         $branches = \App\Support\BranchAccess::hasMultiple((int) $companyId) && !\App\Support\BranchAccess::isRestricted()
@@ -172,14 +170,8 @@ class AssetController extends Controller
 
         if ($request->filled('search_asset')) {
 
-            $search = $request->search_asset;
-
-            $query->where(function ($q) use ($search) {
-
-                $q->where('asset_code', 'like', "%{$search}%")
-                    ->orWhere('asset_name', 'like', "%{$search}%");
-
-            });
+            // Pencarian ber-index (kode / awal kata nama, merek, nomor seri).
+            \App\Services\Asset\AssetSearch::apply($query, (int) $companyId, (string) $request->search_asset);
         }
 
 
@@ -292,7 +284,26 @@ class AssetController extends Controller
         $canDispose = Auth::user()->hasPermission('asset.dispose');
         $palette = ['#2f7be0', '#14b8a6', '#8b5cf6', '#f59e0b', '#ef4444', '#0ea5e9', '#22c55e'];
 
-        return DataTables::eloquent($query)
+        /*
+         * Total baris untuk paginasi diambil dari cache (bukan COUNT setiap
+         * pindah halaman). Tanpa filter, jumlah tersaring = total.
+         */
+        $hasFilter = collect(['search_asset', 'category_id', 'sub_category_id', 'vendor_id', 'status', 'created_from', 'created_to', 'branch_id'])
+            ->contains(fn ($k) => $request->filled($k))
+            || filled($request->input('search.value'));
+
+        $total = (int) \App\Services\Asset\AssetStats::remember((int) $companyId, 'list-total', fn () => Asset::query()
+            ->where('company_id', $companyId)
+            ->inService()
+            ->count());
+
+        $table = DataTables::eloquent($query)->setTotalRecords($total);
+
+        if (!$hasFilter) {
+            $table->setFilteredRecords($total);
+        }
+
+        return $table
             ->addIndexColumn()
             ->addColumn('checkbox', function ($asset) {
                 return '<div class="text-center"><input type="checkbox" class="form-check-input asset-checkbox" value="' . $asset->id . '"></div>';
@@ -472,9 +483,10 @@ class AssetController extends Controller
                     'nullable',
                     'string'
                 ],
+                // Kolom NOT NULL: wajib diisi (new = baru, used = bekas).
                 'asset_condition' => [
-                    'nullable',
-                    'string'
+                    'required',
+                    'in:new,used'
                 ],
                 'purchase_date' => [
                     'nullable',
@@ -592,7 +604,7 @@ class AssetController extends Controller
                 'asset_photos' => [
                     'nullable',
                     'array',
-                    'max:3'
+                    'max:6'
                 ],
 
                 'asset_photos.*' => [
@@ -662,8 +674,14 @@ class AssetController extends Controller
                 'status.required' =>
                     'Status wajib dipilih.',
 
+                'asset_condition.required' =>
+                    'Kondisi aset wajib dipilih (baru / bekas).',
+
+                'asset_condition.in' =>
+                    'Kondisi aset harus new (baru) atau used (bekas).',
+
                 'asset_photos.max' =>
-                    'Foto asset maksimal 3 file.',
+                    'Foto asset maksimal 6 file.',
 
                 'asset_photos.*.file' =>
                     'File foto tidak valid.',
@@ -2652,8 +2670,11 @@ public function update(Request $request)
         $companyId =
             Auth::user()->company_id;
 
-        // Tombol hapus mengirim ID terenkripsi (sama seperti link detail/ubah).
-        $assetId = decryptId((string) $request->route('id'));
+        // Web: ID terenkripsi (sama seperti link detail/ubah).
+        // API mobile (DELETE /api/v1/assets/{id}): ID angka biasa.
+        $assetId = $request->is('api/*')
+            ? (int) $request->route('id')
+            : decryptId((string) $request->route('id'));
 
         $asset = $assetId
             ? Asset::where('company_id', $companyId)

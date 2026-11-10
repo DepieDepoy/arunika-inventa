@@ -1233,7 +1233,7 @@
                             </h6>
 
                             <p class="asset-section-description">
-                                Upload maximum 3 photos of the asset
+                                Upload maximum 6 photos of the asset
                             </p>
 
                         </div>
@@ -1823,7 +1823,7 @@ $(document).ready(function () {
         const preview =
             $('#photo_preview');
 
-        const MAX_PHOTOS = 3;
+        const MAX_PHOTOS = 6;
 
         const MAX_PHOTO_SIZE =
             5 * 1024 * 1024;
@@ -1868,7 +1868,7 @@ $(document).ready(function () {
 
             /*
             |--------------------------------------------------------------------------
-            | Maximum 3 photos
+            | Maximum 6 photos
             |--------------------------------------------------------------------------
             */
 
@@ -1884,7 +1884,7 @@ $(document).ready(function () {
                     title: 'Maximum 3 Photos',
 
                     text:
-                        'Asset hanya dapat memiliki maksimal 3 foto.'
+                        'Asset hanya dapat memiliki maksimal 6 foto.'
 
                 });
 

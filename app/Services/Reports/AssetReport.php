@@ -85,6 +85,9 @@ class AssetReport
 
     protected function compute(int $companyId, ReportPeriod $period): array
     {
+        // Hanya saat cache kosong: rekap jutaan aset bisa lebih dari 30 detik.
+        @set_time_limit(300);
+
         $at = $period->to->min(CarbonImmutable::now());
         $prev = $period->previous();
 
@@ -253,11 +256,19 @@ class AssetReport
 
     protected function byLocation(int $companyId, CarbonImmutable $at): array
     {
-        $rows = $this->aliveAssets($companyId, $at)
-            ->selectRaw("COALESCE(NULLIF(TRIM(assets.location), ''), 'Belum diisi') as label, COUNT(*) as total, COALESCE(SUM(assets.purchase_price), 0) as value")
-            ->groupBy('label')
-            ->orderByDesc('total')
+        // Dikelompokkan per location_id (index), nama diambil dari master lokasi.
+        $grouped = $this->aliveAssets($companyId, $at)
+            ->selectRaw('assets.location_id AS lid, COUNT(*) AS total, COALESCE(SUM(assets.purchase_price), 0) AS value')
+            ->groupBy('assets.location_id')
             ->get();
+
+        $names = DB::table('locations')->whereIn('id', $grouped->pluck('lid')->filter())->pluck('name', 'id');
+
+        $rows = $grouped
+            ->groupBy(fn ($r) => $r->lid ? ($names[$r->lid] ?? 'Belum diisi') : 'Belum diisi')
+            ->map(fn ($items, $label) => (object) ['label' => $label, 'total' => $items->sum('total'), 'value' => $items->sum('value')])
+            ->sortByDesc('total')
+            ->values();
 
         return $this->topWithOther($rows, 8);
     }
@@ -324,7 +335,7 @@ class AssetReport
 
     protected function upcomingMaintenance(int $companyId, CarbonImmutable $at): array
     {
-        $q = $this->aliveAssets($companyId, $at)
+        $q = $this->withIndex($this->aliveAssets($companyId, $at), 'assets_next_maintenance_index')
             ->where('assets.status', 1)
             ->whereBetween('assets.next_maintenance_date', [$at->toDateString(), $at->addDays(30)->toDateString()]);
 
@@ -338,7 +349,7 @@ class AssetReport
 
     protected function warrantyExpiring(int $companyId, CarbonImmutable $at): array
     {
-        $q = $this->aliveAssets($companyId, $at)
+        $q = $this->withIndex($this->aliveAssets($companyId, $at), 'assets_warranty_end_index')
             ->where('assets.status', 1)
             ->whereBetween('assets.warranty_end', [$at->toDateString(), $at->addDays(60)->toDateString()]);
 
@@ -348,6 +359,20 @@ class AssetReport
                 ->get(['assets.asset_code as code', 'assets.asset_name as name', 'assets.warranty_end as date'])
                 ->map(fn ($r) => (array) $r)->all(),
         ];
+    }
+
+    /**
+     * Paksa index tanggal (MySQL/MariaDB) agar rekap jadwal & garansi tidak
+     * memindai seluruh aset. Database lain: tanpa perubahan.
+     */
+    protected function withIndex(Builder $query, string $index): Builder
+    {
+        if (in_array(DB::getDriverName(), ['mysql', 'mariadb'], true)
+            && collect(\Illuminate\Support\Facades\Schema::getIndexes('assets'))->contains(fn ($i) => $i['name'] === $index)) {
+            $query->forceIndex($index);
+        }
+
+        return $query;
     }
 
     /* ------------------------------------------------------------------ */

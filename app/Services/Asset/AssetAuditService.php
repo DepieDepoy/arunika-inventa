@@ -36,6 +36,9 @@ class AssetAuditService
 
     public const TYPE = 'asset_audit';
 
+    /** Batas aset per sesi audit; lebih dari ini pecah per cabang / lokasi. */
+    public const MAX_ITEMS = 50000;
+
     public function __construct(
         protected AssetLifecycleService $lifecycle
     ) {
@@ -214,20 +217,32 @@ class AssetAuditService
             }
         }
 
-        $assets = Asset::query()
+        // Cakupan aset. Data TIDAK dimuat ke memori: item audit disalin langsung
+        // di database (INSERT ... SELECT) agar tetap ringan walau ratusan ribu aset.
+        $scope = Asset::query()
             ->withoutGlobalScope(BranchScope::class)
             ->where('company_id', $companyId)
             ->inService()
             ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
-            ->when($location, fn ($q) => $q->where('location_id', $location->id))
-            ->orderBy('asset_code')
-            ->get(['id', 'asset_code', 'asset_name', 'branch_id', 'location', 'location_id']);
+            ->when($location, fn ($q) => $q->where('location_id', $location->id));
 
-        if ($assets->isEmpty()) {
+        if (!(clone $scope)->exists()) {
             throw new ActionFailed('Tidak ada aset pada cakupan audit tersebut.');
         }
 
-        $audit = DB::transaction(function () use ($companyId, $branchId, $location, $title, $notes, $user, $assets, $team) {
+        $count = (clone $scope)->count();
+
+        if ($count > self::MAX_ITEMS) {
+            throw new ActionFailed(sprintf(
+                'Cakupan audit berisi %s aset, melebihi batas %s aset per sesi. Pecah audit per cabang atau per lokasi (mis. per lantai / gudang) agar petugas lebih mudah dan sistem tetap ringan.',
+                number_format($count, 0, ',', '.'),
+                number_format(self::MAX_ITEMS, 0, ',', '.')
+            ));
+        }
+
+        @set_time_limit(180);
+
+        $audit = DB::transaction(function () use ($companyId, $branchId, $location, $title, $notes, $user, $scope, $team) {
             $audit = AssetAudit::create([
                 'company_id' => $companyId,
                 'branch_id' => $branchId,
@@ -240,23 +255,24 @@ class AssetAuditService
                 'started_by' => $user->id,
             ]);
 
-            $now = now();
+            $now = now()->toDateTimeString();
 
-            foreach ($assets->chunk(500) as $chunk) {
-                AssetAuditItem::insert($chunk->map(fn (Asset $a) => [
-                    'asset_audit_id' => $audit->id,
-                    'asset_id' => $a->id,
-                    'asset_code' => $a->asset_code,
-                    'asset_name' => $a->asset_name,
-                    'expected_location' => $a->location,
-                    'expected_branch_id' => $a->branch_id,
-                    'expected_location_id' => $a->location_id,
-                    'in_scope' => true,
-                    'branch_mismatch' => false,
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ])->all());
-            }
+            DB::table('asset_audit_items')->insertUsing(
+                ['asset_audit_id', 'asset_id', 'asset_code', 'asset_name', 'expected_location', 'expected_branch_id', 'expected_location_id', 'in_scope', 'branch_mismatch', 'created_at', 'updated_at'],
+                (clone $scope)->toBase()->select([
+                    DB::raw((int) $audit->id),
+                    'assets.id',
+                    'assets.asset_code',
+                    'assets.asset_name',
+                    'assets.location',
+                    'assets.branch_id',
+                    'assets.location_id',
+                    DB::raw('1'),
+                    DB::raw('0'),
+                    DB::raw(DB::getPdo()->quote($now)),
+                    DB::raw(DB::getPdo()->quote($now)),
+                ])
+            );
 
             foreach ($team as $a) {
                 AssetAuditAssignee::create(['asset_audit_id' => $audit->id] + $a);

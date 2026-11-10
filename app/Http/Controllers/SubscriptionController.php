@@ -789,19 +789,25 @@ class SubscriptionController extends Controller
         return null;
     }
 
+    /**
+     * Generate nomor invoice unik Vasetra.
+     *
+     * Format: VST-YYYYMMDD-RANDOM6
+     * Contoh: VST-20261110-A8K92F
+     */
     protected function nextOrderId(): string
     {
-        $lastSequence = PaymentTransaction::query()
-            ->where('order_id', 'like', 'V-%')
-            ->pluck('order_id')
-            ->map(function ($existingOrderId) {
-                return preg_match('/^V-(\d+)$/', (string) $existingOrderId, $matches)
-                    ? (int) $matches[1]
-                    : 0;
-            })
-            ->max() ?? 0;
+        do {
+            $orderId = 'VST-'
+                . now()->format('Ymd')
+                . '-'
+                . strtoupper(Str::random(6));
 
-        return 'V-' . str_pad((string) ($lastSequence + 1), 4, '0', STR_PAD_LEFT);
+        } while (
+            PaymentTransaction::where('order_id', $orderId)->exists()
+        );
+
+        return $orderId;
     }
 
     /**
@@ -1768,6 +1774,34 @@ class SubscriptionController extends Controller
     | PRINT BILLING
     |--------------------------------------------------------------------------
     */
+
+    /**
+     * Batalkan transaksi pembayaran yang belum selesai (status pending),
+     * agar pelanggan bisa membuat transaksi baru. Transaksi yang sudah
+     * dibayar tidak bisa dibatalkan.
+     */
+    public function cancelPendingPayment(int $paymentTransaction): RedirectResponse
+    {
+        $this->requireAdministrator();
+
+        $payment = PaymentTransaction::query()
+            ->where('company_id', Auth::user()->company_id)
+            ->whereKey($paymentTransaction)
+            ->first();
+
+        if (!$payment) {
+            return back()->with('error', 'Transaksi tidak ditemukan.');
+        }
+
+        if ($payment->isPaid() || $payment->transaction_status !== 'pending') {
+            return back()->with('error', 'Transaksi ini sudah ' . ($payment->isPaid() ? 'dibayar' : 'tidak aktif') . ' sehingga tidak bisa dibatalkan.');
+        }
+
+        $this->subscriptions->failPayment($payment, 'cancel');
+
+        return redirect()->route('subscription.index')
+            ->with('success', 'Transaksi ' . $payment->order_id . ' dibatalkan. Silakan pilih paket lalu buat pembayaran baru.');
+    }
 
     public function printBilling(PaymentTransaction $paymentTransaction): View
     {

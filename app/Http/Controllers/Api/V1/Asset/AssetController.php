@@ -9,6 +9,7 @@ use App\Models\Maintenance;
 use App\Models\MaintenanceRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class AssetController extends Controller
@@ -88,8 +89,23 @@ class AssetController extends Controller
             $request
         );
 
+        // ?category_id= : chip kategori (hanya daftar; ringkasan & chip tetap utuh).
+        if ($request->filled('category_id')) {
+            $query->where('category_id', (int) $request->query('category_id'));
+        }
+
+        // Tanpa filter: total dari cache (tidak COUNT jutaan baris tiap halaman).
+        $plain = !collect(['search', 'status', 'include_disposed', 'branch_id', 'category_id'])->contains(fn ($k) => $request->filled($k));
+        $total = $plain
+            ? (int) \App\Services\Asset\AssetStats::remember((int) $user->company_id, 'list-total', fn () => Asset::query()->where('company_id', $user->company_id)->inService()->count())
+            : null;
+
         $assets = $query->paginate(
-            $this->perPage($request)
+            $this->perPage($request),
+            ['*'],
+            'page',
+            null,
+            $total
         );
 
         $data = collect(
@@ -102,14 +118,105 @@ class AssetController extends Controller
             })
             ->values();
 
+        [$summary, $categories] = $this->listAggregates($request, $user);
+
         return response()->json([
             'success' => true,
             'data' => [
                 'assets' => $data,
+                // Ringkasan seluruh data (bukan hanya halaman ini), mengikuti
+                // cabang & pencarian; tidak dipengaruhi chip kategori / status.
+                'summary' => $summary,
+                'categories' => $categories,
             ],
             'pagination' =>
                 $this->pagination($assets),
         ]);
+    }
+
+    /**
+     * Ringkasan daftar aset untuk kartu & chip di aplikasi.
+     *  summary    : {total, in_use, available, maintenance, disposed} - SATU query agregat
+     *  categories : [{id, name, total}] - jumlah aset (tanpa dihapuskan) per kategori
+     * Mengikuti cabang (BranchScope + ?branch_id) & ?search. Tanpa pencarian: di-cache.
+     *
+     * @return array{0: array, 1: array}
+     */
+    private function listAggregates(Request $request, $user): array
+    {
+        $companyId = (int) $user->company_id;
+
+        $base = function () use ($request, $user, $companyId) {
+            $q = Asset::query()->where('assets.company_id', $companyId);
+
+            if ($request->filled('branch_id') && \App\Support\BranchAccess::seesAll($user)) {
+                $q->where('assets.branch_id', (int) $request->query('branch_id'));
+            }
+
+            if ($request->filled('search')) {
+                \App\Services\Asset\AssetSearch::apply($q, $companyId, (string) $request->search);
+            }
+
+            return $q;
+        };
+
+        $compute = function () use ($base, $companyId) {
+            $disposed = Asset::STATUS_DISPOSED;
+
+            // Aset dengan request maintenance aktif (menunggu / dikerjakan).
+            $active = DB::table('maintenance_requests')
+                ->select('asset_id')
+                ->where('company_id', $companyId)
+                ->whereIn('status', ['pending', 'in_progress'])
+                ->distinct();
+
+            $row = $base()
+                ->toBase()
+                ->leftJoinSub($active, 'mr', 'mr.asset_id', '=', 'assets.id')
+                ->selectRaw("SUM(assets.status <> {$disposed}) AS total")
+                ->selectRaw("SUM(assets.status <> {$disposed} AND assets.responsible_user_id IS NOT NULL) AS in_use")
+                ->selectRaw("SUM(assets.status <> {$disposed} AND assets.responsible_user_id IS NULL) AS available")
+                ->selectRaw("SUM(assets.status <> {$disposed} AND mr.asset_id IS NOT NULL) AS maintenance")
+                ->selectRaw("SUM(assets.status = {$disposed}) AS disposed")
+                ->first();
+
+            $summary = [];
+
+            foreach (['total', 'in_use', 'available', 'maintenance', 'disposed'] as $k) {
+                $summary[$k] = (int) ($row->{$k} ?? 0);
+            }
+
+            $counts = $base()
+                ->inService()
+                ->toBase()
+                ->selectRaw('assets.category_id AS id, COUNT(*) AS total')
+                ->groupBy('assets.category_id')
+                ->pluck('total', 'id');
+
+            $names = DB::table('categories')->whereIn('id', $counts->keys()->filter())->pluck('category_name', 'id');
+
+            $categories = $counts
+                ->map(fn ($total, $id) => [
+                    'id' => $id ? (int) $id : null,
+                    'name' => $id ? ($names[$id] ?? 'Tanpa kategori') : 'Tanpa kategori',
+                    'total' => (int) $total,
+                ])
+                ->sortByDesc('total')
+                ->values()
+                ->all();
+
+            return [$summary, $categories];
+        };
+
+        if ($request->filled('search')) {
+            return $compute();
+        }
+
+        return \App\Services\Asset\AssetStats::remember(
+            $companyId,
+            'api-list-aggregates:b' . (int) $request->query('branch_id'),
+            $compute
+        );
     }
 
 
@@ -913,7 +1020,7 @@ class AssetController extends Controller
 
         $photos = $asset->photos
             ->sortBy('sort_order')
-            ->take(3)
+            ->take(6)
             ->map(function ($photo) {
                 return [
                     'id' =>
@@ -1100,6 +1207,20 @@ class AssetController extends Controller
 
             'photos' =>
                 $photos,
+
+            // Dokumen faktur: tampil & bisa dihapus dari form ubah aset
+            // (kirim id-nya di delete_invoice_documents[] saat PUT /assets/{id}).
+            'invoice_documents' => $asset->documents()
+                ->where('document_type', 'invoice')
+                ->orderBy('id')
+                ->get(['id', 'file_path', 'original_name'])
+                ->map(fn ($doc) => [
+                    'id' => $doc->id,
+                    'original_name' => $doc->original_name ?: basename((string) $doc->file_path),
+                    'url' => $doc->file_path ? Storage::disk('public')->url($doc->file_path) : null,
+                ])
+                ->values()
+                ->all(),
 
             /*
             |--------------------------------------------------------------------------
@@ -1293,46 +1414,14 @@ class AssetController extends Controller
             return;
         }
 
-        $search = trim(
-            $request->search
-        );
-
-        $query->where(
-            function ($q) use ($search) {
-
-                $q->where(
-                    'asset_code',
-                    'like',
-                    "%{$search}%"
-                )
-
-                    ->orWhere(
-                        'asset_name',
-                        'like',
-                        "%{$search}%"
-                    )
-
-                    ->orWhere(
-                        'brand',
-                        'like',
-                        "%{$search}%"
-                    )
-
-                    ->orWhere(
-                        'model',
-                        'like',
-                        "%{$search}%"
-                    )
-
-                    ->orWhere(
-                        'serial_number',
-                        'like',
-                        "%{$search}%"
-                    );
-            }
+        // Pencarian ber-index (kode / awal kata nama, merek, nomor seri) agar
+        // tetap cepat walau aset mencapai jutaan.
+        \App\Services\Asset\AssetSearch::apply(
+            $query,
+            (int) $request->user()->company_id,
+            (string) $request->search
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------

@@ -35,10 +35,22 @@ class LocationController extends Controller
             ->where('company_id', $companyId)
             ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
             ->with('branch:id,branch_name,is_head_office')
-            ->withCount(['assets' => fn ($q) => $q->withoutGlobalScope(BranchScope::class)])
             ->orderBy('branch_id')
             ->orderBy('name')
             ->get();
+
+        // Jumlah aset per lokasi: satu query kelompok ber-index + cache.
+        $counts = \App\Services\Asset\AssetStats::remember($companyId, 'location-asset-counts', fn () => \App\Models\Asset::query()
+            ->withoutGlobalScope(BranchScope::class)
+            ->where('company_id', $companyId)
+            ->toBase()
+            ->whereNull('deleted_at')
+            ->whereNotNull('location_id')
+            ->selectRaw('location_id, COUNT(*) AS c')
+            ->groupBy('location_id')
+            ->pluck('c', 'location_id')
+            ->all());
+        $rows->each(fn ($l) => $l->setAttribute('assets_count', (int) ($counts[$l->id] ?? 0)));
 
         return view('dashboard.location.index', [
             'locations' => $rows,

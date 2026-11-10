@@ -7,6 +7,7 @@ use App\Models\AuditLog;
 use App\Models\Maintenance;
 use App\Models\MaintenanceRequest;
 use App\Models\User;
+use App\Services\Asset\AssetStats;
 use App\Services\Subscription\SubscriptionService;
 use Carbon\Carbon;
 
@@ -40,21 +41,35 @@ class DashboardMetrics
         |--------------------------------------------------------------------------
         */
 
-        $totalAssets = (clone $assetQuery)->count();
+        /*
+         * Semua KPI aset dihitung dalam SATU kali pindai tabel (bukan banyak
+         * COUNT terpisah) agar tetap ringan walau aset mencapai jutaan.
+         * assets.status: 1 = aktif.
+         */
+        $start = $today->copy()->startOfMonth()->subMonthsNoOverflow(11);
+        $thisMonth = $today->copy()->startOfMonth();
+        $lastMonthStart = $today->copy()->subMonthNoOverflow()->startOfMonth();
 
-        // assets.status: 1 = aktif.
-        $activeAssets = (clone $assetQuery)->where('status', 1)->count();
+        // Di-cache per perusahaan + cakupan cabang; segar otomatis saat aset berubah (AssetStats).
+        $kpi = (object) AssetStats::remember($companyId, 'dashboard-kpi:' . $today->toDateString(), fn () => (array) (clone $assetQuery)
+            ->toBase()
+            ->selectRaw('COUNT(*) AS total')
+            ->selectRaw('SUM(status = 1) AS active')
+            ->selectRaw('SUM(responsible_user_id IS NULL) AS unassigned')
+            ->selectRaw('COALESCE(SUM(purchase_price), 0) AS value')
+            ->selectRaw('SUM(created_at >= ?) AS new_this_month', [$thisMonth])
+            ->selectRaw('SUM(created_at >= ? AND created_at < ?) AS new_last_month', [$lastMonthStart, $thisMonth])
+            ->selectRaw('SUM(created_at < ?) AS before_trend', [$start])
+            ->first());
+
+        $totalAssets = (int) $kpi->total;
+        $activeAssets = (int) $kpi->active;
+        // Aset yang dipegang user ini: cepat lewat index pemegang aset.
         $myAssets = (clone $assetQuery)->where('responsible_user_id', $user->id)->count();
-        $unassignedAssets = (clone $assetQuery)->whereNull('responsible_user_id')->count();
-        $assetValue = (float) (clone $assetQuery)->sum('purchase_price');
-
-        $newThisMonth = (clone $assetQuery)->where('created_at', '>=', $today->copy()->startOfMonth())->count();
-        $newLastMonth = (clone $assetQuery)
-            ->whereBetween('created_at', [
-                $today->copy()->subMonthNoOverflow()->startOfMonth(),
-                $today->copy()->subMonthNoOverflow()->endOfMonth(),
-            ])
-            ->count();
+        $unassignedAssets = (int) $kpi->unassigned;
+        $assetValue = (float) $kpi->value;
+        $newThisMonth = (int) $kpi->new_this_month;
+        $newLastMonth = (int) $kpi->new_last_month;
 
         $maintenanceOverdue = (clone $openMaintenance)->whereDate('maintenance_date', '<', $today)->count();
         $maintenanceToday = (clone $openMaintenance)->whereDate('maintenance_date', $today)->count();
@@ -80,25 +95,27 @@ class DashboardMetrics
         |--------------------------------------------------------------------------
         */
 
-        $start = $today->copy()->startOfMonth()->subMonthsNoOverflow(11);
-
         $months = collect(range(0, 11))->map(fn ($i) => $start->copy()->addMonthsNoOverflow($i));
 
-        $assetsPerMonth = (clone $assetQuery)
+        // Dikelompokkan di database (bukan memuat semua baris ke PHP).
+        $assetsPerMonth = collect(AssetStats::remember($companyId, 'dashboard-trend:' . $today->toDateString(), fn () => (clone $assetQuery)
+            ->toBase()
             ->where('created_at', '>=', $start)
-            ->get(['created_at'])
-            ->groupBy(fn ($a) => $a->created_at->format('Y-m'))
-            ->map->count();
+            ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') AS ym, COUNT(*) AS c")
+            ->groupBy('ym')
+            ->pluck('c', 'ym')
+            ->all()));
 
         $maintenancePerMonth = Maintenance::query()
             ->where('company_id', $companyId)
             ->whereDate('maintenance_date', '>=', $start)
             ->whereDate('maintenance_date', '<=', $today)
-            ->get(['maintenance_date'])
-            ->groupBy(fn ($m) => Carbon::parse($m->maintenance_date)->format('Y-m'))
-            ->map->count();
+            ->toBase()
+            ->selectRaw("DATE_FORMAT(maintenance_date, '%Y-%m') AS ym, COUNT(*) AS c")
+            ->groupBy('ym')
+            ->pluck('c', 'ym');
 
-        $running = (clone $assetQuery)->where('created_at', '<', $start)->count();
+        $running = (int) $kpi->before_trend;
 
         $trend = $months->map(function ($month) use ($assetsPerMonth, $maintenancePerMonth, &$running) {
             $key = $month->format('Y-m');
@@ -120,12 +137,14 @@ class DashboardMetrics
         |--------------------------------------------------------------------------
         */
 
-        $assetConditions = (clone $assetQuery)
+        $assetConditions = collect(AssetStats::remember($companyId, 'dashboard-conditions', fn () => (clone $assetQuery)
+            ->toBase()
             ->selectRaw('asset_condition, COUNT(*) as total')
             ->groupBy('asset_condition')
-            ->pluck('total', 'asset_condition');
+            ->pluck('total', 'asset_condition')
+            ->all()));
 
-        $assetCategories = (clone $assetQuery)
+        $assetCategories = collect(AssetStats::remember($companyId, 'dashboard-categories', fn () => (clone $assetQuery)
             ->with('category:id,category_name')
             ->selectRaw('category_id, COUNT(*) as total')
             ->groupBy('category_id')
@@ -135,7 +154,8 @@ class DashboardMetrics
             ->map(fn ($row) => [
                 'name' => $row->category?->category_name ?? 'Tanpa kategori',
                 'total' => (int) $row->total,
-            ]);
+            ])
+            ->all()));
 
         /*
         |--------------------------------------------------------------------------
@@ -151,7 +171,7 @@ class DashboardMetrics
 
         $recentAssets = (clone $assetQuery)
             ->with(['category', 'responsibleUser'])
-            ->latest()
+            ->latest('id')
             ->limit(5)
             ->get();
 
