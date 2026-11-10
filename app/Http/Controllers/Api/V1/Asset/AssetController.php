@@ -37,6 +37,9 @@ class AssetController extends Controller
                 'subCategory:id,sub_category_name',
                 'photos:id,asset_id,file_path,original_name,sort_order',
                 'branch:id,branch_code,branch_name,is_head_office',
+                // Kartu aset di aplikasi: nama pemegang & badge Perawatan (tanpa N+1).
+                'responsibleUser:id,name',
+                'activeMaintenanceRequest:id,asset_id,request_type,status,created_at',
             ])
             ->select([
                 'id',
@@ -248,6 +251,9 @@ class AssetController extends Controller
                 'subCategory:id,sub_category_name',
                 'photos:id,asset_id,file_path,original_name,sort_order',
                 'branch:id,branch_code,branch_name,is_head_office',
+                // Kartu aset di aplikasi: nama pemegang & badge Perawatan (tanpa N+1).
+                'responsibleUser:id,name',
+                'activeMaintenanceRequest:id,asset_id,request_type,status,created_at',
             ])
             ->select([
                 'id',
@@ -825,10 +831,11 @@ class AssetController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $activeRequest =
-            $this->getActiveRequest(
-                $asset
-            );
+        // Daftar aset meng-eager-load activeMaintenanceRequest (1 query per halaman);
+        // pemanggil lain tetap memakai query langsung.
+        $activeRequest = $asset->relationLoaded('activeMaintenanceRequest')
+            ? $asset->activeMaintenanceRequest
+            : $this->getActiveRequest($asset);
 
         return [
             'id' =>
@@ -898,6 +905,11 @@ class AssetController extends Controller
 
             'responsible_user_id' =>
                 $asset->responsible_user_id,
+
+            // Pemegang aset untuk kartu daftar (badge Dipakai / Tersedia).
+            'responsible_user' => $asset->responsible_user_id && $asset->responsibleUser
+                ? ['id' => $asset->responsibleUser->id, 'name' => $asset->responsibleUser->name]
+                : null,
 
             /*
             |--------------------------------------------------------------------------

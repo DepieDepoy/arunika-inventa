@@ -306,6 +306,8 @@ Nilai `target.screen`: `calendar_event`, `calendar`, `maintenance_request`, `mai
 }
 ```
 
+- Setiap item di `assets` (juga di `/my-assets`) berisi `responsible_user` `{id, name}` (null = belum dipegang),
+  `has_active_request` (bool) dan `active_request` (`{id, request_type, status, ...}` atau null) → badge **Dipakai / Tersedia / Perawatan**.
 - `summary.total` = aset belum dihapuskan; `in_use` (ada pemegang) + `available` (belum dipegang) = `total`;
   `maintenance` = aset dengan request maintenance aktif (menunggu / dikerjakan); `disposed` = aset dihapuskan.
 - `categories` = jumlah aset (tanpa yang dihapuskan) per kategori, urut terbanyak → untuk chip kategori; kirim `category_id` saat chip dipilih.
