@@ -572,7 +572,7 @@ footer{background:#fff;border-top:1px solid var(--line);padding:56px 0 28px;font
     {{-- Ilustrasi dashboard (data contoh) --}}
     <div class="stage reveal" aria-hidden="true">
       <div class="browser">
-        <div class="browser-bar"><span></span><span></span><span></span><div class="browser-url"><i class="bi bi-lock-fill"></i> app.vasetra.com/dashboard</div></div>
+        <div class="browser-bar"><span></span><span></span><span></span><div class="browser-url"><i class="bi bi-lock-fill"></i> vasetra.com/dashboard</div></div>
         <div class="app">
           <aside class="app-side">
             <div class="logo"><img src="{{ asset('assets/images/brand/vasetra-mark.png') }}" alt="" width="28" height="20">VASETRA</div>
@@ -758,7 +758,7 @@ footer{background:#fff;border-top:1px solid var(--line);padding:56px 0 28px;font
     </div>
 
     <div class="tour-frame reveal" aria-hidden="true">
-      <div class="tour-bar"><div class="dots"><span></span><span></span><span></span></div><div class="tour-url" id="tourUrl"><i class="bi bi-lock-fill"></i> app.vasetra.com/dashboard/assets</div><div style="width:47px"></div></div>
+      <div class="tour-bar"><div class="dots"><span></span><span></span><span></span></div><div class="tour-url" id="tourUrl"><i class="bi bi-lock-fill"></i> vasetra.com/dashboard/assets</div><div style="width:47px"></div></div>
       <div class="tour-body">
         <div class="tour-rail">
           <img src="{{ asset('assets/images/brand/vasetra-mark.png') }}" alt="">
