@@ -1254,7 +1254,7 @@
 
                         <div class="text-muted small mt-1">
 
-                            Maximum 3 files
+                            Maximum 6 files
 
                             <br>
 
@@ -1881,7 +1881,7 @@ $(document).ready(function () {
 
                     icon: 'warning',
 
-                    title: 'Maximum 3 Photos',
+                    title: 'Maximum 6 Photos',
 
                     text:
                         'Asset hanya dapat memiliki maksimal 6 foto.'
