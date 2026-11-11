@@ -13,7 +13,6 @@ use App\Services\Backoffice\BackofficeAudit;
 use App\Services\Backoffice\CustomerDirectory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
@@ -31,39 +30,23 @@ class CustomerController extends Controller
      */
     public function dashboard(): View
     {
-        $companies = $this->directory->all();
-        $summary = $this->directory->summary($companies);
-
+        // Semua angka & daftar dihitung di database; hanya baris yang tampil yang dimuat.
         $visitors30 = AnalyticsHit::query()
             ->where('event', AnalyticsHit::PAGE_VIEW)
             ->where('created_at', '>=', today()->subDays(29))
             ->distinct()
             ->count('visitor_id');
 
-        $planMix = $companies
-            ->whereIn('customer_status', ['trial', 'paid'])
-            ->groupBy('plan_label')
-            ->map(fn ($g, $label) => ['label' => $label, 'total' => $g->count()])
-            ->sortByDesc('total')
-            ->values()
-            ->all();
-
         return view('backoffice.customers.dashboard', [
-            'summary' => $summary,
-            'monthly' => $this->directory->monthlySignups($companies),
-            'planMix' => $planMix,
-            'expiring' => $companies
-                ->filter(fn ($c) => in_array($c->customer_status, ['trial', 'paid'], true) && $c->days_left !== null && $c->days_left <= 7)
-                ->sortBy('days_left')
-                ->take(8),
-            'recent' => $companies->take(6),
-            'topAssets' => $companies->sortByDesc('assets_count')->take(6),
-            'storageAlerts' => $companies
-                ->filter(fn ($c) => $c->storage_limit > 0 && $c->storage_used / $c->storage_limit >= 0.8)
-                ->sortByDesc(fn ($c) => $c->storage_used / $c->storage_limit)
-                ->take(6),
+            'summary' => $this->directory->summary(),
+            'monthly' => $this->directory->monthlySignups(),
+            'planMix' => $this->directory->planMix(),
+            'expiring' => $this->directory->expiring(),
+            'recent' => $this->directory->recent(),
+            'topAssets' => $this->directory->topAssets(),
+            'storageAlerts' => $this->directory->storageAlerts(),
             'visitors30' => $visitors30,
-            'signups30' => $companies->filter(fn ($c) => $c->created_at?->gte(today()->subDays(29)))->count(),
+            'signups30' => \App\Models\Company::query()->where('created_at', '>=', today()->subDays(29))->count(),
         ]);
     }
 
@@ -74,40 +57,28 @@ class CustomerController extends Controller
         $plan = (string) $request->query('plan');
         $sort = (string) $request->query('sort', 'newest');
 
-        $all = $this->directory->all();
-        $counts = $all->countBy('customer_status');
+        // Filter, pencarian, urutan & paging di database (server side).
+        $counts = $this->directory->statusCounts();
 
-        $rows = $all
-            ->when($q !== '', function ($c) use ($q) {
-                $needle = mb_strtolower($q);
-                $ids = User::query()
-                    ->where(fn ($w) => $w->where('email', 'like', "%{$q}%")->orWhere('phone', 'like', "%{$q}%")->orWhere('name', 'like', "%{$q}%"))
-                    ->pluck('company_id')
-                    ->flip();
+        $query = $this->directory->withCounts($this->directory->query());
 
-                return $c->filter(fn ($x) => str_contains(mb_strtolower($x->company_name . ' ' . $x->company_code), $needle) || $ids->has($x->id));
-            })
-            ->when(array_key_exists($status, CustomerDirectory::STATUS), fn ($c) => $c->where('customer_status', $status))
-            ->when($plan !== '', fn ($c) => $c->where('plan_label', $plan));
+        if ($q !== '') {
+            $this->directory->search($query, $q);
+        }
 
-        $rows = match ($sort) {
-            'assets' => $rows->sortByDesc('assets_count'),
-            'users' => $rows->sortByDesc('users_count'),
-            'storage' => $rows->sortByDesc('storage_used'),
-            'ending' => $rows->sortBy(fn ($c) => $c->days_left ?? PHP_INT_MAX),
-            'activity' => $rows->sortByDesc(fn ($c) => (string) $c->last_activity_at),
-            default => $rows,
-        };
+        if (array_key_exists($status, CustomerDirectory::STATUS)) {
+            $this->directory->whereStatus($query, $status);
+        }
 
-        $page = max(1, (int) $request->query('page', 1));
-        $perPage = 20;
-        $paginator = new LengthAwarePaginator(
-            $rows->slice(($page - 1) * $perPage, $perPage)->values(),
-            $rows->count(),
-            $perPage,
-            $page,
-            ['path' => $request->url(), 'query' => $request->query()]
-        );
+        if ($plan !== '') {
+            $query->where('ap.plan_name', $plan);
+        }
+
+        $paginator = $this->directory->sort($query, $sort)
+            ->paginate(20)
+            ->withQueryString();
+
+        $this->directory->decorateMany($paginator->getCollection());
 
         // Admin utama tiap perusahaan (user pertama).
         $owners = User::query()
@@ -121,7 +92,7 @@ class CustomerController extends Controller
             'companies' => $paginator,
             'owners' => $owners,
             'counts' => $counts,
-            'total' => $all->count(),
+            'total' => (int) $counts->sum(),
             'plans' => Plan::query()->orderBy('id')->pluck('plan_name'),
             'statuses' => CustomerDirectory::STATUS,
         ]);
@@ -129,13 +100,15 @@ class CustomerController extends Controller
 
     public function show(Company $company): View
     {
-        $company = $this->directory->all()->firstWhere('id', $company->id) ?? $this->directory->decorate($company);
+        $company = $this->directory->find($company->id) ?? $this->directory->decorate($company);
 
         $users = User::query()
             ->where('company_id', $company->id)
             ->with('role:id,role_name,role_code')
             ->orderBy('id')
-            ->get(['id', 'company_id', 'role_id', 'name', 'email', 'phone', 'status', 'email_verified_at', 'last_login_at', 'last_login_ip', 'created_at']);
+            ->paginate(15, ['id', 'company_id', 'role_id', 'name', 'email', 'phone', 'status', 'email_verified_at', 'last_login_at', 'last_login_ip', 'created_at'], 'users_page')
+            ->withQueryString()
+            ->fragment('users');
 
         $subscriptions = Subscription::query()
             ->where('company_id', $company->id)

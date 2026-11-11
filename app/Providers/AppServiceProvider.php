@@ -26,6 +26,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Paginasi Bootstrap 5 ringkas (bawaan Laravel = Tailwind -> panah SVG raksasa).
+        \Illuminate\Pagination\Paginator::defaultView('partials.pagination');
+        \Illuminate\Pagination\Paginator::defaultSimpleView('partials.pagination-simple');
+
         /*
         |--------------------------------------------------------------------------
         | Audit Trail

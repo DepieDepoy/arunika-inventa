@@ -98,8 +98,8 @@
 
     <div class="row g-3 mb-4">
         <div class="col-xl-8">
-            <div class="cms-card h-100">
-                <div class="bx-h"><div><h6>User ({{ $users->count() }})</h6><div class="hint">Akun di perusahaan ini</div></div></div>
+            <div class="cms-card h-100" id="users">
+                <div class="bx-h"><div><h6>User ({{ bx_num($users->total()) }})</h6><div class="hint">Akun di perusahaan ini</div></div></div>
                 <div class="table-responsive mt-2">
                     <table class="table align-middle mb-0 bx-table">
                         <thead><tr><th>Nama</th><th>Role</th><th>Kontak</th><th>Login terakhir</th><th>Status</th></tr></thead>
@@ -120,6 +120,7 @@
                         </tbody>
                     </table>
                 </div>
+                @if($users->hasPages())<div class="p-3">{{ $users->links() }}</div>@endif
             </div>
         </div>
         <div class="col-xl-4">

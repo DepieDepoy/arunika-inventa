@@ -34,6 +34,11 @@ Illuminate\Support\Facades\Schedule::command('imports:clean-temp')
     ->hourly()
     ->withoutOverlapping();
 
+// Backoffice: storage terpakai per perusahaan (urutan, total & peringatan storage).
+Illuminate\Support\Facades\Schedule::command('backoffice:scan-storage')
+    ->hourly()
+    ->withoutOverlapping();
+
 // Pengingat garansi aset: 30 hari, 7 hari, dan pada hari garansi berakhir.
 Illuminate\Support\Facades\Schedule::command('assets:warranty-reminders')
     ->dailyAt('07:30')
