@@ -576,9 +576,9 @@
                         <div class="text-md-end">
                             <small class="text-muted d-block">Kapasitas storage</small>
                             <strong>{{ $formatStorageServer($queuedSubscription->total_storage_bytes) }}</strong>
-                            @if($queuedSubscription->plan?->max_assets !== null)
+                            @if($queuedSubscription->limit('assets') !== null)
                                 <small class="text-muted d-block mt-1">Maks. asset</small>
-                                <strong>{{ number_format($queuedSubscription->plan->max_assets, 0, ',', '.') }}</strong>
+                                <strong>{{ number_format($queuedSubscription->limit('assets'), 0, ',', '.') }}</strong>
                             @endif
                         </div>
                     </div>
@@ -1249,30 +1249,80 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        if (typeof window.loadJokulCheckout !== 'function') {
-            console.error('DOKU Jokul Checkout JS tidak berhasil dimuat.');
-
-            Swal.fire({
-                icon: 'error',
-                title: 'Checkout DOKU Tidak Tersedia',
-                text: 'Komponen pembayaran DOKU gagal dimuat. Silakan refresh halaman dan coba kembali.'
-            });
-
-            return;
+        // Script Jokul DOKU (luar) kadang tidak tersedia, mis. URL sandbox sedang
+        // "Service Maintenance" -> isinya HTML, bukan JS. Checkout tetap jalan
+        // lewat popup iframe buatan sendiri (sama seperti yang dibuat script DOKU).
+        if (typeof window.loadJokulCheckout === 'function') {
+            try {
+                window.loadJokulCheckout(paymentUrl);
+                return;
+            } catch (error) {
+                console.error('DOKU Checkout Error:', error);
+            }
+        } else {
+            console.warn('DOKU Jokul Checkout JS tidak termuat; memakai popup bawaan.');
         }
 
-        try {
-            window.loadJokulCheckout(paymentUrl);
-        } catch (error) {
-            console.error('DOKU Checkout Error:', error);
-
-            Swal.fire({
-                icon: 'error',
-                title: 'Gagal Membuka Pembayaran',
-                text: 'Popup pembayaran DOKU tidak dapat dibuka. Silakan coba kembali.'
-            });
-        }
+        openDokuFallback(paymentUrl);
     };
+
+    /**
+     * Popup pembayaran tanpa script DOKU. Bila iframe tidak bisa dipakai,
+     * pengguna diarahkan ke halaman pembayaran DOKU.
+     */
+    function openDokuFallback(paymentUrl) {
+        try {
+            let modal = document.getElementById('vsDokuModal');
+
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'vsDokuModal';
+                modal.innerHTML =
+                    '<div class="vs-doku-box">' +
+                        '<div class="vs-doku-bar">' +
+                            '<span>Pembayaran DOKU</span>' +
+                            '<span>' +
+                                '<a class="vs-doku-open" target="_blank" rel="noopener">Buka di tab baru</a>' +
+                                '<button type="button" class="vs-doku-close" aria-label="Tutup">&times;</button>' +
+                            '</span>' +
+                        '</div>' +
+                        '<iframe title="Pembayaran DOKU" allow="payment"></iframe>' +
+                    '</div>';
+
+                const style = document.createElement('style');
+                style.textContent =
+                    '#vsDokuModal{position:fixed;inset:0;z-index:20000;background:rgba(15,23,42,.6);display:flex;align-items:center;justify-content:center;padding:12px}' +
+                    '#vsDokuModal .vs-doku-box{background:#fff;border-radius:12px;width:min(480px,100%);height:min(720px,100%);display:flex;flex-direction:column;overflow:hidden}' +
+                    '#vsDokuModal .vs-doku-bar{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid #e5e7eb;font-weight:600;font-size:.9rem}' +
+                    '#vsDokuModal .vs-doku-open{font-size:.8rem;font-weight:500;margin-right:10px}' +
+                    '#vsDokuModal .vs-doku-close{border:0;background:none;font-size:1.5rem;line-height:1;cursor:pointer}' +
+                    '#vsDokuModal iframe{flex:1;border:0;width:100%}';
+                document.head.appendChild(style);
+                document.body.appendChild(modal);
+
+                modal.querySelector('.vs-doku-close').addEventListener('click', function () {
+                    modal.remove();
+                    window.location.reload();
+                });
+
+                // Tombol tutup di dalam halaman DOKU (sama dengan script Jokul).
+                window.addEventListener('message', function (event) {
+                    const fromDoku = /^https:\/\/([a-z0-9-]+\.)*doku\.com$/i.test(event.origin);
+
+                    if (fromDoku && event.data && event.data.func === 'closeJokul' && document.getElementById('vsDokuModal')) {
+                        document.getElementById('vsDokuModal').remove();
+                        window.location.reload();
+                    }
+                });
+            }
+
+            modal.querySelector('iframe').src = paymentUrl + (paymentUrl.indexOf('?') === -1 ? '?' : '&') + 'view=iframe';
+            modal.querySelector('.vs-doku-open').href = paymentUrl;
+        } catch (error) {
+            console.error('DOKU fallback popup error:', error);
+            window.location.href = paymentUrl;
+        }
+    }
 
 
     /**

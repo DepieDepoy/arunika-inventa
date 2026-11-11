@@ -29,6 +29,12 @@ Route::prefix('dashboard')
             ->name('assets.create');
 
 
+        // Pilihan penanggung jawab (Select2 AJAX) — hanya user di cabang aset.
+        Route::get('/assets/responsible-options', [AssetController::class, 'responsibleOptions'])
+            ->middleware('permission:asset.create|asset.edit')
+            ->name('assets.responsible-options');
+
+
         // Store Asset
         Route::post('/assets/store', [AssetController::class, 'store'])
             ->middleware([

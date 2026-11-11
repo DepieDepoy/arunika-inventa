@@ -178,8 +178,9 @@ class CustomerDirectory
         $company->plan_label = $plan?->plan_name ?? '—';
         $company->ends_at = $sub?->end_date;
         $company->days_left = $sub ? (int) today()->diffInDays($sub->end_date, false) : null;
-        $company->max_users = $plan?->max_users;
-        $company->max_assets = $plan?->max_assets;
+        // Kuota yang dikunci saat pembelian (bukan nilai paket terbaru).
+        $company->max_users = $sub?->limit('users');
+        $company->max_assets = $sub?->limit('assets');
         $company->storage_limit = $sub ? max((int) $sub->total_storage_bytes, (int) ($plan?->max_storage_bytes ?? 0)) : 0;
         $company->storage_used = $this->storageUsed($company->id);
         $company->mrr = $company->customer_status === 'paid' ? $this->monthlyValue($sub) : 0.0;

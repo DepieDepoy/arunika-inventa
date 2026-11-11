@@ -1136,41 +1136,26 @@
                     </div>
 
 
+                    {{-- Alur: Cabang -> Lokasi (master lokasi cabang) -> Penanggung jawab (user cabang itu). --}}
                     <div class="row">
 
-                        <!-- Responsible -->
-
-                        <div class="col-md-6 mb-3">
-
-                            <label class="form-label">
-                                Responsible
-                            </label>
-
-                            <select
-                                name="responsible_user_id"
-                                class="form-select"
-                            >
-
-                                <option value="">
-                                    Select Responsible Person
-                                </option>
-
-                                @foreach($users as $user)
-
-                                    <option value="{{ $user->id }}">
-                                        {{ $user->name }}
-                                    </option>
-
-                                @endforeach
-
-                            </select>
-
-                        </div>
+                        @if(($branches ?? collect())->count() > 0)
+                            <!-- Branch -->
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Cabang</label>
+                                <select name="branch_id" id="assetBranch" class="form-select">
+                                    @foreach($branches as $branch)
+                                        <option value="{{ $branch->id }}" @selected($branch->id == $defaultBranchId)>{{ $branch->label() }}</option>
+                                    @endforeach
+                                </select>
+                                <small class="text-muted">Setelah tersimpan, pindah cabang lewat menu Mutasi Aset.</small>
+                            </div>
+                        @endif
 
 
                         <!-- Location -->
 
-                        <div class="col-md-6 mb-3">
+                        <div class="{{ ($branches ?? collect())->count() > 0 ? 'col-md-4' : 'col-md-6' }} mb-3">
 
                             <label class="form-label">
                                 Location
@@ -1187,19 +1172,28 @@
 
                         </div>
 
-                        @if(($branches ?? collect())->count() > 0)
-                            <!-- Branch -->
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Cabang</label>
-                                <select name="branch_id" id="assetBranch" class="form-select"
-                                        onchange="const l = document.getElementById('assetLocation'); l.dataset.branch = this.value; l.dataset.value = ''; VasetraLocation.load(l);">
-                                    @foreach($branches as $branch)
-                                        <option value="{{ $branch->id }}" @selected($branch->id == $defaultBranchId)>{{ $branch->label() }}</option>
-                                    @endforeach
-                                </select>
-                                <small class="text-muted">Setelah tersimpan, pindah cabang lewat menu Mutasi Aset.</small>
-                            </div>
-                        @endif
+
+                        <!-- Responsible -->
+
+                        <div class="{{ ($branches ?? collect())->count() > 0 ? 'col-md-4' : 'col-md-6' }} mb-3">
+
+                            <label class="form-label">
+                                Responsible
+                            </label>
+
+                            {{-- Diisi lewat AJAX: hanya user aktif di cabang terpilih (cari nama / NIK / email). --}}
+                            <select
+                                name="responsible_user_id"
+                                id="responsible_user_id"
+                                class="form-select"
+                                data-url="{{ route('assets.responsible-options') }}"
+                            >
+                                <option value="">Select Responsible Person</option>
+                            </select>
+
+                            <small class="text-muted">Hanya user di cabang terpilih.</small>
+
+                        </div>
 
                     </div>
 
@@ -1767,6 +1761,46 @@ $(document).ready(function () {
 
         allowClear: true
 
+    });
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | CABANG -> LOKASI -> PENANGGUNG JAWAB
+    |--------------------------------------------------------------------------
+    | Penanggung jawab hanya user di cabang terpilih (dicari di server).
+    */
+
+    const $responsible = $('#responsible_user_id');
+    const currentBranch = () => $('#assetBranch').val() || $('#assetLocation').data('branch') || '';
+
+    $responsible.select2({
+        width: '100%',
+        placeholder: 'Select Responsible Person',
+        allowClear: true,
+        ajax: {
+            url: $responsible.data('url'),
+            dataType: 'json',
+            delay: 250,
+            data: params => ({ q: params.term || '', page: params.page || 1, branch_id: currentBranch() }),
+            processResults: data => data,
+            cache: false
+        },
+        language: {
+            noResults: () => 'Tidak ada user di cabang ini',
+            searching: () => 'Mencari…',
+            loadingMore: () => 'Memuat…'
+        }
+    });
+
+    $('#assetBranch').on('change', function () {
+        const loc = document.getElementById('assetLocation');
+        loc.dataset.branch = this.value;
+        loc.dataset.value = '';
+        VasetraLocation.load(loc);
+
+        // Penanggung jawab lama mungkin bukan user cabang baru.
+        $responsible.val(null).trigger('change');
     });
 
 

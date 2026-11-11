@@ -99,8 +99,10 @@ class SubscriptionController extends ApiController
             'end_date' => $this->date($s->end_date),
             'status' => $s->status,
             'limits' => [
-                'users' => $s->plan?->max_users,
-                'assets' => $s->plan?->max_assets,
+                // Kuota dikunci saat pembelian (tidak ikut berubah bila paket diubah).
+                'users' => $s->limit('users'),
+                'assets' => $s->limit('assets'),
+                'branches' => $s->limit('branches'),
                 'storage' => $s->total_storage_bytes ?: $s->plan?->max_storage_bytes,
             ],
         ];

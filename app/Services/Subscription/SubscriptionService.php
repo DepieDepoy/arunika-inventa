@@ -228,8 +228,14 @@ class SubscriptionService
             ];
         }
 
-        $users = $plan->max_users === null ? null : (int) $plan->max_users + $addons['user'];
-        $assets = $plan->max_assets === null ? null : (int) $plan->max_assets + $addons['asset'];
+        // Kuota dikunci di langganan saat pembelian (Subscription::limit()),
+        // sehingga perubahan paket di backoffice tidak mengubah pelanggan berjalan.
+        $maxUsers = $subscription->limit('users');
+        $maxAssets = $subscription->limit('assets');
+        $maxBranches = $subscription->limit('branches');
+
+        $users = $maxUsers === null ? null : $maxUsers + $addons['user'];
+        $assets = $maxAssets === null ? null : $maxAssets + $addons['asset'];
 
         $baseStorage = (int) $subscription->total_storage_bytes;
 
@@ -247,7 +253,7 @@ class SubscriptionService
             'users' => $users,
             'assets' => $assets,
             // Batas cabang (Kantor Pusat ikut dihitung). NULL = tanpa batas.
-            'branches' => $plan->max_branches === null ? null : max(1, (int) $plan->max_branches),
+            'branches' => $maxBranches === null ? null : max(1, $maxBranches),
             'storage' => $baseStorage + $addons['storage'],
             'addons' => $addons,
         ];

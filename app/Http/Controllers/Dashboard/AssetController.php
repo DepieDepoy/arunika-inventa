@@ -18,6 +18,7 @@ use App\Models\AssetAssignment;
 use App\Helpers\CodeHelper;
 use App\Helpers\PlanLimitHelper;
 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -116,10 +117,7 @@ class AssetController extends Controller
             ->orderBy('vendor_name')
             ->get();
 
-        $users = User::where('company_id', $companyId)
-            ->where('status', 1)
-            ->orderBy('name')
-            ->get();
+        // Penanggung jawab dimuat lewat AJAX per cabang (responsibleOptions).
 
         // Pilihan cabang hanya tampil bila perusahaan punya > 1 cabang.
         $branches = \App\Support\BranchAccess::hasMultiple((int) $companyId)
@@ -133,10 +131,50 @@ class AssetController extends Controller
             'categories',
             'subCategories',
             'vendors',
-            'users',
             'branches',
             'defaultBranchId'
         ));
+    }
+
+
+    /**
+     * Pilihan penanggung jawab untuk form aset (Select2 AJAX).
+     * Hanya user aktif di cabang aset (sama dengan validasi store/update),
+     * dicari & dipaging di database agar ringan walau user ribuan.
+     *
+     * Query: branch_id (opsional, default cabang awal), q, page.
+     */
+    public function responsibleOptions(Request $request): JsonResponse
+    {
+        $companyId = (int) Auth::user()->company_id;
+
+        $branchId = \App\Support\BranchAccess::find($companyId, $request->query('branch_id'))?->id
+            ?? \App\Support\BranchAccess::defaultBranchId($companyId);
+
+        $search = trim((string) $request->query('q', ''));
+        $perPage = 20;
+
+        $users = User::query()
+            ->where('company_id', $companyId)
+            ->where('status', 1)
+            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+            ->when($search !== '', function ($q) use ($search) {
+                $like = '%' . addcslashes($search, '%_\\') . '%';
+                $q->where(fn ($w) => $w->where('name', 'like', $like)
+                    ->orWhere('email', 'like', $like)
+                    ->orWhere('nik', 'like', $like));
+            })
+            ->orderBy('name')
+            ->orderBy('id')
+            ->simplePaginate($perPage, ['id', 'name', 'email', 'nik']);
+
+        return response()->json([
+            'results' => collect($users->items())->map(fn (User $u) => [
+                'id' => $u->id,
+                'text' => $u->name . ($u->nik ? ' · ' . $u->nik : ''),
+            ])->values(),
+            'pagination' => ['more' => $users->hasMorePages()],
+        ]);
     }
 
 
