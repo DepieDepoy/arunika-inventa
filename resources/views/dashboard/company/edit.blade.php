@@ -1,6 +1,6 @@
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Profil Perusahaan')
+@section('title', __('Profil Perusahaan'))
 
 @section('content')
 @php $fallback = asset('assets/images/brand/vasetra-logo.png'); @endphp
@@ -47,45 +47,45 @@
             <div class="col-xl-7">
                 <div class="cp-card h-100">
                     <div class="cp-h">
-                        <h5>Profil Perusahaan</h5>
-                        <div class="hint">Logo &amp; nama ini tampil di laporan PDF dan PowerPoint, serta di aplikasi mobile.</div>
+                        <h5>{{ __('Profil Perusahaan') }}</h5>
+                        <div class="hint">{{ __('Logo & nama ini tampil di laporan PDF dan PowerPoint, serta di aplikasi mobile.') }}</div>
                     </div>
                     <div class="p-4">
-                        <label class="form-label fw-bold">Logo perusahaan</label>
+                        <label class="form-label fw-bold">{{ __('Logo perusahaan') }}</label>
                         <div class="cp-drop" id="cpDrop">
-                            <div class="cp-logo"><img src="{{ $logoUrl ?? $fallback }}" alt="Logo" id="cpLogoImg"></div>
+                            <div class="cp-logo"><img src="{{ $logoUrl ?? $fallback }}" alt="{{ __('Logo') }}" id="cpLogoImg"></div>
                             <div style="flex:1;min-width:220px">
                                 <div class="mb-2" id="cpBadge">
                                     @if($logoUrl)
-                                        <span class="cp-badge own"><i class="bi bi-check-circle"></i> Logo perusahaan aktif</span>
+                                        <span class="cp-badge own"><i class="bi bi-check-circle"></i> {{ __('Logo perusahaan aktif') }}</span>
                                     @else
-                                        <span class="cp-badge def"><i class="bi bi-info-circle"></i> Belum ada logo — laporan memakai logo Vasetra</span>
+                                        <span class="cp-badge def"><i class="bi bi-info-circle"></i> {{ __('Belum ada logo — laporan memakai logo Vasetra') }}</span>
                                     @endif
                                 </div>
                                 <input type="file" name="logo" id="cpLogo" class="form-control" accept="image/png,image/jpeg,image/webp">
-                                <div class="cp-help mt-2">PNG (latar transparan paling bagus), JPG, atau WEBP · maks 2 MB · disarankan logo mendatar, min. 400 piksel lebarnya. Bisa juga tarik &amp; lepas file ke kotak ini.</div>
+                                <div class="cp-help mt-2">{{ __('PNG (latar transparan paling bagus), JPG, atau WEBP · maks 2 MB · disarankan logo mendatar, min. 400 piksel lebarnya. Bisa juga tarik & lepas file ke kotak ini.') }}</div>
                                 @if($logoUrl)
                                     <div class="form-check mt-2">
                                         <input class="form-check-input" type="checkbox" name="remove_logo" value="1" id="cpRemove">
-                                        <label class="form-check-label small" for="cpRemove">Hapus logo (kembali ke logo Vasetra)</label>
+                                        <label class="form-check-label small" for="cpRemove">{{ __('Hapus logo (kembali ke logo Vasetra)') }}</label>
                                     </div>
                                 @endif
                             </div>
                         </div>
 
                         <div class="mt-4">
-                            <label class="form-label fw-bold" for="cpName">Nama perusahaan</label>
+                            <label class="form-label fw-bold" for="cpName">{{ __('Nama perusahaan') }}</label>
                             <input type="text" name="company_name" id="cpName" class="form-control" value="{{ old('company_name', $company->company_name) }}" maxlength="255" required>
-                            <div class="cp-help mt-1">Kode perusahaan <b>{{ $company->company_code }}</b> tidak berubah.</div>
+                            <div class="cp-help mt-1">{{ __('Kode perusahaan') }} <b>{{ $company->company_code }}</b> {{ __('tidak berubah.') }}</div>
                         </div>
 
                         <div class="mt-3">
-                            <label class="form-label fw-bold" for="cpAddress">Alamat <span class="text-muted fw-normal">(opsional)</span></label>
+                            <label class="form-label fw-bold" for="cpAddress">{{ __('Alamat') }} <span class="text-muted fw-normal">{{ __('(opsional)') }}</span></label>
                             <textarea name="address" id="cpAddress" class="form-control" rows="3" maxlength="500" placeholder="Alamat kantor yang tampil di laporan cetak">{{ old('address', $company->address) }}</textarea>
                         </div>
 
                         <div class="d-flex justify-content-end mt-4">
-                            <button class="btn btn-primary"><i class="bi bi-check2 me-1"></i> Simpan profil</button>
+                            <button class="btn btn-primary"><i class="bi bi-check2 me-1"></i> {{ __('Simpan profil') }}</button>
                         </div>
                     </div>
                 </div>
@@ -94,19 +94,19 @@
             <div class="col-xl-5">
                 <div class="cp-card h-100">
                     <div class="cp-h">
-                        <h5>Pratinjau laporan</h5>
-                        <div class="hint">Begini tampilan sampul laporan PowerPoint Anda.</div>
+                        <h5>{{ __('Pratinjau laporan') }}</h5>
+                        <div class="hint">{{ __('Begini tampilan sampul laporan PowerPoint Anda.') }}</div>
                     </div>
                     <div class="p-4">
                         <div class="cp-cover">
                             <div class="chip"><img src="{{ $logoUrl ?? $fallback }}" alt="" id="cpCoverImg"></div>
-                            <div class="kick">LAPORAN BULANAN</div>
+                            <div class="kick">{{ __('LAPORAN BULANAN') }}</div>
                             <div class="name" id="cpCoverName">{{ $company->company_name }}</div>
-                            <div class="per">Bulan ini · {{ now()->startOfMonth()->locale('id')->translatedFormat('d M') }} – {{ now()->endOfMonth()->locale('id')->translatedFormat('d M Y') }}</div>
+                            <div class="per">{{ __('Bulan ini · :p1 – :p2', ['p1' => now()->startOfMonth()->locale('id')->translatedFormat('d M'), 'p2' => now()->endOfMonth()->locale('id')->translatedFormat('d M Y')]) }}</div>
                             <div class="bar"></div>
                         </div>
                         @if(Route::has('reports.index') && auth()->user()->hasPermission('report.view'))
-                            <a href="{{ route('reports.index') }}" class="btn btn-outline-primary w-100 mt-3"><i class="bi bi-graph-up me-1"></i> Buka Laporan</a>
+                            <a href="{{ route('reports.index') }}" class="btn btn-outline-primary w-100 mt-3"><i class="bi bi-graph-up me-1"></i> {{ __('Buka Laporan') }}</a>
                         @endif
                     </div>
                 </div>
@@ -127,7 +127,7 @@
     var preview = function (file) {
         if (!file) return;
         if (file.size > 2 * 1024 * 1024) {
-            Swal.fire({ icon: 'warning', title: 'Logo terlalu besar', text: 'Maksimal 2 MB.' });
+            Swal.fire({ icon: 'warning', title: @json(__('Logo terlalu besar')), text: @json(__('Maksimal 2 MB.')) });
             input.value = '';
             return;
         }

@@ -1,6 +1,6 @@
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Asset Import History')
+@section('title', __('Asset Import History'))
 
 @section('content')
 
@@ -13,11 +13,11 @@
 
         <div>
             <h4 class="mb-1">
-                Asset Import History
+                {{ __('Asset Import History') }}
             </h4>
 
             <p class="text-muted mb-0">
-                Monitor proses import asset dari file Excel.
+                {{ __('Monitor proses import asset dari file Excel.') }}
             </p>
         </div>
 
@@ -28,7 +28,7 @@
                 class="btn btn-outline-secondary"
             >
                 <i class="fas fa-arrow-left me-1"></i>
-                Kembali Import
+                {{ __('Kembali Import') }}
             </a>
 
         </div>
@@ -44,11 +44,10 @@
         <i class="fas fa-info-circle mt-1"></i>
 
         <div>
-            <strong>Import berjalan di background.</strong>
+            <strong>{{ __('Import berjalan di background.') }}</strong>
 
             <div class="small mt-1">
-                Halaman ini akan memperbarui progress secara otomatis.
-                Anda tidak perlu menunggu halaman tetap terbuka untuk proses import.
+                {{ __('Halaman ini akan memperbarui progress secara otomatis. Anda tidak perlu menunggu halaman tetap terbuka untuk proses import.') }}
             </div>
         </div>
 
@@ -64,7 +63,7 @@
 
             <div>
                 <h5 class="mb-0">
-                    Riwayat Import
+                    {{ __('Riwayat Import') }}
                 </h5>
             </div>
 
@@ -98,35 +97,35 @@
                             </th>
 
                             <th>
-                                File
+                                {{ __('File') }}
                             </th>
 
                             <th style="min-width: 220px;">
-                                Progress
+                                {{ __('Progress') }}
                             </th>
 
                             <th>
-                                Total
+                                {{ __('Total') }}
                             </th>
 
                             <th>
-                                Berhasil
+                                {{ __('Berhasil') }}
                             </th>
 
                             <th>
-                                Gagal
+                                {{ __('Gagal') }}
                             </th>
 
                             <th>
-                                Status
+                                {{ __('Status') }}
                             </th>
 
                             <th>
-                                Waktu
+                                {{ __('Waktu') }}
                             </th>
 
                             <th style="width: 100px;">
-                                Action
+                                {{ __('Action') }}
                             </th>
 
                         </tr>
@@ -144,7 +143,7 @@
 
                                 <div class="spinner-border spinner-border-sm me-2"></div>
 
-                                Memuat riwayat import...
+                                {{ __('Memuat riwayat import...') }}
 
                             </td>
 

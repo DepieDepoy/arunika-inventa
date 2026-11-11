@@ -82,7 +82,7 @@
                         <span
                             class="rounded-circle bg-primary flex-shrink-0 ms-2 mt-1"
                             style="width: 7px; height: 7px;"
-                            title="Belum dibaca"
+                            title="{{ __('Belum dibaca') }}"
                         ></span>
                     @endif
                 </div>
@@ -105,12 +105,11 @@
         <i class="fa-regular fa-bell-slash fs-2 text-muted"></i>
 
         <p class="mb-1 mt-2 fw-semibold">
-            Belum ada notifikasi
+            {{ __('Belum ada notifikasi') }}
         </p>
 
         <small class="text-muted">
-            Notifikasi meeting, Info Perusahaan,
-            dan pemberitahuan lainnya akan tampil di sini.
+            {{ __('Notifikasi meeting, Info Perusahaan, dan pemberitahuan lainnya akan tampil di sini.') }}
         </small>
     </div>
 

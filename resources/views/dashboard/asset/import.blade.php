@@ -1,6 +1,6 @@
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Import Assets')
+@section('title', __('Import Assets'))
 
 @section('content')
 
@@ -23,11 +23,11 @@
                         <div>
 
                             <h5 class="mb-0">
-                                Import Assets
+                                {{ __('Import Assets') }}
                             </h5>
 
                             <small class="text-muted">
-                                Import data aset secara massal menggunakan file Excel.
+                                {{ __('Import data aset secara massal menggunakan file Excel.') }}
                             </small>
 
                         </div>
@@ -40,7 +40,7 @@
 
                                 <i class="fas fa-arrow-left me-1"></i>
 
-                                Kembali
+                                {{ __('Kembali') }}
 
                             </a>
 
@@ -100,7 +100,7 @@
 
                                 <i class="fas fa-exclamation-triangle me-2"></i>
 
-                                Validasi gagal
+                                {{ __('Validasi gagal') }}
 
                             </strong>
 
@@ -162,36 +162,30 @@
                                                 <div>
 
                                                     <strong>
-                                                        Perhatian
+                                                        {{ __('Perhatian') }}
                                                     </strong>
 
 
                                                     <ul class="mb-0 mt-2">
 
                                                         <li>
-                                                            Gunakan template Excel yang telah
-                                                            disediakan.
+                                                            {{ __('Gunakan template Excel yang telah disediakan.') }}
                                                         </li>
 
                                                         <li>
-                                                            Header Excel harus mengikuti
-                                                            format template.
+                                                            {{ __('Header Excel harus mengikuti format template.') }}
                                                         </li>
 
                                                         <li>
-                                                            Asset Code harus unik.
+                                                            {{ __('Asset Code harus unik.') }}
                                                         </li>
 
                                                         <li>
-                                                            Data akan diperiksa terlebih dahulu
-                                                            melalui halaman <strong>Preview</strong>.
+                                                            {{ __('Data akan diperiksa terlebih dahulu melalui halaman') }} <strong>{{ __('Preview') }}</strong>.
                                                         </li>
 
                                                         <li>
-                                                            Pastikan data kategori,
-                                                            subkategori, vendor, dan
-                                                            responsible user sesuai dengan
-                                                            data yang tersedia di sistem.
+                                                            {{ __('Pastikan data kategori, subkategori, vendor, dan responsible user sesuai dengan data yang tersedia di sistem.') }}
                                                         </li>
 
                                                     </ul>
@@ -234,13 +228,12 @@
                                                         <div>
 
                                                             <h6 class="mb-1">
-                                                                Download Template Excel
+                                                                {{ __('Download Template Excel') }}
                                                             </h6>
 
                                                             <p class="text-muted mb-0 small">
 
-                                                                Gunakan template ini agar format
-                                                                data asset sesuai dengan sistem.
+                                                                {{ __('Gunakan template ini agar format data asset sesuai dengan sistem.') }}
 
                                                             </p>
 
@@ -258,7 +251,7 @@
 
                                                         <i class="fas fa-download me-1"></i>
 
-                                                        Download Template
+                                                        {{ __('Download Template') }}
 
                                                     </a>
 
@@ -286,7 +279,7 @@
                                                 <label for="excel_file"
                                                        class="form-label fw-semibold">
 
-                                                    File Excel
+                                                    {{ __('File Excel') }}
 
                                                     <span class="text-danger">*</span>
 
@@ -332,31 +325,31 @@
 
                                                         <h6 class="mb-2">
 
-                                                            Pilih File Excel
+                                                            {{ __('Pilih File Excel') }}
 
                                                         </h6>
 
 
                                                         <p class="text-muted mb-2">
 
-                                                            Klik area ini untuk memilih file
+                                                            {{ __('Klik area ini untuk memilih file') }}
 
                                                         </p>
 
 
                                                         <small class="text-muted">
 
-                                                            Format yang diperbolehkan:
+                                                            {{ __('Format yang diperbolehkan:') }}
 
-                                                            <strong>.xlsx</strong>
-                                                            atau
-                                                            <strong>.xls</strong>
+                                                            <strong>{{ __('.xlsx') }}</strong>
+                                                            {{ __('atau') }}
+                                                            <strong>{{ __('.xls') }}</strong>
 
                                                             <br>
 
-                                                            Maksimal ukuran file:
+                                                            {{ __('Maksimal ukuran file:') }}
 
-                                                            <strong>10 MB</strong>
+                                                            <strong>{{ __('10 MB') }}</strong>
 
                                                         </small>
 
@@ -398,7 +391,7 @@
 
                                                                 <i class="fas fa-times me-1"></i>
 
-                                                                Ganti File
+                                                                {{ __('Ganti File') }}
 
                                                             </button>
 
@@ -422,8 +415,7 @@
 
                                                 <div class="form-text mt-2">
 
-                                                    Pastikan data Excel sudah sesuai
-                                                    sebelum melakukan preview.
+                                                    {{ __('Pastikan data Excel sudah sesuai sebelum melakukan preview.') }}
 
                                                 </div>
 
@@ -442,7 +434,7 @@
 
                                                     <i class="fas fa-times me-1"></i>
 
-                                                    Batal
+                                                    {{ __('Batal') }}
 
                                                 </a>
 
@@ -454,7 +446,7 @@
 
                                                     <i class="fas fa-eye me-1"></i>
 
-                                                    Preview Data
+                                                    {{ __('Preview Data') }}
 
                                                 </button>
 

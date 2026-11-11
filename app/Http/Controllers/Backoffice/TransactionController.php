@@ -92,6 +92,9 @@ class TransactionController extends Controller
     {
         $transaction->load(['company', 'subscription.plan', 'plan']);
 
+        // View invoice dashboard kini dua bahasa; backoffice tetap Bahasa Indonesia.
+        \Illuminate\Support\Facades\App::setLocale('id');
+
         return view('dashboard.subscription.billing-print', [
             'payment' => $transaction,
             'company' => $transaction->company,

@@ -1,6 +1,6 @@
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Dashboard')
+@section('title', __('Dashboard'))
 
 @section('content')
 @php
@@ -87,11 +87,11 @@
         <div class="alert alert-info d-flex flex-wrap gap-2 align-items-center justify-content-between mb-3">
             <div>
                 <i class="bi bi-building me-1"></i>
-                <b>Lengkapi data Kantor Pusat.</b>
-                Saat ini bernama "{{ $hqReminder->branch_name }}" tanpa alamat. Ganti nama sesuai kota pusat Anda (mis. "Pusat Surabaya") dan isi alamatnya.
+                <b>{{ __('Lengkapi data Kantor Pusat.') }}</b>
+                {{ __('Saat ini bernama ":p1" tanpa alamat. Ganti nama sesuai kota pusat Anda (mis. "Pusat Surabaya") dan isi alamatnya.', ['p1' => $hqReminder->branch_name]) }}
             </div>
             @if(auth()->user()->hasPermission('branch.edit'))
-                <a href="{{ route('branches.index') }}" class="btn btn-sm btn-primary">Atur Kantor Pusat</a>
+                <a href="{{ route('branches.index') }}" class="btn btn-sm btn-primary">{{ __('Atur Kantor Pusat') }}</a>
             @endif
         </div>
     @endif
@@ -107,7 +107,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <div class="vx-kpi-label">Total Aset</div>
+                            <div class="vx-kpi-label">{{ __('Total Aset') }}</div>
                             <div class="vx-kpi-value">{{ $num($totalAssets) }}</div>
                         </div>
                         <span class="vx-kpi-icon tone-blue"><i class="bi bi-box-seam"></i></span>
@@ -115,12 +115,12 @@
                     <div class="vx-kpi-meta">
                         <span class="vx-delta {{ $assetDelta > 0 ? 'is-up' : ($assetDelta < 0 ? 'is-down' : '') }}">
                             <i class="bi {{ $assetDelta > 0 ? 'bi-arrow-up-right' : ($assetDelta < 0 ? 'bi-arrow-down-right' : 'bi-dash') }}"></i>
-                            {{ $newThisMonth > 0 ? '+' . $num($newThisMonth) : '0' }} bulan ini
+                            {{ __(':p1 bulan ini', ['p1' => $newThisMonth > 0 ? '+' . $num($newThisMonth) : '0']) }}
                         </span>
-                        <span class="text-muted">{{ $num($activeAssets) }} aktif</span>
+                        <span class="text-muted">{{ __(':p1 aktif', ['p1' => $num($activeAssets)]) }}</span>
                     </div>
                     <div class="vx-spark" id="sparkAssets" role="img"
-                         aria-label="Total aset 12 bulan terakhir"></div>
+                         aria-label="{{ __('Total aset 12 bulan terakhir') }}"></div>
                 </div>
             </div>
         </div>
@@ -131,7 +131,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <div class="vx-kpi-label">Nilai Perolehan Aset</div>
+                            <div class="vx-kpi-label">{{ __('Nilai Perolehan Aset') }}</div>
                             <div class="vx-kpi-value" title="Rp{{ number_format($assetValue, 0, ',', '.') }}">
                                 {{ $rupiahShort($assetValue) }}
                             </div>
@@ -140,14 +140,14 @@
                     </div>
                     <div class="vx-kpi-meta">
                         <span class="text-muted">
-                            Biaya maintenance {{ now()->year }}:
+                            {{ __('Biaya maintenance :p1:', ['p1' => now()->year]) }}
                             <strong class="text-body">{{ $rupiahShort($maintenanceCostYear) }}</strong>
                         </span>
                     </div>
                     <div class="vx-kpi-foot">
-                        <span><i class="bi bi-person-check me-1"></i>{{ $num($totalAssets - $unassignedAssets) }} ada PIC</span>
+                        <span><i class="bi bi-person-check me-1"></i>{{ __(':p1 ada PIC', ['p1' => $num($totalAssets - $unassignedAssets)]) }}</span>
                         <span class="{{ $unassignedAssets > 0 ? 'text-warning-emphasis' : '' }}">
-                            <i class="bi bi-person-dash me-1"></i>{{ $num($unassignedAssets) }} tanpa PIC
+                            <i class="bi bi-person-dash me-1"></i>{{ __(':p1 tanpa PIC', ['p1' => $num($unassignedAssets)]) }}
                         </span>
                     </div>
                 </div>
@@ -160,20 +160,20 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <div class="vx-kpi-label">Jadwal Maintenance</div>
+                            <div class="vx-kpi-label">{{ __('Jadwal Maintenance') }}</div>
                             <div class="vx-kpi-value">{{ $num($maintenanceOpen) }}</div>
                         </div>
                         <span class="vx-kpi-icon tone-orange"><i class="bi bi-calendar2-check"></i></span>
                     </div>
                     <div class="vx-status-row">
                         <span class="vx-status tone-critical {{ $maintenanceOverdue ? '' : 'is-zero' }}">
-                            <i class="bi bi-exclamation-octagon"></i> {{ $num($maintenanceOverdue) }} terlambat
+                            <i class="bi bi-exclamation-octagon"></i> {{ __(':p1 terlambat', ['p1' => $num($maintenanceOverdue)]) }}
                         </span>
                         <span class="vx-status tone-warning {{ $maintenanceToday ? '' : 'is-zero' }}">
-                            <i class="bi bi-clock"></i> {{ $num($maintenanceToday) }} hari ini
+                            <i class="bi bi-clock"></i> {{ __(':p1 hari ini', ['p1' => $num($maintenanceToday)]) }}
                         </span>
                         <span class="vx-status tone-new {{ $maintenanceThisWeek ? '' : 'is-zero' }}">
-                            <i class="bi bi-calendar-week"></i> {{ $num($maintenanceThisWeek) }} minggu ini
+                            <i class="bi bi-calendar-week"></i> {{ __(':p1 minggu ini', ['p1' => $num($maintenanceThisWeek)]) }}
                         </span>
                     </div>
                 </div>
@@ -186,22 +186,22 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <div class="vx-kpi-label">Request Perbaikan</div>
+                            <div class="vx-kpi-label">{{ __('Request Perbaikan') }}</div>
                             <div class="vx-kpi-value">{{ $num($requestPending + $requestInProgress) }}</div>
                         </div>
                         <span class="vx-kpi-icon tone-violet"><i class="bi bi-wrench-adjustable-circle"></i></span>
                     </div>
                     <div class="vx-status-row">
                         <span class="vx-status tone-warning {{ $requestPending ? '' : 'is-zero' }}">
-                            <i class="bi bi-hourglass-split"></i> {{ $num($requestPending) }} menunggu
+                            <i class="bi bi-hourglass-split"></i> {{ __(':p1 menunggu', ['p1' => $num($requestPending)]) }}
                         </span>
                         <span class="vx-status tone-new {{ $requestInProgress ? '' : 'is-zero' }}">
-                            <i class="bi bi-gear"></i> {{ $num($requestInProgress) }} dikerjakan
+                            <i class="bi bi-gear"></i> {{ __(':p1 dikerjakan', ['p1' => $num($requestInProgress)]) }}
                         </span>
                     </div>
                     @if($can('maintenance.view'))
                         <a href="{{ route('maintenance.requests.index') }}" class="vx-link mt-2">
-                            Kelola request <i class="bi bi-arrow-right"></i>
+                            {{ __('Kelola request') }} <i class="bi bi-arrow-right"></i>
                         </a>
                     @endif
                 </div>
@@ -215,30 +215,30 @@
     <div class="vx-actions">
         @if($can('asset.create'))
             <a href="{{ route('assets.create') }}" class="vx-action">
-                <span class="vx-action-icon tone-blue"><i class="bi bi-plus-lg"></i></span> Tambah Aset
+                <span class="vx-action-icon tone-blue"><i class="bi bi-plus-lg"></i></span> {{ __('Tambah Aset') }}
             </a>
         @endif
         @if($can('asset.import'))
             <a href="{{ route('assets.import') }}" class="vx-action">
-                <span class="vx-action-icon tone-teal"><i class="bi bi-file-earmark-arrow-up"></i></span> Import Excel
+                <span class="vx-action-icon tone-teal"><i class="bi bi-file-earmark-arrow-up"></i></span> {{ __('Import Excel') }}
             </a>
         @endif
         @if($can('asset.view'))
             <a href="{{ route('assets.index') }}" class="vx-action">
-                <span class="vx-action-icon tone-violet"><i class="bi bi-qr-code"></i></span> Cetak QR Aset
+                <span class="vx-action-icon tone-violet"><i class="bi bi-qr-code"></i></span> {{ __('Cetak QR Aset') }}
             </a>
         @endif
         @if($can('maintenance.create'))
             <a href="{{ route('my-assets.index') }}" class="vx-action">
-                <span class="vx-action-icon tone-orange"><i class="bi bi-tools"></i></span> Ajukan Perbaikan
+                <span class="vx-action-icon tone-orange"><i class="bi bi-tools"></i></span> {{ __('Ajukan Perbaikan') }}
             </a>
         @endif
         <a href="{{ route('calendar.index') }}" class="vx-action">
-            <span class="vx-action-icon tone-blue"><i class="bi bi-calendar3"></i></span> Kalender
+            <span class="vx-action-icon tone-blue"><i class="bi bi-calendar3"></i></span> {{ __('Kalender') }}
         </a>
         @if($isAdministrator)
             <a href="{{ route('subscription.usage') }}" class="vx-action">
-                <span class="vx-action-icon tone-teal"><i class="bi bi-speedometer2"></i></span> Kuota & Paket
+                <span class="vx-action-icon tone-teal"><i class="bi bi-speedometer2"></i></span> {{ __('Kuota & Paket') }}
             </a>
         @endif
     </div>
@@ -253,34 +253,34 @@
                 <div class="card-body">
                     <div class="vx-card-head">
                         <div>
-                            <h5 class="vx-card-title">Aktivitas 12 Bulan Terakhir</h5>
-                            <div class="vx-card-sub">Aset baru didaftarkan &amp; maintenance dilakukan per bulan</div>
+                            <h5 class="vx-card-title">{{ __('Aktivitas 12 Bulan Terakhir') }}</h5>
+                            <div class="vx-card-sub">{{ __('Aset baru didaftarkan & maintenance dilakukan per bulan') }}</div>
                         </div>
-                        <div class="btn-group btn-group-sm vx-view-toggle" role="group" aria-label="Tampilan">
+                        <div class="btn-group btn-group-sm vx-view-toggle" role="group" aria-label="{{ __('Tampilan') }}">
                             <button type="button" class="btn btn-light active" data-view="chart" data-target="trend">
-                                <i class="bi bi-bar-chart"></i> Grafik
+                                <i class="bi bi-bar-chart"></i> {{ __('Grafik') }}
                             </button>
                             <button type="button" class="btn btn-light" data-view="table" data-target="trend">
-                                <i class="bi bi-table"></i> Tabel
+                                <i class="bi bi-table"></i> {{ __('Tabel') }}
                             </button>
                         </div>
                     </div>
 
                     <div class="vx-legend">
-                        <span><i class="vx-swatch series-1"></i> Aset baru <strong>{{ $num($trendNewTotal) }}</strong></span>
-                        <span><i class="vx-swatch series-2"></i> Maintenance <strong>{{ $num($trendMaintTotal) }}</strong></span>
+                        <span><i class="vx-swatch series-1"></i> {{ __('Aset baru') }} <strong>{{ $num($trendNewTotal) }}</strong></span>
+                        <span><i class="vx-swatch series-2"></i> {{ __('Maintenance') }} <strong>{{ $num($trendMaintTotal) }}</strong></span>
                     </div>
 
                     <div data-panel="trend" data-mode="chart">
                         <div id="trendChart" class="vx-chart" role="img"
-                             aria-label="Grafik kolom aset baru dan maintenance per bulan, 12 bulan terakhir"></div>
+                             aria-label="{{ __('Grafik kolom aset baru dan maintenance per bulan, 12 bulan terakhir') }}"></div>
                     </div>
 
                     <div data-panel="trend" data-mode="table" hidden>
                         <div class="table-responsive vx-table-wrap">
                             <table class="table table-sm align-middle mb-0 vx-num-table">
                                 <thead>
-                                    <tr><th>Bulan</th><th class="text-end">Aset baru</th><th class="text-end">Total aset</th><th class="text-end">Maintenance</th></tr>
+                                    <tr><th>{{ __('Bulan') }}</th><th class="text-end">{{ __('Aset baru') }}</th><th class="text-end">{{ __('Total aset') }}</th><th class="text-end">{{ __('Maintenance') }}</th></tr>
                                 </thead>
                                 <tbody>
                                     @foreach($trend->reverse() as $row)
@@ -304,17 +304,17 @@
                 <div class="card-body">
                     <div class="vx-card-head">
                         <div>
-                            <h5 class="vx-card-title">Kondisi Aset</h5>
-                            <div class="vx-card-sub">{{ $num($assetConditions->sum()) }} aset tercatat</div>
+                            <h5 class="vx-card-title">{{ __('Kondisi Aset') }}</h5>
+                            <div class="vx-card-sub">{{ __(':p1 aset tercatat', ['p1' => $num($assetConditions->sum())]) }}</div>
                         </div>
                     </div>
 
                     @if($conditions->isEmpty())
                         <div class="vx-empty">
                             <i class="bi bi-box"></i>
-                            <div>Belum ada aset.</div>
+                            <div>{{ __('Belum ada aset.') }}</div>
                             @if($can('asset.create'))
-                                <a href="{{ route('assets.create') }}" class="btn btn-sm btn-primary mt-2">Tambah aset pertama</a>
+                                <a href="{{ route('assets.create') }}" class="btn btn-sm btn-primary mt-2">{{ __('Tambah aset pertama') }}</a>
                             @endif
                         </div>
                     @else
@@ -364,11 +364,11 @@
                 <div class="card-body">
                     <div class="vx-card-head">
                         <div>
-                            <h5 class="vx-card-title">Aset per Kategori</h5>
-                            <div class="vx-card-sub">6 kategori terbanyak</div>
+                            <h5 class="vx-card-title">{{ __('Aset per Kategori') }}</h5>
+                            <div class="vx-card-sub">{{ __('6 kategori terbanyak') }}</div>
                         </div>
                         @if($can('asset.view'))
-                            <a href="{{ route('assets.index') }}" class="vx-link">Lihat semua <i class="bi bi-arrow-right"></i></a>
+                            <a href="{{ route('assets.index') }}" class="vx-link">{{ __('Lihat semua') }} <i class="bi bi-arrow-right"></i></a>
                         @endif
                     </div>
 
@@ -383,7 +383,7 @@
                             </div>
                         </div>
                     @empty
-                        <div class="vx-empty"><i class="bi bi-tags"></i><div>Belum ada data kategori.</div></div>
+                        <div class="vx-empty"><i class="bi bi-tags"></i><div>{{ __('Belum ada data kategori.') }}</div></div>
                     @endforelse
                 </div>
             </div>
@@ -395,11 +395,11 @@
                 <div class="card-body">
                     <div class="vx-card-head">
                         <div>
-                            <h5 class="vx-card-title">Jadwal Maintenance</h5>
-                            <div class="vx-card-sub">Terdekat &amp; terlambat</div>
+                            <h5 class="vx-card-title">{{ __('Jadwal Maintenance') }}</h5>
+                            <div class="vx-card-sub">{{ __('Terdekat & terlambat') }}</div>
                         </div>
                         @if($can('maintenance.view'))
-                            <a href="{{ route('maintenance.index') }}" class="vx-link">Semua <i class="bi bi-arrow-right"></i></a>
+                            <a href="{{ route('maintenance.index') }}" class="vx-link">{{ __('Semua') }} <i class="bi bi-arrow-right"></i></a>
                         @endif
                     </div>
 
@@ -423,15 +423,15 @@
                                     </small>
                                 </div>
                                 @if($late)
-                                    <span class="vx-status tone-critical"><i class="bi bi-exclamation-octagon"></i> Terlambat</span>
+                                    <span class="vx-status tone-critical"><i class="bi bi-exclamation-octagon"></i> {{ __('Terlambat') }}</span>
                                 @elseif($isToday)
-                                    <span class="vx-status tone-warning"><i class="bi bi-clock"></i> Hari ini</span>
+                                    <span class="vx-status tone-warning"><i class="bi bi-clock"></i> {{ __('Hari ini') }}</span>
                                 @else
                                     <span class="vx-status tone-muted">{{ $date->diffForHumans(today(), ['parts' => 1, 'syntax' => \Carbon\CarbonInterface::DIFF_RELATIVE_TO_NOW]) }}</span>
                                 @endif
                             </li>
                         @empty
-                            <li class="vx-empty border-0"><i class="bi bi-calendar2-check"></i><div>Tidak ada jadwal maintenance terbuka.</div></li>
+                            <li class="vx-empty border-0"><i class="bi bi-calendar2-check"></i><div>{{ __('Tidak ada jadwal maintenance terbuka.') }}</div></li>
                         @endforelse
                     </ul>
                 </div>
@@ -445,7 +445,7 @@
                     @if($isAdministrator && $quota)
                         <div class="vx-card-head">
                             <div>
-                                <h5 class="vx-card-title">Kapasitas Paket</h5>
+                                <h5 class="vx-card-title">{{ __('Kapasitas Paket') }}</h5>
                                 <div class="vx-card-sub">
                                     {{ $quota['plan']?->plan_name ?? 'Tidak ada paket aktif' }}
                                     @if($currentSubscription?->end_date)
@@ -453,7 +453,7 @@
                                     @endif
                                 </div>
                             </div>
-                            <a href="{{ route('subscription.usage') }}" class="vx-link">Detail <i class="bi bi-arrow-right"></i></a>
+                            <a href="{{ route('subscription.usage') }}" class="vx-link">{{ __('Detail') }} <i class="bi bi-arrow-right"></i></a>
                         </div>
 
                         @foreach([
@@ -479,30 +479,30 @@
                                     <div class="vx-meter-fill tone-{{ $tone }}" style="width: {{ $limit === null ? 0 : max(2, $pct) }}%"></div>
                                 </div>
                                 @if($over)
-                                    <small class="vx-meter-note text-danger"><i class="bi bi-exclamation-octagon me-1"></i>Melebihi kuota — penambahan diblokir</small>
+                                    <small class="vx-meter-note text-danger"><i class="bi bi-exclamation-octagon me-1"></i>{{ __('Melebihi kuota — penambahan diblokir') }}</small>
                                 @elseif($tone === 'warning' || $tone === 'critical')
-                                    <small class="vx-meter-note text-warning-emphasis"><i class="bi bi-exclamation-triangle me-1"></i>{{ $pct }}% terpakai</small>
+                                    <small class="vx-meter-note text-warning-emphasis"><i class="bi bi-exclamation-triangle me-1"></i>{{ __(':p1% terpakai', ['p1' => $pct]) }}</small>
                                 @endif
                             </div>
                         @endforeach
 
                         <a href="{{ route('subscription.index') }}#addon-card" class="btn btn-sm btn-outline-primary w-100 mt-2">
-                            <i class="bi bi-plus-circle me-1"></i> Tambah kapasitas
+                            <i class="bi bi-plus-circle me-1"></i> {{ __('Tambah kapasitas') }}
                         </a>
                     @else
                         <div class="vx-card-head">
                             <div>
-                                <h5 class="vx-card-title">Aset Saya</h5>
-                                <div class="vx-card-sub">Aset yang menjadi tanggung jawab Anda</div>
+                                <h5 class="vx-card-title">{{ __('Aset Saya') }}</h5>
+                                <div class="vx-card-sub">{{ __('Aset yang menjadi tanggung jawab Anda') }}</div>
                             </div>
                         </div>
                         <div class="vx-mine-hero">
                             <div class="vx-kpi-value">{{ $num($myAssets) }}</div>
-                            <div class="text-muted">aset</div>
+                            <div class="text-muted">{{ __('aset') }}</div>
                         </div>
                         @if($can('maintenance.create'))
                             <a href="{{ route('my-assets.index') }}" class="btn btn-primary w-100">
-                                <i class="bi bi-tools me-1"></i> Lihat &amp; ajukan perbaikan
+                                <i class="bi bi-tools me-1"></i> {{ __('Lihat & ajukan perbaikan') }}
                             </a>
                         @endif
                     @endif
@@ -522,10 +522,10 @@
                     <div class="card-body">
                         <div class="vx-card-head">
                             <div>
-                                <h5 class="vx-card-title">Aktivitas Terbaru</h5>
-                                <div class="vx-card-sub">Dari audit trail perusahaan</div>
+                                <h5 class="vx-card-title">{{ __('Aktivitas Terbaru') }}</h5>
+                                <div class="vx-card-sub">{{ __('Dari audit trail perusahaan') }}</div>
                             </div>
-                            <a href="{{ route('audit-trail.index') }}" class="vx-link">Audit trail <i class="bi bi-arrow-right"></i></a>
+                            <a href="{{ route('audit-trail.index') }}" class="vx-link">{{ __('Audit trail') }} <i class="bi bi-arrow-right"></i></a>
                         </div>
 
                         <ul class="vx-feed">
@@ -541,7 +541,7 @@
                                     </div>
                                 </li>
                             @empty
-                                <li class="vx-empty border-0"><i class="bi bi-activity"></i><div>Belum ada aktivitas.</div></li>
+                                <li class="vx-empty border-0"><i class="bi bi-activity"></i><div>{{ __('Belum ada aktivitas.') }}</div></li>
                             @endforelse
                         </ul>
                     </div>
@@ -554,11 +554,11 @@
                 <div class="card-body">
                     <div class="vx-card-head">
                         <div>
-                            <h5 class="vx-card-title">Aset Terbaru</h5>
-                            <div class="vx-card-sub">5 aset terakhir didaftarkan</div>
+                            <h5 class="vx-card-title">{{ __('Aset Terbaru') }}</h5>
+                            <div class="vx-card-sub">{{ __('5 aset terakhir didaftarkan') }}</div>
                         </div>
                         @if($can('asset.view'))
-                            <a href="{{ route('assets.index') }}" class="vx-link">Semua aset <i class="bi bi-arrow-right"></i></a>
+                            <a href="{{ route('assets.index') }}" class="vx-link">{{ __('Semua aset') }} <i class="bi bi-arrow-right"></i></a>
                         @endif
                     </div>
 
@@ -582,7 +582,7 @@
                                 <small class="text-muted text-nowrap">{{ $asset->created_at?->diffForHumans() }}</small>
                             </li>
                         @empty
-                            <li class="vx-empty border-0"><i class="bi bi-box"></i><div>Belum ada aset.</div></li>
+                            <li class="vx-empty border-0"><i class="bi bi-box"></i><div>{{ __('Belum ada aset.') }}</div></li>
                         @endforelse
                     </ul>
                 </div>

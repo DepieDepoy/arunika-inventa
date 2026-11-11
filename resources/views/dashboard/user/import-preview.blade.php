@@ -1,6 +1,6 @@
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Preview Import User')
+@section('title', __('Preview Import User'))
 
 @section('content')
 
@@ -230,10 +230,10 @@
 
         <div>
             <h5 class="mb-0">
-                Preview Import User
+                {{ __('Preview Import User') }}
             </h5>
             <small class="text-muted">
-                Periksa data sebelum disimpan ke database.
+                {{ __('Periksa data sebelum disimpan ke database.') }}
             </small>
         </div>
 
@@ -242,7 +242,7 @@
                 class="btn btn-outline-secondary">
 
                 <i class="fas fa-arrow-left me-1"></i>
-                Back to Import
+                {{ __('Back to Import') }}
 
             </a>
         </div>
@@ -302,7 +302,7 @@
         <div class="preview-info-item">
 
             <div class="preview-info-label">
-                Total Data
+                {{ __('Total Data') }}
             </div>
 
             <div class="preview-info-value">
@@ -315,7 +315,7 @@
         <div class="preview-info-item">
 
             <div class="preview-info-label">
-                Data Ditampilkan
+                {{ __('Data Ditampilkan') }}
             </div>
 
             <div class="preview-info-value">
@@ -328,12 +328,12 @@
         <div class="preview-info-item">
 
             <div class="preview-info-label">
-                Default Role
+                {{ __('Default Role') }}
             </div>
 
             <div class="preview-info-value">
                 <span class="badge-staff">
-                    Staff
+                    {{ __('Staff') }}
                 </span>
             </div>
 
@@ -352,30 +352,30 @@
 
         <div class="import-note-content">
 
-            <strong>Informasi Import</strong>
+            <strong>{{ __('Informasi Import') }}</strong>
 
             <br>
 
-            Semua user yang diimport akan otomatis:
+            {{ __('Semua user yang diimport akan otomatis:') }}
 
             <ul class="mb-0 mt-2">
 
                 <li>
-                    Mengikuti <strong>Company</strong> dari user yang melakukan import.
+                    {{ __('Mengikuti') }} <strong>{{ __('Company') }}</strong> {{ __('dari user yang melakukan import.') }}
                 </li>
 
                 <li>
-                    Mendapatkan role default
-                    <strong>Staff</strong>.
+                    {{ __('Mendapatkan role default') }}
+                    <strong>{{ __('Staff') }}</strong>.
                 </li>
 
                 <li>
-                    Mendapatkan password default dari
+                    {{ __('Mendapatkan password default dari') }}
                     <strong>DEFAULT_USER_PASSWORD</strong>.
                 </li>
 
                 <li>
-                    Wajib mengganti password saat login pertama.
+                    {{ __('Wajib mengganti password saat login pertama.') }}
                 </li>
 
             </ul>
@@ -400,7 +400,7 @@
                     <i class="fas fa-table text-primary"></i>
 
                     <h5>
-                        Data User
+                        {{ __('Data User') }}
                     </h5>
 
                 </div>
@@ -417,31 +417,31 @@
                                 <tr>
 
                                     <th style="width: 70px;">
-                                        No
+                                        {{ __('No') }}
                                     </th>
 
                                     <th>
-                                        Name
+                                        {{ __('Name') }}
                                     </th>
 
                                     <th>
-                                        NIK
+                                        {{ __('NIK') }}
                                     </th>
 
                                     <th>
-                                        Email
+                                        {{ __('Email') }}
                                     </th>
 
                                     <th>
-                                        Phone
+                                        {{ __('Phone') }}
                                     </th>
 
                                     <th>
-                                        Cabang
+                                        {{ __('Cabang') }}
                                     </th>
 
                                     <th style="width: 100px;">
-                                        Role
+                                        {{ __('Role') }}
                                     </th>
 
                                 </tr>
@@ -489,7 +489,7 @@
 
                                         <td>
                                             <span class="badge-staff">
-                                                Staff
+                                                {{ __('Staff') }}
                                             </span>
                                         </td>
 
@@ -510,8 +510,7 @@
 
                             <i class="fas fa-info-circle me-1"></i>
 
-                            Hanya 100 data pertama yang ditampilkan pada preview.
-                            Total data yang akan diimport:
+                            {{ __('Hanya 100 data pertama yang ditampilkan pada preview. Total data yang akan diimport:') }}
                             <strong>{{ number_format($totalRows) }}</strong>.
 
                         </div>
@@ -525,11 +524,11 @@
                         <i class="fas fa-file-excel"></i>
 
                         <h5>
-                            Tidak ada data
+                            {{ __('Tidak ada data') }}
                         </h5>
 
                         <p class="mb-0">
-                            Tidak ditemukan data user yang dapat diimport.
+                            {{ __('Tidak ditemukan data user yang dapat diimport.') }}
                         </p>
 
                     </div>
@@ -550,7 +549,7 @@
 
                     <i class="fas fa-times me-1"></i>
 
-                    Cancel
+                    {{ __('Cancel') }}
 
                 </a>
 
@@ -562,7 +561,7 @@
 
                         <i class="fas fa-file-upload me-1"></i>
 
-                        Upload Ulang
+                        {{ __('Upload Ulang') }}
 
                     </a>
 
@@ -581,7 +580,7 @@
 
                                 <i class="fas fa-cloud-upload-alt me-1"></i>
 
-                                Submit Import
+                                {{ __('Submit Import') }}
 
                             </button>
 

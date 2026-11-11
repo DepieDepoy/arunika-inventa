@@ -14,18 +14,18 @@
         type="button"
         id="vasetra-ai-button"
         class="vasetra-ai-button"
-        aria-label="Buka Tera AI"
+        aria-label="{{ __('Buka Tera AI') }}"
     >
 
         <span class="vasetra-ai-button-icon">
             <img
                 src="{{ asset('assets/images/ai/tera.jpg') }}"
-                alt="Tera"
+                alt="{{ __('Tera') }}"
             >
         </span>
 
         <span class="vasetra-ai-button-label">
-            Tera
+            {{ __('Tera') }}
         </span>
 
         <span class="vasetra-ai-online"></span>
@@ -55,7 +55,7 @@
 
                     <img
                         src="{{ asset('assets/images/ai/tera.jpg') }}"
-                        alt="Tera"
+                        alt="{{ __('Tera') }}"
                     >
 
                 </div>
@@ -63,14 +63,14 @@
                 <div class="vasetra-ai-header-info">
 
                     <div class="vasetra-ai-title">
-                        Tera
+                        {{ __('Tera') }}
                     </div>
 
                     <div class="vasetra-ai-status">
 
                         <span></span>
 
-                        AI Assistant
+                        {{ __('AI Assistant') }}
 
                     </div>
 
@@ -85,7 +85,7 @@
                     type="button"
                     id="vasetra-ai-minimize"
                     class="vasetra-ai-header-button"
-                    title="Minimize"
+                    title="{{ __('Minimize') }}"
                 >
                     <i class="bi bi-dash-lg"></i>
                 </button>
@@ -94,7 +94,7 @@
                     type="button"
                     id="vasetra-ai-close"
                     class="vasetra-ai-header-button"
-                    title="Tutup"
+                    title="{{ __('Tutup') }}"
                 >
                     <i class="bi bi-x-lg"></i>
                 </button>
@@ -126,22 +126,19 @@
 
                     <img
                         src="{{ asset('assets/images/ai/tera.jpg') }}"
-                        alt="Tera"
+                        alt="{{ __('Tera') }}"
                     >
 
                 </div>
 
 
                 <h5>
-                    Halo, saya Tera 👋
+                    {{ __('Halo, saya Tera 👋') }}
                 </h5>
 
 
                 <p>
-                    Saya adalah AI Assistant Vasetra.
-                    Saya bisa membantu mencari informasi,
-                    membaca data aset, dan menjalankan
-                    beberapa tindakan di Vasetra.
+                    {{ __('Saya adalah AI Assistant Vasetra. Saya bisa membantu mencari informasi, membaca data aset, dan menjalankan beberapa tindakan di Vasetra.') }}
                 </p>
 
 
@@ -156,7 +153,7 @@
                         <i class="bi bi-box-seam"></i>
 
                         <span>
-                            Total asset
+                            {{ __('Total asset') }}
                         </span>
 
                     </button>
@@ -171,7 +168,7 @@
                         <i class="bi bi-person-badge"></i>
 
                         <span>
-                            Asset saya
+                            {{ __('Asset saya') }}
                         </span>
 
                     </button>
@@ -186,7 +183,7 @@
                         <i class="bi bi-person-x"></i>
 
                         <span>
-                            Asset tanpa PIC
+                            {{ __('Asset tanpa PIC') }}
                         </span>
 
                     </button>
@@ -201,7 +198,7 @@
                         <i class="bi bi-tools"></i>
 
                         <span>
-                            Maintenance terlambat
+                            {{ __('Maintenance terlambat') }}
                         </span>
 
                     </button>
@@ -216,7 +213,7 @@
                         <i class="bi bi-calendar-week"></i>
 
                         <span>
-                            Maintenance minggu ini
+                            {{ __('Maintenance minggu ini') }}
                         </span>
 
                     </button>
@@ -241,7 +238,7 @@
 
                 <img
                     src="{{ asset('assets/images/ai/tera.jpg') }}"
-                    alt="Tera"
+                    alt="{{ __('Tera') }}"
                 >
 
             </div>
@@ -257,7 +254,7 @@
 
 
             <small>
-                Tera sedang berpikir...
+                {{ __('Tera sedang berpikir...') }}
             </small>
 
         </div>
@@ -284,7 +281,7 @@
                     type="button"
                     id="vasetra-ai-send"
                     class="vasetra-ai-send"
-                    title="Kirim"
+                    title="{{ __('Kirim') }}"
                 >
 
                     <i class="bi bi-arrow-up"></i>
@@ -297,11 +294,11 @@
             <div class="vasetra-ai-footer-text">
 
                 <span>
-                    Tera AI
+                    {{ __('Tera AI') }}
                 </span>
 
                 <span>
-                    Enter untuk mengirim
+                    {{ __('Enter untuk mengirim') }}
                 </span>
 
             </div>

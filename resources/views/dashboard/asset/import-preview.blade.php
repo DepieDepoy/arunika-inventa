@@ -1,6 +1,6 @@
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Preview Import Assets')
+@section('title', __('Preview Import Assets'))
 
 @section('content')
 
@@ -323,10 +323,10 @@
         <div>
             <h5 class="mb-0">
                 <i class="fas fa-file-import me-2"></i>
-                Preview Import Assets
+                {{ __('Preview Import Assets') }}
             </h5>
             <small class="text-muted">
-                Periksa kembali data Excel sebelum disimpan ke database.
+                {{ __('Periksa kembali data Excel sebelum disimpan ke database.') }}
             </small>
         </div>
 
@@ -334,7 +334,7 @@
             <a href="{{ route('assets.import') }}"
             class="btn btn-light btn-back">
                 <i class="fas fa-arrow-left me-1"></i>
-                Kembali
+                {{ __('Kembali') }}
             </a>
         </div>
     </div>
@@ -396,7 +396,7 @@
 
                         <div class="summary-label">
 
-                            Total Data
+                            {{ __('Total Data') }}
 
                         </div>
 
@@ -434,7 +434,7 @@
 
                         <div class="summary-label">
 
-                            Baris Ditampilkan
+                            {{ __('Baris Ditampilkan') }}
 
                         </div>
 
@@ -472,7 +472,7 @@
 
                         <div class="summary-label">
 
-                            Status Import
+                            {{ __('Status Import') }}
 
                         </div>
 
@@ -482,7 +482,7 @@
 
                                 <i class="fas fa-check-circle"></i>
 
-                                Siap Diimport
+                                {{ __('Siap Diimport') }}
 
                             </span>
 
@@ -515,15 +515,14 @@
 
                         <i class="fas fa-table me-2"></i>
 
-                        Data Excel
+                        {{ __('Data Excel') }}
 
                     </strong>
 
                     <div class="text-muted mt-1"
                          style="font-size: 12px;">
 
-                        Menampilkan maksimal 100 baris pertama
-                        dari file Excel.
+                        {{ __('Menampilkan maksimal 100 baris pertama dari file Excel.') }}
 
                     </div>
 
@@ -532,8 +531,7 @@
 
                 <span class="badge bg-light text-dark">
 
-                    {{ number_format($previewRows) }}
-                    Baris Ditampilkan
+                    {{ __(':p1 Baris Ditampilkan', ['p1' => number_format($previewRows)]) }}
 
                 </span>
 
@@ -610,13 +608,11 @@
 
                     <span>
 
-                        Hanya <strong>{{ number_format($previewLimit) }}</strong>
-                        baris pertama yang ditampilkan pada preview.
-
-                        Total data yang akan diproses:
+                        {{ __('Hanya') }} <strong>{{ number_format($previewLimit) }}</strong>
+                        {{ __('baris pertama yang ditampilkan pada preview. Total data yang akan diproses:') }}
 
                         <strong>{{ number_format($totalRows) }}</strong>
-                        data.
+                        {{ __('data.') }}
 
                     </span>
 
@@ -635,24 +631,21 @@
 
                 <div class="import-info-text">
 
-                    <strong>Informasi Import</strong>
+                    <strong>{{ __('Informasi Import') }}</strong>
 
                     <br>
 
-                    Data di atas masih dalam tahap preview dan
-                    <strong>belum disimpan ke database</strong>.
-
-                    Saat tombol
-                    <strong>Submit & Import</strong>
-                    ditekan, sistem akan memproses
-                    <strong>seluruh {{ number_format($totalRows) }} data</strong>
-                    dari file Excel.
+                    {{ __('Data di atas masih dalam tahap preview dan') }}
+                    <strong>{{ __('belum disimpan ke database') }}</strong>{{ __('. Saat tombol') }}
+                    <strong>{{ __('Submit & Import') }}</strong>
+                    {{ __('ditekan, sistem akan memproses') }}
+                    <strong>{{ __('seluruh :p1 data', ['p1' => number_format($totalRows)]) }}</strong>
+                    {{ __('dari file Excel.') }}
 
                     <br>
 
-                    Category dan Sub Category yang belum tersedia
-                    akan <strong>dibuat otomatis</strong>
-                    berdasarkan data Excel.
+                    {{ __('Category dan Sub Category yang belum tersedia akan') }} <strong>{{ __('dibuat otomatis') }}</strong>
+                    {{ __('berdasarkan data Excel.') }}
 
                 </div>
 
@@ -670,7 +663,7 @@
 
                     <i class="fas fa-shield-alt me-1"></i>
 
-                    Pastikan data sudah benar sebelum melanjutkan.
+                    {{ __('Pastikan data sudah benar sebelum melanjutkan.') }}
 
                 </div>
 
@@ -682,7 +675,7 @@
 
                         <i class="fas fa-times me-1"></i>
 
-                        Batal
+                        {{ __('Batal') }}
 
                     </a>
 
@@ -703,7 +696,7 @@
 
                             <i class="fas fa-cloud-upload-alt me-1"></i>
 
-                            Submit & Import
+                            {{ __('Submit & Import') }}
 
                         </button>
 
@@ -739,15 +732,14 @@
 
                 <h5>
 
-                    Data Excel Kosong
+                    {{ __('Data Excel Kosong') }}
 
                 </h5>
 
 
                 <p class="text-muted mb-4">
 
-                    Tidak ditemukan data yang dapat ditampilkan
-                    dari file Excel.
+                    {{ __('Tidak ditemukan data yang dapat ditampilkan dari file Excel.') }}
 
                 </p>
 
@@ -757,7 +749,7 @@
 
                     <i class="fas fa-upload me-1"></i>
 
-                    Upload File Lain
+                    {{ __('Upload File Lain') }}
 
                 </a>
 

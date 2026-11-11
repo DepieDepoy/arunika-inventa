@@ -7,7 +7,7 @@
             <div class="modal-header">
 
                 <h5 class="modal-title">
-                    Add Role
+                    {{ __('Add Role') }}
                 </h5>
 
                 <button
@@ -27,14 +27,14 @@
                     <div class="mb-3">
 
                         <label class="form-label">
-                            Role Name
+                            {{ __('Role Name') }}
                         </label>
 
                         <input
                             type="text"
                             name="role_name"
                             class="form-control"
-                            placeholder="Enter role name">
+                            placeholder="{{ __('Enter role name') }}">
 
                         <div class="invalid-feedback"></div>
 
@@ -43,16 +43,16 @@
                     <div class="mb-3">
 
                         <label class="form-label">
-                            Status
+                            {{ __('Status') }}
                         </label>
 
                         <select
                             name="status"
                             class="form-select">
 
-                            <option value="">Select Status</option>
-                            <option value="1">Active</option>
-                            <option value="0">Inactive</option>
+                            <option value="">{{ __('Select Status') }}</option>
+                            <option value="1">{{ __('Active') }}</option>
+                            <option value="0">{{ __('Inactive') }}</option>
 
                         </select>
 
@@ -68,13 +68,13 @@
                         type="button"
                         class="btn btn-secondary"
                         data-bs-dismiss="modal">
-                        Cancel
+                        {{ __('Cancel') }}
                     </button>
 
                     <button
                         type="submit"
                         class="btn btn-primary">
-                        Save
+                        {{ __('Save') }}
                     </button>
 
                 </div>

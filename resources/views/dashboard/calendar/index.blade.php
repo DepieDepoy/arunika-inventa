@@ -1,7 +1,7 @@
 
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Calendar')
+@section('title', __('Calendar'))
 
 @section('content')
 @php
@@ -1099,16 +1099,16 @@
                         <div>
                             <h5 class="mb-1">
                                 <i class="fas fa-calendar-alt me-2 text-primary"></i>
-                                Calendar
+                                {{ __('Calendar') }}
                             </h5>
                             <div class="calendar-subtitle">
-                                Kelola jadwal meeting dan pengumuman perusahaan.
+                                {{ __('Kelola jadwal meeting dan pengumuman perusahaan.') }}
                             </div>
                         </div>
 
                         <button type="button" class="calendar-action-btn" id="btnAddEvent">
                             <i class="fas fa-plus"></i>
-                            Tambah Jadwal
+                            {{ __('Tambah Jadwal') }}
                         </button>
                     </div>
 
@@ -1120,7 +1120,7 @@
                                     type="button"
                                     class="calendar-nav-btn"
                                     id="btnPrevMonth"
-                                    aria-label="Bulan sebelumnya"
+                                    aria-label="{{ __('Bulan sebelumnya') }}"
                                 >
                                     <i class="fas fa-chevron-left"></i>
                                 </button>
@@ -1129,7 +1129,7 @@
                                     type="button"
                                     class="calendar-nav-btn"
                                     id="btnNextMonth"
-                                    aria-label="Bulan berikutnya"
+                                    aria-label="{{ __('Bulan berikutnya') }}"
                                 >
                                     <i class="fas fa-chevron-right"></i>
                                 </button>
@@ -1139,7 +1139,7 @@
                                     class="calendar-nav-btn calendar-today-btn"
                                     id="btnToday"
                                 >
-                                    Hari Ini
+                                    {{ __('Hari Ini') }}
                                 </button>
                             </div>
 
@@ -1148,50 +1148,50 @@
                             </div>
 
                             <div class="calendar-nav-group">
-                                <span class="text-muted small">Tampilan Bulanan</span>
+                                <span class="text-muted small">{{ __('Tampilan Bulanan') }}</span>
                             </div>
                         </div>
 
                         <div class="calendar-grid" id="calendarGrid">
-                            <div class="calendar-weekday">Min</div>
-                            <div class="calendar-weekday">Sen</div>
-                            <div class="calendar-weekday">Sel</div>
-                            <div class="calendar-weekday">Rab</div>
-                            <div class="calendar-weekday">Kam</div>
-                            <div class="calendar-weekday">Jum</div>
-                            <div class="calendar-weekday">Sab</div>
+                            <div class="calendar-weekday">{{ __('Min') }}</div>
+                            <div class="calendar-weekday">{{ __('Sen') }}</div>
+                            <div class="calendar-weekday">{{ __('Sel') }}</div>
+                            <div class="calendar-weekday">{{ __('Rab') }}</div>
+                            <div class="calendar-weekday">{{ __('Kam') }}</div>
+                            <div class="calendar-weekday">{{ __('Jum') }}</div>
+                            <div class="calendar-weekday">{{ __('Sab') }}</div>
                         </div>
 
                         {{-- ================= LEGEND ================= --}}
                         <div class="calendar-legend">
                             <div class="calendar-legend-item">
                                 <span class="calendar-legend-dot" style="background:#246bfd"></span>
-                                Meeting
+                                {{ __('Meeting') }}
                             </div>
 
                             <div class="calendar-legend-item">
                                 <span class="calendar-legend-dot" style="background:#0d9b72"></span>
-                                Pengumuman
+                                {{ __('Pengumuman') }}
                             </div>
 
                             <div class="calendar-legend-item">
                                 <span class="calendar-legend-dot" style="background:#0d9488"></span>
-                                Jadwal Maintenance
+                                {{ __('Jadwal Maintenance') }}
                             </div>
 
                             <div class="calendar-legend-item">
                                 <span class="calendar-legend-dot" style="background:#d97706"></span>
-                                Permintaan Maintenance
+                                {{ __('Permintaan Maintenance') }}
                             </div>
 
                             <div class="calendar-legend-item">
                                 <span class="calendar-legend-dot" style="background:#dc3545"></span>
-                                Permintaan Repair
+                                {{ __('Permintaan Repair') }}
                             </div>
 
                             <div class="calendar-legend-item">
                                 <span class="calendar-legend-dot" style="background:#98a2b3"></span>
-                                Dibatalkan
+                                {{ __('Dibatalkan') }}
                             </div>
                         </div>
                     </div>
@@ -1211,13 +1211,13 @@
         <div class="modal-content">
 
             <div class="modal-header">
-                <h5 class="modal-title" id="eventModalTitle">Tambah Jadwal</h5>
+                <h5 class="modal-title" id="eventModalTitle">{{ __('Tambah Jadwal') }}</h5>
 
                 <button
                     type="button"
                     class="btn-close"
                     data-bs-dismiss="modal"
-                    aria-label="Tutup"
+                    aria-label="{{ __('Tutup') }}"
                 ></button>
             </div>
 
@@ -1234,7 +1234,7 @@
                     {{-- Judul --}}
                     <div class="mb-3">
                         <label for="eventTitle" class="form-label">
-                            Judul <span class="text-danger">*</span>
+                            {{ __('Judul') }} <span class="text-danger">*</span>
                         </label>
 
                         <input
@@ -1243,7 +1243,7 @@
                             id="eventTitle"
                             maxlength="255"
                             required
-                            placeholder="Contoh: Meeting Evaluasi Bulanan"
+                            placeholder="{{ __('Contoh: Meeting Evaluasi Bulanan') }}"
                         >
 
                         <div class="calendar-form-error" data-error="title"></div>
@@ -1253,12 +1253,12 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="eventType" class="form-label">
-                                Jenis Jadwal <span class="text-danger">*</span>
+                                {{ __('Jenis Jadwal') }} <span class="text-danger">*</span>
                             </label>
 
                             <select class="form-select" id="eventType" required>
-                                <option value="meeting">Meeting</option>
-                                <option value="announcement">Pengumuman Perusahaan</option>
+                                <option value="meeting">{{ __('Meeting') }}</option>
+                                <option value="announcement">{{ __('Pengumuman Perusahaan') }}</option>
                             </select>
 
                             <div class="calendar-form-error" data-error="event_type"></div>
@@ -1266,7 +1266,7 @@
 
                         <div class="col-md-6 mb-3" id="attendeesGroup">
                             <label for="attendeeSearch" class="form-label">
-                                Cari dan Undang Peserta
+                                {{ __('Cari dan Undang Peserta') }}
                             </label>
 
                             <div class="attendee-autocomplete">
@@ -1277,7 +1277,7 @@
                                         type="text"
                                         class="form-control"
                                         id="attendeeSearch"
-                                        placeholder="Ketik nama atau email..."
+                                        placeholder="{{ __('Ketik nama atau email...') }}"
                                         autocomplete="off"
                                     >
                                 </div>
@@ -1288,8 +1288,7 @@
                             <div class="attendee-selected-list" id="selectedAttendees"></div>
 
                             <small class="text-muted d-block mt-2">
-                                Ketik nama/email, lalu pilih hasilnya.
-                                Anda bisa memilih beberapa peserta.
+                                {{ __('Ketik nama/email, lalu pilih hasilnya. Anda bisa memilih beberapa peserta.') }}
                             </small>
 
                             <div class="calendar-form-error" data-error="attendees"></div>
@@ -1300,14 +1299,14 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="eventStart" class="form-label">
-                                Mulai <span class="text-danger">*</span>
+                                {{ __('Mulai') }} <span class="text-danger">*</span>
                             </label>
 
                             <input
                                 type="text"
                                 class="form-control"
                                 id="eventStart"
-                                placeholder="Pilih tanggal dan jam"
+                                placeholder="{{ __('Pilih tanggal dan jam') }}"
                                 required
                             >
 
@@ -1316,14 +1315,14 @@
 
                         <div class="col-md-6 mb-3">
                             <label for="eventEnd" class="form-label">
-                                Selesai <span class="text-danger">*</span>
+                                {{ __('Selesai') }} <span class="text-danger">*</span>
                             </label>
 
                             <input
                                 type="text"
                                 class="form-control"
                                 id="eventEnd"
-                                placeholder="Pilih tanggal dan jam"
+                                placeholder="{{ __('Pilih tanggal dan jam') }}"
                                 required
                             >
 
@@ -1333,14 +1332,14 @@
 
                     {{-- Lokasi --}}
                     <div class="mb-3">
-                        <label for="eventLocation" class="form-label">Lokasi</label>
+                        <label for="eventLocation" class="form-label">{{ __('Lokasi') }}</label>
 
                         <input
                             type="text"
                             class="form-control"
                             id="eventLocation"
                             maxlength="255"
-                            placeholder="Contoh: Ruang Meeting / Online"
+                            placeholder="{{ __('Contoh: Ruang Meeting / Online') }}"
                         >
 
                         <div class="calendar-form-error" data-error="location"></div>
@@ -1348,7 +1347,7 @@
 
                     {{-- Deskripsi --}}
                     <div class="mb-3">
-                        <label for="eventDescription" class="form-label">Deskripsi</label>
+                        <label for="eventDescription" class="form-label">{{ __('Deskripsi') }}</label>
 
                         <textarea
                             class="form-control"
@@ -1362,11 +1361,11 @@
 
                     {{-- Informasi sesuai jenis jadwal --}}
                     <div class="alert alert-info py-2 small mb-0" id="announcementInfo">
-                        Pengumuman akan terlihat oleh pengguna dalam perusahaan yang sama.
+                        {{ __('Pengumuman akan terlihat oleh pengguna dalam perusahaan yang sama.') }}
                     </div>
 
                     <div class="alert alert-info py-2 small mb-0 d-none" id="meetingInfo">
-                        Meeting hanya terlihat oleh pembuat dan peserta yang diundang.
+                        {{ __('Meeting hanya terlihat oleh pembuat dan peserta yang diundang.') }}
                     </div>
                 </div>
 
@@ -1376,12 +1375,12 @@
                         class="calendar-secondary-btn"
                         data-bs-dismiss="modal"
                     >
-                        Batal
+                        {{ __('Batal') }}
                     </button>
 
                     <button type="submit" class="calendar-action-btn" id="btnSaveEvent">
                         <i class="fas fa-save"></i>
-                        <span>Simpan Jadwal</span>
+                        <span>{{ __('Simpan Jadwal') }}</span>
                     </button>
                 </div>
             </form>
@@ -1396,13 +1395,13 @@
         <div class="modal-content">
 
             <div class="modal-header">
-                <h5 class="modal-title">Detail Jadwal</h5>
+                <h5 class="modal-title">{{ __('Detail Jadwal') }}</h5>
 
                 <button
                     type="button"
                     class="btn-close"
                     data-bs-dismiss="modal"
-                    aria-label="Tutup"
+                    aria-label="{{ __('Tutup') }}"
                 ></button>
             </div>
 
@@ -1410,11 +1409,11 @@
                 {{-- Jenis dan status --}}
                 <div class="mb-3">
                     <span class="calendar-status calendar-status-meeting" id="detailType">
-                        Meeting
+                        {{ __('Meeting') }}
                     </span>
 
                     <span class="calendar-status calendar-status-cancelled d-none" id="detailCancelled">
-                        Dibatalkan
+                        {{ __('Dibatalkan') }}
                     </span>
                 </div>
 
@@ -1427,7 +1426,7 @@
                     </div>
 
                     <div>
-                        <div class="calendar-detail-label">Waktu</div>
+                        <div class="calendar-detail-label">{{ __('Waktu') }}</div>
                         <div class="calendar-detail-value" id="detailDate">-</div>
                     </div>
                 </div>
@@ -1439,7 +1438,7 @@
                     </div>
 
                     <div>
-                        <div class="calendar-detail-label">Lokasi</div>
+                        <div class="calendar-detail-label">{{ __('Lokasi') }}</div>
                         <div class="calendar-detail-value" id="detailLocation">-</div>
                     </div>
                 </div>
@@ -1451,7 +1450,7 @@
                     </div>
 
                     <div>
-                        <div class="calendar-detail-label">Deskripsi</div>
+                        <div class="calendar-detail-label">{{ __('Deskripsi') }}</div>
                         <div class="calendar-detail-value" id="detailDescription">-</div>
                     </div>
                 </div>
@@ -1463,7 +1462,7 @@
                     </div>
 
                     <div class="flex-grow-1">
-                        <div class="calendar-detail-label">Peserta</div>
+                        <div class="calendar-detail-label">{{ __('Peserta') }}</div>
                         <div class="calendar-attendee-list" id="detailAttendees"></div>
                     </div>
                 </div>
@@ -1476,7 +1475,7 @@
                     id="btnCancelEvent"
                 >
                     <i class="fas fa-ban me-1"></i>
-                    Batalkan
+                    {{ __('Batalkan') }}
                 </button>
 
                 <div class="ms-auto d-flex gap-2">
@@ -1485,7 +1484,7 @@
                         class="calendar-secondary-btn"
                         data-bs-dismiss="modal"
                     >
-                        Tutup
+                        {{ __('Tutup') }}
                     </button>
 
                     <button
@@ -1494,7 +1493,7 @@
                         id="btnEditEvent"
                     >
                         <i class="fas fa-edit"></i>
-                        Edit
+                        {{ __('Edit') }}
                     </button>
                 </div>
             </div>
@@ -1515,7 +1514,7 @@
 
             <div class="modal-header">
                 <div>
-                    <h5 class="modal-title">Daftar Jadwal Harian</h5>
+                    <h5 class="modal-title">{{ __('Daftar Jadwal Harian') }}</h5>
                     <div class="calendar-subtitle"
                          id="dayEventsDate">-</div>
                 </div>
@@ -1523,7 +1522,7 @@
                 <button type="button"
                         class="btn-close"
                         data-bs-dismiss="modal"
-                        aria-label="Tutup"></button>
+                        aria-label="{{ __('Tutup') }}"></button>
             </div>
 
             <div class="modal-body">
@@ -1535,7 +1534,7 @@
                 <button type="button"
                         class="calendar-secondary-btn"
                         data-bs-dismiss="modal">
-                    Tutup
+                    {{ __('Tutup') }}
                 </button>
             </div>
 

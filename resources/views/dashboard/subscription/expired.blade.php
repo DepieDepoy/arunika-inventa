@@ -1,6 +1,6 @@
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Subscription')
+@section('title', __('Subscription'))
 
 @section('content')
 
@@ -20,25 +20,23 @@
                     </div>
 
                     <h3 class="fw-bold mb-3">
-                        Subscription Telah Berakhir
+                        {{ __('Subscription Telah Berakhir') }}
                     </h3>
 
                     <p class="text-muted mb-4">
-                        Subscription perusahaan Anda telah berakhir.
-                        Silakan perpanjang subscription untuk kembali
-                        menggunakan seluruh fitur Inventa.
+                        {{ __('Subscription perusahaan Anda telah berakhir. Silakan perpanjang subscription untuk kembali menggunakan seluruh fitur Inventa.') }}
                     </p>
 
                     @if($subscription)
 
                         <div class="mb-4">
                             <div>
-                                <strong>Paket:</strong>
+                                <strong>{{ __('Paket:') }}</strong>
                                 {{ $subscription->plan?->plan_name ?? '-' }}
                             </div>
 
                             <div>
-                                <strong>Berakhir:</strong>
+                                <strong>{{ __('Berakhir:') }}</strong>
                                 {{ $subscription->end_date?->format('d F Y') ?? '-' }}
                             </div>
                         </div>
@@ -51,7 +49,7 @@
                         disabled
                     >
                         <i class="fa-solid fa-credit-card me-1"></i>
-                        Perpanjang Subscription
+                        {{ __('Perpanjang Subscription') }}
                     </button>
 
                 </div>

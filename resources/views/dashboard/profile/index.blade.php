@@ -1,6 +1,6 @@
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Profile')
+@section('title', __('Profile'))
 
 @section('content')
 
@@ -236,11 +236,11 @@
                     <div>
 
                         <h5 class="mb-0">
-                            Profile
+                            {{ __('Profile') }}
                         </h5>
 
                         <small class="text-muted">
-                            Manage your account and password
+                            {{ __('Manage your account and password') }}
                         </small>
 
                     </div>
@@ -266,11 +266,11 @@
                     <div>
 
                         <h5 class="mb-0">
-                            Change Password
+                            {{ __('Change Password') }}
                         </h5>
 
                         <small class="text-muted">
-                            Update your account password
+                            {{ __('Update your account password') }}
                         </small>
 
                     </div>
@@ -297,7 +297,7 @@
                                     for="current_password"
                                     class="form-label"
                                 >
-                                    Current Password
+                                    {{ __('Current Password') }}
                                     <span class="text-danger">*</span>
                                 </label>
 
@@ -317,7 +317,7 @@
                                         type="button"
                                         class="toggle-password"
                                         data-target="current_password"
-                                        aria-label="Show or hide current password"
+                                        aria-label="{{ __('Show or hide current password') }}"
                                     >
 
                                         <i class="fa-solid fa-eye"></i>
@@ -345,7 +345,7 @@
                                     for="password"
                                     class="form-label"
                                 >
-                                    New Password
+                                    {{ __('New Password') }}
                                     <span class="text-danger">*</span>
                                 </label>
 
@@ -365,7 +365,7 @@
                                         type="button"
                                         class="toggle-password"
                                         data-target="password"
-                                        aria-label="Show or hide new password"
+                                        aria-label="{{ __('Show or hide new password') }}"
                                     >
 
                                         <i class="fa-solid fa-eye"></i>
@@ -376,7 +376,7 @@
 
 
                                 <small class="text-muted">
-                                    Minimum 8 characters.
+                                    {{ __('Minimum 8 characters.') }}
                                 </small>
 
 
@@ -398,7 +398,7 @@
                                     for="password_confirmation"
                                     class="form-label"
                                 >
-                                    Confirm Password
+                                    {{ __('Confirm Password') }}
                                     <span class="text-danger">*</span>
                                 </label>
 
@@ -418,7 +418,7 @@
                                         type="button"
                                         class="toggle-password"
                                         data-target="password_confirmation"
-                                        aria-label="Show or hide confirm password"
+                                        aria-label="{{ __('Show or hide confirm password') }}"
                                     >
 
                                         <i class="fa-solid fa-eye"></i>
@@ -452,7 +452,7 @@
 
                                         <i class="fa-solid fa-key me-1"></i>
 
-                                        Update Password
+                                        {{ __('Update Password') }}
 
                                     </button>
 
@@ -484,11 +484,11 @@
                     <div>
 
                         <h5 class="mb-0">
-                            Account
+                            {{ __('Account') }}
                         </h5>
 
                         <small class="text-muted">
-                            Account information
+                            {{ __('Account information') }}
                         </small>
 
                     </div>
@@ -511,18 +511,18 @@
 
                             <div class="profile-avatar-wrap mb-3">
                                 <div class="profile-avatar" id="profileAvatar">
-                                    <img id="profileAvatarImg" src="{{ $photoUrl }}" alt="Foto profil" class="{{ $photoUrl ? '' : 'd-none' }}">
+                                    <img id="profileAvatarImg" src="{{ $photoUrl }}" alt="{{ __('Foto profil') }}" class="{{ $photoUrl ? '' : 'd-none' }}">
                                     <span id="profileAvatarInitial" class="{{ $photoUrl ? 'd-none' : '' }}">{{ strtoupper(substr($user->name ?? 'U', 0, 1)) }}</span>
                                 </div>
 
-                                <label for="profilePhotoInput" class="profile-avatar-edit" title="Ganti foto profil">
+                                <label for="profilePhotoInput" class="profile-avatar-edit" title="{{ __('Ganti foto profil') }}">
                                     <i class="fa-solid fa-camera"></i>
                                 </label>
                                 <input type="file" id="profilePhotoInput" accept="image/jpeg,image/png,image/webp" class="d-none">
                             </div>
 
                             <button type="button" id="btnRemovePhoto" class="btn btn-sm btn-link text-white-50 p-0 mb-2 {{ $photoUrl ? '' : 'd-none' }}">
-                                Hapus foto
+                                {{ __('Hapus foto') }}
                             </button>
 
 
@@ -549,7 +549,7 @@
                         <div class="profile-summary-item">
 
                             <div class="profile-summary-label">
-                                Role
+                                {{ __('Role') }}
                             </div>
 
                             <div class="profile-summary-value">
@@ -568,7 +568,7 @@
                         <div class="profile-summary-item">
 
                             <div class="profile-summary-label">
-                                Phone
+                                {{ __('Phone') }}
                             </div>
 
                             <div class="profile-summary-value">
@@ -587,7 +587,7 @@
                         <div class="profile-summary-item">
 
                             <div class="profile-summary-label">
-                                NIK
+                                {{ __('NIK') }}
                             </div>
 
                             <div class="profile-summary-value">
@@ -606,7 +606,7 @@
                         <div class="profile-summary-item">
 
                             <div class="profile-summary-label">
-                                Status
+                                {{ __('Status') }}
                             </div>
 
                             <div class="profile-summary-value">
@@ -614,13 +614,13 @@
                                 @if($user->status)
 
                                     <span class="badge bg-success">
-                                        Active
+                                        {{ __('Active') }}
                                     </span>
 
                                 @else
 
                                     <span class="badge bg-secondary">
-                                        Inactive
+                                        {{ __('Inactive') }}
                                     </span>
 
                                 @endif
@@ -835,7 +835,7 @@ $(function () {
                                 'success',
 
                             title:
-                                'Password Updated',
+                                @json(__('Password Updated')),
 
                             text:
                                 response.message,
@@ -889,7 +889,7 @@ $(function () {
                                 'warning',
 
                             title:
-                                'Validation Failed',
+                                @json(__('Validation Failed')),
 
                             text:
                                 xhr.responseJSON?.message ||
@@ -964,7 +964,7 @@ $(function () {
                             'error',
 
                         title:
-                            'Password Error',
+                            @json(__('Password Error')),
 
                         text:
                             message
@@ -1026,7 +1026,7 @@ $(function () {
     {
         Swal.fire({
             icon: 'error',
-            title: 'Foto Profil',
+            title: @json(__('Foto Profil')),
             text: (xhr.responseJSON && xhr.responseJSON.message) || fallback
         });
     }
@@ -1041,7 +1041,7 @@ $(function () {
 
         if (file.size > 5 * 1024 * 1024) {
             input.value = '';
-            Swal.fire({ icon: 'error', title: 'Foto Profil', text: 'Ukuran foto maksimal 5 MB.' });
+            Swal.fire({ icon: 'error', title: @json(__('Foto Profil')), text: @json(__('Ukuran foto maksimal 5 MB.')) });
             return;
         }
 
@@ -1060,7 +1060,7 @@ $(function () {
             dataType: 'json',
             success: function (res) {
                 renderPhoto(res.data && res.data.photo_url);
-                Swal.fire({ icon: 'success', title: 'Berhasil', text: res.message, timer: 1500, showConfirmButton: false });
+                Swal.fire({ icon: 'success', title: @json(__('Berhasil')), text: res.message, timer: 1500, showConfirmButton: false });
             },
             error: function (xhr) {
                 photoError(xhr, 'Foto profil gagal diunggah.');
@@ -1075,10 +1075,10 @@ $(function () {
     $('#btnRemovePhoto').on('click', function () {
         Swal.fire({
             icon: 'warning',
-            title: 'Hapus foto profil?',
+            title: @json(__('Hapus foto profil?')),
             showCancelButton: true,
-            confirmButtonText: 'Hapus',
-            cancelButtonText: 'Batal'
+            confirmButtonText: @json(__('Hapus')),
+            cancelButtonText: @json(__('Batal'))
         }).then(function (result) {
             if (!result.isConfirmed) {
                 return;

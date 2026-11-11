@@ -1,6 +1,6 @@
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'My Assets')
+@section('title', __('My Assets'))
 
 @section('content')
 
@@ -92,11 +92,11 @@
                         <div>
 
                             <h5 class="mb-1">
-                                My Assets
+                                {{ __('My Assets') }}
                             </h5>
 
                             <small class="text-muted">
-                                Daftar aset yang menjadi tanggung jawab Anda.
+                                {{ __('Daftar aset yang menjadi tanggung jawab Anda.') }}
                             </small>
 
                         </div>
@@ -134,7 +134,7 @@
                                             <div>
 
                                                 <small class="text-muted">
-                                                    My Assets
+                                                    {{ __('My Assets') }}
                                                 </small>
 
                                                 <h4 class="mb-0 fw-bold">
@@ -165,12 +165,11 @@
                         <div class="mb-3">
 
                             <h6 class="mb-1 fw-semibold">
-                                Asset List
+                                {{ __('Asset List') }}
                             </h6>
 
                             <small class="text-muted">
-                                Ajukan maintenance, repair, atau laporan masalah
-                                untuk aset yang menjadi tanggung jawab Anda.
+                                {{ __('Ajukan maintenance, repair, atau laporan masalah untuk aset yang menjadi tanggung jawab Anda.') }}
                             </small>
 
                         </div>
@@ -189,27 +188,27 @@
                                     <tr>
 
                                         <th width="5%">
-                                            No
+                                            {{ __('No') }}
                                         </th>
 
                                         <th>
-                                            Asset
+                                            {{ __('Asset') }}
                                         </th>
 
                                         <th>
-                                            Category
+                                            {{ __('Category') }}
                                         </th>
 
                                         <th>
-                                            Condition
+                                            {{ __('Condition') }}
                                         </th>
 
                                         <th>
-                                            Request Status
+                                            {{ __('Request Status') }}
                                         </th>
 
                                         <th width="15%">
-                                            Action
+                                            {{ __('Action') }}
                                         </th>
 
                                     </tr>
@@ -419,7 +418,7 @@
                                                         class="badge bg-light text-dark"
                                                     >
 
-                                                        No Active Request
+                                                        {{ __('No Active Request') }}
 
                                                     </span>
 
@@ -454,12 +453,12 @@
                                                             data-name="{{ $asset->asset_name }}"
                                                             data-code="{{ $asset->asset_code }}"
 
-                                                            title="Create Request"
+                                                            title="{{ __('Create Request') }}"
                                                         >
 
                                                             <i class="fa-solid fa-wrench me-1"></i>
 
-                                                            Request
+                                                            {{ __('Request') }}
 
                                                         </button>
 
@@ -498,12 +497,12 @@
                                                                 data-type="{{ $activeRequest->request_type }}"
                                                                 data-description="{{ $activeRequest->description }}"
 
-                                                                title="Edit Request"
+                                                                title="{{ __('Edit Request') }}"
                                                             >
 
                                                                 <i class="fa-solid fa-pen-to-square me-1"></i>
 
-                                                                Edit Request
+                                                                {{ __('Edit Request') }}
 
                                                             </button>
 
@@ -522,7 +521,7 @@
 
                                                                 <i class="fa-solid fa-hourglass-half me-1"></i>
 
-                                                                Processing
+                                                                {{ __('Processing') }}
 
                                                             </button>
 
@@ -617,7 +616,7 @@
                         class="modal-title"
                         id="requestModalTitle"
                     >
-                        Asset Request
+                        {{ __('Asset Request') }}
                     </h5>
 
 
@@ -646,7 +645,7 @@
                         <div class="col-12 mb-3">
 
                             <label class="form-label fw-semibold">
-                                Asset
+                                {{ __('Asset') }}
                             </label>
 
 
@@ -683,7 +682,7 @@
                                 class="form-label fw-semibold"
                             >
 
-                                Request Type
+                                {{ __('Request Type') }}
 
                                 <span class="text-danger">
                                     *
@@ -700,23 +699,23 @@
                             >
 
                                 <option value="">
-                                    Select Request Type
+                                    {{ __('Select Request Type') }}
                                 </option>
 
                                 <option value="maintenance">
-                                    Maintenance
+                                    {{ __('Maintenance') }}
                                 </option>
 
                                 <option value="repair">
-                                    Repair
+                                    {{ __('Repair') }}
                                 </option>
 
                                 <option value="problem">
-                                    Problem / Issue
+                                    {{ __('Problem / Issue') }}
                                 </option>
 
                                 <option value="other">
-                                    Other
+                                    {{ __('Other') }}
                                 </option>
 
                             </select>
@@ -735,7 +734,7 @@
                                 class="form-label fw-semibold"
                             >
 
-                                Description
+                                {{ __('Description') }}
 
                                 <span class="text-danger">
                                     *
@@ -757,8 +756,7 @@
 
                             <small class="text-muted">
 
-                                Jelaskan masalah atau kebutuhan
-                                maintenance dengan jelas.
+                                {{ __('Jelaskan masalah atau kebutuhan maintenance dengan jelas.') }}
 
                             </small>
 
@@ -780,7 +778,7 @@
                         class="btn btn-label-secondary"
                         data-bs-dismiss="modal"
                     >
-                        Close
+                        {{ __('Close') }}
                     </button>
 
 
@@ -792,7 +790,7 @@
 
                         <i class="fa-solid fa-paper-plane me-1"></i>
 
-                        Submit Request
+                        {{ __('Submit Request') }}
 
                     </button>
 
@@ -1147,10 +1145,10 @@ $(function () {
                         'warning',
 
                     title:
-                        'Request Type Required',
+                        @json(__('Request Type Required')),
 
                     text:
-                        'Silakan pilih jenis request terlebih dahulu.'
+                        @json(__('Silakan pilih jenis request terlebih dahulu.'))
 
                 });
 
@@ -1173,10 +1171,10 @@ $(function () {
                         'warning',
 
                     title:
-                        'Description Required',
+                        @json(__('Description Required')),
 
                     text:
-                        'Description minimal 5 karakter.'
+                        @json(__('Description minimal 5 karakter.'))
 
                 });
 
@@ -1320,7 +1318,7 @@ $(function () {
                                 'error',
 
                             title:
-                                'Failed',
+                                @json(__('Failed')),
 
                             text:
                                 response.message ??
@@ -1370,7 +1368,7 @@ $(function () {
                             'success',
 
                         title:
-                            'Success',
+                            @json(__('Success')),
 
                         text:
                             response.message,
@@ -1454,7 +1452,7 @@ $(function () {
                             'error',
 
                         title:
-                            'Request Failed',
+                            @json(__('Request Failed')),
 
                         text:
                             message

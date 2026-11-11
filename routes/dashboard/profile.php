@@ -62,6 +62,14 @@ Route::prefix('dashboard')
         |--------------------------------------------------------------------------
         */
 
+        // Bahasa tampilan (users.locale, juga dipakai aplikasi mobile & email).
+        Route::post('/profile/locale', [
+            ProfileController::class,
+            'updateLocale'
+        ])
+        ->middleware('throttle:30,1')
+        ->name('profile.locale');
+
         Route::post('/profile/photo', [
             ProfileController::class,
             'updatePhoto'

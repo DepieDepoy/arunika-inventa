@@ -9,7 +9,7 @@
 <script>
 Swal.fire({
     icon: 'success',
-    title: 'Berhasil',
+    title: @json(__('Berhasil')),
     text: @json(session('success')),
     confirmButtonColor: '#3A57E8'
 });
@@ -20,7 +20,7 @@ Swal.fire({
 <script>
 Swal.fire({
     icon: 'error',
-    title: 'Oops...',
+    title: @json(__('Oops...')),
     text: @json(session('error')),
     confirmButtonColor: '#dc3545'
 });
@@ -33,7 +33,7 @@ Swal.fire({
     icon: 'error',
     title: @json(session('payment_error')['title'] ?? 'Pembayaran Belum Dapat Diproses'),
     text: @json(session('payment_error')['message'] ?? ''),
-    confirmButtonText: 'Mengerti',
+    confirmButtonText: @json(__('Mengerti')),
     confirmButtonColor: '#3A57E8'
 });
 </script>
@@ -43,7 +43,7 @@ Swal.fire({
 <script>
 Swal.fire({
     icon: 'warning',
-    title: 'Perhatian',
+    title: @json(__('Perhatian')),
     text: @json(session('warning'))
 });
 </script>
@@ -53,7 +53,7 @@ Swal.fire({
 <script>
 Swal.fire({
     icon: 'info',
-    title: 'Informasi',
+    title: @json(__('Informasi')),
     text: @json(session('info'))
 });
 </script>
@@ -63,7 +63,7 @@ Swal.fire({
 <script>
 Swal.fire({
     icon: 'error',
-    title: 'Validasi Gagal',
+    title: @json(__('Validasi Gagal')),
     html: @json(implode('<br>', array_map('e', $errors->all())))
 });
 </script>

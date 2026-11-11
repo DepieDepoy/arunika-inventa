@@ -1,6 +1,6 @@
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Import History Detail')
+@section('title', __('Import History Detail'))
 
 @section('content')
 
@@ -340,11 +340,10 @@ if ($history->started_at) {
 
         <div>
             <h5 class="mb-0">
-                Import History Detail
+                {{ __('Import History Detail') }}
             </h5>
             <small class="text-muted">
-                Detail hasil proses import
-            {{ ucfirst($module ?: '-') }}
+                {{ __('Detail hasil proses import :p1', ['p1' => ucfirst($module ?: '-')]) }}
             </small>
         </div>
 
@@ -354,7 +353,7 @@ if ($history->started_at) {
                 class="btn btn-outline-secondary import-back-button"
             >
                 <i class="fas fa-arrow-left me-1"></i>
-                Kembali
+                {{ __('Kembali') }}
             </a>
         </div>
     </div>
@@ -383,7 +382,7 @@ if ($history->started_at) {
                     <div class="overflow-hidden">
 
                         <span class="import-summary-label">
-                            File Import
+                            {{ __('File Import') }}
                         </span>
 
                         <div
@@ -412,7 +411,7 @@ if ($history->started_at) {
             <div class="card-body">
 
                 <span class="import-summary-label">
-                    Module
+                    {{ __('Module') }}
                 </span>
 
                 <div class="mt-2">
@@ -442,7 +441,7 @@ if ($history->started_at) {
             <div class="card-body">
 
                 <span class="import-summary-label">
-                    Total
+                    {{ __('Total') }}
                 </span>
 
                 <div class="import-summary-value">
@@ -464,7 +463,7 @@ if ($history->started_at) {
             <div class="card-body">
 
                 <span class="import-summary-label">
-                    Berhasil
+                    {{ __('Berhasil') }}
                 </span>
 
                 <div class="import-summary-value text-success">
@@ -486,7 +485,7 @@ if ($history->started_at) {
             <div class="card-body">
 
                 <span class="import-summary-label">
-                    Gagal
+                    {{ __('Gagal') }}
                 </span>
 
                 <div class="import-summary-value text-danger">
@@ -515,7 +514,7 @@ if ($history->started_at) {
 
                 <i class="fas fa-info-circle"></i>
 
-                Status Import
+                {{ __('Status Import') }}
 
             </h5>
 
@@ -526,7 +525,7 @@ if ($history->started_at) {
 
                     <i class="fas fa-spinner fa-spin me-1"></i>
 
-                    Processing
+                    {{ __('Processing') }}
 
                 </span>
 
@@ -536,7 +535,7 @@ if ($history->started_at) {
 
                     <i class="fas fa-check me-1"></i>
 
-                    Completed
+                    {{ __('Completed') }}
 
                 </span>
 
@@ -546,7 +545,7 @@ if ($history->started_at) {
 
                     <i class="fas fa-exclamation-triangle me-1"></i>
 
-                    Completed with Errors
+                    {{ __('Completed with Errors') }}
 
                 </span>
 
@@ -556,7 +555,7 @@ if ($history->started_at) {
 
                     <i class="fas fa-times me-1"></i>
 
-                    Failed
+                    {{ __('Failed') }}
 
                 </span>
 
@@ -589,7 +588,7 @@ if ($history->started_at) {
             <div class="col-lg-3 col-md-6 mb-3 mb-lg-0">
 
                 <span class="import-info-label">
-                    Dibuat
+                    {{ __('Dibuat') }}
                 </span>
 
                 <div class="import-info-value">
@@ -608,7 +607,7 @@ if ($history->started_at) {
             <div class="col-lg-3 col-md-6 mb-3 mb-lg-0">
 
                 <span class="import-info-label">
-                    Mulai
+                    {{ __('Mulai') }}
                 </span>
 
                 <div class="import-info-value">
@@ -627,7 +626,7 @@ if ($history->started_at) {
             <div class="col-lg-3 col-md-6">
 
                 <span class="import-info-label">
-                    Selesai
+                    {{ __('Selesai') }}
                 </span>
 
                 <div class="import-info-value">
@@ -646,7 +645,7 @@ if ($history->started_at) {
             <div class="col-lg-3 col-md-6">
 
                 <span class="import-info-label">
-                    Durasi
+                    {{ __('Durasi') }}
                 </span>
 
                 <div class="import-info-value">
@@ -656,7 +655,7 @@ if ($history->started_at) {
                     @if($history->status === 'processing' && $history->started_at)
 
                         <span class="text-warning">
-                            (berjalan)
+                            {{ __('(berjalan)') }}
                         </span>
 
                     @endif
@@ -683,7 +682,7 @@ if ($history->started_at) {
 
             <i class="fas fa-chart-bar"></i>
 
-            Ringkasan Hasil
+            {{ __('Ringkasan Hasil') }}
 
         </h5>
 
@@ -695,7 +694,7 @@ if ($history->started_at) {
         <div class="mb-2 d-flex justify-content-between">
 
             <span class="text-muted">
-                Progress
+                {{ __('Progress') }}
             </span>
 
             <strong>
@@ -730,7 +729,7 @@ if ($history->started_at) {
                 <div class="import-result-box">
 
                     <span class="import-result-box-label">
-                        Total
+                        {{ __('Total') }}
                     </span>
 
                     <div class="import-result-box-value">
@@ -748,7 +747,7 @@ if ($history->started_at) {
                 <div class="import-result-box">
 
                     <span class="import-result-box-label">
-                        Berhasil
+                        {{ __('Berhasil') }}
                     </span>
 
                     <div class="import-result-box-value text-success">
@@ -766,7 +765,7 @@ if ($history->started_at) {
                 <div class="import-result-box">
 
                     <span class="import-result-box-label">
-                        Gagal
+                        {{ __('Gagal') }}
                     </span>
 
                     <div class="import-result-box-value text-danger">
@@ -799,12 +798,12 @@ if ($history->started_at) {
 
                     <i class="fas fa-exclamation-circle text-danger"></i>
 
-                    Detail Error
+                    {{ __('Detail Error') }}
 
                 </h5>
 
                 <small class="text-muted">
-                    Daftar row yang gagal diimport
+                    {{ __('Daftar row yang gagal diimport') }}
                 </small>
 
             </div>
@@ -847,15 +846,15 @@ if ($history->started_at) {
                                 class="text-center"
                                 style="width: 80px;"
                             >
-                                Row
+                                {{ __('Row') }}
                             </th>
 
                             <th>
-                                Data
+                                {{ __('Data') }}
                             </th>
 
                             <th>
-                                Error
+                                {{ __('Error') }}
                             </th>
 
                         </tr>
@@ -876,11 +875,11 @@ if ($history->started_at) {
                 <i class="fas fa-check-circle fa-3x text-success"></i>
 
                 <h5>
-                    Tidak ada error
+                    {{ __('Tidak ada error') }}
                 </h5>
 
                 <p class="text-muted mb-0">
-                    Semua data berhasil diproses.
+                    {{ __('Semua data berhasil diproses.') }}
                 </p>
 
             </div>
@@ -1008,36 +1007,36 @@ DATATABLE ERROR
             language: {
 
                 processing:
-                    'Memuat data...',
+                    @json(__('Memuat data...')),
 
                 search:
-                    'Cari:',
+                    @json(__('Cari:')),
 
                 lengthMenu:
-                    'Tampilkan _MENU_ data',
+                    @json(__('Tampilkan _MENU_ data')),
 
                 info:
-                    'Menampilkan _START_ sampai _END_ dari _TOTAL_ error',
+                    @json(__('Menampilkan _START_ sampai _END_ dari _TOTAL_ error')),
 
                 infoEmpty:
-                    'Menampilkan 0 sampai 0 dari 0 error',
+                    @json(__('Menampilkan 0 sampai 0 dari 0 error')),
 
                 infoFiltered:
-                    '(difilter dari _MAX_ total error)',
+                    @json(__('(difilter dari _MAX_ total error)')),
 
                 zeroRecords:
-                    'Data error tidak ditemukan',
+                    @json(__('Data error tidak ditemukan')),
 
                 emptyTable:
-                    'Tidak ada data error',
+                    @json(__('Tidak ada data error')),
 
                 paginate: {
 
                     first:
-                        'Pertama',
+                        @json(__('Pertama')),
 
                     last:
-                        'Terakhir',
+                        @json(__('Terakhir')),
 
                     next:
                         '›',

@@ -1,6 +1,6 @@
 
 @extends('dashboard.layouts.wrapper')
-@section('title', 'Detail Maintenance Request')
+@section('title', __('Detail Maintenance Request'))
 
 @section('content')
 
@@ -39,11 +39,11 @@
                     <div>
 
                         <h5 class="mb-0">
-                            Detail Maintenance Request
+                            {{ __('Detail Maintenance Request') }}
                         </h5>
 
                         <small class="text-muted">
-                            Informasi lengkap pengajuan dan riwayat pengerjaan aset.
+                            {{ __('Informasi lengkap pengajuan dan riwayat pengerjaan aset.') }}
                         </small>
 
                     </div>
@@ -58,7 +58,7 @@
 
                             <i class="fa fa-arrow-left"></i>
 
-                            Kembali
+                            {{ __('Kembali') }}
 
                         </a>
 
@@ -79,11 +79,11 @@
                     <div class="mb-4">
 
                         <h6 class="fw-bold mb-1">
-                            Informasi Request
+                            {{ __('Informasi Request') }}
                         </h6>
 
                         <small class="text-muted">
-                            Informasi pengajuan maintenance asset.
+                            {{ __('Informasi pengajuan maintenance asset.') }}
                         </small>
 
                     </div>
@@ -96,7 +96,7 @@
                         <div class="col-xl-3 col-lg-4 col-md-6">
 
                             <label class="text-muted small d-block">
-                                Kode Aset
+                                {{ __('Kode Aset') }}
                             </label>
 
                             <div class="fw-bold">
@@ -110,7 +110,7 @@
                         <div class="col-xl-3 col-lg-4 col-md-6">
 
                             <label class="text-muted small d-block">
-                                Nama Aset
+                                {{ __('Nama Aset') }}
                             </label>
 
                             <div class="fw-bold">
@@ -124,7 +124,7 @@
                         <div class="col-xl-3 col-lg-4 col-md-6">
 
                             <label class="text-muted small d-block">
-                                Jenis Request
+                                {{ __('Jenis Request') }}
                             </label>
 
                             @php
@@ -160,7 +160,7 @@
                         <div class="col-xl-3 col-lg-4 col-md-6">
 
                             <label class="text-muted small d-block">
-                                Status
+                                {{ __('Status') }}
                             </label>
 
                             @php
@@ -207,7 +207,7 @@
                         <div class="col-xl-3 col-lg-4 col-md-6">
 
                             <label class="text-muted small d-block">
-                                Pemohon
+                                {{ __('Pemohon') }}
                             </label>
 
                             <div>
@@ -221,7 +221,7 @@
                         <div class="col-xl-3 col-lg-4 col-md-6">
 
                             <label class="text-muted small d-block">
-                                Petugas
+                                {{ __('Petugas') }}
                             </label>
 
                             <div>
@@ -235,7 +235,7 @@
                         <div class="col-12">
 
                             <label class="text-muted small d-block mb-1">
-                                Deskripsi Masalah
+                                {{ __('Deskripsi Masalah') }}
                             </label>
 
                             <div class="border rounded p-3 bg-light">
@@ -262,11 +262,11 @@
                     <div class="mb-4">
 
                         <h6 class="fw-bold mb-1">
-                            Timeline Request
+                            {{ __('Timeline Request') }}
                         </h6>
 
                         <small class="text-muted">
-                            Riwayat waktu proses maintenance request.
+                            {{ __('Riwayat waktu proses maintenance request.') }}
                         </small>
 
                     </div>
@@ -281,7 +281,7 @@
                             <div class="border rounded p-3 h-100">
 
                                 <label class="text-muted small d-block">
-                                    Waktu Pengajuan
+                                    {{ __('Waktu Pengajuan') }}
                                 </label>
 
                                 <strong>
@@ -306,7 +306,7 @@
                             <div class="border rounded p-3 h-100">
 
                                 <label class="text-muted small d-block">
-                                    Mulai Ditangani
+                                    {{ __('Mulai Ditangani') }}
                                 </label>
 
                                 <strong>
@@ -331,7 +331,7 @@
                             <div class="border rounded p-3 h-100">
 
                                 <label class="text-muted small d-block">
-                                    Waktu Selesai
+                                    {{ __('Waktu Selesai') }}
                                 </label>
 
                                 <strong>
@@ -361,11 +361,11 @@
                     <div class="mb-4">
 
                         <h6 class="fw-bold mb-1">
-                            Riwayat Progress
+                            {{ __('Riwayat Progress') }}
                         </h6>
 
                         <small class="text-muted">
-                            Catatan dan dokumentasi selama pekerjaan berlangsung.
+                            {{ __('Catatan dan dokumentasi selama pekerjaan berlangsung.') }}
                         </small>
 
                     </div>
@@ -387,7 +387,7 @@
 
                                     <div>
                                         <small class="text-muted">
-                                            Progress Update
+                                            {{ __('Progress Update') }}
                                         </small>
                                     </div>
 
@@ -432,7 +432,7 @@
                                 <div>
 
                                     <label class="text-muted small d-block mb-2">
-                                        Foto Progress
+                                        {{ __('Foto Progress') }}
                                     </label>
 
 
@@ -463,7 +463,7 @@
                                                             height:180px;
                                                             object-fit:cover;
                                                         "
-                                                        alt="Foto progress"
+                                                        alt="{{ __('Foto progress') }}"
                                                     >
 
                                                 </a>
@@ -497,7 +497,7 @@
 
                             <i class="fa fa-info-circle me-1"></i>
 
-                            Belum ada progress yang tercatat.
+                            {{ __('Belum ada progress yang tercatat.') }}
 
                         </div>
 
@@ -520,11 +520,11 @@
                                 <div>
 
                                     <h6 class="fw-bold mb-1">
-                                        Hasil Maintenance
+                                        {{ __('Hasil Maintenance') }}
                                     </h6>
 
                                     <small class="text-muted">
-                                        Detail hasil pekerjaan maintenance asset.
+                                        {{ __('Detail hasil pekerjaan maintenance asset.') }}
                                     </small>
 
                                 </div>
@@ -580,7 +580,7 @@
                             <div class="col-xl-4 col-lg-4 col-md-6">
 
                                 <label class="text-muted small d-block">
-                                    Maintenance Code
+                                    {{ __('Maintenance Code') }}
                                 </label>
 
                                 <strong>
@@ -594,7 +594,7 @@
                             <div class="col-xl-4 col-lg-4 col-md-6">
 
                                 <label class="text-muted small d-block">
-                                    Maintenance Type
+                                    {{ __('Maintenance Type') }}
                                 </label>
 
                                 <strong>
@@ -608,7 +608,7 @@
                             <div class="col-xl-4 col-lg-4 col-md-6">
 
                                 <label class="text-muted small d-block">
-                                    Maintenance Date
+                                    {{ __('Maintenance Date') }}
                                 </label>
 
                                 <strong>
@@ -629,7 +629,7 @@
                             <div class="col-xl-4 col-lg-4 col-md-6">
 
                                 <label class="text-muted small d-block">
-                                    Technician
+                                    {{ __('Technician') }}
                                 </label>
 
                                 <strong>
@@ -643,7 +643,7 @@
                             <div class="col-xl-4 col-lg-4 col-md-6">
 
                                 <label class="text-muted small d-block">
-                                    Vendor
+                                    {{ __('Vendor') }}
                                 </label>
 
                                 <strong>
@@ -657,7 +657,7 @@
                             <div class="col-xl-4 col-lg-4 col-md-6">
 
                                 <label class="text-muted small d-block">
-                                    Cost
+                                    {{ __('Cost') }}
                                 </label>
 
                                 <strong>
@@ -680,7 +680,7 @@
                             <div class="col-12">
 
                                 <label class="text-muted small d-block mb-1">
-                                    Action Taken
+                                    {{ __('Action Taken') }}
                                 </label>
 
                                 <div class="border rounded p-3 bg-light">
@@ -702,7 +702,7 @@
                                 <div class="col-12">
 
                                     <label class="text-muted small d-block mb-1">
-                                        Problem Description
+                                        {{ __('Problem Description') }}
                                     </label>
 
                                     <div class="border rounded p-3 bg-light">
@@ -724,7 +724,7 @@
                             <div class="col-xl-4 col-lg-4 col-md-6">
 
                                 <label class="text-muted small d-block">
-                                    Next Maintenance
+                                    {{ __('Next Maintenance') }}
                                 </label>
 
                                 <strong>
@@ -745,7 +745,7 @@
                             <div class="col-xl-4 col-lg-4 col-md-6">
 
                                 <label class="text-muted small d-block">
-                                    Created By
+                                    {{ __('Created By') }}
                                 </label>
 
                                 <strong>
@@ -761,7 +761,7 @@
                                 <div class="col-12">
 
                                     <label class="text-muted small d-block mb-1">
-                                        Notes
+                                        {{ __('Notes') }}
                                     </label>
 
                                     <div class="border rounded p-3 bg-light">
@@ -804,11 +804,11 @@
                             <div>
 
                                 <h6 class="fw-bold mb-1">
-                                    Foto Setelah Maintenance
+                                    {{ __('Foto Setelah Maintenance') }}
                                 </h6>
 
                                 <small class="text-muted">
-                                    Dokumentasi kondisi asset setelah pekerjaan selesai.
+                                    {{ __('Dokumentasi kondisi asset setelah pekerjaan selesai.') }}
                                 </small>
 
                             </div>
@@ -818,7 +818,7 @@
 
                                 <span class="badge bg-success">
 
-                                    {{ $afterPhotos->count() }} Foto
+                                    {{ __(':p1 Foto', ['p1' => $afterPhotos->count()]) }}
 
                                 </span>
 
@@ -854,7 +854,7 @@
                                                     height:200px;
                                                     object-fit:cover;
                                                 "
-                                                alt="Foto setelah maintenance"
+                                                alt="{{ __('Foto setelah maintenance') }}"
                                             >
 
                                         </a>
@@ -880,7 +880,7 @@
 
                                 <i class="fa fa-image me-1"></i>
 
-                                Tidak ada foto setelah maintenance.
+                                {{ __('Tidak ada foto setelah maintenance.') }}
 
                             </div>
 

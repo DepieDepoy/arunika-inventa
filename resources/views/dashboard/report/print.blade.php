@@ -74,13 +74,13 @@
 </head>
 <body>
 <div class="bar-top">
-    <button class="ghost" onclick="window.close()">Tutup</button>
-    <button onclick="window.print()">Cetak / Simpan PDF</button>
+    <button class="ghost" onclick="window.close()">{{ __('Tutup') }}</button>
+    <button onclick="window.print()">{{ __('Cetak / Simpan PDF') }}</button>
 </div>
 
 <div class="page">
     <div class="head">
-        <img src="{{ $logoSrc }}" alt="Logo">
+        <img src="{{ $logoSrc }}" alt="{{ __('Logo') }}">
         <div class="t">
             <div class="kick">{{ $r['meta']['title'] }}</div>
             <h1>{{ $r['meta']['company'] }}</h1>
@@ -89,27 +89,27 @@
         </div>
     </div>
 
-    <h2>Ringkasan</h2>
+    <h2>{{ __('Ringkasan') }}</h2>
     <ul class="hl">
-        @forelse($r['highlights'] as $h)<li>{{ $h }}</li>@empty<li>Belum ada aktivitas pada periode ini.</li>@endforelse
+        @forelse($r['highlights'] as $h)<li>{{ $h }}</li>@empty<li>{{ __('Belum ada aktivitas pada periode ini.') }}</li>@endforelse
     </ul>
 
-    <h2>Angka utama <span style="text-transform:none;letter-spacing:0;color:#8592a6;font-weight:400">· dibanding {{ $r['meta']['previous'] }}</span></h2>
+    <h2>{{ __('Angka utama') }} <span style="text-transform:none;letter-spacing:0;color:#8592a6;font-weight:400">{{ __('· dibanding :p1', ['p1' => $r['meta']['previous']]) }}</span></h2>
     <div class="kpis">
-        <div class="kpi"><div class="l">Total aset</div><div class="v">{{ $num($k['total_assets']) }}</div><div class="s">{{ $num($k['active_assets']) }} aktif</div></div>
-        <div class="kpi"><div class="l">Nilai perolehan</div><div class="v">{{ $rp($k['total_value']) }}</div><div class="s">nilai buku {{ $rp($k['book_value']) }}</div></div>
-        <div class="kpi"><div class="l">Aset baru</div><div class="v">{{ $num($k['new_assets']) }}</div><div class="s">{!! $chg($k['new_assets'], $p['new_assets']) !!}{{ $rp($k['new_assets_value']) }}</div></div>
-        <div class="kpi"><div class="l">Penugasan</div><div class="v">{{ $num($k['assignments']) }}</div><div class="s">{!! $chg($k['assignments'], $p['assignments']) !!}serah terima</div></div>
-        <div class="kpi t"><div class="l">Maintenance</div><div class="v">{{ $num($k['maintenance_count']) }}</div><div class="s">{!! $chg($k['maintenance_count'], $p['maintenance_count']) !!}{{ $num($k['maintenance_done']) }} selesai</div></div>
-        <div class="kpi t"><div class="l">Biaya maintenance</div><div class="v">{{ $rp($k['maintenance_cost']) }}</div><div class="s">{!! $chg($k['maintenance_cost'], $p['maintenance_cost']) !!}realisasi</div></div>
-        <div class="kpi t"><div class="l">Request masuk</div><div class="v">{{ $num($k['requests_created']) }}</div><div class="s">{!! $chg($k['requests_created'], $p['requests_created']) !!}{{ $num($k['requests_open']) }} terbuka</div></div>
-        <div class="kpi t"><div class="l">Rata-rata selesai</div><div class="v">{{ $dur($k['avg_resolution_hours']) }}</div><div class="s">{{ $num($k['requests_completed']) }} request selesai</div></div>
+        <div class="kpi"><div class="l">{{ __('Total aset') }}</div><div class="v">{{ $num($k['total_assets']) }}</div><div class="s">{{ __(':p1 aktif', ['p1' => $num($k['active_assets'])]) }}</div></div>
+        <div class="kpi"><div class="l">{{ __('Nilai perolehan') }}</div><div class="v">{{ $rp($k['total_value']) }}</div><div class="s">{{ __('nilai buku :p1', ['p1' => $rp($k['book_value'])]) }}</div></div>
+        <div class="kpi"><div class="l">{{ __('Aset baru') }}</div><div class="v">{{ $num($k['new_assets']) }}</div><div class="s">{!! $chg($k['new_assets'], $p['new_assets']) !!}{{ $rp($k['new_assets_value']) }}</div></div>
+        <div class="kpi"><div class="l">{{ __('Penugasan') }}</div><div class="v">{{ $num($k['assignments']) }}</div><div class="s">{!! $chg($k['assignments'], $p['assignments']) !!}serah terima</div></div>
+        <div class="kpi t"><div class="l">{{ __('Maintenance') }}</div><div class="v">{{ $num($k['maintenance_count']) }}</div><div class="s">{!! $chg($k['maintenance_count'], $p['maintenance_count']) !!}{{ $num($k['maintenance_done']) }} selesai</div></div>
+        <div class="kpi t"><div class="l">{{ __('Biaya maintenance') }}</div><div class="v">{{ $rp($k['maintenance_cost']) }}</div><div class="s">{!! $chg($k['maintenance_cost'], $p['maintenance_cost']) !!}realisasi</div></div>
+        <div class="kpi t"><div class="l">{{ __('Request masuk') }}</div><div class="v">{{ $num($k['requests_created']) }}</div><div class="s">{!! $chg($k['requests_created'], $p['requests_created']) !!}{{ $num($k['requests_open']) }} terbuka</div></div>
+        <div class="kpi t"><div class="l">{{ __('Rata-rata selesai') }}</div><div class="v">{{ $dur($k['avg_resolution_hours']) }}</div><div class="s">{{ __(':p1 request selesai', ['p1' => $num($k['requests_completed'])]) }}</div></div>
     </div>
 
     <div class="cols">
         <div>
-            <h2>Request perbaikan</h2>
-            <div class="legend"><i style="background:#2a78d6;margin-left:0"></i>Masuk <i style="background:#1baf7a"></i>Selesai</div>
+            <h2>{{ __('Request perbaikan') }}</h2>
+            <div class="legend"><i style="background:#2a78d6;margin-left:0"></i>{{ __('Masuk') }} <i style="background:#1baf7a"></i>{{ __('Selesai') }}</div>
             <div class="chart">
                 @foreach($r['trend'] as $t)
                     <div class="g">
@@ -122,8 +122,8 @@
             <div class="chart-l">@foreach($r['trend'] as $i => $t)<span>{{ $i % $every === 0 ? $t['label'] : '' }}</span>@endforeach</div>
         </div>
         <div>
-            <h2>Biaya maintenance</h2>
-            <div class="legend">maks {{ $rp($costMax > 1 ? $costMax : 0) }}</div>
+            <h2>{{ __('Biaya maintenance') }}</h2>
+            <div class="legend">{{ __('maks :p1', ['p1' => $rp($costMax > 1 ? $costMax : 0)]) }}</div>
             <div class="chart">
                 @foreach($r['trend'] as $t)
                     <div class="g"><div class="b" style="width:70%;height:{{ $t['maintenance_cost'] / $costMax * 100 }}%;background:#eb6834"></div></div>
@@ -141,58 +141,58 @@
                 @forelse($r[$key] as $row)
                     <div class="hb"><div class="top"><span>{{ $row['label'] }}</span><b>{{ $fmt($row[$field]) }}</b></div><div class="tr"><div class="fl" style="width:{{ $row[$field] / $max * 100 }}%"></div></div></div>
                 @empty
-                    <div class="empty">Belum ada data.</div>
+                    <div class="empty">{{ __('Belum ada data.') }}</div>
                 @endforelse
             </div>
         @endforeach
     </div>
 
-    <div class="foot"><span>Vasetra Asset Lifecycle Platform</span><span>Dicetak {{ now()->locale('id')->translatedFormat('d F Y H:i') }} · {{ auth()->user()->name }}</span></div>
+    <div class="foot"><span>{{ __('Vasetra Asset Lifecycle Platform') }}</span><span>{{ __('Dicetak :p1 · :p2', ['p1' => now()->locale('id')->translatedFormat('d F Y H:i'), 'p2' => auth()->user()->name]) }}</span></div>
 </div>
 
 <div class="page">
     <div class="head">
-        <img src="{{ $logoSrc }}" alt="Logo">
-        <div class="t"><div class="kick">{{ $r['meta']['title'] }}</div><h1>Maintenance &amp; request</h1><div>{{ $r['meta']['period'] }}</div></div>
+        <img src="{{ $logoSrc }}" alt="{{ __('Logo') }}">
+        <div class="t"><div class="kick">{{ $r['meta']['title'] }}</div><h1>{{ __('Maintenance & request') }}</h1><div>{{ $r['meta']['period'] }}</div></div>
     </div>
 
     <div class="cols">
         <div>
-            <h2>Maintenance per jenis</h2>
-            <table><tr><th>Jenis</th><th class="r">Jumlah</th><th class="r">Biaya</th></tr>
-                @forelse($r['maintenance_by_type'] as $m)<tr><td>{{ $m['label'] }}</td><td class="r">{{ $num($m['total']) }}</td><td class="r">{{ $rp($m['cost']) }}</td></tr>@empty<tr><td colspan="3" class="empty">Tidak ada.</td></tr>@endforelse
+            <h2>{{ __('Maintenance per jenis') }}</h2>
+            <table><tr><th>{{ __('Jenis') }}</th><th class="r">{{ __('Jumlah') }}</th><th class="r">{{ __('Biaya') }}</th></tr>
+                @forelse($r['maintenance_by_type'] as $m)<tr><td>{{ $m['label'] }}</td><td class="r">{{ $num($m['total']) }}</td><td class="r">{{ $rp($m['cost']) }}</td></tr>@empty<tr><td colspan="3" class="empty">{{ __('Tidak ada.') }}</td></tr>@endforelse
             </table>
         </div>
         <div>
-            <h2>Status request</h2>
-            <table><tr><th>Status</th><th class="r">Jumlah</th></tr>
-                @forelse($r['requests_by_status'] as $m)<tr><td>{{ $m['label'] }}</td><td class="r">{{ $num($m['total']) }}</td></tr>@empty<tr><td colspan="2" class="empty">Tidak ada.</td></tr>@endforelse
+            <h2>{{ __('Status request') }}</h2>
+            <table><tr><th>{{ __('Status') }}</th><th class="r">{{ __('Jumlah') }}</th></tr>
+                @forelse($r['requests_by_status'] as $m)<tr><td>{{ $m['label'] }}</td><td class="r">{{ $num($m['total']) }}</td></tr>@empty<tr><td colspan="2" class="empty">{{ __('Tidak ada.') }}</td></tr>@endforelse
             </table>
         </div>
     </div>
 
-    <h2>Aset dengan biaya maintenance terbesar</h2>
-    <table><tr><th>Kode</th><th>Nama aset</th><th class="r">Kali</th><th class="r">Biaya</th></tr>
-        @forelse($r['top_cost_assets'] as $a)<tr><td>{{ $a['code'] }}</td><td>{{ $a['name'] }}</td><td class="r">{{ $num($a['total']) }}</td><td class="r">{{ $rp($a['cost']) }}</td></tr>@empty<tr><td colspan="4" class="empty">Tidak ada maintenance pada periode ini.</td></tr>@endforelse
+    <h2>{{ __('Aset dengan biaya maintenance terbesar') }}</h2>
+    <table><tr><th>{{ __('Kode') }}</th><th>{{ __('Nama aset') }}</th><th class="r">{{ __('Kali') }}</th><th class="r">{{ __('Biaya') }}</th></tr>
+        @forelse($r['top_cost_assets'] as $a)<tr><td>{{ $a['code'] }}</td><td>{{ $a['name'] }}</td><td class="r">{{ $num($a['total']) }}</td><td class="r">{{ $rp($a['cost']) }}</td></tr>@empty<tr><td colspan="4" class="empty">{{ __('Tidak ada maintenance pada periode ini.') }}</td></tr>@endforelse
     </table>
 
-    <h2>Teknisi paling aktif</h2>
-    <table><tr><th>Teknisi</th><th class="r">Selesai</th><th class="r">Rata-rata waktu</th></tr>
-        @forelse($r['top_technicians'] as $t)<tr><td>{{ $t['name'] }}</td><td class="r">{{ $num($t['total']) }}</td><td class="r">{{ $dur($t['avg_hours']) }}</td></tr>@empty<tr><td colspan="3" class="empty">Belum ada request yang diselesaikan.</td></tr>@endforelse
+    <h2>{{ __('Teknisi paling aktif') }}</h2>
+    <table><tr><th>{{ __('Teknisi') }}</th><th class="r">{{ __('Selesai') }}</th><th class="r">{{ __('Rata-rata waktu') }}</th></tr>
+        @forelse($r['top_technicians'] as $t)<tr><td>{{ $t['name'] }}</td><td class="r">{{ $num($t['total']) }}</td><td class="r">{{ $dur($t['avg_hours']) }}</td></tr>@empty<tr><td colspan="3" class="empty">{{ __('Belum ada request yang diselesaikan.') }}</td></tr>@endforelse
     </table>
 
     <div class="cols">
         @foreach([['upcoming_maintenance', 'Maintenance 30 hari ke depan'], ['warranty_expiring', 'Garansi habis 60 hari ke depan']] as [$key, $title])
             <div>
                 <h2>{{ $title }} ({{ $num($r[$key]['total']) }})</h2>
-                <table><tr><th>Tanggal</th><th>Kode</th><th>Aset</th></tr>
-                    @forelse($r[$key]['items'] as $i)<tr><td>{{ \Illuminate\Support\Carbon::parse($i['date'])->format('d/m/Y') }}</td><td>{{ $i['code'] }}</td><td>{{ $i['name'] }}</td></tr>@empty<tr><td colspan="3" class="empty">Tidak ada.</td></tr>@endforelse
+                <table><tr><th>{{ __('Tanggal') }}</th><th>{{ __('Kode') }}</th><th>{{ __('Aset') }}</th></tr>
+                    @forelse($r[$key]['items'] as $i)<tr><td>{{ \Illuminate\Support\Carbon::parse($i['date'])->format('d/m/Y') }}</td><td>{{ $i['code'] }}</td><td>{{ $i['name'] }}</td></tr>@empty<tr><td colspan="3" class="empty">{{ __('Tidak ada.') }}</td></tr>@endforelse
                 </table>
             </div>
         @endforeach
     </div>
 
-    <div class="foot"><span>Vasetra Asset Lifecycle Platform</span><span>Halaman 2</span></div>
+    <div class="foot"><span>{{ __('Vasetra Asset Lifecycle Platform') }}</span><span>{{ __('Halaman 2') }}</span></div>
 </div>
 </body>
 </html>

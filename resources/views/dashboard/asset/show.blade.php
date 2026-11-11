@@ -1,6 +1,6 @@
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Detail Aset')
+@section('title', __('Detail Aset'))
 
 @section('content')
 
@@ -103,7 +103,7 @@
     <div class="ad-head ad-card p-3 p-md-4">
         <div>
             <a href="{{ route('assets.index') }}" class="text-muted small d-inline-flex align-items-center gap-1 mb-1">
-                <i class="bi bi-arrow-left"></i> Data Aset
+                <i class="bi bi-arrow-left"></i> {{ __('Data Aset') }}
             </a>
             <h4>{{ $asset->asset_name }}</h4>
             <div class="ad-sub">
@@ -111,11 +111,11 @@
                 <span>·</span>
                 <span>{{ $asset->category->category_name ?? 'Tanpa kategori' }}@if($asset->subCategory) › {{ $asset->subCategory->sub_category_name }}@endif</span>
                 @if($disposed)
-                    <span class="ad-chip ad-chip-red"><i class="bi bi-archive"></i>Dihapuskan</span>
+                    <span class="ad-chip ad-chip-red"><i class="bi bi-archive"></i>{{ __('Dihapuskan') }}</span>
                 @elseif($asset->status == 1)
-                    <span class="ad-chip ad-chip-teal"><i class="bi bi-circle-fill" style="font-size:.45rem"></i>Aktif</span>
+                    <span class="ad-chip ad-chip-teal"><i class="bi bi-circle-fill" style="font-size:.45rem"></i>{{ __('Aktif') }}</span>
                 @else
-                    <span class="ad-chip ad-chip-gray"><i class="bi bi-circle-fill" style="font-size:.45rem"></i>Tidak aktif</span>
+                    <span class="ad-chip ad-chip-gray"><i class="bi bi-circle-fill" style="font-size:.45rem"></i>{{ __('Tidak aktif') }}</span>
                 @endif
                 @if($asset->asset_condition)
                     <span class="ad-chip ad-chip-blue">{{ $asset->asset_condition === 'new' ? 'Baru' : 'Bekas' }}</span>
@@ -126,7 +126,7 @@
             @if($disposed)
                 @if($canDispose && $activeDisposal)
                     <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelDisposalModal">
-                        <i class="bi bi-arrow-counterclockwise me-1"></i> Batalkan penghapusan
+                        <i class="bi bi-arrow-counterclockwise me-1"></i> {{ __('Batalkan penghapusan') }}
                     </button>
                 @endif
             @else
@@ -137,20 +137,20 @@
                 @endif
                 @if($canMove)
                     <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#moveLocationModal">
-                        <i class="bi bi-geo-alt me-1"></i> Pindah lokasi
+                        <i class="bi bi-geo-alt me-1"></i> {{ __('Pindah lokasi') }}
                     </button>
                 @endif
                 @if($canEdit)
                     <a href="{{ route('assets.edit', $encId) }}" class="btn btn-outline-primary">
-                        <i class="bi bi-pencil me-1"></i> Ubah
+                        <i class="bi bi-pencil me-1"></i> {{ __('Ubah') }}
                     </a>
                 @endif
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#printQrModal" onclick="generateAssetQr()">
-                    <i class="bi bi-qr-code me-1"></i> Cetak QR
+                    <i class="bi bi-qr-code me-1"></i> {{ __('Cetak QR') }}
                 </button>
                 @if($canDispose)
-                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#disposeModal" title="Rusak, hilang, dijual, dihibahkan, dikembalikan ke vendor">
-                        <i class="bi bi-archive me-1"></i> Hapuskan
+                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#disposeModal" title="{{ __('Rusak, hilang, dijual, dihibahkan, dikembalikan ke vendor') }}">
+                        <i class="bi bi-archive me-1"></i> {{ __('Hapuskan') }}
                     </button>
                 @endif
             @endif
@@ -163,7 +163,7 @@
             <div class="ad-disposed-head">
                 <span class="ic"><i class="bi bi-archive"></i></span>
                 <div>
-                    <b>Aset ini telah dihapuskan &middot; {{ $activeDisposal->typeLabel() }}</b>
+                    <b>{{ __('Aset ini telah dihapuskan · :p1', ['p1' => $activeDisposal->typeLabel()]) }}</b>
                     <small>
                         {{ $activeDisposal->disposal_date->translatedFormat('d M Y') }}
                         @if($activeDisposal->creator) &middot; dicatat oleh {{ $activeDisposal->creator->name }}@endif
@@ -173,18 +173,18 @@
                 </div>
             </div>
             <div class="ad-disposed-grid">
-                <div><small>Harga perolehan</small><b>{{ $activeDisposal->purchase_price !== null ? $rp($activeDisposal->purchase_price) : '—' }}</b></div>
-                <div><small>Nilai buku saat dihapuskan</small><b>{{ $activeDisposal->book_value !== null ? $rp($activeDisposal->book_value) : '—' }}</b></div>
-                <div><small>Hasil penjualan / ganti</small><b>{{ $rp($activeDisposal->proceeds) }}</b></div>
+                <div><small>{{ __('Harga perolehan') }}</small><b>{{ $activeDisposal->purchase_price !== null ? $rp($activeDisposal->purchase_price) : '—' }}</b></div>
+                <div><small>{{ __('Nilai buku saat dihapuskan') }}</small><b>{{ $activeDisposal->book_value !== null ? $rp($activeDisposal->book_value) : '—' }}</b></div>
+                <div><small>{{ __('Hasil penjualan / ganti') }}</small><b>{{ $rp($activeDisposal->proceeds) }}</b></div>
                 <div><small>{{ $gl !== null && $gl > 0 ? 'Laba penghapusan' : 'Kerugian penghapusan' }}</small>
                     <b class="{{ $gl !== null && $gl < 0 ? 'text-danger' : ($gl > 0 ? 'text-success' : '') }}">{{ $gl === null ? '—' : ($gl < 0 ? '(' . $rp(abs($gl)) . ')' : $rp($gl)) }}</b>
                 </div>
             </div>
             @if($activeDisposal->notes || $activeDisposal->document_path)
                 <div class="ad-disposed-foot">
-                    @if($activeDisposal->notes)<div class="flex-grow-1"><small>Catatan</small>{{ $activeDisposal->notes }}</div>@endif
+                    @if($activeDisposal->notes)<div class="flex-grow-1"><small>{{ __('Catatan') }}</small>{{ $activeDisposal->notes }}</div>@endif
                     @if($activeDisposal->document_path)
-                        <a href="{{ asset('storage/' . $activeDisposal->document_path) }}" target="_blank" class="btn btn-sm btn-outline-danger"><i class="bi bi-file-earmark-text me-1"></i>Berita acara</a>
+                        <a href="{{ asset('storage/' . $activeDisposal->document_path) }}" target="_blank" class="btn btn-sm btn-outline-danger"><i class="bi bi-file-earmark-text me-1"></i>{{ __('Berita acara') }}</a>
                     @endif
                 </div>
             @endif
@@ -195,9 +195,7 @@
         <div class="ad-alert">
             <i class="bi bi-tools fs-5"></i>
             <div>
-                Ada request <strong>{{ strtolower(\App\Services\Maintenance\MaintenanceRequestNotifier::TYPE_LABELS[$activeRequest->request_type] ?? $activeRequest->request_type) }}</strong> yang
-                {{ $activeRequest->status === 'pending' ? 'menunggu diambil teknisi' : 'sedang dikerjakan oleh ' . ($activeRequest->handler->name ?? 'teknisi') }}:
-                “{{ \Illuminate\Support\Str::limit($activeRequest->description, 90) }}”
+                {{ __('Ada request') }} <strong>{{ strtolower(\App\Services\Maintenance\MaintenanceRequestNotifier::TYPE_LABELS[$activeRequest->request_type] ?? $activeRequest->request_type) }}</strong> {{ __('yang :p1: “:p2”', ['p1' => $activeRequest->status === 'pending' ? 'menunggu diambil teknisi' : 'sedang dikerjakan oleh ' . ($activeRequest->handler->name ?? 'teknisi'), 'p2' => \Illuminate\Support\Str::limit($activeRequest->description, 90)]) }}
             </div>
         </div>
     @endif
@@ -212,7 +210,7 @@
                         <div class="ad-photo" id="adMainPhoto">
                             @if($mainPhoto)
                                 <img src="{{ asset('storage/' . $mainPhoto->file_path) }}" alt="{{ $asset->asset_name }}">
-                                @if($asset->photos->count() > 1)<span class="ad-count"><i class="bi bi-images me-1"></i>{{ $asset->photos->count() }} foto</span>@endif
+                                @if($asset->photos->count() > 1)<span class="ad-count"><i class="bi bi-images me-1"></i>{{ __(':p1 foto', ['p1' => $asset->photos->count()]) }}</span>@endif
                             @else
                                 <i class="bi bi-box-seam"></i>
                             @endif
@@ -229,30 +227,30 @@
                     </div>
                     <div class="col-md-7">
                         <div class="ad-tiles">
-                            <div class="ad-tile"><small>Vendor</small><b title="{{ $asset->vendor->vendor_name ?? '' }}">{{ $asset->vendor->vendor_name ?? '—' }}</b></div>
-                            <div class="ad-tile"><small>Tanggal beli</small><b>{{ $date($asset->purchase_date) ?? '—' }}</b></div>
-                            <div class="ad-tile"><small>Harga beli</small><b>{{ $asset->purchase_price ? $rp($asset->purchase_price) : '—' }}</b></div>
+                            <div class="ad-tile"><small>{{ __('Vendor') }}</small><b title="{{ $asset->vendor->vendor_name ?? '' }}">{{ $asset->vendor->vendor_name ?? '—' }}</b></div>
+                            <div class="ad-tile"><small>{{ __('Tanggal beli') }}</small><b>{{ $date($asset->purchase_date) ?? '—' }}</b></div>
+                            <div class="ad-tile"><small>{{ __('Harga beli') }}</small><b>{{ $asset->purchase_price ? $rp($asset->purchase_price) : '—' }}</b></div>
                             @if($disposed && $activeDisposal)
-                                <div class="ad-tile" title="Nilai buku dibekukan pada tanggal penghapusan"><small>Nilai buku (saat dihapuskan)</small><b>{{ $activeDisposal->book_value !== null ? $rp($activeDisposal->book_value) : '—' }}</b></div>
+                                <div class="ad-tile" title="{{ __('Nilai buku dibekukan pada tanggal penghapusan') }}"><small>{{ __('Nilai buku (saat dihapuskan)') }}</small><b>{{ $activeDisposal->book_value !== null ? $rp($activeDisposal->book_value) : '—' }}</b></div>
                             @else
-                                <div class="ad-tile"><small>Nilai buku</small><b>{{ $bookValue ? $rp($bookValue['value']) : '—' }}</b></div>
+                                <div class="ad-tile"><small>{{ __('Nilai buku') }}</small><b>{{ $bookValue ? $rp($bookValue['value']) : '—' }}</b></div>
                             @endif
-                            <div class="ad-tile"><small>Garansi s/d</small>
+                            <div class="ad-tile"><small>{{ __('Garansi s/d') }}</small>
                                 <b title="{{ $warranty['label'] }}">{{ $date($asset->warranty_end) ?? '—' }}
                                     @if($asset->warranty_end)<span class="ad-chip {{ $warrantyChip }} ms-1" style="font-size:.6rem">{{ $warrantyShort }}</span>@endif
                                 </b>
                             </div>
-                            <div class="ad-tile"><small>Lokasi</small><b title="{{ $asset->location }}">{{ $asset->location ?: '—' }}</b></div>
+                            <div class="ad-tile"><small>{{ __('Lokasi') }}</small><b title="{{ $asset->location }}">{{ $asset->location ?: '—' }}</b></div>
                             @if($asset->branch && \App\Support\BranchAccess::hasMultiple((int) $asset->company_id))
-                                <div class="ad-tile"><small>Cabang</small><b title="{{ $asset->branch->branch_name }}">{{ $asset->branch->branch_name }}</b></div>
+                                <div class="ad-tile"><small>{{ __('Cabang') }}</small><b title="{{ $asset->branch->branch_name }}">{{ $asset->branch->branch_name }}</b></div>
                             @endif
-                            <div class="ad-tile"><small>Merek</small><b>{{ $asset->brand ?: '—' }}</b></div>
-                            <div class="ad-tile"><small>Model</small><b title="{{ $asset->model }}">{{ $asset->model ?: '—' }}</b></div>
-                            <div class="ad-tile"><small>Nomor seri</small><b title="{{ $asset->serial_number }}">{{ $asset->serial_number ?: '—' }}</b></div>
+                            <div class="ad-tile"><small>{{ __('Merek') }}</small><b>{{ $asset->brand ?: '—' }}</b></div>
+                            <div class="ad-tile"><small>{{ __('Model') }}</small><b title="{{ $asset->model }}">{{ $asset->model ?: '—' }}</b></div>
+                            <div class="ad-tile"><small>{{ __('Nomor seri') }}</small><b title="{{ $asset->serial_number }}">{{ $asset->serial_number ?: '—' }}</b></div>
                         </div>
                         @if($asset->description)
                             <div class="ad-tile mt-2" style="white-space:normal">
-                                <small>Deskripsi</small><div class="small" style="color:inherit">{{ $asset->description }}</div>
+                                <small>{{ __('Deskripsi') }}</small><div class="small" style="color:inherit">{{ $asset->description }}</div>
                             </div>
                         @endif
                     </div>
@@ -266,36 +264,36 @@
                 <div class="ad-qr">
                     <div class="ad-qr-box" id="assetQrPreview"></div>
                     <div class="ad-qr-code">{{ $asset->asset_code }}</div>
-                    <small class="text-muted">Scan untuk lihat detail &amp; lapor kerusakan</small>
+                    <small class="text-muted">{{ __('Scan untuk lihat detail & lapor kerusakan') }}</small>
                 </div>
                 <div class="ad-row">
                     @if($holder)
                         <span class="ad-ava">{{ $initials($holder->name) }}</span>
                         <div>
                             <b>{{ $holder->name }}</b>
-                            <small>Pemegang{{ $since ? ' sejak ' . $since->translatedFormat('d M Y') : '' }}</small>
+                            <small>{{ __('Pemegang:p1', ['p1' => $since ? ' sejak ' . $since->translatedFormat('d M Y') : '']) }}</small>
                         </div>
                     @else
                         <span class="ic"><i class="bi bi-person-dash"></i></span>
-                        <div><b>Belum diserahkan</b><small>Aset belum dipegang siapa pun</small></div>
+                        <div><b>{{ __('Belum diserahkan') }}</b><small>{{ __('Aset belum dipegang siapa pun') }}</small></div>
                     @endif
                 </div>
                 <div class="ad-row">
                     <span class="ic"><i class="bi bi-clock-history"></i></span>
                     <div>
-                        <small>Riwayat</small>
-                        <b>{{ $asset->assignments_count }} penugasan · {{ $maintenanceStats['count'] }} maintenance · {{ $rp($maintenanceStats['cost']) }}</b>
+                        <small>{{ __('Riwayat') }}</small>
+                        <b>{{ __(':p1 penugasan · :p2 maintenance · :p3', ['p1' => $asset->assignments_count, 'p2' => $maintenanceStats['count'], 'p3' => $rp($maintenanceStats['cost'])]) }}</b>
                     </div>
                 </div>
                 <div class="ad-row">
                     <span class="ic"><i class="bi bi-calendar2-check"></i></span>
                     <div>
-                        <small>Maintenance berikutnya</small>
+                        <small>{{ __('Maintenance berikutnya') }}</small>
                         @if($next)
                             <b>{{ $next->translatedFormat('d M Y') }}</b>
                             <span class="ad-chip {{ $nextState[1] }} ms-1">{{ $nextState[0] }}</span>
                         @else
-                            <b class="muted">Tidak dijadwalkan</b>
+                            <b class="muted">{{ __('Tidak dijadwalkan') }}</b>
                         @endif
                     </div>
                 </div>
@@ -306,37 +304,37 @@
         <div class="col-12">
             <div class="ad-card">
                 <div class="ad-tabs" role="tablist">
-                    <button type="button" data-ad-tab="finance"><i class="bi bi-cash-stack me-1"></i>Pembelian &amp; Penyusutan</button>
-                    <button type="button" data-ad-tab="maintenance"><i class="bi bi-tools me-1"></i>Maintenance</button>
-                    <button type="button" data-ad-tab="assignment"><i class="bi bi-arrow-left-right me-1"></i>Penugasan</button>
-                    <button type="button" data-ad-tab="location"><i class="bi bi-geo-alt me-1"></i>Lokasi ({{ $locationHistories->count() }})</button>
+                    <button type="button" data-ad-tab="finance"><i class="bi bi-cash-stack me-1"></i>{{ __('Pembelian & Penyusutan') }}</button>
+                    <button type="button" data-ad-tab="maintenance"><i class="bi bi-tools me-1"></i>{{ __('Maintenance') }}</button>
+                    <button type="button" data-ad-tab="assignment"><i class="bi bi-arrow-left-right me-1"></i>{{ __('Penugasan') }}</button>
+                    <button type="button" data-ad-tab="location"><i class="bi bi-geo-alt me-1"></i>{{ __('Lokasi (:p1)', ['p1' => $locationHistories->count()]) }}</button>
                     @if($disposals->isNotEmpty())
-                        <button type="button" data-ad-tab="disposal"><i class="bi bi-archive me-1"></i>Penghapusan</button>
+                        <button type="button" data-ad-tab="disposal"><i class="bi bi-archive me-1"></i>{{ __('Penghapusan') }}</button>
                     @endif
-                    <button type="button" data-ad-tab="docs"><i class="bi bi-paperclip me-1"></i>Dokumen ({{ $asset->documents->count() }})</button>
+                    <button type="button" data-ad-tab="docs"><i class="bi bi-paperclip me-1"></i>{{ __('Dokumen (:p1)', ['p1' => $asset->documents->count()]) }}</button>
                 </div>
 
                 {{-- Pembelian & penyusutan --}}
                 <div class="ad-pane" data-ad-pane="finance">
                     <div class="ad-tiles mb-3">
-                        <div class="ad-tile"><small>No. invoice / pembelian</small><b>{{ $asset->purchase_invoice ?: '—' }}</b></div>
-                        <div class="ad-tile"><small>Metode penyusutan</small><b>{{ $asset->depreciation_method === 'straight_line' ? 'Garis lurus' : '—' }}</b></div>
-                        <div class="ad-tile"><small>Umur manfaat</small><b>{{ $asset->useful_life ? $asset->useful_life . ' tahun' : '—' }}</b></div>
-                        <div class="ad-tile"><small>Nilai residu</small><b>{{ $asset->residual_value ? $rp($asset->residual_value) : '—' }}</b></div>
-                        <div class="ad-tile"><small>Mulai penyusutan</small><b>{{ $date($asset->depreciation_start_date) ?? '—' }}</b></div>
-                        <div class="ad-tile"><small>Periode garansi</small><b>@if($asset->warranty_start || $asset->warranty_end){{ $date($asset->warranty_start) ?? '?' }} – {{ $date($asset->warranty_end) ?? '?' }}@else—@endif</b></div>
+                        <div class="ad-tile"><small>{{ __('No. invoice / pembelian') }}</small><b>{{ $asset->purchase_invoice ?: '—' }}</b></div>
+                        <div class="ad-tile"><small>{{ __('Metode penyusutan') }}</small><b>{{ $asset->depreciation_method === 'straight_line' ? 'Garis lurus' : '—' }}</b></div>
+                        <div class="ad-tile"><small>{{ __('Umur manfaat') }}</small><b>{{ $asset->useful_life ? $asset->useful_life . ' tahun' : '—' }}</b></div>
+                        <div class="ad-tile"><small>{{ __('Nilai residu') }}</small><b>{{ $asset->residual_value ? $rp($asset->residual_value) : '—' }}</b></div>
+                        <div class="ad-tile"><small>{{ __('Mulai penyusutan') }}</small><b>{{ $date($asset->depreciation_start_date) ?? '—' }}</b></div>
+                        <div class="ad-tile"><small>{{ __('Periode garansi') }}</small><b>@if($asset->warranty_start || $asset->warranty_end){{ $date($asset->warranty_start) ?? '?' }} – {{ $date($asset->warranty_end) ?? '?' }}@else—@endif</b></div>
                     </div>
                     @if($bookValue)
                         <div class="d-flex justify-content-between small mb-1">
-                            <span>Sudah disusutkan <strong>{{ $rp($bookValue['depreciated']) }}</strong></span>
-                            <span class="text-muted">{{ number_format($bookValue['percent'], 1, ',', '.') }}% dari umur manfaat</span>
+                            <span>{{ __('Sudah disusutkan') }} <strong>{{ $rp($bookValue['depreciated']) }}</strong></span>
+                            <span class="text-muted">{{ __(':p1% dari umur manfaat', ['p1' => number_format($bookValue['percent'], 1, ',', '.')]) }}</span>
                         </div>
                         <div class="ad-progress"><span style="width:{{ min(100, $bookValue['percent']) }}%"></span></div>
                     @else
-                        <div class="text-muted small"><i class="bi bi-info-circle me-1"></i>Isi harga beli, umur manfaat, dan metode penyusutan untuk melihat nilai buku.</div>
+                        <div class="text-muted small"><i class="bi bi-info-circle me-1"></i>{{ __('Isi harga beli, umur manfaat, dan metode penyusutan untuk melihat nilai buku.') }}</div>
                     @endif
                     @if($asset->warranty_note)
-                        <div class="ad-tile mt-3" style="white-space:normal"><small>Catatan garansi</small><div class="small">{{ $asset->warranty_note }}</div></div>
+                        <div class="ad-tile mt-3" style="white-space:normal"><small>{{ __('Catatan garansi') }}</small><div class="small">{{ $asset->warranty_note }}</div></div>
                     @endif
                 </div>
 
@@ -344,13 +342,13 @@
                 <div class="ad-pane" data-ad-pane="maintenance">
                     @if($asset->maintenance_required)
                         <div class="ad-tiles mb-3">
-                            <div class="ad-tile"><small>Jenis</small><b>{{ $typeLabels[$asset->maintenance_type] ?? ($asset->maintenance_type ?: '—') }}</b></div>
-                            <div class="ad-tile"><small>Interval</small><b>{{ $asset->maintenance_interval ? 'Tiap ' . $asset->maintenance_interval . ' ' . ($asset->maintenance_interval_unit ?? '') : '—' }}</b></div>
-                            <div class="ad-tile"><small>Terakhir</small><b>{{ $date($asset->last_maintenance_date) ?? '—' }}</b></div>
+                            <div class="ad-tile"><small>{{ __('Jenis') }}</small><b>{{ $typeLabels[$asset->maintenance_type] ?? ($asset->maintenance_type ?: '—') }}</b></div>
+                            <div class="ad-tile"><small>{{ __('Interval') }}</small><b>{{ $asset->maintenance_interval ? 'Tiap ' . $asset->maintenance_interval . ' ' . ($asset->maintenance_interval_unit ?? '') : '—' }}</b></div>
+                            <div class="ad-tile"><small>{{ __('Terakhir') }}</small><b>{{ $date($asset->last_maintenance_date) ?? '—' }}</b></div>
                         </div>
                     @endif
                     @if($maintenances->isEmpty())
-                        <div class="ad-empty"><i class="bi bi-tools"></i>Belum ada riwayat maintenance.</div>
+                        <div class="ad-empty"><i class="bi bi-tools"></i>{{ __('Belum ada riwayat maintenance.') }}</div>
                     @else
                         <ul class="ad-tl">
                             @foreach($maintenances as $m)
@@ -374,7 +372,7 @@
                 {{-- Penugasan --}}
                 <div class="ad-pane" data-ad-pane="assignment">
                     @if($assignments->isEmpty())
-                        <div class="ad-empty"><i class="bi bi-person-badge"></i>Belum ada riwayat penugasan.</div>
+                        <div class="ad-empty"><i class="bi bi-person-badge"></i>{{ __('Belum ada riwayat penugasan.') }}</div>
                     @else
                         <ul class="ad-tl">
                             @foreach($assignments as $a)
@@ -391,7 +389,7 @@
                             @endforeach
                         </ul>
                         @if(auth()->user()->hasPermission('asset.edit') && $asset->assignments_count > $assignments->count())
-                            <a href="{{ route('assets.assignment.index', $encId) }}" class="small fw-semibold">Lihat semua riwayat penugasan →</a>
+                            <a href="{{ route('assets.assignment.index', $encId) }}" class="small fw-semibold">{{ __('Lihat semua riwayat penugasan →') }}</a>
                         @endif
                     @endif
                 </div>
@@ -400,17 +398,17 @@
                 <div class="ad-pane" data-ad-pane="location">
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                         <div>
-                            <small class="text-muted d-block">Lokasi saat ini</small>
+                            <small class="text-muted d-block">{{ __('Lokasi saat ini') }}</small>
                             <b class="fs-6"><i class="bi bi-geo-alt-fill text-primary me-1"></i>{{ $asset->location ?: 'Belum diisi' }}</b>
                             @if($asset->branch && \App\Support\BranchAccess::hasMultiple((int) $asset->company_id))
                                 <small class="d-block text-muted mt-1"><i class="bi bi-diagram-3 me-1"></i>{{ $asset->branch->branch_name }}
-                                    @if(auth()->user()->hasPermission('branch.transfer') && !$disposed) · <a href="{{ route('branch-transfers.create') }}">Pindah cabang &rarr;</a>@endif
+                                    @if(auth()->user()->hasPermission('branch.transfer') && !$disposed) · <a href="{{ route('branch-transfers.create') }}">{{ __('Pindah cabang →') }}</a>@endif
                                 </small>
                             @endif
                         </div>
                         @if($canMove && !$disposed)
                             <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#moveLocationModal">
-                                <i class="bi bi-arrow-right-circle me-1"></i>Pindah lokasi
+                                <i class="bi bi-arrow-right-circle me-1"></i>{{ __('Pindah lokasi') }}
                             </button>
                         @endif
                     </div>
@@ -451,7 +449,7 @@
                                             @if($d->creator) &middot; oleh {{ $d->creator->name }}@endif
                                         </small>
                                         @if($d->isCancelled())
-                                            <small>Dibatalkan {{ $d->cancelled_at->translatedFormat('d M Y H:i') }}{{ $d->canceller ? ' oleh ' . $d->canceller->name : '' }}: {{ $d->cancel_reason }}</small>
+                                            <small>{{ __('Dibatalkan :p1:p2: :p3', ['p1' => $d->cancelled_at->translatedFormat('d M Y H:i'), 'p2' => $d->canceller ? ' oleh ' . $d->canceller->name : '', 'p3' => $d->cancel_reason]) }}</small>
                                         @endif
                                     </div>
                                 </li>
@@ -470,10 +468,10 @@
                                 {{ $document->original_name ?? basename($document->file_path) }}
                                 <small class="text-muted d-block">{{ strtoupper($ext) }}</small>
                             </div>
-                            <a href="{{ asset('storage/' . $document->file_path) }}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye me-1"></i>Lihat</a>
+                            <a href="{{ asset('storage/' . $document->file_path) }}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye me-1"></i>{{ __('Lihat') }}</a>
                         </div>
                     @empty
-                        <div class="ad-empty"><i class="bi bi-paperclip"></i>Belum ada invoice atau dokumen.</div>
+                        <div class="ad-empty"><i class="bi bi-paperclip"></i>{{ __('Belum ada invoice atau dokumen.') }}</div>
                     @endforelse
                 </div>
             </div>
@@ -572,12 +570,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     <i class="fa-solid fa-qrcode text-primary me-2"></i>
 
-                    Print QR Asset
+                    {{ __('Print QR Asset') }}
 
                 </h5>
 
                 <small class="text-muted">
-                    Generate dan cetak QR Code asset
+                    {{ __('Generate dan cetak QR Code asset') }}
                 </small>
 
             </div>
@@ -587,7 +585,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 type="button"
                 class="btn-close"
                 data-bs-dismiss="modal"
-                aria-label="Close"
+                aria-label="{{ __('Close') }}"
             ></button>
 
         </div>
@@ -630,7 +628,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                                 <br>
 
-                                QR siap dibuat
+                                {{ __('QR siap dibuat') }}
 
                             </div>
 
@@ -666,7 +664,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <div class="mb-4">
 
                         <label class="form-label fw-semibold">
-                            QR Size
+                            {{ __('QR Size') }}
                         </label>
 
 
@@ -688,10 +686,10 @@ document.addEventListener('DOMContentLoaded', function () {
                                     for="qrSizeSmall"
                                 >
 
-                                    Small
+                                    {{ __('Small') }}
 
                                     <small class="d-block">
-                                        1 × 1 cm
+                                        {{ __('1 × 1 cm') }}
                                     </small>
 
                                 </label>
@@ -714,10 +712,10 @@ document.addEventListener('DOMContentLoaded', function () {
                                     for="qrSizeMedium"
                                 >
 
-                                    Medium
+                                    {{ __('Medium') }}
 
                                     <small class="d-block">
-                                        1.3 × 1.3 cm
+                                        {{ __('1.3 × 1.3 cm') }}
                                     </small>
 
                                 </label>
@@ -740,10 +738,10 @@ document.addEventListener('DOMContentLoaded', function () {
                                     for="qrSizeLarge"
                                 >
 
-                                    Large
+                                    {{ __('Large') }}
 
                                     <small class="d-block">
-                                        1.6 × 1.6 cm
+                                        {{ __('1.6 × 1.6 cm') }}
                                     </small>
 
                                 </label>
@@ -769,7 +767,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     XL
 
                                     <small class="d-block">
-                                        2.1 × 2.1 cm
+                                        {{ __('2.1 × 2.1 cm') }}
                                     </small>
 
                                 </label>
@@ -799,10 +797,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                                 <small>
 
-                                    QR Code akan berisi link unik
-                                    berdasarkan QR Token asset dan dapat
-                                    digunakan untuk proses scanning
-                                    inventory.
+                                    {{ __('QR Code akan berisi link unik berdasarkan QR Token asset dan dapat digunakan untuk proses scanning inventory.') }}
 
                                 </small>
 
@@ -825,7 +820,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                             <i class="fa-solid fa-print me-2"></i>
 
-                            Print QR
+                            {{ __('Print QR') }}
 
                         </button>
 
@@ -838,7 +833,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                             <i class="fa-solid fa-download me-2"></i>
 
-                            Download QR
+                            {{ __('Download QR') }}
 
                         </button>
 
@@ -850,7 +845,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <div class="mt-4">
 
                         <label class="form-label fw-semibold">
-                            Share
+                            {{ __('Share') }}
                         </label>
 
 
@@ -864,7 +859,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                                 <i class="fa-brands fa-whatsapp me-1"></i>
 
-                                WhatsApp
+                                {{ __('WhatsApp') }}
 
                             </button>
 
@@ -877,7 +872,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                                 <i class="fa-solid fa-envelope me-1"></i>
 
-                                Email
+                                {{ __('Email') }}
 
                             </button>
 
@@ -898,7 +893,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             <small class="text-muted me-auto">
 
-                Asset:
+                {{ __('Asset:') }}
                 <strong id="qrFooterAssetCode"></strong>
 
             </small>
@@ -910,7 +905,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 data-bs-dismiss="modal"
             >
 
-                Close
+                {{ __('Close') }}
 
             </button>
 

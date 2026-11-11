@@ -1,6 +1,6 @@
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Vasetra Intelligence')
+@section('title', __('Vasetra Intelligence'))
 
 @section('content')
 
@@ -947,11 +947,11 @@
 
                 <div>
                     <h1 class="vi-title">
-                        Vasetra Intelligence
+                        {{ __('Vasetra Intelligence') }}
                     </h1>
 
                     <p class="vi-subtitle">
-                        Workspace untuk memahami dan mengelola data aset perusahaan.
+                        {{ __('Workspace untuk memahami dan mengelola data aset perusahaan.') }}
                     </p>
                 </div>
 
@@ -962,7 +962,7 @@
 
                 <span class="vi-status">
                     <span class="vi-status-dot"></span>
-                    AI Ready
+                    {{ __('AI Ready') }}
                 </span>
 
                 <a
@@ -970,7 +970,7 @@
                     class="vi-btn"
                 >
                     <i class="bi bi-grid"></i>
-                    Dashboard
+                    {{ __('Dashboard') }}
                 </a>
 
             </div>
@@ -990,7 +990,7 @@
                 <div class="vi-kpi-info">
 
                     <div class="vi-kpi-label">
-                        Total Asset
+                        {{ __('Total Asset') }}
                     </div>
 
                     <div class="vi-kpi-value">
@@ -1011,7 +1011,7 @@
                 <div class="vi-kpi-info">
 
                     <div class="vi-kpi-label">
-                        Asset Aktif
+                        {{ __('Asset Aktif') }}
                     </div>
 
                     <div class="vi-kpi-value">
@@ -1032,7 +1032,7 @@
                 <div class="vi-kpi-info">
 
                     <div class="vi-kpi-label">
-                        Asset Saya
+                        {{ __('Asset Saya') }}
                     </div>
 
                     <div class="vi-kpi-value">
@@ -1053,7 +1053,7 @@
                 <div class="vi-kpi-info">
 
                     <div class="vi-kpi-label">
-                        Maintenance Due
+                        {{ __('Maintenance Due') }}
                     </div>
 
                     <div class="vi-kpi-value">
@@ -1089,11 +1089,11 @@
                     <div>
 
                         <h3>
-                            Ask Vasetra AI
+                            {{ __('Ask Vasetra AI') }}
                         </h3>
 
                         <p>
-                            Tanyakan data atau minta bantuan melakukan tindakan.
+                            {{ __('Tanyakan data atau minta bantuan melakukan tindakan.') }}
                         </p>
 
                     </div>
@@ -1102,7 +1102,7 @@
 
                 <span class="vi-status">
                     <span class="vi-status-dot"></span>
-                    Online
+                    {{ __('Online') }}
                 </span>
 
             </div>
@@ -1123,7 +1123,7 @@
                             id="vasetraQuestion"
                             class="vi-ai-input"
                             autocomplete="off"
-                            placeholder="Contoh: Berapa total asset perusahaan saya?"
+                            placeholder="{{ __('Contoh: Berapa total asset perusahaan saya?') }}"
                         >
 
                         <button
@@ -1132,7 +1132,7 @@
                             id="vasetraAiButton"
                         >
                             <i class="bi bi-send"></i>
-                            Tanya AI
+                            {{ __('Tanya AI') }}
                         </button>
 
                     </div>
@@ -1149,7 +1149,7 @@
                         class="vi-ai-suggestion"
                         data-question="Berapa total asset perusahaan saya?"
                     >
-                        Total asset
+                        {{ __('Total asset') }}
                     </button>
 
                     <button
@@ -1157,7 +1157,7 @@
                         class="vi-ai-suggestion"
                         data-question="Berapa asset saya?"
                     >
-                        Asset saya
+                        {{ __('Asset saya') }}
                     </button>
 
                     <button
@@ -1165,7 +1165,7 @@
                         class="vi-ai-suggestion"
                         data-question="Berapa asset yang belum memiliki PIC?"
                     >
-                        Asset tanpa PIC
+                        {{ __('Asset tanpa PIC') }}
                     </button>
 
                     <button
@@ -1173,7 +1173,7 @@
                         class="vi-ai-suggestion"
                         data-question="Apakah ada maintenance yang terlambat?"
                     >
-                        Maintenance terlambat
+                        {{ __('Maintenance terlambat') }}
                     </button>
 
                     <button
@@ -1181,7 +1181,7 @@
                         class="vi-ai-suggestion"
                         data-question="Tampilkan maintenance minggu ini."
                     >
-                        Maintenance minggu ini
+                        {{ __('Maintenance minggu ini') }}
                     </button>
 
                     <button
@@ -1189,7 +1189,7 @@
                         class="vi-ai-suggestion"
                         data-question="Tambahkan asset laptop Dell Latitude 5420, kategori Laptop, subkategori Notebook, vendor Dell, harga 12 juta"
                     >
-                        + Tambah Asset
+                        {{ __('+ Tambah Asset') }}
                     </button>
 
                 </div>
@@ -1230,7 +1230,7 @@
 
                         <h3 class="vi-card-title">
                             <i class="bi bi-heart-pulse"></i>
-                            Asset Health
+                            {{ __('Asset Health') }}
                         </h3>
 
                     </div>
@@ -1295,7 +1295,7 @@
                         @empty
 
                             <div class="vi-empty">
-                                Belum ada data kondisi asset.
+                                {{ __('Belum ada data kondisi asset.') }}
                             </div>
 
                         @endforelse
@@ -1314,7 +1314,7 @@
 
                         <h3 class="vi-card-title">
                             <i class="bi bi-diagram-3"></i>
-                            Distribusi Kategori
+                            {{ __('Distribusi Kategori') }}
                         </h3>
 
                     </div>
@@ -1358,7 +1358,7 @@
                         @else
 
                             <div class="vi-empty">
-                                Belum ada data kategori.
+                                {{ __('Belum ada data kategori.') }}
                             </div>
 
                         @endif
@@ -1386,7 +1386,7 @@
 
                         <h3 class="vi-card-title">
                             <i class="bi bi-calendar-check"></i>
-                            Maintenance Monitor
+                            {{ __('Maintenance Monitor') }}
                         </h3>
 
                     </div>
@@ -1403,7 +1403,7 @@
                                 </div>
 
                                 <div class="vi-maint-label">
-                                    Terlambat
+                                    {{ __('Terlambat') }}
                                 </div>
 
                             </div>
@@ -1416,7 +1416,7 @@
                                 </div>
 
                                 <div class="vi-maint-label">
-                                    Hari Ini
+                                    {{ __('Hari Ini') }}
                                 </div>
 
                             </div>
@@ -1429,7 +1429,7 @@
                                 </div>
 
                                 <div class="vi-maint-label">
-                                    Minggu Ini
+                                    {{ __('Minggu Ini') }}
                                 </div>
 
                             </div>
@@ -1439,7 +1439,7 @@
                         <div class="vi-health-head">
 
                             <span class="vi-health-label">
-                                Asset tanpa PIC
+                                {{ __('Asset tanpa PIC') }}
                             </span>
 
                             <span class="vi-health-value">
@@ -1464,7 +1464,7 @@
 
         <h3 class="vi-card-title">
             <i class="bi bi-lightning"></i>
-            Quick Access
+            {{ __('Quick Access') }}
         </h3>
 
     </div>
@@ -1486,11 +1486,11 @@
                 <div class="vi-quick-text">
 
                     <div class="vi-quick-title">
-                        Assets
+                        {{ __('Assets') }}
                     </div>
 
                     <div class="vi-quick-desc">
-                        Kelola asset
+                        {{ __('Kelola asset') }}
                     </div>
 
                 </div>
@@ -1510,11 +1510,11 @@
                 <div class="vi-quick-text">
 
                     <div class="vi-quick-title">
-                        Maintenance
+                        {{ __('Maintenance') }}
                     </div>
 
                     <div class="vi-quick-desc">
-                        Jadwal maintenance
+                        {{ __('Jadwal maintenance') }}
                     </div>
 
                 </div>
@@ -1543,13 +1543,13 @@
 
                 <h3 class="vi-card-title">
                     <i class="bi bi-calendar3"></i>
-                    Upcoming Maintenance
+                    {{ __('Upcoming Maintenance') }}
                 </h3>
 
                 <span
                     style="font-size:10px;color:#98a2b3;"
                 >
-                    5 jadwal berikutnya
+                    {{ __('5 jadwal berikutnya') }}
                 </span>
 
             </div>
@@ -1566,19 +1566,19 @@
                             <tr>
 
                                 <th>
-                                    Asset
+                                    {{ __('Asset') }}
                                 </th>
 
                                 <th>
-                                    Category
+                                    {{ __('Category') }}
                                 </th>
 
                                 <th>
-                                    PIC
+                                    {{ __('PIC') }}
                                 </th>
 
                                 <th>
-                                    Jadwal
+                                    {{ __('Jadwal') }}
                                 </th>
 
                             </tr>
@@ -1644,7 +1644,7 @@
                 @else
 
                     <div class="vi-empty">
-                        Tidak ada maintenance terjadwal.
+                        {{ __('Tidak ada maintenance terjadwal.') }}
                     </div>
 
                 @endif

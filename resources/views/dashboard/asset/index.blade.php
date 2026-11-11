@@ -1,6 +1,6 @@
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Data Aset')
+@section('title', __('Data Aset'))
 
 @section('content')
 
@@ -95,33 +95,33 @@
                 <!-- ===================================================== -->
                 <div class="card-header al-head">
                     <div>
-                        <h5 class="mb-1">Data Aset</h5>
+                        <h5 class="mb-1">{{ __('Data Aset') }}</h5>
                         <div class="al-sub">
-                            <span><b>{{ number_format((int) $stats->total, 0, ',', '.') }}</b> aset</span>
-                            <span>· <b>{{ number_format((int) $stats->active, 0, ',', '.') }}</b> aktif</span>
-                            <span>· <b>{{ number_format((int) $stats->assigned, 0, ',', '.') }}</b> dipegang karyawan</span>
-                            <span>· <b>{{ $categories->count() }}</b> kategori</span>
-                            <span>· nilai beli <b>Rp{{ number_format((float) $stats->value, 0, ',', '.') }}</b></span>
+                            <span><b>{{ number_format((int) $stats->total, 0, ',', '.') }}</b> {{ __('aset') }}</span>
+                            <span>· <b>{{ number_format((int) $stats->active, 0, ',', '.') }}</b> {{ __('aktif') }}</span>
+                            <span>· <b>{{ number_format((int) $stats->assigned, 0, ',', '.') }}</b> {{ __('dipegang karyawan') }}</span>
+                            <span>· <b>{{ $categories->count() }}</b> {{ __('kategori') }}</span>
+                            <span>{{ __('· nilai beli') }} <b>Rp{{ number_format((float) $stats->value, 0, ',', '.') }}</b></span>
                             @if($stats->disposed > 0 && auth()->user()->hasPermission('asset.dispose'))
-                                <span>· <a href="{{ route('assets.disposals.index', ['period' => 'all']) }}" class="text-danger fw-semibold">{{ number_format((int) $stats->disposed, 0, ',', '.') }} dihapuskan</a></span>
+                                <span>· <a href="{{ route('assets.disposals.index', ['period' => 'all']) }}" class="text-danger fw-semibold">{{ __(':p1 dihapuskan', ['p1' => number_format((int) $stats->disposed, 0, ',', '.')]) }}</a></span>
                             @endif
                         </div>
                     </div>
                     <div class="al-toolbar">
                         @if(auth()->user()->hasPermission('asset.import'))
-                            <a href="{{ route('assets.import') }}" class="al-tbtn"><i class="bi bi-upload"></i> Import Excel</a>
+                            <a href="{{ route('assets.import') }}" class="al-tbtn"><i class="bi bi-upload"></i> {{ __('Import Excel') }}</a>
                         @endif
                         @if(auth()->user()->hasPermission('asset.export'))
-                            <a href="{{ route('assets.export') }}" class="al-tbtn"><i class="bi bi-file-earmark-spreadsheet"></i> Export</a>
+                            <a href="{{ route('assets.export') }}" class="al-tbtn"><i class="bi bi-file-earmark-spreadsheet"></i> {{ __('Export') }}</a>
                         @endif
                         @if(auth()->user()->hasPermission('asset.dispose'))
-                            <a href="{{ route('assets.disposals.index') }}" class="al-tbtn" title="Aset yang dihapuskan: rusak, hilang, dijual, dihibahkan"><i class="bi bi-archive"></i> Penghapusan</a>
+                            <a href="{{ route('assets.disposals.index') }}" class="al-tbtn" title="{{ __('Aset yang dihapuskan: rusak, hilang, dijual, dihibahkan') }}"><i class="bi bi-archive"></i> {{ __('Penghapusan') }}</a>
                         @endif
                         @if(auth()->user()->hasPermission('asset.print_qr'))
-                            <button type="button" class="al-tbtn" id="btnPrintQr" title="Centang aset di tabel, lalu cetak"><i class="bi bi-qr-code"></i> Cetak QR</button>
+                            <button type="button" class="al-tbtn" id="btnPrintQr" title="{{ __('Centang aset di tabel, lalu cetak') }}"><i class="bi bi-qr-code"></i> {{ __('Cetak QR') }}</button>
                         @endif
                         @if(auth()->user()->hasPermission('asset.create'))
-                            <a href="{{ route('assets.create') }}" class="al-tbtn al-tbtn-primary"><i class="bi bi-plus-lg"></i> Tambah Aset</a>
+                            <a href="{{ route('assets.create') }}" class="al-tbtn al-tbtn-primary"><i class="bi bi-plus-lg"></i> {{ __('Tambah Aset') }}</a>
                         @endif
                     </div>
                 </div>
@@ -137,10 +137,10 @@
                             <div>
                                 <div class="filter-title">
                                     <i class="fa-solid fa-filter me-1"></i>
-                                    Filter Aset
+                                    {{ __('Filter Aset') }}
                                 </div>
                                 <small class="text-muted">
-                                    Saring aset berdasarkan kategori, vendor, status, atau tanggal dibuat
+                                    {{ __('Saring aset berdasarkan kategori, vendor, status, atau tanggal dibuat') }}
                                 </small>
                             </div>
                             <button
@@ -149,14 +149,14 @@
                                 id="btnResetFilter"
                             >
                                 <i class="fa-solid fa-rotate-left me-1"></i>
-                                Reset
+                                {{ __('Reset') }}
                             </button>
                         </div>
                         <div class="row g-3">
                             <!-- SEARCH -->
                             <div class="col-md-4">
                                 <label class="form-label filter-label">
-                                    Cari aset
+                                    {{ __('Cari aset') }}
                                 </label>
                                 <div class="input-group">
                                     <span class="input-group-text">
@@ -167,7 +167,7 @@
                                         type="text"
                                         id="search_asset"
                                         class="form-control"
-                                        placeholder="Kode atau nama aset"
+                                        placeholder="{{ __('Kode atau nama aset') }}"
                                     >
                                 </div>
                             </div>
@@ -179,7 +179,7 @@
 
                                 <label class="form-label filter-label">
 
-                                    Kategori
+                                    {{ __('Kategori') }}
 
                                 </label>
 
@@ -189,7 +189,7 @@
                                 >
 
                                     <option value="">
-                                        Semua kategori
+                                        {{ __('Semua kategori') }}
                                     </option>
 
                                     @foreach($categories ?? [] as $category)
@@ -215,7 +215,7 @@
 
                                 <label class="form-label filter-label">
 
-                                    Subkategori
+                                    {{ __('Subkategori') }}
 
                                 </label>
 
@@ -225,7 +225,7 @@
                                 >
 
                                     <option value="">
-                                        Semua subkategori
+                                        {{ __('Semua subkategori') }}
                                     </option>
 
                                     @foreach($subCategories ?? [] as $subCategory)
@@ -252,7 +252,7 @@
 
                                 <label class="form-label filter-label">
 
-                                    Vendor
+                                    {{ __('Vendor') }}
 
                                 </label>
 
@@ -262,7 +262,7 @@
                                 >
 
                                     <option value="">
-                                        Semua vendor
+                                        {{ __('Semua vendor') }}
                                     </option>
 
                                     @foreach($vendors ?? [] as $vendor)
@@ -288,7 +288,7 @@
 
                                 <label class="form-label filter-label">
 
-                                    Status
+                                    {{ __('Status') }}
 
                                 </label>
 
@@ -298,19 +298,19 @@
                                 >
 
                                     <option value="">
-                                        Semua status
+                                        {{ __('Semua status') }}
                                     </option>
 
                                     <option value="1">
-                                        Aktif
+                                        {{ __('Aktif') }}
                                     </option>
 
                                     <option value="0">
-                                        Tidak aktif
+                                        {{ __('Tidak aktif') }}
                                     </option>
 
                                     <option value="2">
-                                        Dihapuskan
+                                        {{ __('Dihapuskan') }}
                                     </option>
 
                                 </select>
@@ -320,9 +320,9 @@
                             @if(($branches ?? collect())->count() > 0)
                                 <!-- CABANG -->
                                 <div class="col-md-4">
-                                    <label class="form-label filter-label">Cabang</label>
+                                    <label class="form-label filter-label">{{ __('Cabang') }}</label>
                                     <select id="branch_id" class="form-select">
-                                        <option value="">Semua cabang</option>
+                                        <option value="">{{ __('Semua cabang') }}</option>
                                         @foreach($branches as $branch)
                                             <option value="{{ $branch->id }}">{{ $branch->label() }}</option>
                                         @endforeach
@@ -337,7 +337,7 @@
 
                                 <label class="form-label filter-label">
 
-                                    Dibuat dari
+                                    {{ __('Dibuat dari') }}
 
                                 </label>
 
@@ -356,7 +356,7 @@
 
                                 <label class="form-label filter-label">
 
-                                    Sampai
+                                    {{ __('Sampai') }}
 
                                 </label>
 
@@ -383,7 +383,7 @@
 
                                 <i class="fa-solid fa-magnifying-glass me-1"></i>
 
-                                Terapkan
+                                {{ __('Terapkan') }}
 
                             </button>
 
@@ -411,7 +411,7 @@
                                     <span id="selectedCount">0</span>
                                 </strong>
 
-                                asset dipilih.
+                                {{ __('asset dipilih.') }}
 
                             </div>
 
@@ -422,7 +422,7 @@
                                 id="btnClearSelection"
                             >
 
-                                Clear Selection
+                                {{ __('Clear Selection') }}
 
                             </button>
 
@@ -458,7 +458,7 @@
                                             type="checkbox"
                                             id="checkAllAssets"
                                             class="form-check-input"
-                                            title="Select All"
+                                            title="{{ __('Select All') }}"
                                         >
 
                                     </th>
@@ -467,20 +467,20 @@
                                     <!-- NO -->
 
                                     <th width="5%">
-                                        No
+                                        {{ __('No') }}
                                     </th>
 
 
                                     <!-- ASSET CODE -->
 
-                                    <th>Kode</th>
-                                    <th>Nama aset</th>
-                                    <th>Pemegang</th>
-                                    <th>Lokasi</th>
-                                    <th>Vendor</th>
-                                    <th>Harga beli</th>
-                                    <th>Status</th>
-                                    <th width="10%">Aksi</th>
+                                    <th>{{ __('Kode') }}</th>
+                                    <th>{{ __('Nama aset') }}</th>
+                                    <th>{{ __('Pemegang') }}</th>
+                                    <th>{{ __('Lokasi') }}</th>
+                                    <th>{{ __('Vendor') }}</th>
+                                    <th>{{ __('Harga beli') }}</th>
+                                    <th>{{ __('Status') }}</th>
+                                    <th width="10%">{{ __('Aksi') }}</th>
 
                                 </tr>
 
@@ -1086,12 +1086,12 @@ $(function () {
 
                     icon: 'warning',
 
-                    title: 'Belum ada asset dipilih',
+                    title: @json(__('Belum ada asset dipilih')),
 
                     text:
-                        'Silakan pilih minimal satu asset untuk dicetak QR.',
+                        @json(__('Silakan pilih minimal satu asset untuk dicetak QR.')),
 
-                    confirmButtonText: 'OK'
+                    confirmButtonText: @json(__('OK'))
 
                 });
 
@@ -1253,20 +1253,20 @@ $(function () {
 
             Swal.fire({
 
-                title: 'Hapus Asset?',
+                title: @json(__('Hapus Asset?')),
 
                 text:
-                    'Data asset akan dipindahkan ke trash.',
+                    @json(__('Data asset akan dipindahkan ke trash.')),
 
                 icon: 'warning',
 
                 showCancelButton: true,
 
                 confirmButtonText:
-                    'Ya, Hapus!',
+                    @json(__('Ya, Hapus!')),
 
                 cancelButtonText:
-                    'Batal',
+                    @json(__('Batal')),
 
                 reverseButtons: true
 
@@ -1313,7 +1313,7 @@ $(function () {
 
                                     icon: 'success',
 
-                                    title: 'Berhasil',
+                                    title: @json(__('Berhasil')),
 
                                     text:
                                         response.message ||
@@ -1347,7 +1347,7 @@ $(function () {
 
                                     icon: 'error',
 
-                                    title: 'Gagal',
+                                    title: @json(__('Gagal')),
 
                                     text:
                                         xhr.responseJSON?.message ||

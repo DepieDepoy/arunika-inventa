@@ -1,6 +1,6 @@
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Cabang')
+@section('title', __('Cabang'))
 
 @section('content')
 @php
@@ -31,7 +31,7 @@
         <div class="card-body d-flex flex-wrap align-items-center gap-3 justify-content-between">
             <div style="min-width:240px;flex:1">
                 <div class="d-flex justify-content-between mb-1">
-                    <span class="fw-bold"><i class="bi bi-diagram-3-fill text-primary me-1"></i> Kuota cabang paket {{ $limit['plan'] ?? '' }}</span>
+                    <span class="fw-bold"><i class="bi bi-diagram-3-fill text-primary me-1"></i> {{ __('Kuota cabang paket :p1', ['p1' => $limit['plan'] ?? '']) }}</span>
                     <span class="br-stat">{{ $limit['used'] }} / {{ $limit['unlimited'] ? '∞' : $limit['max'] }}</span>
                 </div>
                 <div class="bar"><span style="width: {{ $pct ?? 8 }}%"></span></div>
@@ -46,7 +46,7 @@
                 </small>
             </div>
             @if(!$limit['unlimited'] && !$limit['can_add'] && $user->hasPermission('subscription.view'))
-                <a href="{{ route('subscription.index') }}" class="btn btn-warning"><i class="bi bi-rocket-takeoff me-1"></i> Upgrade paket</a>
+                <a href="{{ route('subscription.index') }}" class="btn btn-warning"><i class="bi bi-rocket-takeoff me-1"></i> {{ __('Upgrade paket') }}</a>
             @endif
         </div>
     </div>
@@ -54,8 +54,8 @@
     <div class="card">
         <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
             <div>
-                <h5 class="mb-0">Cabang</h5>
-                <small class="text-muted">Setiap user terdaftar di satu cabang. Administrator melihat semua cabang; user lain hanya melihat data cabangnya.</small>
+                <h5 class="mb-0">{{ __('Cabang') }}</h5>
+                <small class="text-muted">{{ __('Setiap user terdaftar di satu cabang. Administrator melihat semua cabang; user lain hanya melihat data cabangnya.') }}</small>
             </div>
             <div class="d-flex gap-2">
                 @if($user->hasPermission('branch.transfer') || $user->hasPermission('branch.receive'))
@@ -65,7 +65,7 @@
                     </a>
                 @endif
                 @if($canCreate)
-                    <button class="btn btn-primary" id="btnAddBranch"><i class="fa-solid fa-plus"></i> Tambah Cabang</button>
+                    <button class="btn btn-primary" id="btnAddBranch"><i class="fa-solid fa-plus"></i> {{ __('Tambah Cabang') }}</button>
                 @endif
             </div>
         </div>
@@ -74,15 +74,15 @@
                 <table class="table table-hover align-middle">
                     <thead>
                         <tr>
-                            <th>Cabang</th>
-                            <th>Kode</th>
-                            <th>Alamat</th>
-                            <th>PIC / Telepon</th>
-                            <th class="text-center">Aset</th>
-                            <th class="text-center">User</th>
-                            <th>Maintenance oleh</th>
-                            <th>Status</th>
-                            <th class="text-center" width="10%">Aksi</th>
+                            <th>{{ __('Cabang') }}</th>
+                            <th>{{ __('Kode') }}</th>
+                            <th>{{ __('Alamat') }}</th>
+                            <th>{{ __('PIC / Telepon') }}</th>
+                            <th class="text-center">{{ __('Aset') }}</th>
+                            <th class="text-center">{{ __('User') }}</th>
+                            <th>{{ __('Maintenance oleh') }}</th>
+                            <th>{{ __('Status') }}</th>
+                            <th class="text-center" width="10%">{{ __('Aksi') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -90,7 +90,7 @@
                             <tr>
                                 <td>
                                     <div class="fw-bold text-dark">{{ $b->branch_name }}</div>
-                                    @if($b->is_head_office)<span class="br-chip ho"><i class="bi bi-star-fill"></i> Kantor Pusat</span>@endif
+                                    @if($b->is_head_office)<span class="br-chip ho"><i class="bi bi-star-fill"></i> {{ __('Kantor Pusat') }}</span>@endif
                                 </td>
                                 <td>{{ $b->branch_code }}</td>
                                 <td class="text-muted" style="max-width:260px">{{ $b->address ?: '—' }}</td>
@@ -106,9 +106,9 @@
                                         $serviceName = optional($branches->firstWhere('id', $serviceId))->branch_name;
                                     @endphp
                                     @if($serviceId === $b->id)
-                                        <span class="small"><i class="bi bi-tools text-success"></i> Teknisi sendiri</span>
+                                        <span class="small"><i class="bi bi-tools text-success"></i> {{ __('Teknisi sendiri') }}</span>
                                     @else
-                                        <span class="small"><i class="bi bi-arrow-left-right text-primary"></i> Teknisi {{ $serviceName ?? '—' }}</span>
+                                        <span class="small"><i class="bi bi-arrow-left-right text-primary"></i> {{ __('Teknisi :p1', ['p1' => $serviceName ?? '—']) }}</span>
                                     @endif
                                     <small class="d-block text-muted">
                                         {{ $b->service_branch_id ? 'Diatur manual' : (in_array($b->id, $withTechnicians) ? 'Otomatis' : 'Otomatis · belum ada teknisi') }}
@@ -116,18 +116,18 @@
                                 </td>
                                 <td>
                                     @if($b->status == 1)
-                                        <span class="br-chip on"><i class="fa-solid fa-circle-check"></i> Aktif</span>
+                                        <span class="br-chip on"><i class="fa-solid fa-circle-check"></i> {{ __('Aktif') }}</span>
                                     @else
-                                        <span class="br-chip off"><i class="fa-solid fa-circle-xmark"></i> Nonaktif</span>
+                                        <span class="br-chip off"><i class="fa-solid fa-circle-xmark"></i> {{ __('Nonaktif') }}</span>
                                     @endif
                                 </td>
                                 <td class="text-center">
                                     <div class="d-flex justify-content-center gap-1">
                                         @if($canEdit && (!$restrictedBranchId || $restrictedBranchId == $b->id))
-                                            <a href="javascript:void(0)" class="btn-action btn-edit" data-id="{{ $b->id }}" title="Edit"><i class="fa-solid fa-pen-to-square"></i></a>
+                                            <a href="javascript:void(0)" class="btn-action btn-edit" data-id="{{ $b->id }}" title="{{ __('Edit') }}"><i class="fa-solid fa-pen-to-square"></i></a>
                                         @endif
                                         @if($canDelete && !$b->is_head_office)
-                                            <a href="javascript:void(0)" class="btn-action btn-delete" data-id="{{ $b->id }}" data-name="{{ $b->branch_name }}" title="Hapus"><i class="fa-solid fa-trash"></i></a>
+                                            <a href="javascript:void(0)" class="btn-action btn-delete" data-id="{{ $b->id }}" data-name="{{ $b->branch_name }}" title="{{ __('Hapus') }}"><i class="fa-solid fa-trash"></i></a>
                                         @endif
                                     </div>
                                 </td>
@@ -150,49 +150,49 @@
             <input type="hidden" id="branch_id">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="branchModalTitle">Tambah Cabang</h5>
+                    <h5 class="modal-title" id="branchModalTitle">{{ __('Tambah Cabang') }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Nama cabang <span class="text-danger">*</span></label>
-                            <input type="text" name="branch_name" id="f_branch_name" class="form-control" maxlength="150" required placeholder="Contoh: Cabang Surabaya">
+                            <label class="form-label">{{ __('Nama cabang') }} <span class="text-danger">*</span></label>
+                            <input type="text" name="branch_name" id="f_branch_name" class="form-control" maxlength="150" required placeholder="{{ __('Contoh: Cabang Surabaya') }}">
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Status</label>
+                            <label class="form-label">{{ __('Status') }}</label>
                             <select name="status" id="f_status" class="form-select">
-                                <option value="1">Aktif</option>
-                                <option value="0">Nonaktif</option>
+                                <option value="1">{{ __('Aktif') }}</option>
+                                <option value="0">{{ __('Nonaktif') }}</option>
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">PIC / Kepala cabang</label>
+                            <label class="form-label">{{ __('PIC / Kepala cabang') }}</label>
                             <input type="text" name="pic_name" id="f_pic_name" class="form-control" maxlength="150">
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Telepon</label>
+                            <label class="form-label">{{ __('Telepon') }}</label>
                             <input type="text" name="phone" id="f_phone" class="form-control" maxlength="30">
                         </div>
                         <div class="col-12 mb-3">
-                            <label class="form-label">Maintenance ditangani oleh</label>
+                            <label class="form-label">{{ __('Maintenance ditangani oleh') }}</label>
                             <select name="service_branch_id" id="f_service_branch_id" class="form-select">
-                                <option value="">Otomatis — teknisi cabang ini; bila belum ada teknisi, teknisi Kantor Pusat</option>
+                                <option value="">{{ __('Otomatis — teknisi cabang ini; bila belum ada teknisi, teknisi Kantor Pusat') }}</option>
                                 @foreach($branches->where('status', 1) as $opt)
-                                    <option value="{{ $opt->id }}">Teknisi {{ $opt->label() }}</option>
+                                    <option value="{{ $opt->id }}">{{ __('Teknisi :p1', ['p1' => $opt->label()]) }}</option>
                                 @endforeach
                             </select>
-                            <small class="text-muted">Request maintenance & notifikasi aset cabang ini dikirim ke teknisi cabang yang dipilih.</small>
+                            <small class="text-muted">{{ __('Request maintenance & notifikasi aset cabang ini dikirim ke teknisi cabang yang dipilih.') }}</small>
                         </div>
                         <div class="col-12 mb-3">
-                            <label class="form-label">Alamat</label>
+                            <label class="form-label">{{ __('Alamat') }}</label>
                             <textarea name="address" id="f_address" class="form-control" rows="3"></textarea>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">Tutup</button>
-                    <button type="submit" class="btn btn-primary">Simpan</button>
+                    <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">{{ __('Tutup') }}</button>
+                    <button type="submit" class="btn btn-primary">{{ __('Simpan') }}</button>
                 </div>
             </div>
         </form>
@@ -217,17 +217,17 @@
         if (res.limit_reached) {
             Swal.fire({
                 icon: 'warning',
-                title: 'Batas cabang tercapai',
+                title: @json(__('Batas cabang tercapai')),
                 html: (res.errors.plan_limit || [])[0],
                 showCancelButton: canUpgrade,
                 confirmButtonText: canUpgrade ? 'Upgrade paket' : 'OK',
-                cancelButtonText: 'Nanti saja'
+                cancelButtonText: @json(__('Nanti saja'))
             }).then(r => { if (r.isConfirmed && canUpgrade) window.location.href = urls.upgrade; });
             return;
         }
         let msg = res.message || '';
         if (res.errors) msg = Object.values(res.errors).map(v => v[0]).join('<br>');
-        Swal.fire({ icon: 'error', title: 'Gagal', html: msg || 'Terjadi kesalahan.' });
+        Swal.fire({ icon: 'error', title: @json(__('Gagal')), html: msg || 'Terjadi kesalahan.' });
     }
 
     $('#btnAddBranch').on('click', function () {
@@ -266,7 +266,7 @@
             headers: { 'Accept': 'application/json' },
             success: function (res) {
                 bootstrap.Modal.getInstance(modalEl)?.hide();
-                Swal.fire({ icon: 'success', title: 'Berhasil', text: res.message, timer: 1500, showConfirmButton: false })
+                Swal.fire({ icon: 'success', title: @json(__('Berhasil')), text: res.message, timer: 1500, showConfirmButton: false })
                     .then(() => window.location.reload());
             },
             error: showErrors
@@ -277,11 +277,11 @@
         const id = $(this).data('id');
         Swal.fire({
             icon: 'warning',
-            title: 'Hapus cabang?',
+            title: @json(__('Hapus cabang?')),
             text: 'Cabang "' + $(this).data('name') + '" akan dihapus. Cabang harus sudah kosong (tanpa aset & user).',
             showCancelButton: true,
-            confirmButtonText: 'Ya, hapus',
-            cancelButtonText: 'Batal'
+            confirmButtonText: @json(__('Ya, hapus')),
+            cancelButtonText: @json(__('Batal'))
         }).then(r => {
             if (!r.isConfirmed) return;
             $.ajax({
@@ -289,7 +289,7 @@
                 type: 'DELETE',
                 data: { _token: csrf },
                 headers: { 'Accept': 'application/json' },
-                success: res => Swal.fire({ icon: 'success', title: 'Berhasil', text: res.message }).then(() => window.location.reload()),
+                success: res => Swal.fire({ icon: 'success', title: @json(__('Berhasil')), text: res.message }).then(() => window.location.reload()),
                 error: showErrors
             });
         });

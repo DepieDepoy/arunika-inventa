@@ -1,6 +1,6 @@
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Import History Detail')
+@section('title', __('Import History Detail'))
 
 @section('content')
 
@@ -15,11 +15,11 @@
 
     <div>
         <h4 class="mb-1">
-            Import History Detail
+            {{ __('Import History Detail') }}
         </h4>
 
         <p class="text-muted mb-0">
-            Detail hasil proses import user
+            {{ __('Detail hasil proses import user') }}
         </p>
     </div>
 
@@ -28,7 +28,7 @@
         class="btn btn-outline-secondary"
     >
         <i class="fas fa-arrow-left me-1"></i>
-        Kembali
+        {{ __('Kembali') }}
     </a>
 
 </div>
@@ -61,7 +61,7 @@
                     <div class="overflow-hidden">
 
                         <small class="text-muted">
-                            File Import
+                            {{ __('File Import') }}
                         </small>
 
                         <div
@@ -91,7 +91,7 @@
             <div class="card-body">
 
                 <small class="text-muted">
-                    Total
+                    {{ __('Total') }}
                 </small>
 
                 <h4 class="mb-0 mt-1">
@@ -114,7 +114,7 @@
             <div class="card-body">
 
                 <small class="text-muted">
-                    Berhasil
+                    {{ __('Berhasil') }}
                 </small>
 
                 <h4 class="mb-0 mt-1 text-success">
@@ -137,7 +137,7 @@
             <div class="card-body">
 
                 <small class="text-muted">
-                    Gagal
+                    {{ __('Gagal') }}
                 </small>
 
                 <h4 class="mb-0 mt-1 text-danger">
@@ -160,7 +160,7 @@
             <div class="card-body">
 
                 <small class="text-muted">
-                    Status
+                    {{ __('Status') }}
                 </small>
 
                 <div class="mt-2">
@@ -173,7 +173,7 @@
                                 class="fas fa-spinner fa-spin me-1"
                             ></i>
 
-                            Processing
+                            {{ __('Processing') }}
 
                         </span>
 
@@ -183,7 +183,7 @@
 
                             <i class="fas fa-check me-1"></i>
 
-                            Completed
+                            {{ __('Completed') }}
 
                         </span>
 
@@ -199,7 +199,7 @@
                                 "
                             ></i>
 
-                            Completed with Errors
+                            {{ __('Completed with Errors') }}
 
                         </span>
 
@@ -209,7 +209,7 @@
 
                             <i class="fas fa-times me-1"></i>
 
-                            Failed
+                            {{ __('Failed') }}
 
                         </span>
 
@@ -238,7 +238,7 @@
 
             <i class="fas fa-clock me-2"></i>
 
-            Informasi Proses
+            {{ __('Informasi Proses') }}
 
         </h5>
 
@@ -253,7 +253,7 @@
             <div class="col-md-3 mb-3">
 
                 <small class="text-muted d-block">
-                    Dibuat
+                    {{ __('Dibuat') }}
                 </small>
 
                 <strong>
@@ -268,7 +268,7 @@
             <div class="col-md-3 mb-3">
 
                 <small class="text-muted d-block">
-                    Mulai
+                    {{ __('Mulai') }}
                 </small>
 
                 <strong>
@@ -283,7 +283,7 @@
             <div class="col-md-3 mb-3">
 
                 <small class="text-muted d-block">
-                    Selesai
+                    {{ __('Selesai') }}
                 </small>
 
                 <strong>
@@ -298,7 +298,7 @@
             <div class="col-md-3 mb-3">
 
                 <small class="text-muted d-block">
-                    Durasi
+                    {{ __('Durasi') }}
                 </small>
 
                 <strong>
@@ -362,7 +362,7 @@
                         @if($history->status === 'processing')
 
                             <span class="text-warning">
-                                (berjalan)
+                                {{ __('(berjalan)') }}
                             </span>
 
                         @endif
@@ -413,12 +413,12 @@
                         "
                     ></i>
 
-                    Detail Error
+                    {{ __('Detail Error') }}
 
                 </h5>
 
                 <small class="text-muted">
-                    Daftar row yang gagal diimport
+                    {{ __('Daftar row yang gagal diimport') }}
                 </small>
 
             </div>
@@ -471,15 +471,15 @@
                                 class="text-center"
                                 style="width: 80px;"
                             >
-                                Row
+                                {{ __('Row') }}
                             </th>
 
                             <th>
-                                Data
+                                {{ __('Data') }}
                             </th>
 
                             <th>
-                                Error
+                                {{ __('Error') }}
                             </th>
 
                         </tr>
@@ -512,11 +512,11 @@
                 ></i>
 
                 <h5>
-                    Tidak ada error
+                    {{ __('Tidak ada error') }}
                 </h5>
 
                 <p class="text-muted mb-0">
-                    Semua data berhasil diproses.
+                    {{ __('Semua data berhasil diproses.') }}
                 </p>
 
             </div>
@@ -613,27 +613,27 @@ document.addEventListener('DOMContentLoaded', function () {
 
         language: {
 
-            processing: 'Memuat data...',
+            processing: @json(__('Memuat data...')),
 
-            search: 'Cari:',
+            search: @json(__('Cari:')),
 
-            lengthMenu: 'Tampilkan _MENU_ data',
+            lengthMenu: @json(__('Tampilkan _MENU_ data')),
 
-            info: 'Menampilkan _START_ sampai _END_ dari _TOTAL_ error',
+            info: @json(__('Menampilkan _START_ sampai _END_ dari _TOTAL_ error')),
 
-            infoEmpty: 'Menampilkan 0 sampai 0 dari 0 error',
+            infoEmpty: @json(__('Menampilkan 0 sampai 0 dari 0 error')),
 
-            infoFiltered: '(difilter dari _MAX_ total error)',
+            infoFiltered: @json(__('(difilter dari _MAX_ total error)')),
 
-            zeroRecords: 'Data error tidak ditemukan',
+            zeroRecords: @json(__('Data error tidak ditemukan')),
 
-            emptyTable: 'Tidak ada data error',
+            emptyTable: @json(__('Tidak ada data error')),
 
             paginate: {
 
-                first: 'Pertama',
+                first: @json(__('Pertama')),
 
-                last: 'Terakhir',
+                last: @json(__('Terakhir')),
 
                 next: '›',
 

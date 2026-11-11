@@ -1,6 +1,6 @@
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Import History')
+@section('title', __('Import History'))
 
 @section('content')
 
@@ -15,11 +15,11 @@
         <div>
 
             <h4 class="mb-1">
-                Import History
+                {{ __('Import History') }}
             </h4>
 
             <p class="text-muted mb-0">
-                Riwayat proses import data user
+                {{ __('Riwayat proses import data user') }}
             </p>
 
         </div>
@@ -29,7 +29,7 @@
             class="btn btn-primary"
         >
             <i class="fas fa-file-import me-1"></i>
-            Import User
+            {{ __('Import User') }}
         </a>
 
     </div>
@@ -55,35 +55,35 @@
                         <tr>
 
                             <th>
-                                File
+                                {{ __('File') }}
                             </th>
 
                             <th style="min-width: 220px;">
-                                Progress
+                                {{ __('Progress') }}
                             </th>
 
                             <th>
-                                Total
+                                {{ __('Total') }}
                             </th>
 
                             <th>
-                                Berhasil
+                                {{ __('Berhasil') }}
                             </th>
 
                             <th>
-                                Gagal
+                                {{ __('Gagal') }}
                             </th>
 
                             <th>
-                                Status
+                                {{ __('Status') }}
                             </th>
 
                             <th style="min-width: 190px;">
-                                Waktu
+                                {{ __('Waktu') }}
                             </th>
 
                             <th class="text-end">
-                                Action
+                                {{ __('Action') }}
                             </th>
 
                         </tr>
@@ -154,7 +154,7 @@
                                         </div>
 
                                         <small class="text-muted">
-                                            Import User
+                                            {{ __('Import User') }}
                                         </small>
 
                                     </div>
@@ -281,7 +281,7 @@
                                                 class="fas fa-spinner fa-spin me-1"
                                             ></i>
 
-                                            Processing
+                                            {{ __('Processing') }}
 
                                         </span>
 
@@ -295,7 +295,7 @@
                                                 class="fas fa-check me-1"
                                             ></i>
 
-                                            Completed
+                                            {{ __('Completed') }}
 
                                         </span>
 
@@ -309,7 +309,7 @@
                                                 class="fas fa-exclamation-triangle me-1"
                                             ></i>
 
-                                            Completed with Errors
+                                            {{ __('Completed with Errors') }}
 
                                         </span>
 
@@ -323,7 +323,7 @@
                                                 class="fas fa-times me-1"
                                             ></i>
 
-                                            Failed
+                                            {{ __('Failed') }}
 
                                         </span>
 
@@ -354,7 +354,7 @@
                                 <div class="small text-muted">
 
                                     <span class="fw-semibold">
-                                        Mulai:
+                                        {{ __('Mulai:') }}
                                     </span>
 
                                     <span class="started-time">
@@ -379,7 +379,7 @@
                                 <div class="small text-muted finished-wrapper">
 
                                     <span class="fw-semibold">
-                                        Selesai:
+                                        {{ __('Selesai:') }}
                                     </span>
 
                                     <span class="finished-time">
@@ -404,7 +404,7 @@
                                 <div class="small duration-wrapper">
 
                                     <span class="fw-semibold">
-                                        Durasi:
+                                        {{ __('Durasi:') }}
                                     </span>
 
                                     <span class="duration-text">
@@ -471,7 +471,7 @@
                                             @if($history->status === 'processing')
 
                                                 <span class="text-warning">
-                                                    (berjalan)
+                                                    {{ __('(berjalan)') }}
                                                 </span>
 
                                             @endif
@@ -505,7 +505,7 @@
 
                                     <i class="fas fa-eye me-1"></i>
 
-                                    Detail
+                                    {{ __('Detail') }}
 
                                 </a>
 
@@ -528,7 +528,7 @@
                                 ></i>
 
                                 <div>
-                                    Belum ada riwayat import.
+                                    {{ __('Belum ada riwayat import.') }}
                                 </div>
 
                             </td>

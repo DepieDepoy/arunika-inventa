@@ -1,6 +1,6 @@
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Audit Trail')
+@section('title', __('Audit Trail'))
 
 @section('content')
 <div class="content-wrapper">
@@ -10,14 +10,14 @@
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                         <div>
-                            <h5 class="mb-0">Audit Trail</h5>
+                            <h5 class="mb-0">{{ __('Audit Trail') }}</h5>
                             <small class="text-muted">
-                                Catatan seluruh aktivitas user di perusahaan Anda.
+                                {{ __('Catatan seluruh aktivitas user di perusahaan Anda.') }}
                             </small>
                         </div>
                         <span class="badge bg-light text-dark border">
                             <i class="fas fa-lock me-1"></i>
-                            Hanya Administrator
+                            {{ __('Hanya Administrator') }}
                         </span>
                     </div>
 
@@ -26,56 +26,56 @@
                         {{-- FILTER --}}
                         <form id="audit-filter" class="row g-2 align-items-end mb-4">
                             <div class="col-6 col-md-2">
-                                <label class="form-label small mb-1">Dari Tanggal</label>
+                                <label class="form-label small mb-1">{{ __('Dari Tanggal') }}</label>
                                 <input type="date" name="date_from" class="form-control form-control-sm"
                                        value="{{ now()->subDays(30)->format('Y-m-d') }}">
                             </div>
                             <div class="col-6 col-md-2">
-                                <label class="form-label small mb-1">Sampai Tanggal</label>
+                                <label class="form-label small mb-1">{{ __('Sampai Tanggal') }}</label>
                                 <input type="date" name="date_to" class="form-control form-control-sm"
                                        value="{{ now()->format('Y-m-d') }}">
                             </div>
                             <div class="col-6 col-md-2">
-                                <label class="form-label small mb-1">Modul</label>
+                                <label class="form-label small mb-1">{{ __('Modul') }}</label>
                                 <select name="module" class="form-select form-select-sm">
-                                    <option value="">Semua Modul</option>
+                                    <option value="">{{ __('Semua Modul') }}</option>
                                     @foreach($modules as $key => $label)
                                         <option value="{{ $key }}">{{ $label }}</option>
                                     @endforeach
                                 </select>
                             </div>
                             <div class="col-6 col-md-2">
-                                <label class="form-label small mb-1">Aktivitas</label>
+                                <label class="form-label small mb-1">{{ __('Aktivitas') }}</label>
                                 <select name="event" class="form-select form-select-sm">
-                                    <option value="">Semua Aktivitas</option>
+                                    <option value="">{{ __('Semua Aktivitas') }}</option>
                                     @foreach($events as $key => $label)
                                         <option value="{{ $key }}">{{ $label }}</option>
                                     @endforeach
                                 </select>
                             </div>
                             <div class="col-6 col-md-2">
-                                <label class="form-label small mb-1">User</label>
+                                <label class="form-label small mb-1">{{ __('User') }}</label>
                                 <select name="user_id" class="form-select form-select-sm">
-                                    <option value="">Semua User</option>
+                                    <option value="">{{ __('Semua User') }}</option>
                                     @foreach($users as $u)
                                         <option value="{{ $u->id }}">{{ $u->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
                             <div class="col-6 col-md-1">
-                                <label class="form-label small mb-1">Sumber</label>
+                                <label class="form-label small mb-1">{{ __('Sumber') }}</label>
                                 <select name="source" class="form-select form-select-sm">
-                                    <option value="">Semua</option>
-                                    <option value="web">Web</option>
-                                    <option value="api">Mobile</option>
-                                    <option value="system">Sistem</option>
+                                    <option value="">{{ __('Semua') }}</option>
+                                    <option value="web">{{ __('Web') }}</option>
+                                    <option value="api">{{ __('Mobile') }}</option>
+                                    <option value="system">{{ __('Sistem') }}</option>
                                 </select>
                             </div>
                             <div class="col-12 col-md-1 d-flex gap-1">
-                                <button type="submit" class="btn btn-sm btn-primary flex-fill" title="Terapkan filter">
+                                <button type="submit" class="btn btn-sm btn-primary flex-fill" title="{{ __('Terapkan filter') }}">
                                     <i class="fas fa-filter"></i>
                                 </button>
-                                <button type="button" id="audit-reset" class="btn btn-sm btn-light flex-fill" title="Reset filter">
+                                <button type="button" id="audit-reset" class="btn btn-sm btn-light flex-fill" title="{{ __('Reset filter') }}">
                                     <i class="fas fa-undo"></i>
                                 </button>
                             </div>
@@ -85,14 +85,14 @@
                             <table class="table table-hover align-middle" id="table-audit-trail" width="100%">
                                 <thead>
                                     <tr>
-                                        <th width="5%">No</th>
-                                        <th width="150">Waktu</th>
-                                        <th>User</th>
-                                        <th>Aktivitas</th>
-                                        <th>Modul</th>
-                                        <th>Keterangan</th>
-                                        <th>IP</th>
-                                        <th width="60">Detail</th>
+                                        <th width="5%">{{ __('No') }}</th>
+                                        <th width="150">{{ __('Waktu') }}</th>
+                                        <th>{{ __('User') }}</th>
+                                        <th>{{ __('Aktivitas') }}</th>
+                                        <th>{{ __('Modul') }}</th>
+                                        <th>{{ __('Keterangan') }}</th>
+                                        <th>{{ __('IP') }}</th>
+                                        <th width="60">{{ __('Detail') }}</th>
                                     </tr>
                                 </thead>
                             </table>
@@ -109,11 +109,11 @@
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Detail Aktivitas</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                <h5 class="modal-title">{{ __('Detail Aktivitas') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Tutup') }}"></button>
             </div>
             <div class="modal-body" id="audit-detail-body">
-                <div class="text-center text-muted py-4">Memuat...</div>
+                <div class="text-center text-muted py-4">{{ __('Memuat...') }}</div>
             </div>
         </div>
     </div>

@@ -1,6 +1,6 @@
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Maintenance Requests')
+@section('title', __('Maintenance Requests'))
 
 @section('content')
 
@@ -87,7 +87,7 @@
 
                     <div class="card-header d-flex flex-wrap justify-content-between align-items-start gap-2">
                         <div>
-                            <h5 class="mb-1">Maintenance Requests</h5>
+                            <h5 class="mb-1">{{ __('Maintenance Requests') }}</h5>
                             <small class="text-muted">
                                 Permintaan maintenance, perbaikan, dan laporan masalah aset.
                                 @if($canHandle)
@@ -96,7 +96,7 @@
                             </small>
                         </div>
                         <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.location.reload()">
-                            <i class="bi bi-arrow-clockwise me-1"></i> Muat ulang
+                            <i class="bi bi-arrow-clockwise me-1"></i> {{ __('Muat ulang') }}
                         </button>
                     </div>
 
@@ -108,7 +108,7 @@
                                     <span class="mr-stat-icon bg-warning-subtle text-warning"><i class="bi bi-hourglass-split"></i></span>
                                     <span>
                                         <span class="mr-stat-value d-block">{{ $pendingCount }}</span>
-                                        <span class="mr-stat-label">Menunggu diambil</span>
+                                        <span class="mr-stat-label">{{ __('Menunggu diambil') }}</span>
                                     </span>
                                 </button>
                             </div>
@@ -117,7 +117,7 @@
                                     <span class="mr-stat-icon bg-primary-subtle text-primary"><i class="bi bi-gear-wide-connected"></i></span>
                                     <span>
                                         <span class="mr-stat-value d-block">{{ $progressCount }}</span>
-                                        <span class="mr-stat-label">Sedang dikerjakan</span>
+                                        <span class="mr-stat-label">{{ __('Sedang dikerjakan') }}</span>
                                     </span>
                                 </button>
                             </div>
@@ -127,7 +127,7 @@
                                         <span class="mr-stat-icon bg-success-subtle text-success"><i class="bi bi-person-workspace"></i></span>
                                         <span>
                                             <span class="mr-stat-value d-block">{{ $mineCount }}</span>
-                                            <span class="mr-stat-label">Tugas saya</span>
+                                            <span class="mr-stat-label">{{ __('Tugas saya') }}</span>
                                         </span>
                                     </button>
                                 </div>
@@ -137,7 +137,7 @@
                                     <span class="mr-stat-icon bg-info-subtle text-info"><i class="bi bi-list-task"></i></span>
                                     <span>
                                         <span class="mr-stat-value d-block">{{ $requests->count() }}</span>
-                                        <span class="mr-stat-label">Semua request aktif</span>
+                                        <span class="mr-stat-label">{{ __('Semua request aktif') }}</span>
                                     </span>
                                 </button>
                             </div>
@@ -150,13 +150,13 @@
                             <table class="table table-hover align-middle" id="maintenanceRequestsTable" width="100%">
                                 <thead>
                                     <tr>
-                                        <th width="4%">No</th>
-                                        <th>Aset</th>
-                                        <th>Jenis</th>
-                                        <th>Keterangan</th>
-                                        <th>Pemohon</th>
-                                        <th>Status</th>
-                                        <th width="14%">Aksi</th>
+                                        <th width="4%">{{ __('No') }}</th>
+                                        <th>{{ __('Aset') }}</th>
+                                        <th>{{ __('Jenis') }}</th>
+                                        <th>{{ __('Keterangan') }}</th>
+                                        <th>{{ __('Pemohon') }}</th>
+                                        <th>{{ __('Status') }}</th>
+                                        <th width="14%">{{ __('Aksi') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -199,14 +199,14 @@
 
                                             <td data-order="{{ $item->status === 'pending' ? 0 : 1 }}">
                                                 @if($item->status === 'pending')
-                                                    <span class="mr-waiting"><i class="bi bi-hourglass-split"></i> Menunggu diambil</span>
+                                                    <span class="mr-waiting"><i class="bi bi-hourglass-split"></i> {{ __('Menunggu diambil') }}</span>
                                                 @elseif($item->status === 'in_progress')
                                                     <span class="mr-handler {{ $isMine ? 'is-me' : '' }}">
                                                         <i class="bi bi-person-gear"></i>
                                                         {{ $isMine ? 'Dikerjakan oleh Anda' : 'Dikerjakan oleh ' . ($item->handler->name ?? '-') }}
                                                     </span>
                                                     @if($item->handled_at)
-                                                        <div class="mr-meta mt-1">sejak {{ $item->handled_at->diffForHumans() }}</div>
+                                                        <div class="mr-meta mt-1">{{ __('sejak :p1', ['p1' => $item->handled_at->diffForHumans()]) }}</div>
                                                     @endif
                                                 @else
                                                     <span class="badge bg-secondary">{{ ucfirst(str_replace('_', ' ', $item->status)) }}</span>
@@ -217,15 +217,15 @@
                                                 <div class="d-flex gap-1 flex-wrap">
                                                     @if($item->status === 'pending' && $canHandle)
                                                         <button type="button" class="btn btn-primary btn-sm btn-take-request" data-id="{{ $item->id }}">
-                                                            <i class="bi bi-hand-index-thumb me-1"></i> Ambil
+                                                            <i class="bi bi-hand-index-thumb me-1"></i> {{ __('Ambil') }}
                                                         </button>
                                                     @elseif($item->status === 'in_progress' && $isMine)
                                                         <a href="{{ route('maintenance.requests.work', $item->id) }}" class="btn btn-success btn-sm">
-                                                            <i class="bi bi-tools me-1"></i> Kerjakan
+                                                            <i class="bi bi-tools me-1"></i> {{ __('Kerjakan') }}
                                                         </a>
                                                     @endif
 
-                                                    <a href="{{ route('maintenance.requests.show', $item->id) }}" class="btn btn-outline-secondary btn-sm" title="Detail">
+                                                    <a href="{{ route('maintenance.requests.show', $item->id) }}" class="btn btn-outline-secondary btn-sm" title="{{ __('Detail') }}">
                                                         <i class="bi bi-eye"></i>
                                                     </a>
                                                 </div>
@@ -270,14 +270,14 @@ $(function () {
         order: [[5, 'asc']],
         columnDefs: [{ orderable: false, searchable: false, targets: [0, 6] }],
         language: {
-            search: 'Cari:',
-            lengthMenu: 'Tampilkan _MENU_',
-            info: '_START_–_END_ dari _TOTAL_ request',
-            infoEmpty: 'Tidak ada request',
-            infoFiltered: '(disaring dari _MAX_)',
-            zeroRecords: 'Tidak ada request yang cocok',
-            emptyTable: 'Belum ada request aktif',
-            paginate: { first: 'Awal', last: 'Akhir', next: '›', previous: '‹' }
+            search: @json(__('Cari:')),
+            lengthMenu: @json(__('Tampilkan _MENU_')),
+            info: @json(__('_START_–_END_ dari _TOTAL_ request')),
+            infoEmpty: @json(__('Tidak ada request')),
+            infoFiltered: @json(__('(disaring dari _MAX_)')),
+            zeroRecords: @json(__('Tidak ada request yang cocok')),
+            emptyTable: @json(__('Belum ada request aktif')),
+            paginate: { first: @json(__('Awal')), last: @json(__('Akhir')), next: '›', previous: '‹' }
         }
     });
 
@@ -297,11 +297,11 @@ $(function () {
 
         Swal.fire({
             icon: 'question',
-            title: 'Ambil request ini?',
-            text: 'Request akan menjadi tanggung jawab Anda dan hilang dari antrean anggota tim lainnya.',
+            title: @json(__('Ambil request ini?')),
+            text: @json(__('Request akan menjadi tanggung jawab Anda dan hilang dari antrean anggota tim lainnya.')),
             showCancelButton: true,
-            confirmButtonText: 'Ya, ambil',
-            cancelButtonText: 'Batal',
+            confirmButtonText: @json(__('Ya, ambil')),
+            cancelButtonText: @json(__('Batal')),
             reverseButtons: true
         }).then(function (result) {
             if (!result.isConfirmed) {
@@ -319,11 +319,11 @@ $(function () {
                 success: function (response) {
                     Swal.fire({
                         icon: 'success',
-                        title: 'Request diambil',
+                        title: @json(__('Request diambil')),
                         text: response.message,
                         showCancelButton: true,
-                        confirmButtonText: 'Mulai kerjakan',
-                        cancelButtonText: 'Nanti',
+                        confirmButtonText: @json(__('Mulai kerjakan')),
+                        cancelButtonText: @json(__('Nanti')),
                         reverseButtons: true
                     }).then(function (r) {
                         if (r.isConfirmed && response.redirect) {

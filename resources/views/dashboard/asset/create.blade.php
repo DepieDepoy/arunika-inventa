@@ -1,6 +1,6 @@
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Add Asset')
+@section('title', __('Add Asset'))
 
 @section('content')
 
@@ -207,10 +207,10 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <div>
                         <h5 class="mb-0">
-                            Add Detail
+                            {{ __('Add Detail') }}
                         </h5>
                         <small class="text-muted">
-                            Add new company asset information
+                            {{ __('Add new company asset information') }}
                         </small>
                     </div>
                    <div class="d-flex gap-2">
@@ -222,7 +222,7 @@
                         class="btn btn-label-secondary"
                     >
                         <i class="fa-solid fa-arrow-left me-1"></i>
-                        Back to Assets
+                        {{ __('Back to Assets') }}
                     </a>
 
                 </div>
@@ -261,11 +261,11 @@
                         <div>
 
                             <h6 class="asset-section-title">
-                                Asset Information
+                                {{ __('Asset Information') }}
                             </h6>
 
                             <p class="asset-section-description">
-                                Basic information about the asset
+                                {{ __('Basic information about the asset') }}
                             </p>
 
                         </div>
@@ -281,7 +281,7 @@
 
                             <label class="form-label">
 
-                                Asset Name
+                                {{ __('Asset Name') }}
 
                                 <span class="required">*</span>
 
@@ -292,7 +292,7 @@
                                 name="asset_name"
                                 id="asset_name"
                                 class="form-control"
-                                placeholder="Enter asset name"
+                                placeholder="{{ __('Enter asset name') }}"
                                 required
                             >
 
@@ -305,7 +305,7 @@
 
                             <label class="form-label">
 
-                                Category
+                                {{ __('Category') }}
 
                                 <span class="required">*</span>
 
@@ -319,7 +319,7 @@
                             >
 
                                 <option value="">
-                                    Select or type category
+                                    {{ __('Select or type category') }}
                                 </option>
 
                                 @foreach($categories as $category)
@@ -336,7 +336,7 @@
                             </select>
 
                             <small class="text-muted">
-                                Type a new category if it is not registered yet.
+                                {{ __('Type a new category if it is not registered yet.') }}
                             </small>
 
                         </div>
@@ -347,7 +347,7 @@
                         <div class="col-md-6 mb-3">
 
                             <label class="form-label">
-                                Sub Category
+                                {{ __('Sub Category') }}
                             </label>
 
                             <select
@@ -357,13 +357,13 @@
                             >
 
                                 <option value="">
-                                    Select or type sub category
+                                    {{ __('Select or type sub category') }}
                                 </option>
 
                             </select>
 
                             <small class="text-muted">
-                                Sub category will follow the selected category.
+                                {{ __('Sub category will follow the selected category.') }}
                             </small>
 
                         </div>
@@ -375,7 +375,7 @@
 
                             <label class="form-label">
 
-                                Vendor
+                                {{ __('Vendor') }}
 
                                 <span class="required">*</span>
 
@@ -389,7 +389,7 @@
                             >
 
                                 <option value="">
-                                    Select vendor
+                                    {{ __('Select vendor') }}
                                 </option>
 
                                 @foreach($vendors as $vendor)
@@ -403,7 +403,7 @@
                             </select>
 
                             <small class="text-muted">
-                                Vendor must be registered first.
+                                {{ __('Vendor must be registered first.') }}
                             </small>
 
                         </div>
@@ -418,7 +418,7 @@
                                 class="form-label"
                             >
 
-                                Asset Condition
+                                {{ __('Asset Condition') }}
 
                                 <span class="required">*</span>
 
@@ -432,24 +432,24 @@
                             >
 
                                 <option value="">
-                                    Select Condition
+                                    {{ __('Select Condition') }}
                                 </option>
 
                                 <option
                                     value="new"
                                     selected
                                 >
-                                    New
+                                    {{ __('New') }}
                                 </option>
 
                                 <option value="used">
-                                    Used
+                                    {{ __('Used') }}
                                 </option>
 
                             </select>
 
                             <small class="text-muted">
-                                Select whether the asset is new or previously used.
+                                {{ __('Select whether the asset is new or previously used.') }}
                             </small>
 
                         </div>
@@ -460,14 +460,14 @@
                         <div class="col-md-6 mb-3">
 
                             <label class="form-label">
-                                Brand
+                                {{ __('Brand') }}
                             </label>
 
                             <input
                                 type="text"
                                 name="brand"
                                 class="form-control"
-                                placeholder="Example: Dell, HP, Lenovo"
+                                placeholder="{{ __('Example: Dell, HP, Lenovo') }}"
                             >
 
                         </div>
@@ -478,14 +478,14 @@
                         <div class="col-md-6 mb-3">
 
                             <label class="form-label">
-                                Model
+                                {{ __('Model') }}
                             </label>
 
                             <input
                                 type="text"
                                 name="model"
                                 class="form-control"
-                                placeholder="Enter asset model"
+                                placeholder="{{ __('Enter asset model') }}"
                             >
 
                         </div>
@@ -496,14 +496,14 @@
                         <div class="col-md-6 mb-3">
 
                             <label class="form-label">
-                                Serial Number
+                                {{ __('Serial Number') }}
                             </label>
 
                             <input
                                 type="text"
                                 name="serial_number"
                                 class="form-control"
-                                placeholder="Enter serial number"
+                                placeholder="{{ __('Enter serial number') }}"
                             >
 
                         </div>
@@ -515,7 +515,7 @@
 
                             <label class="form-label">
 
-                                Status
+                                {{ __('Status') }}
 
                                 <span class="required">*</span>
 
@@ -531,11 +531,11 @@
                                     value="1"
                                     selected
                                 >
-                                    Active
+                                    {{ __('Active') }}
                                 </option>
 
                                 <option value="0">
-                                    Inactive
+                                    {{ __('Inactive') }}
                                 </option>
 
                             </select>
@@ -548,7 +548,7 @@
                         <div class="col-md-12 mb-3">
 
                             <label class="form-label">
-                                Description
+                                {{ __('Description') }}
                             </label>
 
                             <textarea
@@ -584,11 +584,11 @@
                         <div>
 
                             <h6 class="asset-section-title">
-                                Purchase Information
+                                {{ __('Purchase Information') }}
                             </h6>
 
                             <p class="asset-section-description">
-                                Purchase and invoice information
+                                {{ __('Purchase and invoice information') }}
                             </p>
 
                         </div>
@@ -604,7 +604,7 @@
 
                             <label class="form-label">
 
-                                Purchase Date
+                                {{ __('Purchase Date') }}
 
                                 <span class="required">*</span>
 
@@ -626,7 +626,7 @@
 
                             <label class="form-label">
 
-                                Purchase Price
+                                {{ __('Purchase Price') }}
 
                                 <span class="required">*</span>
 
@@ -635,7 +635,7 @@
                             <div class="input-group">
 
                                 <span class="input-group-text">
-                                    Rp
+                                    {{ __('Rp') }}
                                 </span>
 
                                 <input
@@ -658,7 +658,7 @@
 
                             <label class="form-label">
 
-                                Purchase Number
+                                {{ __('Purchase Number') }}
 
                                 <span class="required">*</span>
 
@@ -668,7 +668,7 @@
                                 type="text"
                                 name="purchase_invoice"
                                 class="form-control"
-                                placeholder="Enter invoice number"
+                                placeholder="{{ __('Enter invoice number') }}"
                                 required
                             >
 
@@ -698,11 +698,11 @@
                         <div>
 
                             <h6 class="asset-section-title">
-                                Depreciation &amp; Warranty
+                                {{ __('Depreciation & Warranty') }}
                             </h6>
 
                             <p class="asset-section-description">
-                                Asset depreciation and warranty period
+                                {{ __('Asset depreciation and warranty period') }}
                             </p>
 
                         </div>
@@ -717,9 +717,7 @@
                             <i class="fa-solid fa-circle-info me-2 mt-1"></i>
 
                             <div>
-                                Depreciation will be calculated based on
-                                purchase price, useful life and depreciation
-                                method.
+                                {{ __('Depreciation will be calculated based on purchase price, useful life and depreciation method.') }}
                             </div>
 
                         </div>
@@ -734,7 +732,7 @@
                         <div class="col-md-4 mb-3">
 
                             <label class="form-label">
-                                Depreciation Method
+                                {{ __('Depreciation Method') }}
                             </label>
 
                             <select
@@ -744,11 +742,11 @@
                             >
 
                                 <option value="">
-                                    Select Method
+                                    {{ __('Select Method') }}
                                 </option>
 
                                 <option value="straight_line">
-                                    Straight Line
+                                    {{ __('Straight Line') }}
                                 </option>
 
                             </select>
@@ -761,7 +759,7 @@
                         <div class="col-md-4 mb-3">
 
                             <label class="form-label">
-                                Useful Life
+                                {{ __('Useful Life') }}
                             </label>
 
                             <div class="input-group">
@@ -775,7 +773,7 @@
                                 >
 
                                 <span class="input-group-text">
-                                    Years
+                                    {{ __('Years') }}
                                 </span>
 
                             </div>
@@ -788,13 +786,13 @@
                         <div class="col-md-4 mb-3">
 
                             <label class="form-label">
-                                Residual Value
+                                {{ __('Residual Value') }}
                             </label>
 
                             <div class="input-group">
 
                                 <span class="input-group-text">
-                                    Rp
+                                    {{ __('Rp') }}
                                 </span>
 
                                 <input
@@ -815,7 +813,7 @@
                         <div class="col-md-4 mb-3">
 
                             <label class="form-label">
-                                Depreciation Start Date
+                                {{ __('Depreciation Start Date') }}
                             </label>
 
                             <input
@@ -852,11 +850,11 @@
                         <div>
 
                             <h6 class="asset-section-title">
-                                Maintenance
+                                {{ __('Maintenance') }}
                             </h6>
 
                             <p class="asset-section-description">
-                                Maintenance schedule and configuration
+                                {{ __('Maintenance schedule and configuration') }}
                             </p>
 
                         </div>
@@ -871,7 +869,7 @@
                         <div class="col-md-6 mb-3">
 
                             <label class="form-label">
-                                Maintenance Required
+                                {{ __('Maintenance Required') }}
                             </label>
 
                             {{-- Default = No --}}
@@ -897,13 +895,13 @@
                                     for="maintenance_required"
                                     id="maintenance_required_label"
                                 >
-                                    No
+                                    {{ __('No') }}
                                 </label>
 
                             </div>
 
                             <small class="text-muted">
-                                Enable maintenance scheduling for this asset.
+                                {{ __('Enable maintenance scheduling for this asset.') }}
                             </small>
 
                         </div>
@@ -925,7 +923,7 @@
                             <div class="col-md-6 mb-3">
 
                                 <label class="form-label">
-                                    Maintenance Type
+                                    {{ __('Maintenance Type') }}
                                 </label>
 
                                 <select
@@ -935,15 +933,15 @@
                                 >
 
                                     <option value="">
-                                        Select Maintenance Type
+                                        {{ __('Select Maintenance Type') }}
                                     </option>
 
                                     <option value="preventive">
-                                        Preventive Maintenance
+                                        {{ __('Preventive Maintenance') }}
                                     </option>
 
                                     <option value="corrective">
-                                        Corrective Maintenance
+                                        {{ __('Corrective Maintenance') }}
                                     </option>
 
                                 </select>
@@ -956,7 +954,7 @@
                             <div class="col-md-6 mb-3">
 
                                 <label class="form-label">
-                                    Maintenance Trigger
+                                    {{ __('Maintenance Trigger') }}
                                 </label>
 
                                 <select
@@ -969,7 +967,7 @@
                                         value="calendar"
                                         selected
                                     >
-                                        Calendar
+                                        {{ __('Calendar') }}
                                     </option>
 
                                 </select>
@@ -982,7 +980,7 @@
                             <div class="col-md-6 mb-3">
 
                                 <label class="form-label">
-                                    Maintenance Interval
+                                    {{ __('Maintenance Interval') }}
                                 </label>
 
                                 <div class="input-group">
@@ -1004,22 +1002,22 @@
                                     >
 
                                         <option value="day">
-                                            Days
+                                            {{ __('Days') }}
                                         </option>
 
                                         <option value="week">
-                                            Weeks
+                                            {{ __('Weeks') }}
                                         </option>
 
                                         <option
                                             value="month"
                                             selected
                                         >
-                                            Months
+                                            {{ __('Months') }}
                                         </option>
 
                                         <option value="year">
-                                            Years
+                                            {{ __('Years') }}
                                         </option>
 
                                     </select>
@@ -1027,7 +1025,7 @@
                                 </div>
 
                                 <small class="text-muted">
-                                    Example: every 3 months.
+                                    {{ __('Example: every 3 months.') }}
                                 </small>
 
                             </div>
@@ -1038,7 +1036,7 @@
                             <div class="col-md-6 mb-3">
 
                                 <label class="form-label">
-                                    Maintenance Start Date
+                                    {{ __('Maintenance Start Date') }}
                                 </label>
 
                                 <input
@@ -1049,7 +1047,7 @@
                                 >
 
                                 <small class="text-muted">
-                                    Starting date for the maintenance schedule.
+                                    {{ __('Starting date for the maintenance schedule.') }}
                                 </small>
 
                             </div>
@@ -1060,7 +1058,7 @@
                             <div class="col-md-6 mb-3">
 
                                 <label class="form-label">
-                                    Last Maintenance
+                                    {{ __('Last Maintenance') }}
                                 </label>
 
                                 <input
@@ -1071,7 +1069,7 @@
                                 >
 
                                 <small class="text-muted">
-                                    Leave empty if this asset has never been maintained.
+                                    {{ __('Leave empty if this asset has never been maintained.') }}
                                 </small>
 
                             </div>
@@ -1082,7 +1080,7 @@
                             <div class="col-md-6 mb-3">
 
                                 <label class="form-label">
-                                    Next Maintenance
+                                    {{ __('Next Maintenance') }}
                                 </label>
 
                                 <input
@@ -1093,7 +1091,7 @@
                                 >
 
                                 <small class="text-muted">
-                                    Automatically calculated from the maintenance schedule.
+                                    {{ __('Automatically calculated from the maintenance schedule.') }}
                                 </small>
 
                             </div>
@@ -1124,11 +1122,11 @@
                         <div>
 
                             <h6 class="asset-section-title">
-                                Asset Assignment
+                                {{ __('Asset Assignment') }}
                             </h6>
 
                             <p class="asset-section-description">
-                                Person responsible for this asset
+                                {{ __('Person responsible for this asset') }}
                             </p>
 
                         </div>
@@ -1142,13 +1140,13 @@
                         @if(($branches ?? collect())->count() > 0)
                             <!-- Branch -->
                             <div class="col-md-4 mb-3">
-                                <label class="form-label">Cabang</label>
+                                <label class="form-label">{{ __('Cabang') }}</label>
                                 <select name="branch_id" id="assetBranch" class="form-select">
                                     @foreach($branches as $branch)
                                         <option value="{{ $branch->id }}" @selected($branch->id == $defaultBranchId)>{{ $branch->label() }}</option>
                                     @endforeach
                                 </select>
-                                <small class="text-muted">Setelah tersimpan, pindah cabang lewat menu Mutasi Aset.</small>
+                                <small class="text-muted">{{ __('Setelah tersimpan, pindah cabang lewat menu Mutasi Aset.') }}</small>
                             </div>
                         @endif
 
@@ -1158,7 +1156,7 @@
                         <div class="{{ ($branches ?? collect())->count() > 0 ? 'col-md-4' : 'col-md-6' }} mb-3">
 
                             <label class="form-label">
-                                Location
+                                {{ __('Location') }}
                             </label>
 
                             {{-- Master lokasi per cabang (Master Data > Lokasi) --}}
@@ -1178,7 +1176,7 @@
                         <div class="{{ ($branches ?? collect())->count() > 0 ? 'col-md-4' : 'col-md-6' }} mb-3">
 
                             <label class="form-label">
-                                Responsible
+                                {{ __('Responsible') }}
                             </label>
 
                             {{-- Diisi lewat AJAX: hanya user aktif di cabang terpilih (cari nama / NIK / email). --}}
@@ -1188,10 +1186,10 @@
                                 class="form-select"
                                 data-url="{{ route('assets.responsible-options') }}"
                             >
-                                <option value="">Select Responsible Person</option>
+                                <option value="">{{ __('Select Responsible Person') }}</option>
                             </select>
 
-                            <small class="text-muted">Hanya user di cabang terpilih.</small>
+                            <small class="text-muted">{{ __('Hanya user di cabang terpilih.') }}</small>
 
                         </div>
 
@@ -1220,14 +1218,14 @@
 
                             <h6 class="asset-section-title">
 
-                                Asset Photos
+                                {{ __('Asset Photos') }}
 
                                 <span class="required">*</span>
 
                             </h6>
 
                             <p class="asset-section-description">
-                                Upload maximum 6 photos of the asset
+                                {{ __('Upload maximum 6 photos of the asset') }}
                             </p>
 
                         </div>
@@ -1243,16 +1241,16 @@
                         <i class="fa-solid fa-cloud-arrow-up d-block"></i>
 
                         <strong>
-                            Click to upload asset photos
+                            {{ __('Click to upload asset photos') }}
                         </strong>
 
                         <div class="text-muted small mt-1">
 
-                            Maximum 6 files
+                            {{ __('Maximum 6 files') }}
 
                             <br>
 
-                            JPG, JPEG, PNG
+                            {{ __('JPG, JPEG, PNG') }}
 
                         </div>
 
@@ -1298,14 +1296,14 @@
 
                             <h6 class="asset-section-title">
 
-                                Invoice / Documents
+                                {{ __('Invoice / Documents') }}
 
                                 <span class="required">*</span>
 
                             </h6>
 
                             <p class="asset-section-description">
-                                Upload maximum 5 invoice or supporting documents
+                                {{ __('Upload maximum 5 invoice or supporting documents') }}
                             </p>
 
                         </div>
@@ -1321,16 +1319,16 @@
                         <i class="fa-solid fa-file-invoice d-block"></i>
 
                         <strong>
-                            Click to upload invoice documents
+                            {{ __('Click to upload invoice documents') }}
                         </strong>
 
                         <div class="text-muted small mt-1">
 
-                            Maximum 5 files
+                            {{ __('Maximum 5 files') }}
 
                             <br>
 
-                            PDF, JPG, JPEG, PNG
+                            {{ __('PDF, JPG, JPEG, PNG') }}
 
                         </div>
 
@@ -1372,7 +1370,7 @@
                             href="{{ route('assets.index') }}"
                             class="btn btn-label-secondary"
                         >
-                            Cancel
+                            {{ __('Cancel') }}
                         </a>
 
 
@@ -1384,7 +1382,7 @@
 
                             <i class="fa-solid fa-save me-1"></i>
 
-                            Save Asset
+                            {{ __('Save Asset') }}
 
                         </button>
 
@@ -1506,7 +1504,7 @@ $(document).ready(function () {
 
         width: '100%',
 
-        placeholder: 'Select or type category',
+        placeholder: @json(__('Select or type category')),
 
         allowClear: true,
 
@@ -1568,7 +1566,7 @@ $(document).ready(function () {
 
         width: '100%',
 
-        placeholder: 'Select or type sub category',
+        placeholder: @json(__('Select or type sub category')),
 
         allowClear: true,
 
@@ -1597,10 +1595,10 @@ $(document).ready(function () {
 
                     icon: 'warning',
 
-                    title: 'Select Category First',
+                    title: @json(__('Select Category First')),
 
                     text:
-                        'Please select or create a category first.'
+                        @json(__('Please select or create a category first.'))
 
                 });
 
@@ -1757,7 +1755,7 @@ $(document).ready(function () {
 
         width: '100%',
 
-        placeholder: 'Select vendor',
+        placeholder: @json(__('Select vendor')),
 
         allowClear: true
 
@@ -1776,7 +1774,7 @@ $(document).ready(function () {
 
     $responsible.select2({
         width: '100%',
-        placeholder: 'Select Responsible Person',
+        placeholder: @json(__('Select Responsible Person')),
         allowClear: true,
         ajax: {
             url: $responsible.data('url'),
@@ -1827,10 +1825,10 @@ $(document).ready(function () {
 
                     icon: 'warning',
 
-                    title: 'Select Category First',
+                    title: @json(__('Select Category First')),
 
                     text:
-                        'Please select or create a category first.'
+                        @json(__('Please select or create a category first.'))
 
                 });
 
@@ -1915,10 +1913,10 @@ $(document).ready(function () {
 
                     icon: 'warning',
 
-                    title: 'Maximum 6 Photos',
+                    title: @json(__('Maximum 6 Photos')),
 
                     text:
-                        'Asset hanya dapat memiliki maksimal 6 foto.'
+                        @json(__('Asset hanya dapat memiliki maksimal 6 foto.'))
 
                 });
 
@@ -1941,10 +1939,10 @@ $(document).ready(function () {
 
                     icon: 'error',
 
-                    title: 'Format Tidak Valid',
+                    title: @json(__('Format Tidak Valid')),
 
                     text:
-                        'Foto harus JPG, JPEG atau PNG.'
+                        @json(__('Foto harus JPG, JPEG atau PNG.'))
 
                 });
 
@@ -1965,7 +1963,7 @@ $(document).ready(function () {
 
                     icon: 'error',
 
-                    title: 'Ukuran Foto Terlalu Besar',
+                    title: @json(__('Ukuran Foto Terlalu Besar')),
 
                     text:
                         `"${file.name}" memiliki ukuran ` +
@@ -2268,10 +2266,10 @@ $(document).ready(function () {
 
                     icon: 'warning',
 
-                    title: 'Maximum 5 Documents',
+                    title: @json(__('Maximum 5 Documents')),
 
                     text:
-                        'Invoice/document hanya dapat maksimal 5 file.'
+                        @json(__('Invoice/document hanya dapat maksimal 5 file.'))
 
                 });
 
@@ -2302,10 +2300,10 @@ $(document).ready(function () {
 
                     icon: 'error',
 
-                    title: 'Format Tidak Valid',
+                    title: @json(__('Format Tidak Valid')),
 
                     text:
-                        'Document hanya PDF, JPG, JPEG atau PNG.'
+                        @json(__('Document hanya PDF, JPG, JPEG atau PNG.'))
 
                 });
 
@@ -2328,7 +2326,7 @@ $(document).ready(function () {
 
                     icon: 'error',
 
-                    title: 'Ukuran Dokumen Terlalu Besar',
+                    title: @json(__('Ukuran Dokumen Terlalu Besar')),
 
                     text:
                         `"${file.name}" memiliki ukuran ` +
@@ -2860,7 +2858,7 @@ $(document).ready(function () {
                                     'success',
 
                                 title:
-                                    'Berhasil',
+                                    @json(__('Berhasil')),
 
                                 text:
                                     response.message ||
@@ -2953,7 +2951,7 @@ $(document).ready(function () {
                                     'error',
 
                                 title:
-                                    'Validasi Gagal',
+                                    @json(__('Validasi Gagal')),
 
                                 html:
                                     message
@@ -2978,7 +2976,7 @@ $(document).ready(function () {
                                 'error',
 
                             title:
-                                'Gagal',
+                                @json(__('Gagal')),
 
                             text:
                                 xhr.responseJSON?.message ||

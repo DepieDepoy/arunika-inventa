@@ -31,33 +31,33 @@
         <form class="modal-content" method="POST" action="{{ route('assets.location.move', $encId) }}">
             @csrf
             <div class="modal-header">
-                <h5 class="modal-title" id="moveLocationTitle"><i class="bi bi-geo-alt me-2 text-primary"></i>Pindah lokasi aset</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                <h5 class="modal-title" id="moveLocationTitle"><i class="bi bi-geo-alt me-2 text-primary"></i>{{ __('Pindah lokasi aset') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Tutup') }}"></button>
             </div>
             <div class="modal-body">
-                <div class="small text-muted mb-1">Lokasi saat ini</div>
+                <div class="small text-muted mb-1">{{ __('Lokasi saat ini') }}</div>
                 <div class="fw-bold mb-3">{{ $asset->location ?: 'Belum diisi' }}</div>
 
-                <label class="form-label" for="lcLocation">Lokasi baru <span class="text-danger">*</span></label>
+                <label class="form-label" for="lcLocation">{{ __('Lokasi baru') }} <span class="text-danger">*</span></label>
                 {{-- Master lokasi cabang aset (lihat menu Master Data > Lokasi) --}}
                 <select name="location" id="lcLocation" class="form-select" required data-location-picker
                         data-branch="{{ $asset->branch_id }}" data-value="{{ old('location') }}"></select>
-                <div class="form-text">Lokasi di {{ $asset->branch?->branch_name ?? 'cabang aset' }}. Pilih <b>+ Tambah lokasi baru</b> bila belum ada. Untuk pindah ke cabang lain gunakan Mutasi Aset.</div>
+                <div class="form-text">{{ __('Lokasi di :p1. Pilih', ['p1' => $asset->branch?->branch_name ?? 'cabang aset']) }} <b>{{ __('+ Tambah lokasi baru') }}</b> {{ __('bila belum ada. Untuk pindah ke cabang lain gunakan Mutasi Aset.') }}</div>
 
                 <div class="row g-3 mt-1">
                     <div class="col-sm-5">
-                        <label class="form-label" for="lcMovedAt">Tanggal pindah <span class="text-danger">*</span></label>
+                        <label class="form-label" for="lcMovedAt">{{ __('Tanggal pindah') }} <span class="text-danger">*</span></label>
                         <input type="date" name="moved_at" id="lcMovedAt" class="form-control" required max="{{ today()->toDateString() }}" value="{{ old('moved_at', today()->toDateString()) }}">
                     </div>
                     <div class="col-sm-7">
-                        <label class="form-label" for="lcMoveNotes">Catatan</label>
-                        <input type="text" name="notes" id="lcMoveNotes" class="form-control" maxlength="1000" placeholder="Mis. relokasi tim, renovasi ruangan" value="{{ old('notes') }}">
+                        <label class="form-label" for="lcMoveNotes">{{ __('Catatan') }}</label>
+                        <input type="text" name="notes" id="lcMoveNotes" class="form-control" maxlength="1000" placeholder="{{ __('Mis. relokasi tim, renovasi ruangan') }}" value="{{ old('notes') }}">
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-                <button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1"></i>Simpan perpindahan</button>
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ __('Batal') }}</button>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1"></i>{{ __('Simpan perpindahan') }}</button>
             </div>
         </form>
     </div>
@@ -76,13 +76,13 @@
             @csrf
             <div class="modal-header">
                 <div>
-                    <h5 class="modal-title" id="disposeTitle"><i class="bi bi-archive me-2 text-danger"></i>Hapuskan aset</h5>
+                    <h5 class="modal-title" id="disposeTitle"><i class="bi bi-archive me-2 text-danger"></i>{{ __('Hapuskan aset') }}</h5>
                     <small class="text-muted">{{ $asset->asset_code }} &middot; {{ $asset->asset_name }}</small>
                 </div>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Tutup') }}"></button>
             </div>
             <div class="modal-body">
-                <label class="form-label">Alasan penghapusan <span class="text-danger">*</span></label>
+                <label class="form-label">{{ __('Alasan penghapusan') }} <span class="text-danger">*</span></label>
                 <div class="lc-types mb-3" role="radiogroup">
                     @foreach(\App\Models\AssetDisposal::TYPES as $key => $label)
                         <div class="lc-type">
@@ -95,65 +95,65 @@
 
                 <div class="row g-3">
                     <div class="col-sm-6">
-                        <label class="form-label" for="lcDisposalDate">Tanggal penghapusan <span class="text-danger">*</span></label>
+                        <label class="form-label" for="lcDisposalDate">{{ __('Tanggal penghapusan') }} <span class="text-danger">*</span></label>
                         <input type="date" name="disposal_date" id="lcDisposalDate" class="form-control" required
                                max="{{ today()->toDateString() }}" min="{{ $asset->purchase_date?->toDateString() }}"
                                value="{{ old('disposal_date', today()->toDateString()) }}">
                     </div>
                     <div class="col-sm-6" id="lcProceedsWrap">
-                        <label class="form-label" for="lcProceeds">Hasil penjualan / nilai ganti</label>
+                        <label class="form-label" for="lcProceeds">{{ __('Hasil penjualan / nilai ganti') }}</label>
                         <div class="input-group">
-                            <span class="input-group-text">Rp</span>
+                            <span class="input-group-text">{{ __('Rp') }}</span>
                             <input type="number" name="proceeds" id="lcProceeds" class="form-control" min="0" step="1" value="{{ old('proceeds', 0) }}">
                         </div>
-                        <div class="form-text">Isi 0 bila tidak ada uang yang diterima.</div>
+                        <div class="form-text">{{ __('Isi 0 bila tidak ada uang yang diterima.') }}</div>
                     </div>
                 </div>
 
                 <div class="mt-3">
                     <div class="d-flex justify-content-between align-items-center mb-1">
-                        <span class="form-label mb-0">Perhitungan nilai</span>
-                        <small class="text-muted" id="lcValueHint">metode garis lurus, per tanggal penghapusan</small>
+                        <span class="form-label mb-0">{{ __('Perhitungan nilai') }}</span>
+                        <small class="text-muted" id="lcValueHint">{{ __('metode garis lurus, per tanggal penghapusan') }}</small>
                     </div>
                     <div class="lc-value" aria-live="polite">
-                        <div><small>Nilai buku</small><b id="lcBook">{{ $bookValue ? $rp($bookValue['value']) : ($asset->purchase_price ? $rp($asset->purchase_price) : '—') }}</b></div>
-                        <div><small>Hasil</small><b id="lcGot">Rp0</b></div>
-                        <div><small id="lcGlLabel">Kerugian penghapusan</small><b id="lcGl">—</b></div>
+                        <div><small>{{ __('Nilai buku') }}</small><b id="lcBook">{{ $bookValue ? $rp($bookValue['value']) : ($asset->purchase_price ? $rp($asset->purchase_price) : '—') }}</b></div>
+                        <div><small>{{ __('Hasil') }}</small><b id="lcGot">{{ __('Rp0') }}</b></div>
+                        <div><small id="lcGlLabel">{{ __('Kerugian penghapusan') }}</small><b id="lcGl">—</b></div>
                     </div>
                     @if(!$bookValue)
-                        <div class="form-text"><i class="bi bi-info-circle me-1"></i>Aset belum memiliki data penyusutan, sehingga nilai buku memakai harga beli.</div>
+                        <div class="form-text"><i class="bi bi-info-circle me-1"></i>{{ __('Aset belum memiliki data penyusutan, sehingga nilai buku memakai harga beli.') }}</div>
                     @endif
                 </div>
 
                 <div class="row g-3 mt-1">
                     <div class="col-md-7">
-                        <label class="form-label" for="lcNotes">Catatan <span class="text-muted small" id="lcNotesReq"></span></label>
+                        <label class="form-label" for="lcNotes">{{ __('Catatan') }} <span class="text-muted small" id="lcNotesReq"></span></label>
                         <textarea name="notes" id="lcNotes" class="form-control" rows="3" maxlength="2000" placeholder="Kronologi, nomor berita acara, pembeli/penerima, dll.">{{ old('notes') }}</textarea>
                     </div>
                     <div class="col-md-5">
-                        <label class="form-label" for="lcDocument">Berita acara / bukti</label>
+                        <label class="form-label" for="lcDocument">{{ __('Berita acara / bukti') }}</label>
                         <input type="file" name="document" id="lcDocument" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
-                        <div class="form-text">PDF/JPG/PNG, maks 10 MB. Dihitung ke kuota storage.</div>
+                        <div class="form-text">{{ __('PDF/JPG/PNG, maks 10 MB. Dihitung ke kuota storage.') }}</div>
                     </div>
                 </div>
 
                 <div class="alert alert-warning mt-3 mb-2 py-2">
-                    <div class="fw-semibold mb-1"><i class="bi bi-exclamation-triangle me-1"></i>Setelah dihapuskan:</div>
+                    <div class="fw-semibold mb-1"><i class="bi bi-exclamation-triangle me-1"></i>{{ __('Setelah dihapuskan:') }}</div>
                     <ul class="lc-effects">
-                        <li>Status aset menjadi <b>Dihapuskan</b>; tidak lagi dihitung di total aset, nilai aset, dan Aset Saya.</li>
-                        @if($asset->responsibleUser)<li>Aset otomatis dikembalikan dari <b>{{ $asset->responsibleUser->name }}</b>.</li>@endif
-                        <li>Jadwal maintenance & request yang masih terbuka dibatalkan.</li>
-                        <li>Data dan seluruh riwayat <b>tetap tersimpan</b>; penghapusan bisa dibatalkan bila salah input.</li>
+                        <li>{{ __('Status aset menjadi') }} <b>{{ __('Dihapuskan') }}</b>{{ __('; tidak lagi dihitung di total aset, nilai aset, dan Aset Saya.') }}</li>
+                        @if($asset->responsibleUser)<li>{{ __('Aset otomatis dikembalikan dari') }} <b>{{ $asset->responsibleUser->name }}</b>.</li>@endif
+                        <li>{{ __('Jadwal maintenance & request yang masih terbuka dibatalkan.') }}</li>
+                        <li>{{ __('Data dan seluruh riwayat') }} <b>{{ __('tetap tersimpan') }}</b>{{ __('; penghapusan bisa dibatalkan bila salah input.') }}</li>
                     </ul>
                 </div>
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" name="confirm" value="1" id="lcConfirm" required>
-                    <label class="form-check-label" for="lcConfirm">Saya sudah memeriksa data di atas dan aset ini memang dihapuskan.</label>
+                    <label class="form-check-label" for="lcConfirm">{{ __('Saya sudah memeriksa data di atas dan aset ini memang dihapuskan.') }}</label>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-                <button type="submit" class="btn btn-danger"><i class="bi bi-archive me-1"></i>Hapuskan aset</button>
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ __('Batal') }}</button>
+                <button type="submit" class="btn btn-danger"><i class="bi bi-archive me-1"></i>{{ __('Hapuskan aset') }}</button>
             </div>
         </form>
     </div>
@@ -230,19 +230,17 @@ document.addEventListener('DOMContentLoaded', function () {
         <form class="modal-content" method="POST" action="{{ route('assets.disposals.cancel', $activeDisposal->id) }}">
             @csrf
             <div class="modal-header">
-                <h5 class="modal-title" id="cancelDisposalTitle"><i class="bi bi-arrow-counterclockwise me-2"></i>Batalkan penghapusan</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                <h5 class="modal-title" id="cancelDisposalTitle"><i class="bi bi-arrow-counterclockwise me-2"></i>{{ __('Batalkan penghapusan') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Tutup') }}"></button>
             </div>
             <div class="modal-body">
-                <p class="small text-muted">Gunakan bila penghapusan salah input. Aset kembali berstatus <b>{{ $activeDisposal->previous_status == 1 ? 'Aktif' : 'Tidak aktif' }}</b>.
-                    Pemegang dan jadwal maintenance <b>tidak</b> dipulihkan otomatis; serahkan ulang dan atur jadwalnya bila perlu.
-                    Catatan penghapusan tetap tersimpan sebagai riwayat.</p>
-                <label class="form-label" for="lcCancelReason">Alasan pembatalan <span class="text-danger">*</span></label>
+                <p class="small text-muted">{{ __('Gunakan bila penghapusan salah input. Aset kembali berstatus') }} <b>{{ $activeDisposal->previous_status == 1 ? 'Aktif' : 'Tidak aktif' }}</b>{{ __('. Pemegang dan jadwal maintenance') }} <b>{{ __('tidak') }}</b> {{ __('dipulihkan otomatis; serahkan ulang dan atur jadwalnya bila perlu. Catatan penghapusan tetap tersimpan sebagai riwayat.') }}</p>
+                <label class="form-label" for="lcCancelReason">{{ __('Alasan pembatalan') }} <span class="text-danger">*</span></label>
                 <textarea name="cancel_reason" id="lcCancelReason" class="form-control" rows="3" minlength="5" maxlength="500" required placeholder="Mis. salah pilih aset, aset ternyata masih bisa diperbaiki"></textarea>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Tutup</button>
-                <button type="submit" class="btn btn-danger">Batalkan penghapusan</button>
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ __('Tutup') }}</button>
+                <button type="submit" class="btn btn-danger">{{ __('Batalkan penghapusan') }}</button>
             </div>
         </form>
     </div>

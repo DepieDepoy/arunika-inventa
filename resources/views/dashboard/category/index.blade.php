@@ -1,5 +1,5 @@
 @extends('dashboard.layouts.wrapper')
-@section('title', 'Dashboard')
+@section('title', __('Dashboard'))
 @section('content')
 <div class="content-wrapper">
     <div class="container-xxl flex-grow-1 container-p-y">
@@ -12,10 +12,10 @@
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <div>
                             <h5 class="mb-0">
-                                Category
+                                {{ __('Category') }}
                             </h5>
                             <small class="text-muted">
-                                Manage application Category
+                                {{ __('Manage application Category') }}
                             </small>
                         </div>
                         <div class="d-flex gap-2">
@@ -26,7 +26,7 @@
                                     class="btn btn-success"
                                 >
                                     <i class="fa-solid fa-file-excel me-1"></i>
-                                    Export Excel
+                                    {{ __('Export Excel') }}
                                 </a>
                             @endif
                             {{-- Add Category --}}
@@ -38,7 +38,7 @@
                                     data-bs-target="#modalAddCategory"
                                 >
                                     <i class="fa-solid fa-plus me-1"></i>
-                                    Add Category
+                                    {{ __('Add Category') }}
                                 </button>
                             @endif
 
@@ -57,25 +57,25 @@
                                 <thead>
                                     <tr>
                                         <th width="5%">
-                                            No
+                                            {{ __('No') }}
                                         </th>
                                         <th>
-                                            Category Name
+                                            {{ __('Category Name') }}
                                         </th>
                                         <th>
-                                            Code
+                                            {{ __('Code') }}
                                         </th>
                                         <th>
-                                            Description
+                                            {{ __('Description') }}
                                         </th>
                                         <th>
-                                            Total Asset
+                                            {{ __('Total Asset') }}
                                         </th>
                                         <th>
-                                            Status
+                                            {{ __('Status') }}
                                         </th>
                                         <th width="10%">
-                                            Action
+                                            {{ __('Action') }}
                                         </th>
                                     </tr>
                                 </thead>
@@ -102,7 +102,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">
-                        Add Category
+                        {{ __('Add Category') }}
                     </h5>
                     <button
                         type="button"
@@ -114,20 +114,20 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">
-                                Name
+                                {{ __('Name') }}
                             </label>
                             <input
                                 type="text"
                                 name="category_name"
                                 id="category_name"
                                 class="form-control"
-                                placeholder="Enter category name"
+                                placeholder="{{ __('Enter category name') }}"
                                 required
                             >
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">
-                                Description
+                                {{ __('Description') }}
                             </label>
                             <textarea
                                 name="description"
@@ -139,7 +139,7 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">
-                                Status
+                                {{ __('Status') }}
                             </label>
                             <select
                                 name="status"
@@ -147,10 +147,10 @@
                                 required
                             >
                                 <option value="1">
-                                    Active
+                                    {{ __('Active') }}
                                 </option>
                                 <option value="0">
-                                    Inactive
+                                    {{ __('Inactive') }}
                                 </option>
                             </select>
                         </div>
@@ -162,14 +162,14 @@
                         class="btn btn-label-secondary"
                         data-bs-dismiss="modal"
                     >
-                        Close
+                        {{ __('Close') }}
                     </button>
                     <button
                         type="submit"
                         class="btn btn-primary"
                         id="btnSaveCategory"
                     >
-                        Save Category
+                        {{ __('Save Category') }}
                     </button>
                 </div>
             </div>
@@ -196,7 +196,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">
-                        Edit Category
+                        {{ __('Edit Category') }}
                     </h5>
                     <button
                         type="button"
@@ -208,7 +208,7 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">
-                                Name
+                                {{ __('Name') }}
                             </label>
                             <input
                                 type="text"
@@ -220,7 +220,7 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">
-                                Description
+                                {{ __('Description') }}
                             </label>
                             <textarea
                                 name="description"
@@ -231,7 +231,7 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">
-                                Status
+                                {{ __('Status') }}
                             </label>
                             <select
                                 name="status"
@@ -240,10 +240,10 @@
                                 required
                             >
                                 <option value="1">
-                                    Active
+                                    {{ __('Active') }}
                                 </option>
                                 <option value="0">
-                                    Inactive
+                                    {{ __('Inactive') }}
                                 </option>
                             </select>
                         </div>
@@ -255,14 +255,14 @@
                         class="btn btn-label-secondary"
                         data-bs-dismiss="modal"
                     >
-                        Close
+                        {{ __('Close') }}
                     </button>
                     <button
                         type="submit"
                         class="btn btn-primary"
                         id="btnUpdateCategory"
                     >
-                        Save Category
+                        {{ __('Save Category') }}
                     </button>
                 </div>
             </div>
@@ -290,7 +290,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">
-                        Add Sub Category
+                        {{ __('Add Sub Category') }}
                     </h5>
                     <button
                         type="button"
@@ -302,7 +302,7 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">
-                                Category
+                                {{ __('Category') }}
                             </label>
                             <input
                                 type="text"
@@ -313,20 +313,20 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">
-                                Name
+                                {{ __('Name') }}
                             </label>
                             <input
                                 type="text"
                                 name="sub_category_name"
                                 id="sub_category_name"
                                 class="form-control"
-                                placeholder="Enter sub category name"
+                                placeholder="{{ __('Enter sub category name') }}"
                                 required
                             >
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">
-                                Description
+                                {{ __('Description') }}
                             </label>
                             <textarea
                                 name="description"
@@ -337,7 +337,7 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">
-                                Status
+                                {{ __('Status') }}
                             </label>
                             <select
                                 name="status"
@@ -346,10 +346,10 @@
                                 required
                             >
                                 <option value="1">
-                                    Active
+                                    {{ __('Active') }}
                                 </option>
                                 <option value="0">
-                                    Inactive
+                                    {{ __('Inactive') }}
                                 </option>
                             </select>
                         </div>
@@ -361,14 +361,14 @@
                         class="btn btn-label-secondary"
                         data-bs-dismiss="modal"
                     >
-                        Close
+                        {{ __('Close') }}
                     </button>
                     <button
                         type="submit"
                         class="btn btn-primary"
                         id="btnSaveSubCategory"
                     >
-                        Save Sub Category
+                        {{ __('Save Sub Category') }}
                     </button>
                 </div>
             </div>
@@ -395,7 +395,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">
-                        Edit Sub Category
+                        {{ __('Edit Sub Category') }}
                     </h5>
                     <button
                         type="button"
@@ -407,7 +407,7 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">
-                                Category
+                                {{ __('Category') }}
                             </label>
                             <select
                                 name="category_id"
@@ -416,13 +416,13 @@
                                 required
                             >
                                 <option value="">
-                                    Select Category
+                                    {{ __('Select Category') }}
                                 </option>
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">
-                                Name
+                                {{ __('Name') }}
                             </label>
                             <input
                                 type="text"
@@ -434,7 +434,7 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">
-                                Description
+                                {{ __('Description') }}
                             </label>
                             <textarea
                                 name="description"
@@ -445,7 +445,7 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">
-                                Status
+                                {{ __('Status') }}
                             </label>
                             <select
                                 name="status"
@@ -454,11 +454,11 @@
                                 required
                             >
                                 <option value="1">
-                                    Active
+                                    {{ __('Active') }}
                                 </option>
 
                                 <option value="0">
-                                    Inactive
+                                    {{ __('Inactive') }}
                                 </option>
                             </select>
                         </div>
@@ -470,14 +470,14 @@
                         class="btn btn-label-secondary"
                         data-bs-dismiss="modal"
                     >
-                        Close
+                        {{ __('Close') }}
                     </button>
                     <button
                         type="submit"
                         class="btn btn-primary"
                         id="btnUpdateSubCategory"
                     >
-                        Save Sub Category
+                        {{ __('Save Sub Category') }}
                     </button>
                 </div>
             </div>
@@ -1152,7 +1152,7 @@ $(function () {
                                     'success',
 
                                 title:
-                                    'Berhasil',
+                                    @json(__('Berhasil')),
 
                                 text:
                                     response.message,
@@ -1348,7 +1348,7 @@ $(function () {
                                     'success',
 
                                 title:
-                                    'Berhasil',
+                                    @json(__('Berhasil')),
 
                                 text:
                                     response.message,
@@ -1437,10 +1437,10 @@ $(function () {
             Swal.fire({
 
                 title:
-                    'Hapus Category?',
+                    @json(__('Hapus Category?')),
 
                 text:
-                    'Data Category akan dihapus.',
+                    @json(__('Data Category akan dihapus.')),
 
                 icon:
                     'warning',
@@ -1449,10 +1449,10 @@ $(function () {
                     true,
 
                 confirmButtonText:
-                    'Ya, Hapus!',
+                    @json(__('Ya, Hapus!')),
 
                 cancelButtonText:
-                    'Batal',
+                    @json(__('Batal')),
 
                 reverseButtons:
                     true
@@ -1491,7 +1491,7 @@ $(function () {
                                         'success',
 
                                     title:
-                                        'Berhasil',
+                                        @json(__('Berhasil')),
 
                                     text:
                                         response.message,
@@ -1618,7 +1618,7 @@ $(function () {
                                 icon:
                                     'success',
                                 title:
-                                    'Berhasil',
+                                    @json(__('Berhasil')),
                                 text:
                                     response.message,
                                 timer:
@@ -1804,7 +1804,7 @@ $(function () {
                                 icon:
                                     'success',
                                 title:
-                                    'Berhasil',
+                                    @json(__('Berhasil')),
                                 text:
                                     response.message,
                                 timer:
@@ -1862,17 +1862,17 @@ $(function () {
                     );
             Swal.fire({
                 title:
-                    'Hapus Sub Category?',
+                    @json(__('Hapus Sub Category?')),
                 text:
-                    'Data yang sudah dihapus tidak bisa dikembalikan!',
+                    @json(__('Data yang sudah dihapus tidak bisa dikembalikan!')),
                 icon:
                     'warning',
                 showCancelButton:
                     true,
                 confirmButtonText:
-                    'Ya, Hapus!',
+                    @json(__('Ya, Hapus!')),
                 cancelButtonText:
-                    'Batal',
+                    @json(__('Batal')),
                 reverseButtons:
                     true
             }).then(
@@ -1896,7 +1896,7 @@ $(function () {
                                     icon:
                                         'success',
                                     title:
-                                        'Berhasil',
+                                        @json(__('Berhasil')),
                                     text:
                                         response.message,
                                     timer:
@@ -1973,7 +1973,7 @@ $(function () {
                 icon:
                     'error',
                 title:
-                    'Validasi Gagal',
+                    @json(__('Validasi Gagal')),
                 html:
                     message
             });
@@ -1983,7 +1983,7 @@ $(function () {
             icon:
                 'error',
             title:
-                'Gagal',
+                @json(__('Gagal')),
             text:
                 xhr.responseJSON?.message ??
                 defaultMessage

@@ -70,20 +70,16 @@
                         @if ($expiredAt && $daysLeft < 0)
 
                             <h1>
-                                Subscription Telah Berakhir ⚠️
+                                {{ __('Subscription Telah Berakhir ⚠️') }}
                             </h1>
 
                             <p class="mb-2">
 
-                                Masa berlangganan
+                                {{ __('Masa berlangganan') }}
                                 <strong>
                                     {{ $company->company_name }}
                                 </strong>
-                                telah berakhir.
-
-                                Silakan lakukan perpanjangan untuk
-                                melanjutkan penggunaan
-                                Assets Management System.
+                                {{ __('telah berakhir. Silakan lakukan perpanjangan untuk melanjutkan penggunaan Assets Management System.') }}
 
                             </p>
 
@@ -97,7 +93,7 @@
                                     class="btn btn-danger"
                                 >
                                     <i class="bi bi-arrow-repeat me-1"></i>
-                                    Perpanjang Subscription
+                                    {{ __('Perpanjang Subscription') }}
                                 </a>
 
                             @endif
@@ -110,20 +106,17 @@
                         @elseif ($expiredAt && $daysLeft === 0)
 
                             <h1>
-                                Subscription Berakhir Hari Ini ⚠️
+                                {{ __('Subscription Berakhir Hari Ini ⚠️') }}
                             </h1>
 
                             <p class="mb-2">
 
-                                Subscription
+                                {{ __('Subscription') }}
                                 <strong>
                                     {{ $company->company_name }}
                                 </strong>
-                                akan berakhir
-                                <strong>hari ini</strong>.
-
-                                Silakan lakukan perpanjangan agar
-                                layanan tetap dapat digunakan.
+                                {{ __('akan berakhir') }}
+                                <strong>{{ __('hari ini') }}</strong>{{ __('. Silakan lakukan perpanjangan agar layanan tetap dapat digunakan.') }}
 
                             </p>
 
@@ -137,7 +130,7 @@
                                     class="btn btn-warning"
                                 >
                                     <i class="bi bi-arrow-repeat me-1"></i>
-                                    Perpanjang Subscription
+                                    {{ __('Perpanjang Subscription') }}
                                 </a>
 
                             @endif
@@ -155,19 +148,16 @@
 
                             <p class="mb-2">
 
-                                Subscription
+                                {{ __('Subscription') }}
                                 <strong>
                                     {{ $company->company_name }}
                                 </strong>
 
-                                akan berakhir dalam
+                                {{ __('akan berakhir dalam') }}
 
                                 <strong>
-                                    {{ $daysLeft }} hari
-                                </strong>.
-
-                                Silakan lakukan perpanjangan agar
-                                layanan tetap dapat digunakan.
+                                    {{ __(':p1 hari', ['p1' => $daysLeft]) }}
+                                </strong>{{ __('. Silakan lakukan perpanjangan agar layanan tetap dapat digunakan.') }}
 
                             </p>
 
@@ -181,7 +171,7 @@
                                     class="btn btn-light"
                                 >
                                     <i class="bi bi-arrow-repeat me-1"></i>
-                                    Perpanjang Subscription
+                                    {{ __('Perpanjang Subscription') }}
                                 </a>
 
                             @endif
@@ -199,7 +189,7 @@
 
                             <p>
 
-                                Pantau aset, maintenance, dan kapasitas
+                                {{ __('Pantau aset, maintenance, dan kapasitas') }}
                                 <strong>
                                     {{ $company->company_name }}
                                 </strong>

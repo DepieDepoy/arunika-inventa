@@ -1,6 +1,6 @@
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Maintenance Work')
+@section('title', __('Maintenance Work'))
 
 @section('content')
 
@@ -50,11 +50,11 @@
                         <div>
 
                             <h5 class="mb-0">
-                                Maintenance Work
+                                {{ __('Maintenance Work') }}
                             </h5>
 
                             <small class="text-muted">
-                                Kelola pekerjaan maintenance dan progress asset.
+                                {{ __('Kelola pekerjaan maintenance dan progress asset.') }}
                             </small>
 
                         </div>
@@ -66,7 +66,7 @@
                                 class="btn btn-light"
                             >
                                 <i class="fa-solid fa-arrow-left me-1"></i>
-                                Back
+                                {{ __('Back') }}
                             </a>
 
                         </div>
@@ -96,11 +96,11 @@
                                     <div class="card-header">
 
                                         <h5 class="mb-1">
-                                            Request Information
+                                            {{ __('Request Information') }}
                                         </h5>
 
                                         <small class="text-muted">
-                                            Informasi maintenance request.
+                                            {{ __('Informasi maintenance request.') }}
                                         </small>
 
                                     </div>
@@ -115,7 +115,7 @@
                                             <div class="col-md-6 mb-3">
 
                                                 <span class="text-muted small d-block mb-1">
-                                                    Asset
+                                                    {{ __('Asset') }}
                                                 </span>
 
                                                 @if($maintenanceRequest->asset)
@@ -143,7 +143,7 @@
                                             <div class="col-md-6 mb-3">
 
                                                 <span class="text-muted small d-block mb-1">
-                                                    Request Type
+                                                    {{ __('Request Type') }}
                                                 </span>
 
                                                 @php
@@ -184,7 +184,7 @@
                                             <div class="col-md-6 mb-3">
 
                                                 <span class="text-muted small d-block mb-1">
-                                                    Requested By
+                                                    {{ __('Requested By') }}
                                                 </span>
 
                                                 <div class="fw-semibold">
@@ -198,7 +198,7 @@
                                             <div class="col-md-6 mb-3">
 
                                                 <span class="text-muted small d-block mb-1">
-                                                    Handler
+                                                    {{ __('Handler') }}
                                                 </span>
 
                                                 <div class="fw-semibold">
@@ -212,11 +212,11 @@
                                             <div class="col-md-6 mb-3">
 
                                                 <span class="text-muted small d-block mb-1">
-                                                    Status
+                                                    {{ __('Status') }}
                                                 </span>
 
                                                 <span class="badge bg-primary">
-                                                    In Progress
+                                                    {{ __('In Progress') }}
                                                 </span>
 
                                             </div>
@@ -226,7 +226,7 @@
                                             <div class="col-md-6 mb-3">
 
                                                 <span class="text-muted small d-block mb-1">
-                                                    Request Date
+                                                    {{ __('Request Date') }}
                                                 </span>
 
                                                 <div>
@@ -240,7 +240,7 @@
                                             <div class="col-12">
 
                                                 <span class="text-muted small d-block mb-1">
-                                                    Problem / Description
+                                                    {{ __('Problem / Description') }}
                                                 </span>
 
                                                 <div class="bg-light rounded p-3">
@@ -270,11 +270,11 @@
                                     <div class="card-header">
 
                                         <h5 class="mb-1">
-                                            Work Summary
+                                            {{ __('Work Summary') }}
                                         </h5>
 
                                         <small class="text-muted">
-                                            Status pekerjaan saat ini.
+                                            {{ __('Status pekerjaan saat ini.') }}
                                         </small>
 
                                     </div>
@@ -286,7 +286,7 @@
                                         <div class="mb-4">
 
                                             <span class="text-muted small d-block mb-1">
-                                                Started At
+                                                {{ __('Started At') }}
                                             </span>
 
                                             <div class="fw-semibold">
@@ -311,7 +311,7 @@
                                         <div class="mb-4">
 
                                             <span class="text-muted small d-block mb-1">
-                                                Handler
+                                                {{ __('Handler') }}
                                             </span>
 
                                             <div class="fw-semibold">
@@ -324,14 +324,12 @@
                                         <div class="mb-4">
 
                                             <span class="text-muted small d-block mb-1">
-                                                Progress
+                                                {{ __('Progress') }}
                                             </span>
 
                                             <div class="fw-semibold">
 
-                                                {{ $maintenanceRequest->logs->count() }}
-
-                                                update
+                                                {{ __(':p1 update', ['p1' => $maintenanceRequest->logs->count()]) }}
 
                                             </div>
 
@@ -342,7 +340,7 @@
 
                                             <i class="fa-solid fa-screwdriver-wrench me-1"></i>
 
-                                            Maintenance sedang dikerjakan.
+                                            {{ __('Maintenance sedang dikerjakan.') }}
 
                                         </div>
 
@@ -370,11 +368,11 @@
                                         <div>
 
                                             <h5 class="mb-1">
-                                                Work Progress
+                                                {{ __('Work Progress') }}
                                             </h5>
 
                                             <small class="text-muted">
-                                                Catatan pekerjaan maintenance.
+                                                {{ __('Catatan pekerjaan maintenance.') }}
                                             </small>
 
                                         </div>
@@ -390,7 +388,7 @@
 
                                                 <i class="fa-solid fa-plus me-1"></i>
 
-                                                Add Progress
+                                                {{ __('Add Progress') }}
 
                                             </button>
 
@@ -471,7 +469,7 @@
                                                                                 height:120px;
                                                                                 object-fit:cover;
                                                                             "
-                                                                            alt="Progress Photo"
+                                                                            alt="{{ __('Progress Photo') }}"
                                                                         >
 
                                                                     </a>
@@ -495,11 +493,11 @@
                                                 <i class="fa-solid fa-clock-rotate-left fa-2x mb-2"></i>
 
                                                 <div>
-                                                    Belum ada progress pekerjaan.
+                                                    {{ __('Belum ada progress pekerjaan.') }}
                                                 </div>
 
                                                 <small>
-                                                    Klik Add Progress untuk menambahkan update pekerjaan.
+                                                    {{ __('Klik Add Progress untuk menambahkan update pekerjaan.') }}
                                                 </small>
 
                                             </div>
@@ -531,12 +529,11 @@
                                             <div>
 
                                                 <h5 class="mb-1">
-                                                    Finish Maintenance
+                                                    {{ __('Finish Maintenance') }}
                                                 </h5>
 
                                                 <small class="text-muted">
-                                                    Setelah pekerjaan benar-benar selesai,
-                                                    lanjutkan proses Complete Maintenance.
+                                                    {{ __('Setelah pekerjaan benar-benar selesai, lanjutkan proses Complete Maintenance.') }}
                                                 </small>
 
                                             </div>
@@ -552,7 +549,7 @@
 
                                                     <i class="fa-solid fa-check me-1"></i>
 
-                                                    Complete Maintenance
+                                                    {{ __('Complete Maintenance') }}
 
                                                 </button>
 
@@ -601,11 +598,11 @@
                 <div>
 
                     <h5 class="modal-title fw-bold mb-1">
-                        Add Work Progress
+                        {{ __('Add Work Progress') }}
                     </h5>
 
                     <small class="text-muted">
-                        Tambahkan perkembangan pekerjaan maintenance.
+                        {{ __('Tambahkan perkembangan pekerjaan maintenance.') }}
                     </small>
 
                 </div>
@@ -630,7 +627,7 @@
 
                         <label class="form-label fw-semibold">
 
-                            Progress / Note
+                            {{ __('Progress / Note') }}
 
                             <span class="text-danger">*</span>
 
@@ -654,7 +651,7 @@
                     <div class="mb-3">
 
                         <label class="form-label fw-semibold">
-                            Progress Photos
+                            {{ __('Progress Photos') }}
                         </label>
 
                         <input
@@ -667,8 +664,7 @@
                         >
 
                         <small class="text-muted d-block">
-                            Maksimal 10 foto dalam satu update.
-                            JPG, JPEG, PNG. Maksimal 10 MB per foto.
+                            {{ __('Maksimal 10 foto dalam satu update. JPG, JPEG, PNG. Maksimal 10 MB per foto.') }}
                         </small>
 
                     </div>
@@ -690,7 +686,7 @@
                         class="btn btn-secondary"
                         data-bs-dismiss="modal"
                     >
-                        Cancel
+                        {{ __('Cancel') }}
                     </button>
 
                     <button
@@ -701,7 +697,7 @@
 
                         <i class="fa-solid fa-save me-1"></i>
 
-                        Save Progress
+                        {{ __('Save Progress') }}
 
                     </button>
 
@@ -735,11 +731,11 @@
                 <div>
 
                     <h5 class="modal-title fw-bold mb-1">
-                        Complete Maintenance Request
+                        {{ __('Complete Maintenance Request') }}
                     </h5>
 
                     <small class="text-muted">
-                        Selesaikan pekerjaan maintenance untuk asset.
+                        {{ __('Selesaikan pekerjaan maintenance untuk asset.') }}
                     </small>
 
                 </div>
@@ -764,7 +760,7 @@
                     <div class="mb-3">
 
                         <label class="form-label fw-semibold">
-                            Asset
+                            {{ __('Asset') }}
                         </label>
 
                         <input
@@ -784,7 +780,7 @@
 
                             <label class="form-label fw-semibold">
 
-                                Maintenance Date
+                                {{ __('Maintenance Date') }}
 
                                 <span class="text-danger">*</span>
 
@@ -805,7 +801,7 @@
                         <div class="col-md-6 mb-3">
 
                             <label class="form-label fw-semibold">
-                                Technician
+                                {{ __('Technician') }}
                             </label>
 
                             <input
@@ -813,7 +809,7 @@
                                 name="technician_name"
                                 class="form-control"
                                 value="{{ auth()->user()->name }}"
-                                placeholder="Nama teknisi"
+                                placeholder="{{ __('Nama teknisi') }}"
                             >
 
                         </div>
@@ -825,7 +821,7 @@
 
                         <label class="form-label fw-semibold">
 
-                            Action Taken
+                            {{ __('Action Taken') }}
 
                             <span class="text-danger">*</span>
 
@@ -849,7 +845,7 @@
                         <div class="col-md-6 mb-3">
 
                             <label class="form-label fw-semibold">
-                                Cost
+                                {{ __('Cost') }}
                             </label>
 
                             <input
@@ -868,7 +864,7 @@
                         <div class="col-md-6 mb-3">
 
                             <label class="form-label fw-semibold">
-                                Next Maintenance Date
+                                {{ __('Next Maintenance Date') }}
                             </label>
 
                             <input
@@ -878,7 +874,7 @@
                             >
 
                             <small class="text-muted">
-                                Kosongkan jika tidak ada jadwal maintenance berikutnya.
+                                {{ __('Kosongkan jika tidak ada jadwal maintenance berikutnya.') }}
                             </small>
 
                         </div>
@@ -889,7 +885,7 @@
                     <div class="mb-3">
 
                         <label class="form-label fw-semibold">
-                            Notes
+                            {{ __('Notes') }}
                         </label>
 
                         <textarea
@@ -909,7 +905,7 @@
 
                         <label class="form-label fw-semibold">
 
-                            Foto Setelah Maintenance
+                            {{ __('Foto Setelah Maintenance') }}
 
                             <span class="text-danger">*</span>
 
@@ -928,9 +924,7 @@
 
 
                         <small class="text-muted d-block">
-                            Upload foto kondisi asset setelah diperbaiki.
-                            Bisa memilih beberapa foto sekaligus.
-                            Maksimal 10 foto, 10 MB per foto.
+                            {{ __('Upload foto kondisi asset setelah diperbaiki. Bisa memilih beberapa foto sekaligus. Maksimal 10 foto, 10 MB per foto.') }}
                         </small>
 
 
@@ -952,7 +946,7 @@
                         class="btn btn-secondary"
                         data-bs-dismiss="modal"
                     >
-                        Cancel
+                        {{ __('Cancel') }}
                     </button>
 
                     <button
@@ -963,7 +957,7 @@
 
                         <i class="fa-solid fa-check me-1"></i>
 
-                        Complete Maintenance
+                        {{ __('Complete Maintenance') }}
 
                     </button>
 
@@ -1026,8 +1020,8 @@ $(function () {
 
             Swal.fire({
                 icon: 'warning',
-                title: 'Terlalu Banyak Foto',
-                text: 'Maksimal 10 foto progress dalam satu update.'
+                title: @json(__('Terlalu Banyak Foto')),
+                text: @json(__('Maksimal 10 foto progress dalam satu update.'))
             });
 
             input.value = '';
@@ -1054,8 +1048,8 @@ $(function () {
 
                 Swal.fire({
                     icon: 'error',
-                    title: 'Format Tidak Valid',
-                    text: 'Foto harus JPG, JPEG, atau PNG.'
+                    title: @json(__('Format Tidak Valid')),
+                    text: @json(__('Foto harus JPG, JPEG, atau PNG.'))
                 });
 
                 input.value = '';
@@ -1074,8 +1068,8 @@ $(function () {
 
                 Swal.fire({
                     icon: 'error',
-                    title: 'File Terlalu Besar',
-                    text: 'Maksimal ukuran foto adalah 10 MB per file.'
+                    title: @json(__('File Terlalu Besar')),
+                    text: @json(__('Maksimal ukuran foto adalah 10 MB per file.'))
                 });
 
                 input.value = '';
@@ -1139,8 +1133,8 @@ $(function () {
 
             Swal.fire({
                 icon: 'warning',
-                title: 'Progress Wajib Diisi',
-                text: 'Silakan isi catatan progress pekerjaan.'
+                title: @json(__('Progress Wajib Diisi')),
+                text: @json(__('Silakan isi catatan progress pekerjaan.'))
             });
 
             return;
@@ -1187,7 +1181,7 @@ $(function () {
 
                     icon: 'success',
 
-                    title: 'Success',
+                    title: @json(__('Success')),
 
                     text:
                         response.message ||
@@ -1266,7 +1260,7 @@ $(function () {
 
                     icon: 'error',
 
-                    title: 'Failed',
+                    title: @json(__('Failed')),
 
                     html: message
 
@@ -1357,10 +1351,10 @@ $(function () {
 
                 icon: 'warning',
 
-                title: 'Terlalu Banyak Foto',
+                title: @json(__('Terlalu Banyak Foto')),
 
                 text:
-                    'Maksimal 10 foto hasil maintenance.'
+                    @json(__('Maksimal 10 foto hasil maintenance.'))
 
             });
 
@@ -1392,10 +1386,10 @@ $(function () {
 
                     icon: 'error',
 
-                    title: 'Format Tidak Didukung',
+                    title: @json(__('Format Tidak Didukung')),
 
                     text:
-                        'Foto harus berformat JPG, JPEG, atau PNG.'
+                        @json(__('Foto harus berformat JPG, JPEG, atau PNG.'))
 
                 });
 
@@ -1418,10 +1412,10 @@ $(function () {
 
                     icon: 'error',
 
-                    title: 'File Terlalu Besar',
+                    title: @json(__('File Terlalu Besar')),
 
                     text:
-                        'Ukuran foto maksimal 10 MB per file.'
+                        @json(__('Ukuran foto maksimal 10 MB per file.'))
 
                 });
 
@@ -1508,10 +1502,10 @@ $(function () {
 
                 icon: 'warning',
 
-                title: 'Action Taken Wajib Diisi',
+                title: @json(__('Action Taken Wajib Diisi')),
 
                 text:
-                    'Jelaskan tindakan atau perbaikan yang telah dilakukan.'
+                    @json(__('Jelaskan tindakan atau perbaikan yang telah dilakukan.'))
 
             });
 
@@ -1529,10 +1523,10 @@ $(function () {
 
                 icon: 'warning',
 
-                title: 'Foto Wajib',
+                title: @json(__('Foto Wajib')),
 
                 text:
-                    'Silakan upload minimal 1 foto kondisi asset setelah maintenance.'
+                    @json(__('Silakan upload minimal 1 foto kondisi asset setelah maintenance.'))
 
             });
 
@@ -1549,10 +1543,10 @@ $(function () {
 
                 icon: 'warning',
 
-                title: 'Terlalu Banyak Foto',
+                title: @json(__('Terlalu Banyak Foto')),
 
                 text:
-                    'Maksimal 10 foto hasil maintenance.'
+                    @json(__('Maksimal 10 foto hasil maintenance.'))
 
             });
 
@@ -1564,16 +1558,16 @@ $(function () {
 
             icon: 'question',
 
-            title: 'Complete Maintenance?',
+            title: @json(__('Complete Maintenance?')),
 
             text:
-                'Pastikan pekerjaan maintenance sudah benar-benar selesai.',
+                @json(__('Pastikan pekerjaan maintenance sudah benar-benar selesai.')),
 
             showCancelButton: true,
 
-            confirmButtonText: 'Yes, Complete',
+            confirmButtonText: @json(__('Yes, Complete')),
 
-            cancelButtonText: 'Cancel',
+            cancelButtonText: @json(__('Cancel')),
 
             reverseButtons: true
 
@@ -1621,7 +1615,7 @@ $.ajax({
         ) {
             Swal.fire({
                 icon: 'error',
-                title: 'Belum Berhasil',
+                title: @json(__('Belum Berhasil')),
                 text: response?.message ||
                     'Server belum mengonfirmasi penyimpanan maintenance.'
             });
@@ -1631,7 +1625,7 @@ $.ajax({
 
         Swal.fire({
             icon: 'success',
-            title: 'Success',
+            title: @json(__('Success')),
             text: response.message || 'Maintenance berhasil diselesaikan.',
             timer: 1800,
             showConfirmButton: false
@@ -1669,7 +1663,7 @@ $.ajax({
 
         Swal.fire({
             icon: 'error',
-            title: 'Failed',
+            title: @json(__('Failed')),
             html: message
         });
     },

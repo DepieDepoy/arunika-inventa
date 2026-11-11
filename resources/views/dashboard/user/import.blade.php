@@ -1,6 +1,6 @@
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Import User')
+@section('title', __('Import User'))
 
 @section('content')
 
@@ -15,10 +15,10 @@
 
         <div>
             <h5 class="mb-0">
-                Import User
+                {{ __('Import User') }}
             </h5>
             <small class="text-muted">
-                Import data user secara massal menggunakan file Excel.
+                {{ __('Import data user secara massal menggunakan file Excel.') }}
             </small>
         </div>
 
@@ -26,7 +26,7 @@
              <a href="{{ route('users.index') }}"
                 class="btn btn-light">
                     <i class="fas fa-arrow-left me-1"></i>
-                    Kembali
+                    {{ __('Kembali') }}
                 </a>
         </div>
     </div>
@@ -62,7 +62,7 @@
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             <strong>
                 <i class="fas fa-exclamation-triangle me-2"></i>
-                Validasi gagal
+                {{ __('Validasi gagal') }}
             </strong>
 
             <ul class="mb-0 mt-2">
@@ -98,28 +98,26 @@
                     </div>
 
                     <div>
-                        <strong>Perhatian</strong>
+                        <strong>{{ __('Perhatian') }}</strong>
 
                         <ul class="mb-0 mt-2">
                             <li>
-                                Gunakan template Excel yang telah disediakan.
+                                {{ __('Gunakan template Excel yang telah disediakan.') }}
                             </li>
                             <li>
-                                Kolom yang diperlukan:
-                                <strong>Name, ID Person (NIK), Email, Phone</strong>.
-                                Kolom <strong>Cabang</strong> opsional: isi nama / kode cabang, kosongkan untuk Kantor Pusat (atau cabang Anda bila Anda admin cabang).
+                                {{ __('Kolom yang diperlukan:') }}
+                                <strong>{{ __('Name, ID Person (NIK), Email, Phone') }}</strong>{{ __('. Kolom') }} <strong>{{ __('Cabang') }}</strong> {{ __('opsional: isi nama / kode cabang, kosongkan untuk Kantor Pusat (atau cabang Anda bila Anda admin cabang).') }}
                             </li>
                             <li>
-                                Data akan diperiksa terlebih dahulu melalui halaman
-                                <strong>Preview</strong>.
+                                {{ __('Data akan diperiksa terlebih dahulu melalui halaman') }}
+                                <strong>{{ __('Preview') }}</strong>.
                             </li>
                             <li>
-                                User hasil import akan dibuat dengan status
-                                <strong>Active</strong>.
+                                {{ __('User hasil import akan dibuat dengan status') }}
+                                <strong>{{ __('Active') }}</strong>.
                             </li>
                             <li>
-                                User hasil import akan menggunakan password default ({{ config('auth.default_user_password') }})
-                                dan diwajibkan mengganti password saat login pertama.
+                                {{ __('User hasil import akan menggunakan password default (:p1) dan diwajibkan mengganti password saat login pertama.', ['p1' => config('auth.default_user_password')]) }}
                             </li>
                         </ul>
                     </div>
@@ -155,12 +153,11 @@
 
                             <div>
                                 <h6 class="mb-1">
-                                    Download Template Excel
+                                    {{ __('Download Template Excel') }}
                                 </h6>
 
                                 <p class="text-muted mb-0 small">
-                                    Gunakan template ini agar format data sesuai
-                                    dengan sistem Inventa.
+                                    {{ __('Gunakan template ini agar format data sesuai dengan sistem Inventa.') }}
                                 </p>
                             </div>
 
@@ -175,7 +172,7 @@
 
                             <i class="fas fa-download me-1"></i>
 
-                            Download Template
+                            {{ __('Download Template') }}
 
                         </a>
 
@@ -213,12 +210,10 @@
                     class="form-check-label"
                     for="send_verification_email">
                     <strong>
-                        Send Verification Email
+                        {{ __('Send Verification Email') }}
                     </strong>
                     <div class="text-muted small mt-1">
-                        Kirim email verifikasi kepada user yang berhasil
-                        diimport. User yang gagal diimport tidak akan menerima
-                        email.
+                        {{ __('Kirim email verifikasi kepada user yang berhasil diimport. User yang gagal diimport tidak akan menerima email.') }}
                     </div>
                 </label>
             </div>
@@ -229,7 +224,7 @@
                     <label for="excel_file"
                            class="form-label fw-semibold">
 
-                        File Excel
+                        {{ __('File Excel') }}
 
                         <span class="text-danger">*</span>
 
@@ -265,19 +260,19 @@
                             </div>
 
                             <h6 class="mb-2">
-                                Pilih File Excel
+                                {{ __('Pilih File Excel') }}
                             </h6>
 
                             <p class="text-muted mb-2">
-                                Klik area ini untuk memilih file
+                                {{ __('Klik area ini untuk memilih file') }}
                             </p>
 
                             <small class="text-muted">
-                                Format yang diperbolehkan:
-                                <strong>.xlsx</strong> atau
-                                <strong>.xls</strong>
+                                {{ __('Format yang diperbolehkan:') }}
+                                <strong>{{ __('.xlsx') }}</strong> {{ __('atau') }}
+                                <strong>{{ __('.xls') }}</strong>
                                 <br>
-                                Maksimal ukuran file: <strong>10 MB</strong>
+                                {{ __('Maksimal ukuran file:') }} <strong>{{ __('10 MB') }}</strong>
                             </small>
 
                         </div>
@@ -310,7 +305,7 @@
                                         id="removeFile">
 
                                     <i class="fas fa-times me-1"></i>
-                                    Ganti File
+                                    {{ __('Ganti File') }}
 
                                 </button>
 
@@ -321,7 +316,7 @@
                     </div>
 
                     <div class="form-text mt-2">
-                        Pastikan data Excel sudah sesuai sebelum melakukan preview.
+                        {{ __('Pastikan data Excel sudah sesuai sebelum melakukan preview.') }}
                     </div>
 
                 </div>
@@ -336,7 +331,7 @@
                        class="btn btn-light">
 
                         <i class="fas fa-times me-1"></i>
-                        Batal
+                        {{ __('Batal') }}
 
                     </a>
 
@@ -347,7 +342,7 @@
                             disabled>
 
                         <i class="fas fa-eye me-1"></i>
-                        Preview Data
+                        {{ __('Preview Data') }}
 
                     </button>
 

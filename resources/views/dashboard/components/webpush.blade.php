@@ -3,11 +3,11 @@
 <div class="border-top px-3 py-2 d-flex align-items-center justify-content-between gap-2" id="wpBox" hidden>
     <div class="small">
         <i class="fa-solid fa-desktop me-1 text-primary"></i>
-        <span id="wpText">Notifikasi browser</span>
+        <span id="wpText">{{ __('Notifikasi browser') }}</span>
     </div>
     <div class="d-flex gap-1">
-        <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" id="wpTest" hidden>Uji</button>
-        <button type="button" class="btn btn-sm btn-primary py-0 px-2" id="wpToggle">Aktifkan</button>
+        <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" id="wpTest" hidden>{{ __('Uji') }}</button>
+        <button type="button" class="btn btn-sm btn-primary py-0 px-2" id="wpToggle">{{ __('Aktifkan') }}</button>
     </div>
 </div>
 <script>
@@ -64,7 +64,7 @@
         if (!reg) return;
         var state = btn.dataset.state;
         if (state === 'denied') {
-            Swal.fire({ icon: 'info', title: 'Notifikasi diblokir', html: 'Klik ikon gembok di sebelah alamat website, lalu ubah <b>Notifikasi</b> menjadi <b>Izinkan</b>.' });
+            Swal.fire({ icon: 'info', title: @json(__('Notifikasi diblokir')), html: 'Klik ikon gembok di sebelah alamat website, lalu ubah <b>Notifikasi</b> menjadi <b>Izinkan</b>.' });
             return;
         }
         btn.disabled = true;
@@ -85,7 +85,7 @@
                 });
             });
         }).catch(function () {
-            Swal.fire({ icon: 'error', title: 'Gagal mengaktifkan', text: 'Browser ini belum mendukung notifikasi atau koneksi bermasalah.' });
+            Swal.fire({ icon: 'error', title: @json(__('Gagal mengaktifkan')), text: @json(__('Browser ini belum mendukung notifikasi atau koneksi bermasalah.')) });
         }).finally(function () { btn.disabled = false; });
     });
 

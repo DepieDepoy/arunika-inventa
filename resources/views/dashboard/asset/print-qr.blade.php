@@ -1,6 +1,6 @@
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Print QR Asset')
+@section('title', __('Print QR Asset'))
 
 @section('content')
 
@@ -298,11 +298,11 @@
     <div class="qr-toolbar">
 
         <div class="qr-toolbar-title">
-            Print QR Asset
+            {{ __('Print QR Asset') }}
         </div>
 
         <div class="qr-toolbar-subtitle">
-            Total {{ $assets->count() }} asset dipilih untuk dicetak.
+            {{ __('Total :p1 asset dipilih untuk dicetak.', ['p1' => $assets->count()]) }}
         </div>
 
         <div class="qr-settings">
@@ -311,20 +311,20 @@
             <div class="qr-setting-item">
 
                 <label for="qrSize">
-                    Ukuran QR
+                    {{ __('Ukuran QR') }}
                 </label>
 
                 <select id="qrSize">
                     <option value="40">
-                        Kecil
+                        {{ __('Kecil') }}
                     </option>
 
                     <option value="50" selected>
-                        Sedang
+                        {{ __('Sedang') }}
                     </option>
 
                     <option value="60">
-                        Besar
+                        {{ __('Besar') }}
                     </option>
                 </select>
 
@@ -334,21 +334,21 @@
             <div class="qr-setting-item">
 
                 <label for="qrColumns">
-                    Kolom
+                    {{ __('Kolom') }}
                 </label>
 
                 <select id="qrColumns">
 
                     <option value="2">
-                        2 Kolom
+                        {{ __('2 Kolom') }}
                     </option>
 
                     <option value="3">
-                        3 Kolom
+                        {{ __('3 Kolom') }}
                     </option>
 
                     <option value="4" selected>
-                        4 Kolom
+                        {{ __('4 Kolom') }}
                     </option>
 
                 </select>
@@ -359,17 +359,17 @@
             <div class="qr-setting-item">
 
                 <label for="showAssetName">
-                    Nama Asset
+                    {{ __('Nama Asset') }}
                 </label>
 
                 <select id="showAssetName">
 
                     <option value="yes" selected>
-                        Tampilkan
+                        {{ __('Tampilkan') }}
                     </option>
 
                     <option value="no">
-                        Sembunyikan
+                        {{ __('Sembunyikan') }}
                     </option>
 
                 </select>
@@ -385,7 +385,7 @@
                     id="btnPrintQr"
                 >
                     <i class="fa fa-print me-1"></i>
-                    Print QR
+                    {{ __('Print QR') }}
                 </button>
 
                 <button
@@ -394,7 +394,7 @@
                     id="btnBack"
                 >
                     <i class="fa fa-arrow-left me-1"></i>
-                    Kembali
+                    {{ __('Kembali') }}
                 </button>
 
             </div>
@@ -425,7 +425,7 @@
                     <div class="qr-code-container">
 
                         <span class="qr-loading">
-                            Generating...
+                            {{ __('Generating...') }}
                         </span>
 
                     </div>
@@ -454,7 +454,7 @@
             ></i>
 
             <div>
-                Tidak ada asset yang dipilih.
+                {{ __('Tidak ada asset yang dipilih.') }}
             </div>
 
         </div>

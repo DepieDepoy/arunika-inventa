@@ -214,10 +214,10 @@
 <body>
     <div class="toolbar">
         <button class="btn btn-primary" onclick="window.print()">
-            Print / Save PDF
+            {{ __('Print / Save PDF') }}
         </button>
         <button class="btn btn-light" onclick="window.close()">
-            Tutup
+            {{ __('Tutup') }}
         </button>
     </div>
 
@@ -272,23 +272,23 @@
     <main class="invoice">
         <header class="header">
             <div>
-                <img src="{{ asset('assets/images/brand/vasetra-logo.png') }}" alt="Vasetra" class="brand-logo">
-                <div class="muted">Subscription Billing Statement</div>
-                <div class="muted small">Dokumen tagihan berlangganan</div>
+                <img src="{{ asset('assets/images/brand/vasetra-logo.png') }}" alt="{{ __('Vasetra') }}" class="brand-logo">
+                <div class="muted">{{ __('Subscription Billing Statement') }}</div>
+                <div class="muted small">{{ __('Dokumen tagihan berlangganan') }}</div>
             </div>
 
             <div class="invoice-title">
-                <h1>BILLING</h1>
+                <h1>{{ __('BILLING') }}</h1>
                 <div><strong>{{ $payment->order_id }}</strong></div>
                 <div class="muted small">
-                    Dicetak: {{ now()->format('d M Y H:i') }}
+                    {{ __('Dicetak: :p1', ['p1' => now()->format('d M Y H:i')]) }}
                 </div>
             </div>
         </header>
 
         <section class="section parties">
             <div>
-                <h2 class="section-title">Ditagihkan kepada</h2>
+                <h2 class="section-title">{{ __('Ditagihkan kepada') }}</h2>
                 <div class="party-name">
                     {{ $company?->company_name ?? '-' }}
                 </div>
@@ -301,22 +301,22 @@
             </div>
 
             <div>
-                <h2 class="section-title">Informasi billing</h2>
+                <h2 class="section-title">{{ __('Informasi billing') }}</h2>
                 <table class="meta">
                     <tr>
-                        <td>Nomor invoice</td>
+                        <td>{{ __('Nomor invoice') }}</td>
                         <td><strong>{{ $payment->order_id }}</strong></td>
                     </tr>
                     <tr>
-                        <td>Paket</td>
+                        <td>{{ __('Paket') }}</td>
                         <td>{{ $payment->plan_name ?? $plan?->plan_name ?? '-' }}</td>
                     </tr>
                     <tr>
-                        <td>Siklus billing</td>
+                        <td>{{ __('Siklus billing') }}</td>
                         <td>{{ ucfirst($cycle) }}</td>
                     </tr>
                     <tr>
-                        <td>Status pembayaran</td>
+                        <td>{{ __('Status pembayaran') }}</td>
                         <td><span class="status">{{ $paymentStatusLabel }}</span></td>
                     </tr>
                 </table>
@@ -324,23 +324,23 @@
         </section>
 
         <section class="section">
-            <h2 class="section-title">Rincian tagihan</h2>
+            <h2 class="section-title">{{ __('Rincian tagihan') }}</h2>
 
             <table class="items">
                 <thead>
                     <tr>
-                        <th>Deskripsi</th>
-                        <th class="text-right">Jumlah</th>
+                        <th>{{ __('Deskripsi') }}</th>
+                        <th class="text-right">{{ __('Jumlah') }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td>
                             <strong>
-                                Subscription {{ $payment->plan_name ?? $plan?->plan_name ?? 'Paket' }}
+                                {{ __('Subscription :p1', ['p1' => $payment->plan_name ?? $plan?->plan_name ?? 'Paket']) }}
                             </strong>
                             <div class="muted small">
-                                Periode {{ ucfirst($cycle) }}
+                                {{ __('Periode :p1', ['p1' => ucfirst($cycle)]) }}
                             </div>
                         </td>
                         <td class="text-right">
@@ -351,7 +351,7 @@
                     @if($storageGb > 0 || $storagePrice > 0)
                         <tr>
                             <td>
-                                Tambahan storage
+                                {{ __('Tambahan storage') }}
                                 <div class="muted small">
                                     {{ number_format($storageGb, 1, ',', '.') }} GB
                                 </div>
@@ -364,7 +364,7 @@
 
                     @if($discount > 0)
                         <tr>
-                            <td>Diskon</td>
+                            <td>{{ __('Diskon') }}</td>
                             <td class="text-right">
                                 -{{ $money($discount) }}
                             </td>
@@ -375,64 +375,61 @@
 
             <div class="total-box">
                 <div class="total-row">
-                    <span class="muted">Harga paket</span>
+                    <span class="muted">{{ __('Harga paket') }}</span>
                     <strong>{{ $money($packagePrice) }}</strong>
                 </div>
 
                 @if($storagePrice > 0)
                     <div class="total-row">
-                        <span class="muted">Tambahan storage</span>
+                        <span class="muted">{{ __('Tambahan storage') }}</span>
                         <strong>{{ $money($storagePrice) }}</strong>
                     </div>
                 @endif
 
                 @if($discount > 0)
                     <div class="total-row">
-                        <span class="muted">Diskon</span>
+                        <span class="muted">{{ __('Diskon') }}</span>
                         <strong>-{{ $money($discount) }}</strong>
                     </div>
                 @endif
 
                 <div class="total-row grand-total">
-                    <span>Total tagihan</span>
+                    <span>{{ __('Total tagihan') }}</span>
                     <span>{{ $money($grossAmount) }}</span>
                 </div>
             </div>
         </section>
 
         <section class="section">
-            <h2 class="section-title">Periode subscription</h2>
+            <h2 class="section-title">{{ __('Periode subscription') }}</h2>
             <table class="meta">
                 <tr>
-                    <td>Mulai</td>
+                    <td>{{ __('Mulai') }}</td>
                     <td>
                         {{ $periodStart ? \Carbon\Carbon::parse($periodStart)->format('d M Y') : '-' }}
                     </td>
                 </tr>
                 <tr>
-                    <td>Berakhir</td>
+                    <td>{{ __('Berakhir') }}</td>
                     <td>
                         {{ $periodEnd ? \Carbon\Carbon::parse($periodEnd)->format('d M Y') : '-' }}
                     </td>
                 </tr>
                 <tr>
-                    <td>Status subscription</td>
+                    <td>{{ __('Status subscription') }}</td>
                     <td>{{ ucfirst($subscription?->status ?? 'unknown') }}</td>
                 </tr>
             </table>
         </section>
 
         <div class="notice">
-            <strong>Catatan untuk klaim kantor</strong><br>
-            Dokumen ini merupakan rincian billing subscription Vasetra.
-            Untuk klaim biaya, lampirkan bukti pembayaran atau bukti settlement
-            dari penyedia pembayaran apabila diwajibkan oleh kebijakan kantor.
-            Status tagihan pada dokumen ini mengikuti catatan transaksi sistem.
+            <strong>{{ __('Catatan untuk klaim kantor') }}</strong><br>
+            {{ __('Dokumen ini merupakan rincian billing subscription Vasetra. Untuk klaim biaya, lampirkan bukti pembayaran atau bukti settlement dari penyedia pembayaran apabila diwajibkan oleh kebijakan kantor. Status tagihan pada dokumen ini mengikuti catatan transaksi sistem.') }}
         </div>
 
         <footer class="footer">
             Vasetra Subscription Billing · {{ $payment->order_id }}<br>
-            Dokumen dicetak dari sistem. Simpan bersama bukti pembayaran untuk keperluan administrasi.
+            {{ __('Dokumen dicetak dari sistem. Simpan bersama bukti pembayaran untuk keperluan administrasi.') }}
         </footer>
     </main>
 </body>

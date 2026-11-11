@@ -1,6 +1,6 @@
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Dashboard')
+@section('title', __('Dashboard'))
 
 @section('content')
 <style>
@@ -18,9 +18,9 @@
     <div class="card-header d-flex justify-content-between align-items-center">
 
         <div>
-            <h5 class="mb-0">SubCategory</h5>
+            <h5 class="mb-0">{{ __('SubCategory') }}</h5>
             <small class="text-muted">
-                Manage application subcategory
+                {{ __('Manage application subcategory') }}
             </small>
         </div>
 
@@ -29,7 +29,7 @@
             <a href="{{ route('subcategory.export') }}"
             class="btn btn-success">
                 <i class="fa-solid fa-file-excel"></i>
-                Export Excel
+                {{ __('Export Excel') }}
             </a>
             @endif
             @if(auth()->user()->hasPermission('subcategory.create'))
@@ -38,7 +38,7 @@
                 data-bs-toggle="modal"
                 data-bs-target="#modalAddSubcategory">
                 <i class="fa-solid fa-plus"></i>
-                Add Subcategory
+                {{ __('Add Subcategory') }}
             </button>
             @endif
         </div>
@@ -50,15 +50,15 @@
                    width="100%">
                 <thead>
                     <tr>
-                        <th width="5%">No</th>
-                        <th>Category Name</th>
-                        <th>Category Code</th>
-                        <th>Sub Category Name</th>
-                        <th>Sub Category Code</th>
-                        <th>Description</th>
-                        <th>Total Asset</th>
-                        <th>Status</th>
-                        <th width="10%">Action</th>
+                        <th width="5%">{{ __('No') }}</th>
+                        <th>{{ __('Category Name') }}</th>
+                        <th>{{ __('Category Code') }}</th>
+                        <th>{{ __('Sub Category Name') }}</th>
+                        <th>{{ __('Sub Category Code') }}</th>
+                        <th>{{ __('Description') }}</th>
+                        <th>{{ __('Total Asset') }}</th>
+                        <th>{{ __('Status') }}</th>
+                        <th width="10%">{{ __('Action') }}</th>
                     </tr>
                 </thead>
             </table>
@@ -76,20 +76,20 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">
-                        Add Subcategory
+                        {{ __('Add Subcategory') }}
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"> </button>
                 </div>
                 <div class="modal-body">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label>Subcategory Name</label>
+                            <label>{{ __('Subcategory Name') }}</label>
                             <input type="text" name="sub_category_name" class="form-control" id="sub_category_name" required>
                         </div>
                         <div class="col-md-6 mb-6">
-                            <label>Category</label>
+                            <label>{{ __('Category') }}</label>
                             <select name="category_id" id="add_category_id" class="form-select" required>
-                                <option value="">-- Pilih --</option>
+                                <option value="">{{ __('-- Pilih --') }}</option>
                                 @foreach($category as $row)
                                     <option value="{{ $row->id }}">
                                         {{ $row->category_name }}
@@ -99,7 +99,7 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">
-                                Description
+                                {{ __('Description') }}
                             </label>
                             <textarea
                                 name="description"
@@ -110,20 +110,20 @@
                             ></textarea>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label>Status</label>
+                            <label>{{ __('Status') }}</label>
                             <select name="status" class="form-select">
-                                <option value="1"> Active </option>
-                                <option value="0">Inactive</option>
+                                <option value="1"> {{ __('Active') }} </option>
+                                <option value="0">{{ __('Inactive') }}</option>
                             </select>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">
-                        Close
+                        {{ __('Close') }}
                     </button>
                     <button type="submit" class="btn btn-primary">
-                        Save Subcategory
+                        {{ __('Save Subcategory') }}
                     </button>
                 </div>
             </div>
@@ -140,18 +140,18 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">
-                        Edit Subcategory
+                        {{ __('Edit Subcategory') }}
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"> </button>
                 </div>
                 <div class="modal-body">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label>Subcategory Name</label>
+                            <label>{{ __('Subcategory Name') }}</label>
                             <input type="text" name="sub_category_name" id="edit_sub_category_name" class="form-control">
                         </div>
                         <div class="col-md-6 mb-6">
-                            <label>Category</label>
+                            <label>{{ __('Category') }}</label>
                             <select name="category_id" id="edit_category_id" class="form-select" required>
                                 @foreach($category as $row)
                                     <option value="{{ $row->id }}">
@@ -162,7 +162,7 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">
-                                Description
+                                {{ __('Description') }}
                             </label>
                             <textarea
                                 name="description"
@@ -173,20 +173,20 @@
                             ></textarea>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label>Status</label>
+                            <label>{{ __('Status') }}</label>
                             <select name="status" id="edit_status" class="form-select">
-                                <option value="1"> Active </option>
-                                <option value="0">Inactive</option>
+                                <option value="1"> {{ __('Active') }} </option>
+                                <option value="0">{{ __('Inactive') }}</option>
                             </select>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">
-                        Close
+                        {{ __('Close') }}
                     </button>
                     <button type="submit" class="btn btn-primary">
-                        Save Subcategory
+                        {{ __('Save Subcategory') }}
                     </button>
                 </div>
             </div>
@@ -280,8 +280,8 @@ $('#formAddSubcategory').submit(function(e){
             if(response.success){
                 Swal.fire({
                     icon: 'success',
-                    title: 'Berhasil',
-                    text: 'SubCategory berhasil ditambahkan',
+                    title: @json(__('Berhasil')),
+                    text: @json(__('SubCategory berhasil ditambahkan')),
                     timer: 1500,
                     showConfirmButton: false
                 });
@@ -305,7 +305,7 @@ $('#formAddSubcategory').submit(function(e){
                 });
                 Swal.fire({
                     icon: 'error',
-                    title: 'Validasi Gagal',
+                    title: @json(__('Validasi Gagal')),
                     html: message,
                     allowOutsideClick: false,
                     backdrop: true
@@ -366,8 +366,8 @@ $('#formEditSubcategory').submit(function(e){
             if(response.success){
                 Swal.fire({
                     icon: 'success',
-                    title: 'Berhasil',
-                    text: 'Subcategory berhasil diupdate',
+                    title: @json(__('Berhasil')),
+                    text: @json(__('Subcategory berhasil diupdate')),
                     timer: 1500,
                     showConfirmButton: false
                 });
@@ -394,7 +394,7 @@ $('#formEditSubcategory').submit(function(e){
 
                 Swal.fire({
                     icon: 'error',
-                    title: 'Validasi Gagal',
+                    title: @json(__('Validasi Gagal')),
                     html: message
                 });
             } else {
@@ -413,12 +413,12 @@ $(document).on('click', '.btn-delete', function () {
     url = url.replace(':id', id);
 
     Swal.fire({
-        title: 'Hapus Data?',
-        text: 'Data yang sudah dihapus tidak bisa dikembalikan!',
+        title: @json(__('Hapus Data?')),
+        text: @json(__('Data yang sudah dihapus tidak bisa dikembalikan!')),
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: 'Ya, Hapus!',
-        cancelButtonText: 'Batal'
+        confirmButtonText: @json(__('Ya, Hapus!')),
+        cancelButtonText: @json(__('Batal'))
     }).then((result) => {
 
         if (result.isConfirmed) {
@@ -433,7 +433,7 @@ $(document).on('click', '.btn-delete', function () {
 
                     Swal.fire({
                         icon: 'success',
-                        title: 'Berhasil',
+                        title: @json(__('Berhasil')),
                         text: response.message
                     });
 
@@ -445,7 +445,7 @@ $(document).on('click', '.btn-delete', function () {
 
                     Swal.fire({
                         icon: 'error',
-                        title: 'Gagal',
+                        title: @json(__('Gagal')),
                         text: xhr.responseJSON?.message || 'Data gagal dihapus'
                     });
 
@@ -479,7 +479,7 @@ function copyPassword(){
 
     Swal.fire({
         icon: 'success',
-        title: 'Password berhasil disalin',
+        title: @json(__('Password berhasil disalin')),
         timer: 1000,
         showConfirmButton: false
     });

@@ -57,6 +57,8 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\WebSecurityHeaders::class,
             \App\Http\Middleware\EnsureCompanyActive::class,
             \App\Http\Middleware\EnsurePasswordChanged::class,
+            // Bahasa dashboard web mengikuti pilihan user (users.locale), bawaan Indonesia.
+            \App\Http\Middleware\SetUserLocale::class,
         ]);
 
         // Perusahaan ditangguhkan & password awal juga berlaku untuk API mobile.

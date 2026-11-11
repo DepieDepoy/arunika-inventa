@@ -1,6 +1,6 @@
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Dashboard')
+@section('title', __('Dashboard'))
 
 @section('content')
 <style>
@@ -26,9 +26,9 @@
     <div class="card-header d-flex justify-content-between align-items-center">
 
         <div>
-            <h5 class="mb-0">Role User</h5>
+            <h5 class="mb-0">{{ __('Role User') }}</h5>
             <small class="text-muted">
-                Manage application role
+                {{ __('Manage application role') }}
             </small>
         </div>
 
@@ -37,7 +37,7 @@
             <a href="{{ route('roles.export') }}"
             class="btn btn-success">
                 <i class="fa-solid fa-file-excel"></i>
-                Export Excel
+                {{ __('Export Excel') }}
             </a>
             @endif
             @if(auth()->user()->hasPermission('role.create'))
@@ -46,7 +46,7 @@
                 data-bs-toggle="modal"
                 data-bs-target="#modalAddRole">
                 <i class="fa-solid fa-plus"></i>
-                Add Role
+                {{ __('Add Role') }}
             </button>
             @endif
         </div>
@@ -58,11 +58,11 @@
                    width="100%">
                 <thead>
                     <tr>
-                        <th width="5%">No</th>
-                        <th>Role Name</th>
-                        <th>Role Code</th>
-                        <th>Status</th>
-                        <th width="10%">Action</th>
+                        <th width="5%">{{ __('No') }}</th>
+                        <th>{{ __('Role Name') }}</th>
+                        <th>{{ __('Role Code') }}</th>
+                        <th>{{ __('Status') }}</th>
+                        <th width="10%">{{ __('Action') }}</th>
                     </tr>
                 </thead>
             </table>
@@ -80,31 +80,31 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">
-                        Add Role
+                        {{ __('Add Role') }}
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"> </button>
                 </div>
                 <div class="modal-body">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label>Role Name</label>
+                            <label>{{ __('Role Name') }}</label>
                             <input type="text" name="role_name" class="form-control" id="role_name" required>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label>Status</label>
+                            <label>{{ __('Status') }}</label>
                             <select name="status" class="form-select">
-                                <option value="1"> Active </option>
-                                <option value="0">Inactive</option>
+                                <option value="1"> {{ __('Active') }} </option>
+                                <option value="0">{{ __('Inactive') }}</option>
                             </select>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">
-                        Close
+                        {{ __('Close') }}
                     </button>
                     <button type="submit" class="btn btn-primary">
-                        Save Role
+                        {{ __('Save Role') }}
                     </button>
                 </div>
             </div>
@@ -121,31 +121,31 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">
-                        Edit Role
+                        {{ __('Edit Role') }}
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"> </button>
                 </div>
                 <div class="modal-body">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label>Role Name</label>
+                            <label>{{ __('Role Name') }}</label>
                             <input type="text" name="role_name" id="edit_role_name" class="form-control" readonly>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label>Status</label>
+                            <label>{{ __('Status') }}</label>
                             <select name="status" id="edit_role_status" class="form-select">
-                                <option value="1"> Active </option>
-                                <option value="0">Inactive</option>
+                                <option value="1"> {{ __('Active') }} </option>
+                                <option value="0">{{ __('Inactive') }}</option>
                             </select>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">
-                        Close
+                        {{ __('Close') }}
                     </button>
                     <button type="submit" class="btn btn-primary">
-                        Save Role
+                        {{ __('Save Role') }}
                     </button>
                 </div>
             </div>
@@ -220,8 +220,8 @@ $('#formAddRole').submit(function(e){
             if(response.success){
                 Swal.fire({
                     icon: 'success',
-                    title: 'Berhasil',
-                    text: 'Role berhasil ditambahkan',
+                    title: @json(__('Berhasil')),
+                    text: @json(__('Role berhasil ditambahkan')),
                     timer: 1500,
                     showConfirmButton: false
                 });
@@ -245,7 +245,7 @@ $('#formAddRole').submit(function(e){
                 });
                 Swal.fire({
                     icon: 'error',
-                    title: 'Validasi Gagal',
+                    title: @json(__('Validasi Gagal')),
                     html: message,
                     allowOutsideClick: false,
                     backdrop: true
@@ -291,8 +291,8 @@ $('#formEditRole').submit(function(e){
             if(response.success){
                 Swal.fire({
                     icon: 'success',
-                    title: 'Berhasil',
-                    text: 'User berhasil diupdate',
+                    title: @json(__('Berhasil')),
+                    text: @json(__('User berhasil diupdate')),
                     timer: 1500,
                     showConfirmButton: false
                 });
@@ -319,7 +319,7 @@ $('#formEditRole').submit(function(e){
 
                 Swal.fire({
                     icon: 'error',
-                    title: 'Validasi Gagal',
+                    title: @json(__('Validasi Gagal')),
                     html: message
                 });
             }
@@ -336,12 +336,12 @@ $(document).on('click', '.btn-delete', function () {
     url = url.replace(':id', id);
 
     Swal.fire({
-        title: 'Hapus Data?',
-        text: 'Data yang sudah dihapus tidak bisa dikembalikan!',
+        title: @json(__('Hapus Data?')),
+        text: @json(__('Data yang sudah dihapus tidak bisa dikembalikan!')),
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: 'Ya, Hapus!',
-        cancelButtonText: 'Batal'
+        confirmButtonText: @json(__('Ya, Hapus!')),
+        cancelButtonText: @json(__('Batal'))
     }).then((result) => {
 
         if (result.isConfirmed) {
@@ -356,7 +356,7 @@ $(document).on('click', '.btn-delete', function () {
 
                     Swal.fire({
                         icon: 'success',
-                        title: 'Berhasil',
+                        title: @json(__('Berhasil')),
                         text: response.message
                     });
 
@@ -368,7 +368,7 @@ $(document).on('click', '.btn-delete', function () {
 
                     Swal.fire({
                         icon: 'error',
-                        title: 'Gagal',
+                        title: @json(__('Gagal')),
                         text: xhr.responseJSON?.message || 'Data gagal dihapus'
                     });
 

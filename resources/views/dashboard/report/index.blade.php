@@ -1,6 +1,6 @@
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Laporan')
+@section('title', __('Laporan'))
 
 @section('content')
 @php
@@ -86,22 +86,22 @@
             <div class="d-flex align-items-center gap-3 flex-wrap">
                 @php $companyLogo = \App\Services\CompanyBranding::logoUrl(auth()->user()->company); @endphp
                 <div class="rp-logo" title="{{ $companyLogo ? 'Logo perusahaan' : 'Belum ada logo perusahaan — laporan memakai logo Vasetra' }}">
-                    <img src="{{ $companyLogo ?? asset('assets/images/brand/vasetra-logo.png') }}" alt="Logo">
+                    <img src="{{ $companyLogo ?? asset('assets/images/brand/vasetra-logo.png') }}" alt="{{ __('Logo') }}">
                 </div>
                 <div>
                     <div class="rp-kicker">{{ $r['meta']['title'] }}</div>
                     <h4 class="mt-1">{{ $r['meta']['company'] }}</h4>
-                    <div class="sub">{{ $r['meta']['period'] }} · dibanding {{ $r['meta']['previous'] }}</div>
+                    <div class="sub">{{ __(':p1 · dibanding :p2', ['p1' => $r['meta']['period'], 'p2' => $r['meta']['previous']]) }}</div>
                     @if(!$companyLogo && auth()->user()->isCompanyAdmin())
-                        <a href="{{ route('company.edit') }}" class="d-inline-block mt-2 small fw-bold" style="color:#67e8f9"><i class="bi bi-image me-1"></i>Pasang logo perusahaan untuk laporan</a>
+                        <a href="{{ route('company.edit') }}" class="d-inline-block mt-2 small fw-bold" style="color:#67e8f9"><i class="bi bi-image me-1"></i>{{ __('Pasang logo perusahaan untuk laporan') }}</a>
                     @endif
                 </div>
             </div>
             <div class="d-flex flex-wrap gap-2">
-                <a href="{{ route('reports.print', $query) }}" target="_blank" class="rp-btn"><i class="bi bi-printer"></i> Cetak / PDF</a>
+                <a href="{{ route('reports.print', $query) }}" target="_blank" class="rp-btn"><i class="bi bi-printer"></i> {{ __('Cetak / PDF') }}</a>
                 @if($canExport)
-                    <a href="{{ route('reports.excel', $query) }}" class="rp-btn"><i class="bi bi-file-earmark-spreadsheet"></i> Excel</a>
-                    <a href="{{ route('reports.pptx', $query) }}" class="rp-btn solid"><i class="bi bi-file-earmark-slides"></i> PowerPoint</a>
+                    <a href="{{ route('reports.excel', $query) }}" class="rp-btn"><i class="bi bi-file-earmark-spreadsheet"></i> {{ __('Excel') }}</a>
+                    <a href="{{ route('reports.pptx', $query) }}" class="rp-btn solid"><i class="bi bi-file-earmark-slides"></i> {{ __('PowerPoint') }}</a>
                 @endif
             </div>
         </div>
@@ -121,8 +121,8 @@
             </div>
             @if(($branches ?? collect())->count() > 0)
                 {{-- Laporan per cabang (kantor pusat) --}}
-                <select class="form-select form-select-sm" style="width:auto" id="rpBranch" aria-label="Cabang">
-                    <option value="">Semua cabang</option>
+                <select class="form-select form-select-sm" style="width:auto" id="rpBranch" aria-label="{{ __('Cabang') }}">
+                    <option value="">{{ __('Semua cabang') }}</option>
                     @foreach($branches as $b)
                         <option value="{{ $b->id }}" @selected((int) ($branchId ?? 0) === (int) $b->id)>{{ $b->label() }}</option>
                     @endforeach
@@ -141,9 +141,9 @@
                 <input type="hidden" name="range" value="custom">
                 @if(!empty($query['branch_id']))<input type="hidden" name="branch_id" value="{{ $query['branch_id'] }}">@endif
                 <input type="date" name="from" value="{{ $period->from->toDateString() }}" class="form-control form-control-sm" style="width:auto">
-                <span class="text-muted small">s/d</span>
+                <span class="text-muted small">{{ __('s/d') }}</span>
                 <input type="date" name="to" value="{{ $period->to->toDateString() }}" class="form-control form-control-sm" style="width:auto">
-                <button class="btn btn-sm btn-primary">Tampilkan</button>
+                <button class="btn btn-sm btn-primary">{{ __('Tampilkan') }}</button>
             </div>
         </form>
     </div>
@@ -152,12 +152,12 @@
     <div class="row g-3 mb-4">
         <div class="col-xl-5">
             <div class="rp-card h-100">
-                <div class="rp-h"><div><h6><i class="bi bi-stars text-primary me-1"></i> Ringkasan otomatis</h6><div class="hint">Poin penting yang juga tampil di PowerPoint</div></div></div>
+                <div class="rp-h"><div><h6><i class="bi bi-stars text-primary me-1"></i> {{ __('Ringkasan otomatis') }}</h6><div class="hint">{{ __('Poin penting yang juga tampil di PowerPoint') }}</div></div></div>
                 <ul class="rp-hl">
                     @forelse($r['highlights'] as $h)
                         <li><i class="bi bi-check2-circle"></i><span>{{ $h }}</span></li>
                     @empty
-                        <li class="text-muted">Belum ada aktivitas pada periode ini.</li>
+                        <li class="text-muted">{{ __('Belum ada aktivitas pada periode ini.') }}</li>
                     @endforelse
                 </ul>
             </div>
@@ -195,8 +195,8 @@
         <div class="col-xl-6">
             <div class="rp-card h-100">
                 <div class="rp-h">
-                    <div><h6>Request perbaikan</h6><div class="hint">Masuk vs selesai {{ $unit }}</div></div>
-                    <div class="rp-legend"><span><i style="background:#2a78d6"></i>Masuk</span><span><i style="background:#1baf7a"></i>Selesai</span></div>
+                    <div><h6>{{ __('Request perbaikan') }}</h6><div class="hint">{{ __('Masuk vs selesai :p1', ['p1' => $unit]) }}</div></div>
+                    <div class="rp-legend"><span><i style="background:#2a78d6"></i>{{ __('Masuk') }}</span><span><i style="background:#1baf7a"></i>{{ __('Selesai') }}</span></div>
                 </div>
                 <div id="rpRequests" class="px-2"></div>
             </div>
@@ -204,7 +204,7 @@
         <div class="col-xl-6">
             <div class="rp-card h-100">
                 <div class="rp-h">
-                    <div><h6>Biaya maintenance</h6><div class="hint">Realisasi (maintenance selesai) {{ $unit }}</div></div>
+                    <div><h6>{{ __('Biaya maintenance') }}</h6><div class="hint">{{ __('Realisasi (maintenance selesai) :p1', ['p1' => $unit]) }}</div></div>
                 </div>
                 <div id="rpCost" class="px-2"></div>
             </div>
@@ -216,9 +216,9 @@
         @foreach([['by_category', 'Nilai aset per kategori', 'value', $rp], ['by_location', 'Jumlah aset per lokasi', 'total', fn ($v) => $num($v) . ' aset']] as [$key, $title, $field, $fmt])
             <div class="col-xl-6">
                 <div class="rp-card h-100">
-                    <div class="rp-h"><div><h6>{{ $title }}</h6><div class="hint">Posisi akhir periode</div></div></div>
+                    <div class="rp-h"><div><h6>{{ $title }}</h6><div class="hint">{{ __('Posisi akhir periode') }}</div></div></div>
                     @if(empty($r[$key]))
-                        <div class="rp-empty">Belum ada data.</div>
+                        <div class="rp-empty">{{ __('Belum ada data.') }}</div>
                     @else
                         @php $max = max(1, collect($r[$key])->max($field)); @endphp
                         <div class="rp-bars">
@@ -239,15 +239,15 @@
     <div class="row g-3 mb-4">
         <div class="col-xl-6">
             <div class="rp-card h-100">
-                <div class="rp-h"><div><h6>Aset dengan biaya maintenance terbesar</h6><div class="hint">Top 5 pada periode ini</div></div></div>
+                <div class="rp-h"><div><h6>{{ __('Aset dengan biaya maintenance terbesar') }}</h6><div class="hint">{{ __('Top 5 pada periode ini') }}</div></div></div>
                 <div class="table-responsive mt-2">
                     <table class="table align-middle mb-0 rp-table">
-                        <thead><tr><th>Kode</th><th>Nama aset</th><th class="text-end">Kali</th><th class="text-end">Biaya</th></tr></thead>
+                        <thead><tr><th>{{ __('Kode') }}</th><th>{{ __('Nama aset') }}</th><th class="text-end">{{ __('Kali') }}</th><th class="text-end">{{ __('Biaya') }}</th></tr></thead>
                         <tbody>
                             @forelse($r['top_cost_assets'] as $a)
                                 <tr><td class="fw-bold text-primary">{{ $a['code'] }}</td><td>{{ $a['name'] }}</td><td class="text-end">{{ $num($a['total']) }}</td><td class="text-end">{{ $rp($a['cost']) }}</td></tr>
                             @empty
-                                <tr><td colspan="4" class="rp-empty">Tidak ada maintenance pada periode ini.</td></tr>
+                                <tr><td colspan="4" class="rp-empty">{{ __('Tidak ada maintenance pada periode ini.') }}</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -256,15 +256,15 @@
         </div>
         <div class="col-xl-6">
             <div class="rp-card h-100">
-                <div class="rp-h"><div><h6>Teknisi paling aktif</h6><div class="hint">Request yang diselesaikan</div></div></div>
+                <div class="rp-h"><div><h6>{{ __('Teknisi paling aktif') }}</h6><div class="hint">{{ __('Request yang diselesaikan') }}</div></div></div>
                 <div class="table-responsive mt-2">
                     <table class="table align-middle mb-0 rp-table">
-                        <thead><tr><th>Teknisi</th><th class="text-end">Selesai</th><th class="text-end">Rata-rata</th></tr></thead>
+                        <thead><tr><th>{{ __('Teknisi') }}</th><th class="text-end">{{ __('Selesai') }}</th><th class="text-end">{{ __('Rata-rata') }}</th></tr></thead>
                         <tbody>
                             @forelse($r['top_technicians'] as $t)
                                 <tr><td class="fw-bold">{{ $t['name'] }}</td><td class="text-end">{{ $num($t['total']) }}</td><td class="text-end">{{ $dur($t['avg_hours']) }}</td></tr>
                             @empty
-                                <tr><td colspan="3" class="rp-empty">Belum ada request yang diselesaikan.</td></tr>
+                                <tr><td colspan="3" class="rp-empty">{{ __('Belum ada request yang diselesaikan.') }}</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -278,15 +278,15 @@
         @foreach([['upcoming_maintenance', 'Maintenance 30 hari ke depan', 'bi-calendar-check'], ['warranty_expiring', 'Garansi habis 60 hari ke depan', 'bi-shield-exclamation']] as [$key, $title, $icon])
             <div class="col-xl-6">
                 <div class="rp-card h-100">
-                    <div class="rp-h"><div><h6><i class="bi {{ $icon }} me-1 text-warning"></i> {{ $title }} ({{ $num($r[$key]['total']) }})</h6><div class="hint">Setelah akhir periode laporan</div></div></div>
+                    <div class="rp-h"><div><h6><i class="bi {{ $icon }} me-1 text-warning"></i> {{ $title }} ({{ $num($r[$key]['total']) }})</h6><div class="hint">{{ __('Setelah akhir periode laporan') }}</div></div></div>
                     <div class="table-responsive mt-2">
                         <table class="table align-middle mb-0 rp-table">
-                            <thead><tr><th>Tanggal</th><th>Kode</th><th>Aset</th></tr></thead>
+                            <thead><tr><th>{{ __('Tanggal') }}</th><th>{{ __('Kode') }}</th><th>{{ __('Aset') }}</th></tr></thead>
                             <tbody>
                                 @forelse($r[$key]['items'] as $i)
                                     <tr><td class="text-nowrap">{{ \Illuminate\Support\Carbon::parse($i['date'])->locale('id')->translatedFormat('d M Y') }}</td><td class="fw-bold text-primary">{{ $i['code'] }}</td><td>{{ $i['name'] }}</td></tr>
                                 @empty
-                                    <tr><td colspan="3" class="rp-empty">Tidak ada.</td></tr>
+                                    <tr><td colspan="3" class="rp-empty">{{ __('Tidak ada.') }}</td></tr>
                                 @endforelse
                             </tbody>
                         </table>
@@ -298,20 +298,20 @@
 
     {{-- Format unduhan --}}
     <div class="rp-card mb-2">
-        <div class="rp-h"><div><h6>Bagikan laporan</h6><div class="hint">Semua format memakai angka yang sama dengan halaman ini</div></div></div>
+        <div class="rp-h"><div><h6>{{ __('Bagikan laporan') }}</h6><div class="hint">{{ __('Semua format memakai angka yang sama dengan halaman ini') }}</div></div></div>
         <div class="rp-formats">
             <a class="rp-format" href="{{ route('reports.print', $query) }}" target="_blank">
                 <i class="bi bi-filetype-pdf" style="background:#fee2e2;color:#b91c1c"></i>
-                <span><b>PDF / Cetak</b><small>Pilih "Simpan sebagai PDF" di jendela cetak</small></span>
+                <span><b>{{ __('PDF / Cetak') }}</b><small>{{ __('Pilih "Simpan sebagai PDF" di jendela cetak') }}</small></span>
             </a>
             @if($canExport)
                 <a class="rp-format" href="{{ route('reports.excel', $query) }}">
                     <i class="bi bi-file-earmark-spreadsheet" style="background:#dcfce7;color:#15803d"></i>
-                    <span><b>Excel</b><small>Ringkasan, tren, kategori & data rinci per sheet</small></span>
+                    <span><b>{{ __('Excel') }}</b><small>{{ __('Ringkasan, tren, kategori & data rinci per sheet') }}</small></span>
                 </a>
                 <a class="rp-format" href="{{ route('reports.pptx', $query) }}">
                     <i class="bi bi-file-earmark-slides" style="background:#ffedd5;color:#c2410c"></i>
-                    <span><b>PowerPoint</b><small>9 slide siap presentasi rapat</small></span>
+                    <span><b>{{ __('PowerPoint') }}</b><small>{{ __('9 slide siap presentasi rapat') }}</small></span>
                 </a>
             @endif
         </div>

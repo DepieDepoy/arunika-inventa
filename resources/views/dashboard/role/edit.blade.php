@@ -7,7 +7,7 @@
             <div class="modal-header">
 
                 <h5 class="modal-title">
-                    Edit Role
+                    {{ __('Edit Role') }}
                 </h5>
 
                 <button
@@ -29,7 +29,7 @@
                     <div class="mb-3">
 
                         <label class="form-label">
-                            Role Name
+                            {{ __('Role Name') }}
                         </label>
 
                         <input
@@ -45,7 +45,7 @@
                     <div class="mb-3">
 
                         <label class="form-label">
-                            Status
+                            {{ __('Status') }}
                         </label>
 
                         <select
@@ -54,11 +54,11 @@
                             class="form-select">
 
                             <option value="1">
-                                Active
+                                {{ __('Active') }}
                             </option>
 
                             <option value="0">
-                                Inactive
+                                {{ __('Inactive') }}
                             </option>
 
                         </select>
@@ -75,13 +75,13 @@
                         type="button"
                         class="btn btn-secondary"
                         data-bs-dismiss="modal">
-                        Cancel
+                        {{ __('Cancel') }}
                     </button>
 
                     <button
                         type="submit"
                         class="btn btn-primary">
-                        Update
+                        {{ __('Update') }}
                     </button>
 
                 </div>

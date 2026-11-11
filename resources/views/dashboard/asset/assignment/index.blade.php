@@ -1,6 +1,6 @@
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Asset Assignment')
+@section('title', __('Asset Assignment'))
 
 @section('content')
 
@@ -454,7 +454,7 @@
 
                         <i class="fa-solid fa-arrow-left me-1"></i>
 
-                        Asset Detail
+                        {{ __('Asset Detail') }}
 
                     </a>
 
@@ -481,13 +481,13 @@
 
                             <i class="fa-solid fa-user-check me-1"></i>
 
-                            Current Assignment
+                            {{ __('Current Assignment') }}
 
                         </div>
 
                         <p class="section-description">
 
-                            User yang saat ini bertanggung jawab atas asset.
+                            {{ __('User yang saat ini bertanggung jawab atas asset.') }}
 
                         </p>
 
@@ -497,13 +497,13 @@
                     @if($asset->responsibleUser)
 
                         <span class="badge bg-success">
-                            Active
+                            {{ __('Active') }}
                         </span>
 
                     @else
 
                         <span class="badge bg-secondary">
-                            Unassigned
+                            {{ __('Unassigned') }}
                         </span>
 
                     @endif
@@ -572,13 +572,12 @@
                             <div>
 
                                 <strong>
-                                    Asset belum diberikan kepada user.
+                                    {{ __('Asset belum diberikan kepada user.') }}
                                 </strong>
 
                                 <div class="small">
 
-                                    Asset saat ini berstatus
-                                    unassigned / stock.
+                                    {{ __('Asset saat ini berstatus unassigned / stock.') }}
 
                                 </div>
 
@@ -609,13 +608,13 @@
 
                         <i class="fa-solid fa-gears me-1"></i>
 
-                        Assignment Action
+                        {{ __('Assignment Action') }}
 
                     </div>
 
                     <p class="section-description">
 
-                        Kelola perpindahan tanggung jawab asset.
+                        {{ __('Kelola perpindahan tanggung jawab asset.') }}
 
                     </p>
 
@@ -725,15 +724,14 @@
 
                             <div class="action-title">
 
-                                Return Asset
+                                {{ __('Return Asset') }}
 
                             </div>
 
 
                             <div class="action-description">
 
-                                Kembalikan asset dari user sehingga
-                                menjadi unassigned / stock.
+                                {{ __('Kembalikan asset dari user sehingga menjadi unassigned / stock.') }}
 
                             </div>
 
@@ -749,7 +747,7 @@
 
                                     <i class="fa-solid fa-rotate-left me-1"></i>
 
-                                    Return Asset
+                                    {{ __('Return Asset') }}
 
                                 </button>
 
@@ -763,7 +761,7 @@
 
                                     <i class="fa-solid fa-ban me-1"></i>
 
-                                    Already Unassigned
+                                    {{ __('Already Unassigned') }}
 
                                 </button>
 
@@ -796,13 +794,13 @@
 
                             <i class="fa-solid fa-clock-rotate-left me-1"></i>
 
-                            Assignment History
+                            {{ __('Assignment History') }}
 
                         </div>
 
                         <p class="section-description">
 
-                            Riwayat lengkap perpindahan dan pengembalian asset.
+                            {{ __('Riwayat lengkap perpindahan dan pengembalian asset.') }}
 
                         </p>
 
@@ -829,35 +827,35 @@
                                 <tr>
 
                                     <th>
-                                        User
+                                        {{ __('User') }}
                                     </th>
 
                                     <th>
-                                        Action
+                                        {{ __('Action') }}
                                     </th>
 
                                     <th>
-                                        Start
+                                        {{ __('Start') }}
                                     </th>
 
                                     <th>
-                                        End
+                                        {{ __('End') }}
                                     </th>
 
                                     <th>
-                                        Status
+                                        {{ __('Status') }}
                                     </th>
 
                                     <th>
-                                        Reason
+                                        {{ __('Reason') }}
                                     </th>
 
                                     <th>
-                                        Notes
+                                        {{ __('Notes') }}
                                     </th>
 
                                     <th>
-                                        Created By
+                                        {{ __('Created By') }}
                                     </th>
 
                                 </tr>
@@ -1078,15 +1076,15 @@
                                         <td class="history-status-cell">
                                             @if($type === 'return')
                                                 <span class="badge bg-success">
-                                                    Returned
+                                                    {{ __('Returned') }}
                                                 </span>
                                             @elseif(is_null($assignment->end_at))
                                                 <span class="badge bg-primary">
-                                                    Active
+                                                    {{ __('Active') }}
                                                 </span>
                                             @else
                                                 <span class="badge bg-secondary">
-                                                    Finished
+                                                    {{ __('Finished') }}
                                                 </span>
                                             @endif
                                         </td>
@@ -1152,7 +1150,7 @@
 
                         <div>
 
-                            Belum ada history assignment.
+                            {{ __('Belum ada history assignment.') }}
 
                         </div>
 
@@ -1238,7 +1236,7 @@
 
                             <div class="small text-muted mb-1">
 
-                                Current Responsible
+                                {{ __('Current Responsible') }}
 
                             </div>
 
@@ -1267,7 +1265,7 @@
                             class="form-label"
                         >
 
-                            Assign To
+                            {{ __('Assign To') }}
 
                             <span class="text-danger">*</span>
 
@@ -1286,7 +1284,7 @@
                                 id="assignment_user_search"
                                 class="user-search-input"
                                 autocomplete="off"
-                                placeholder="Ketik nama, NIK, atau email..."
+                                placeholder="{{ __('Ketik nama, NIK, atau email...') }}"
                             >
 
 
@@ -1294,7 +1292,7 @@
                                 type="button"
                                 id="assignment_user_clear"
                                 class="user-search-clear"
-                                aria-label="Clear"
+                                aria-label="{{ __('Clear') }}"
                             >
 
                                 <i class="fa-solid fa-xmark"></i>
@@ -1356,7 +1354,7 @@
                                     type="button"
                                     id="selected_user_clear"
                                     class="selected-user-clear"
-                                    title="Ganti user"
+                                    title="{{ __('Ganti user') }}"
                                 >
 
                                     <i class="fa-solid fa-xmark"></i>
@@ -1370,8 +1368,7 @@
 
                         <small class="text-muted">
 
-                            Ketik minimal 2 karakter untuk mencari
-                            nama, NIK, atau email.
+                            {{ __('Ketik minimal 2 karakter untuk mencari nama, NIK, atau email.') }}
 
                         </small>
 
@@ -1386,7 +1383,7 @@
 
                         <label class="form-label">
 
-                            Start Date & Time
+                            {{ __('Start Date & Time') }}
 
                             <span class="text-danger">*</span>
 
@@ -1404,8 +1401,7 @@
 
                         <small class="text-muted">
 
-                            Waktu mulai user menerima tanggung jawab
-                            asset.
+                            {{ __('Waktu mulai user menerima tanggung jawab asset.') }}
 
                         </small>
 
@@ -1420,7 +1416,7 @@
 
                         <label class="form-label">
 
-                            Reason
+                            {{ __('Reason') }}
 
                         </label>
 
@@ -1430,7 +1426,7 @@
                             name="reason"
                             class="form-control"
                             maxlength="255"
-                            placeholder="Contoh: Laptop baru / Tukeran dengan user B"
+                            placeholder="{{ __('Contoh: Laptop baru / Tukeran dengan user B') }}"
                         >
 
                     </div>
@@ -1444,7 +1440,7 @@
 
                         <label class="form-label">
 
-                            Notes
+                            {{ __('Notes') }}
 
                         </label>
 
@@ -1473,7 +1469,7 @@
                         data-bs-dismiss="modal"
                     >
 
-                        Batal
+                        {{ __('Batal') }}
 
                     </button>
 
@@ -1543,7 +1539,7 @@
 
                         <i class="fa-solid fa-rotate-left me-1"></i>
 
-                        Return Asset
+                        {{ __('Return Asset') }}
 
                     </h5>
 
@@ -1576,19 +1572,19 @@
                             <div>
 
                                 <strong>
-                                    Return asset?
+                                    {{ __('Return asset?') }}
                                 </strong>
 
 
                                 <div class="small mt-1">
 
-                                    Asset akan dikembalikan dari
+                                    {{ __('Asset akan dikembalikan dari') }}
 
                                     <strong>
                                         {{ $asset->responsibleUser?->name }}
                                     </strong>
 
-                                    ke kantor / stock.
+                                    {{ __('ke kantor / stock.') }}
 
                                 </div>
 
@@ -1607,7 +1603,7 @@
 
                         <label class="form-label">
 
-                            Return Date & Time
+                            {{ __('Return Date & Time') }}
 
                             <span class="text-danger">*</span>
 
@@ -1625,7 +1621,7 @@
 
                         <small class="text-muted">
 
-                            Waktu asset dikembalikan ke kantor.
+                            {{ __('Waktu asset dikembalikan ke kantor.') }}
 
                         </small>
 
@@ -1640,7 +1636,7 @@
 
                         <label class="form-label">
 
-                            Reason
+                            {{ __('Reason') }}
 
                         </label>
 
@@ -1650,7 +1646,7 @@
                             name="reason"
                             class="form-control"
                             maxlength="255"
-                            placeholder="Contoh: Ganti laptop"
+                            placeholder="{{ __('Contoh: Ganti laptop') }}"
                         >
 
                     </div>
@@ -1664,7 +1660,7 @@
 
                         <label class="form-label">
 
-                            Notes
+                            {{ __('Notes') }}
 
                         </label>
 
@@ -1693,7 +1689,7 @@
                         data-bs-dismiss="modal"
                     >
 
-                        Batal
+                        {{ __('Batal') }}
 
                     </button>
 
@@ -1705,7 +1701,7 @@
 
                         <i class="fa-solid fa-rotate-left me-1"></i>
 
-                        Return Asset
+                        {{ __('Return Asset') }}
 
                     </button>
 

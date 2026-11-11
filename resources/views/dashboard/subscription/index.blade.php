@@ -1,7 +1,7 @@
  
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Subscription')
+@section('title', __('Subscription'))
 
 @section('content')
 
@@ -415,19 +415,18 @@
                                     <i class="bi bi-stars"></i>
                                 </div>
                                 <div>
-                                    <h3 class="mb-1 fw-bold text-white">Subscription</h3>
+                                    <h3 class="mb-1 fw-bold text-white">{{ __('Subscription') }}</h3>
                                     <p class="mb-0 text-white opacity-75">
-                                        Kelola paket dan tingkatkan kemampuan
-                                        {{ $company->company_name }}.
+                                        {{ __('Kelola paket dan tingkatkan kemampuan :p1.', ['p1' => $company->company_name]) }}
                                     </p>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-4 text-md-end mt-4 mt-md-0">
                             <span class="badge rounded-pill bg-white text-primary px-3 py-2">
-                                <i class="bi bi-shield-check me-1"></i> Secure Payment
+                                <i class="bi bi-shield-check me-1"></i> {{ __('Secure Payment') }}
                             </span>
-                            <div class="small text-white opacity-75 mt-2">Powered by DOKU</div>
+                            <div class="small text-white opacity-75 mt-2">{{ __('Powered by DOKU') }}</div>
                         </div>
                     </div>
                 </div>
@@ -446,7 +445,7 @@
         @if($errors->any())
             <div class="alert alert-danger alert-dismissible fade show shadow-sm mb-4">
                 <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                <strong>Terjadi kesalahan:</strong>
+                <strong>{{ __('Terjadi kesalahan:') }}</strong>
                 <ul class="mb-0 mt-2">
                     @foreach($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -463,10 +462,10 @@
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
                             <h5 class="mb-1 text-white fw-bold">
-                                <i class="bi bi-award me-2"></i> Current Subscription
+                                <i class="bi bi-award me-2"></i> {{ __('Current Subscription') }}
                             </h5>
                             <small class="text-white opacity-75">
-                                Informasi paket yang sedang digunakan
+                                {{ __('Informasi paket yang sedang digunakan') }}
                             </small>
                         </div>
                         <i class="bi bi-patch-check-fill fs-2"></i>
@@ -478,7 +477,7 @@
                         <div class="col-12 col-sm-6 col-lg-3">
                             <div class="current-subscription-item">
                                 <div class="item-icon"><i class="bi bi-box-seam"></i></div>
-                                <small class="text-muted d-block">Plan</small>
+                                <small class="text-muted d-block">{{ __('Plan') }}</small>
                                 <div class="fw-bold fs-5">
                                     {{ $currentSubscription->plan->plan_name ?? '-' }}
                                 </div>
@@ -488,27 +487,27 @@
                         <div class="col-12 col-sm-6 col-lg-3">
                             <div class="current-subscription-item">
                                 <div class="item-icon"><i class="bi bi-activity"></i></div>
-                                <small class="text-muted d-block">Status</small>
+                                <small class="text-muted d-block">{{ __('Status') }}</small>
                                 <div class="mt-1">
                                     @if($currentSubscription->status === 'active')
                                         <span class="badge rounded-pill bg-success px-3 py-2">
-                                            <i class="bi bi-check-circle me-1"></i> Active
+                                            <i class="bi bi-check-circle me-1"></i> {{ __('Active') }}
                                         </span>
                                     @elseif($currentSubscription->status === 'expired')
                                         <span class="badge rounded-pill bg-danger px-3 py-2">
-                                            <i class="bi bi-x-circle me-1"></i> Expired
+                                            <i class="bi bi-x-circle me-1"></i> {{ __('Expired') }}
                                         </span>
                                     @elseif($currentSubscription->status === 'replaced')
                                         <span class="badge rounded-pill bg-warning text-dark px-3 py-2">
-                                            <i class="bi bi-arrow-left-right me-1"></i> Replaced
+                                            <i class="bi bi-arrow-left-right me-1"></i> {{ __('Replaced') }}
                                         </span>
                                     @elseif($currentSubscription->status === 'cancelled')
                                         <span class="badge rounded-pill bg-secondary px-3 py-2">
-                                            <i class="bi bi-slash-circle me-1"></i> Cancelled
+                                            <i class="bi bi-slash-circle me-1"></i> {{ __('Cancelled') }}
                                         </span>
                                     @elseif($currentSubscription->status === 'pending')
                                         <span class="badge rounded-pill bg-warning text-dark px-3 py-2">
-                                            <i class="bi bi-hourglass-split me-1"></i> Pending
+                                            <i class="bi bi-hourglass-split me-1"></i> {{ __('Pending') }}
                                         </span>
                                     @else
                                         <span class="badge rounded-pill bg-secondary px-3 py-2">
@@ -522,7 +521,7 @@
                         <div class="col-12 col-sm-6 col-lg-3">
                             <div class="current-subscription-item">
                                 <div class="item-icon"><i class="bi bi-calendar-check"></i></div>
-                                <small class="text-muted d-block">Start Date</small>
+                                <small class="text-muted d-block">{{ __('Start Date') }}</small>
                                 <div class="fw-semibold">
                                     {{ $currentSubscription->start_date
                                         ? $currentSubscription->start_date->translatedFormat('d F Y')
@@ -534,7 +533,7 @@
                         <div class="col-12 col-sm-6 col-lg-3">
                             <div class="current-subscription-item">
                                 <div class="item-icon"><i class="bi bi-calendar-x"></i></div>
-                                <small class="text-muted d-block">Expired Date</small>
+                                <small class="text-muted d-block">{{ __('Expired Date') }}</small>
                                 <div class="fw-semibold">
                                     {{ $currentSubscription->end_date
                                         ? $currentSubscription->end_date->translatedFormat('d F Y')
@@ -557,7 +556,7 @@
                         </div>
                         <div class="flex-grow-1">
                             <span class="badge bg-info-subtle text-info-emphasis mb-2">
-                                <i class="bi bi-clock-history me-1"></i> Paket Berikutnya
+                                <i class="bi bi-clock-history me-1"></i> {{ __('Paket Berikutnya') }}
                             </span>
                             <h5 class="fw-bold mb-1">
                                 {{ $queuedSubscription->plan->plan_name ?? '-' }}
@@ -566,18 +565,17 @@
                                 </small>
                             </h5>
                             <div class="text-muted small">
-                                Sudah dibayar. Aktif otomatis mulai
+                                {{ __('Sudah dibayar. Aktif otomatis mulai') }}
                                 <strong>{{ $queuedSubscription->start_date->translatedFormat('d F Y') }}</strong>
-                                s/d
-                                <strong>{{ $queuedSubscription->end_date->translatedFormat('d F Y') }}</strong>,
-                                setelah paket saat ini berakhir.
+                                {{ __('s/d') }}
+                                <strong>{{ $queuedSubscription->end_date->translatedFormat('d F Y') }}</strong>{{ __(', setelah paket saat ini berakhir.') }}
                             </div>
                         </div>
                         <div class="text-md-end">
-                            <small class="text-muted d-block">Kapasitas storage</small>
+                            <small class="text-muted d-block">{{ __('Kapasitas storage') }}</small>
                             <strong>{{ $formatStorageServer($queuedSubscription->total_storage_bytes) }}</strong>
                             @if($queuedSubscription->limit('assets') !== null)
-                                <small class="text-muted d-block mt-1">Maks. asset</small>
+                                <small class="text-muted d-block mt-1">{{ __('Maks. asset') }}</small>
                                 <strong>{{ number_format($queuedSubscription->limit('assets'), 0, ',', '.') }}</strong>
                             @endif
                         </div>
@@ -592,7 +590,7 @@
                 <div class="d-flex align-items-start gap-3">
                     <i class="bi bi-hourglass-split fs-3"></i>
                     <div class="flex-grow-1">
-                        <h6 class="fw-bold mb-1">Pembayaran Belum Selesai</h6>
+                        <h6 class="fw-bold mb-1">{{ __('Pembayaran Belum Selesai') }}</h6>
                         <div class="small mb-2">
                             Masih terdapat transaksi pembayaran yang belum selesai.
                             @if($pendingPayment->purchase_type === 'storage_addon')
@@ -613,7 +611,7 @@
                                         id="btnResumeDokuPayment"
                                         data-payment-url="{{ $pendingPayment->payment_url }}">
                                     <i class="bi bi-credit-card me-1"></i>
-                                    Lanjutkan Pembayaran
+                                    {{ __('Lanjutkan Pembayaran') }}
                                 </button>
                             @endif
 
@@ -625,7 +623,7 @@
                                     @csrf
                                     <button type="submit" class="btn btn-outline-danger btn-sm fw-semibold">
                                         <i class="bi bi-x-circle me-1"></i>
-                                        Batalkan
+                                        {{ __('Batalkan') }}
                                     </button>
                                 </form>
                             @endif
@@ -654,7 +652,7 @@
                 <div class="card-body p-4 d-flex flex-wrap gap-3 align-items-center">
                     <div class="sub-highlight-icon"><i class="bi bi-rocket-takeoff"></i></div>
                     <div class="flex-grow-1">
-                        <span class="badge bg-primary-subtle text-primary mb-1">Upgrade Aktif</span>
+                        <span class="badge bg-primary-subtle text-primary mb-1">{{ __('Upgrade Aktif') }}</span>
                         <h5 class="fw-bold mb-1">
                             {{ $activeUpgrade->plan->plan_name ?? '-' }}
                             <small class="text-muted fw-normal">
@@ -664,7 +662,7 @@
                         <div class="small text-muted">
                             @if($activeUpgrade->parent && $activeUpgrade->end_date->lt($activeUpgrade->parent->end_date))
                                 Otomatis kembali ke <strong>{{ $activeUpgrade->parent->plan?->plan_name }}</strong>
-                                mulai <strong>{{ $activeUpgrade->end_date->copy()->addDay()->translatedFormat('d F Y') }}</strong>
+                                {{ __('mulai') }} <strong>{{ $activeUpgrade->end_date->copy()->addDay()->translatedFormat('d F Y') }}</strong>
                                 s/d {{ $activeUpgrade->parent->end_date->translatedFormat('d F Y') }}.
                                 Data tetap aman; jika pemakaian melebihi kuota paket tersebut, penambahan data baru diblokir.
                             @else
@@ -683,17 +681,16 @@
                     <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
                         <div>
                             <span class="badge bg-primary-subtle text-primary mb-2">
-                                <i class="bi bi-lightning-charge-fill me-1"></i> Upgrade Sekarang
+                                <i class="bi bi-lightning-charge-fill me-1"></i> {{ __('Upgrade Sekarang') }}
                             </span>
-                            <h5 class="fw-bold mb-1">Butuh kapasitas lebih besar sekarang?</h5>
+                            <h5 class="fw-bold mb-1">{{ __('Butuh kapasitas lebih besar sekarang?') }}</h5>
                             <p class="text-muted small mb-0">
-                                Upgrade langsung aktif hari ini. Anda hanya membayar <strong>selisih harga</strong>;
-                                sisa nilai paket <strong>{{ $paidSubscription->plan->plan_name ?? '' }}</strong>
-                                dihitung sebagai kredit.
+                                {{ __('Upgrade langsung aktif hari ini. Anda hanya membayar') }} <strong>{{ __('selisih harga') }}</strong>{{ __('; sisa nilai paket') }} <strong>{{ $paidSubscription->plan->plan_name ?? '' }}</strong>
+                                {{ __('dihitung sebagai kredit.') }}
                             </p>
                         </div>
                         <div class="text-end small">
-                            <div class="text-muted">Paket saat ini</div>
+                            <div class="text-muted">{{ __('Paket saat ini') }}</div>
                             <strong>{{ $paidSubscription->plan->plan_name ?? '-' }}</strong>
                             <div class="text-muted">s/d {{ $paidSubscription->end_date->translatedFormat('d M Y') }}</div>
                         </div>
@@ -705,12 +702,12 @@
                         <input type="hidden" name="duration" id="upgrade_duration">
 
                         <div class="mb-3">
-                            <div class="small fw-semibold text-muted mb-2">1. Pilih paket tujuan</div>
+                            <div class="small fw-semibold text-muted mb-2">{{ __('1. Pilih paket tujuan') }}</div>
                             <div class="d-flex flex-wrap gap-2" id="upgradePlanChoices"></div>
                         </div>
 
                         <div class="mb-4">
-                            <div class="small fw-semibold text-muted mb-2">2. Pilih durasi upgrade</div>
+                            <div class="small fw-semibold text-muted mb-2">{{ __('2. Pilih durasi upgrade') }}</div>
                             <div class="d-flex flex-wrap gap-2" id="upgradeDurationChoices"></div>
                         </div>
 
@@ -721,20 +718,20 @@
                             <div class="col-lg-5">
                                 <div class="sub-price-box h-100">
                                     <div class="d-flex justify-content-between small mb-1">
-                                        <span class="text-muted" id="upgradeNewLabel">Harga paket baru</span>
-                                        <strong id="upgradeNewPrice">Rp0</strong>
+                                        <span class="text-muted" id="upgradeNewLabel">{{ __('Harga paket baru') }}</span>
+                                        <strong id="upgradeNewPrice">{{ __('Rp0') }}</strong>
                                     </div>
                                     <div class="d-flex justify-content-between small mb-2">
-                                        <span class="text-muted">Kredit sisa paket saat ini</span>
-                                        <strong class="text-success" id="upgradeCredit">−Rp0</strong>
+                                        <span class="text-muted">{{ __('Kredit sisa paket saat ini') }}</span>
+                                        <strong class="text-success" id="upgradeCredit">{{ __('−Rp0') }}</strong>
                                     </div>
                                     <hr class="my-2">
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <span class="fw-bold">Bayar selisih</span>
-                                        <span class="fs-4 fw-bold text-primary" id="upgradeTotal">Rp0</span>
+                                        <span class="fw-bold">{{ __('Bayar selisih') }}</span>
+                                        <span class="fs-4 fw-bold text-primary" id="upgradeTotal">{{ __('Rp0') }}</span>
                                     </div>
                                     <button type="submit" class="btn btn-primary w-100 mt-3" id="btnUpgrade">
-                                        <i class="bi bi-arrow-up-circle me-1"></i> Upgrade Sekarang
+                                        <i class="bi bi-arrow-up-circle me-1"></i> {{ __('Upgrade Sekarang') }}
                                     </button>
                                 </div>
                             </div>
@@ -745,7 +742,7 @@
         @elseif($paidSubscription && $queuedSubscription && !$activeUpgrade)
             <div class="alert alert-light border small mb-4" id="upgrade-card">
                 <i class="bi bi-info-circle me-1"></i>
-                Upgrade sekarang tidak tersedia karena sudah ada paket berikutnya di antrean.
+                {{ __('Upgrade sekarang tidak tersedia karena sudah ada paket berikutnya di antrean.') }}
             </div>
         @endif
 
@@ -756,20 +753,19 @@
                     <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
                         <div>
                             <span class="badge bg-success-subtle text-success mb-2">
-                                <i class="bi bi-sliders me-1"></i> Tambah Storage
+                                <i class="bi bi-sliders me-1"></i> {{ __('Tambah Storage') }}
                             </span>
-                            <h5 class="fw-bold mb-1">Butuh ruang penyimpanan lebih?</h5>
+                            <h5 class="fw-bold mb-1">{{ __('Butuh ruang penyimpanan lebih?') }}</h5>
                             <p class="text-muted small mb-0">
-                                Tambah storage tanpa ganti paket. Langsung aktif setelah pembayaran, harga dihitung prorata.
-                                Untuk menambah kuota user atau aset, gunakan <a href="#upgrade-card">upgrade paket</a>.
+                                {{ __('Tambah storage tanpa ganti paket. Langsung aktif setelah pembayaran, harga dihitung prorata. Untuk menambah kuota user atau aset, gunakan') }} <a href="#upgrade-card">{{ __('upgrade paket') }}</a>.
                             </p>
                         </div>
-                        <div class="btn-group" role="group" aria-label="Durasi add-on" id="addonDurationGroup">
+                        <div class="btn-group" role="group" aria-label="{{ __('Durasi add-on') }}" id="addonDurationGroup">
                             <input type="radio" class="btn-check" name="addon_duration_display" id="addonDur1" value="1" checked>
-                            <label class="btn btn-outline-success btn-sm" for="addonDur1">1 bulan</label>
+                            <label class="btn btn-outline-success btn-sm" for="addonDur1">{{ __('1 bulan') }}</label>
                             <input type="radio" class="btn-check" name="addon_duration_display" id="addonDurEnd" value="end">
                             <label class="btn btn-outline-success btn-sm" for="addonDurEnd">
-                                Sampai {{ $addonOffer['base']->end_date->translatedFormat('d M Y') }}
+                                {{ __('Sampai :p1', ['p1' => $addonOffer['base']->end_date->translatedFormat('d M Y')]) }}
                             </label>
                         </div>
                     </div>
@@ -797,12 +793,11 @@
                                         </div>
 
                                         <div class="small text-muted mb-2">
-                                            Terpakai {{ $formatQuota($type, $currentUsed) }}
-                                            / {{ $formatQuota($type, $currentLimit) }}
+                                            {{ __('Terpakai :p1 / :p2', ['p1' => $formatQuota($type, $currentUsed), 'p2' => $formatQuota($type, $currentLimit)]) }}
                                         </div>
 
                                         @if($currentLimit === null && $type !== 'storage')
-                                            <div class="small text-success"><i class="bi bi-infinity me-1"></i>Paket Anda sudah unlimited</div>
+                                            <div class="small text-success"><i class="bi bi-infinity me-1"></i>{{ __('Paket Anda sudah unlimited') }}</div>
                                         @elseif($remainingUnits > 0)
                                             <input type="hidden" name="{{ $type }}_units" value="0" class="addon-units-input">
                                             <input type="range" class="form-range addon-slider" min="0"
@@ -810,10 +805,10 @@
                                                    aria-label="Jumlah {{ $rate['name'] }}">
                                             <div class="d-flex justify-content-between align-items-baseline">
                                                 <strong class="addon-amount">+0</strong>
-                                                <small class="text-muted addon-price">Rp0</small>
+                                                <small class="text-muted addon-price">{{ __('Rp0') }}</small>
                                             </div>
                                         @else
-                                            <div class="small text-muted">Batas maksimal tambahan sudah tercapai.</div>
+                                            <div class="small text-muted">{{ __('Batas maksimal tambahan sudah tercapai.') }}</div>
                                         @endif
                                     </div>
                                 </div>
@@ -823,17 +818,17 @@
                         <div class="sub-price-box d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4">
                             <div>
                                 <div class="small text-muted" id="addonPeriodLabel">-</div>
-                                <div class="fs-4 fw-bold text-success" id="addonTotal">Rp0</div>
+                                <div class="fs-4 fw-bold text-success" id="addonTotal">{{ __('Rp0') }}</div>
                             </div>
                             <button type="submit" class="btn btn-success px-4" id="btnAddon" disabled>
-                                <i class="bi bi-plus-circle me-1"></i> Beli Kapasitas
+                                <i class="bi bi-plus-circle me-1"></i> {{ __('Beli Kapasitas') }}
                             </button>
                         </div>
                     </form>
 
                     @if(count($activeAddons))
                         <div class="mt-4">
-                            <div class="small fw-semibold text-muted mb-2">Kapasitas tambahan aktif</div>
+                            <div class="small fw-semibold text-muted mb-2">{{ __('Kapasitas tambahan aktif') }}</div>
                             <div class="d-flex flex-wrap gap-2">
                                 @foreach($activeAddons as $addon)
                                     <span class="badge rounded-pill bg-light text-dark border px-3 py-2">
@@ -855,11 +850,11 @@
 
                 <div class="text-center mb-4">
                     <span class="badge rounded-pill bg-primary-subtle text-primary px-3 py-2 mb-2">
-                        <i class="bi bi-lightning-charge-fill me-1"></i> Upgrade Your Experience
+                        <i class="bi bi-lightning-charge-fill me-1"></i> {{ __('Upgrade Your Experience') }}
                     </span>
-                    <h4 class="fw-bold mb-2">Pilih Paket Terbaik untuk Perusahaan Anda</h4>
+                    <h4 class="fw-bold mb-2">{{ __('Pilih Paket Terbaik untuk Perusahaan Anda') }}</h4>
                     <p class="text-muted mb-0">
-                        Sesuaikan paket dengan kebutuhan user, asset, dan kapasitas penyimpanan perusahaan.
+                        {{ __('Sesuaikan paket dengan kebutuhan user, asset, dan kapasitas penyimpanan perusahaan.') }}
                     </p>
                 </div>
 
@@ -874,7 +869,7 @@
                                    value="monthly"
                                    checked>
                             <label class="form-check-label" for="billing_monthly">
-                                <i class="bi bi-calendar-month me-1"></i> Monthly
+                                <i class="bi bi-calendar-month me-1"></i> {{ __('Monthly') }}
                             </label>
                         </div>
 
@@ -885,8 +880,8 @@
                                    id="billing_yearly"
                                    value="yearly">
                             <label class="form-check-label" for="billing_yearly">
-                                <i class="bi bi-calendar-check me-1"></i> Yearly
-                                <span class="badge bg-success ms-1">Save</span>
+                                <i class="bi bi-calendar-check me-1"></i> {{ __('Yearly') }}
+                                <span class="badge bg-success ms-1">{{ __('Save') }}</span>
                             </label>
                         </div>
                     </div>
@@ -926,7 +921,7 @@
                                     <div class="card subscription-card {{ $planClass }}"
                                          data-plan-card="{{ $plan->id }}">
                                         @if($isPopular)
-                                            <div class="popular-badge">POPULAR</div>
+                                            <div class="popular-badge">{{ __('POPULAR') }}</div>
                                         @endif
 
                                         <div class="card-body p-4 d-flex flex-column">
@@ -960,14 +955,14 @@
                                                     <span class="price-value">
                                                         Rp{{ number_format($plan->price_monthly, 0, ',', '.') }}
                                                     </span>
-                                                    <span class="price-period">/ bulan</span>
+                                                    <span class="price-period">{{ __('/ bulan') }}</span>
                                                 </div>
 
                                                 <div class="yearly-price d-none">
                                                     <span class="price-value">
                                                         Rp{{ number_format($plan->price_yearly, 0, ',', '.') }}
                                                     </span>
-                                                    <span class="price-period">/ tahun</span>
+                                                    <span class="price-period">{{ __('/ tahun') }}</span>
                                                 </div>
                                             </div>
 
@@ -1012,26 +1007,25 @@
                                                 <div class="plan-feature">
                                                     <i class="bi bi-check-circle-fill"></i>
                                                     <span>
-                                                        Storage dasar:
-                                                        {{ $formatStorageServer($baseStorageBytes) }}
+                                                        {{ __('Storage dasar: :p1', ['p1' => $formatStorageServer($baseStorageBytes)]) }}
                                                     </span>
                                                 </div>
 
                                                 <div class="plan-feature">
                                                     <i class="bi bi-check-circle-fill"></i>
-                                                    <span>Asset Management</span>
+                                                    <span>{{ __('Asset Management') }}</span>
                                                 </div>
 
                                                 <div class="plan-feature">
                                                     <i class="bi bi-check-circle-fill"></i>
-                                                    <span>Maintenance Management</span>
+                                                    <span>{{ __('Maintenance Management') }}</span>
                                                 </div>
                                             </div>
 
                                             <div class="mt-auto">
                                                 <label class="btn btn-outline-primary select-plan-button w-100"
                                                        for="plan_{{ $plan->id }}">
-                                                    <i class="bi bi-check2-circle me-1"></i> Pilih Paket
+                                                    <i class="bi bi-check2-circle me-1"></i> {{ __('Pilih Paket') }}
                                                 </label>
                                             </div>
                                         </div>
@@ -1042,7 +1036,7 @@
                             <div class="col-12">
                                 <div class="alert alert-warning">
                                     <i class="bi bi-exclamation-circle me-2"></i>
-                                    Belum ada paket subscription yang tersedia.
+                                    {{ __('Belum ada paket subscription yang tersedia.') }}
                                 </div>
                             </div>
                         @endforelse
@@ -1053,17 +1047,17 @@
                         <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
                             <div>
                                 <span class="badge bg-primary-subtle text-primary mb-2">
-                                    <i class="bi bi-hdd-stack me-1"></i> Custom Storage
+                                    <i class="bi bi-hdd-stack me-1"></i> {{ __('Custom Storage') }}
                                 </span>
-                                <h5 class="fw-bold mb-1">Tambah Kapasitas Penyimpanan</h5>
+                                <h5 class="fw-bold mb-1">{{ __('Tambah Kapasitas Penyimpanan') }}</h5>
                                 <p class="text-muted small mb-0">
-                                    Storage bawaan paket tetap tersedia. Pilih tambahan sesuai kebutuhan.
+                                    {{ __('Storage bawaan paket tetap tersedia. Pilih tambahan sesuai kebutuhan.') }}
                                 </p>
                             </div>
 
                             <div class="text-end">
-                                <div class="small text-muted">Storage tambahan</div>
-                                <div class="storage-value text-primary" id="extraStorageLabel">0 MB</div>
+                                <div class="small text-muted">{{ __('Storage tambahan') }}</div>
+                                <div class="storage-value text-primary" id="extraStorageLabel">{{ __('0 MB') }}</div>
                             </div>
                         </div>
 
@@ -1075,38 +1069,36 @@
                                    max="{{ $storageAddonMaxSteps }}"
                                    step="1"
                                    value="0"
-                                   aria-label="Pilih tambahan storage">
+                                   aria-label="{{ __('Pilih tambahan storage') }}">
 
                             <div class="d-flex justify-content-between small text-muted">
-                                <span>0 MB</span>
+                                <span>{{ __('0 MB') }}</span>
                                 <span>{{ $formatStorageServer($storageAddonMaxBytes) }}</span>
                             </div>
 
                             <div class="small text-muted mt-2">
-                                Setiap langkah menambah
-                                {{ number_format($storageAddonUnitBytes / (1024 * 1024), 0, ',', '.') }} MB.
-                                Maksimal tambahan {{ $formatStorageServer($storageAddonMaxBytes) }}.
+                                {{ __('Setiap langkah menambah :p1 MB. Maksimal tambahan :p2.', ['p1' => number_format($storageAddonUnitBytes / (1024 * 1024), 0, ',', '.'), 'p2' => $formatStorageServer($storageAddonMaxBytes)]) }}
                             </div>
                         </div>
 
                         <div class="row g-3 mt-2">
                             <div class="col-12 col-md-4">
                                 <div class="storage-summary-box">
-                                    <small class="text-muted d-block mb-1">Storage dasar paket</small>
+                                    <small class="text-muted d-block mb-1">{{ __('Storage dasar paket') }}</small>
                                     <strong id="baseStorageLabel">-</strong>
                                 </div>
                             </div>
 
                             <div class="col-12 col-md-4">
                                 <div class="storage-summary-box">
-                                    <small class="text-muted d-block mb-1">Storage tambahan</small>
-                                    <strong id="extraStorageSummary">0 MB</strong>
+                                    <small class="text-muted d-block mb-1">{{ __('Storage tambahan') }}</small>
+                                    <strong id="extraStorageSummary">{{ __('0 MB') }}</strong>
                                 </div>
                             </div>
 
                             <div class="col-12 col-md-4">
                                 <div class="storage-summary-box">
-                                    <small class="text-muted d-block mb-1">Total kapasitas</small>
+                                    <small class="text-muted d-block mb-1">{{ __('Total kapasitas') }}</small>
                                     <strong id="totalStorageLabel">-</strong>
                                 </div>
                             </div>
@@ -1114,23 +1106,20 @@
 
                         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-4 pt-3 border-top">
                             <div>
-                                <div class="text-muted small">Biaya tambahan storage</div>
-                                <strong class="fs-5 text-primary" id="storageAddonPriceLabel">Rp0</strong>
-                                <div class="small text-muted" id="storageAddonPeriod">Per bulan</div>
+                                <div class="text-muted small">{{ __('Biaya tambahan storage') }}</div>
+                                <strong class="fs-5 text-primary" id="storageAddonPriceLabel">{{ __('Rp0') }}</strong>
+                                <div class="small text-muted" id="storageAddonPeriod">{{ __('Per bulan') }}</div>
                             </div>
 
                             <div class="text-md-end">
                                 <div class="small text-muted">
-                                    Rp{{ number_format($storageAddonPriceMonthly, 0, ',', '.') }}
-                                    per {{ $formatStorageServer($storageAddonUnitBytes) }} per bulan
+                                    {{ __('Rp:p1 per :p2 per bulan', ['p1' => number_format($storageAddonPriceMonthly, 0, ',', '.'), 'p2' => $formatStorageServer($storageAddonUnitBytes)]) }}
                                 </div>
                                 <div class="small text-muted">
-                                    Harga tahunan:
-                                    Rp{{ number_format($storageAddonPriceYearly, 0, ',', '.') }}
-                                    per unit
+                                    {{ __('Harga tahunan: Rp:p1 per unit', ['p1' => number_format($storageAddonPriceYearly, 0, ',', '.')]) }}
                                 </div>
                                 <div class="small text-muted">
-                                    Maksimal tambahan {{ $formatStorageServer($storageAddonMaxBytes) }}
+                                    {{ __('Maksimal tambahan :p1', ['p1' => $formatStorageServer($storageAddonMaxBytes)]) }}
                                 </div>
                             </div>
                         </div>
@@ -1140,17 +1129,17 @@
                     <div class="subscription-total-card p-4 mt-3">
                         <div class="row align-items-center g-3">
                             <div class="col">
-                                <div class="fw-bold fs-5">Total Pembayaran</div>
+                                <div class="fw-bold fs-5">{{ __('Total Pembayaran') }}</div>
                                 <div class="small text-muted" id="subscriptionTotalPeriod">
-                                    Harga paket + storage tambahan per bulan
+                                    {{ __('Harga paket + storage tambahan per bulan') }}
                                 </div>
                                 <div class="small text-muted mt-1" id="subscriptionTotalBreakdown">
-                                    Pilih paket untuk melihat rincian harga.
+                                    {{ __('Pilih paket untuk melihat rincian harga.') }}
                                 </div>
                             </div>
                             <div class="col-auto text-end">
                                 <div class="fs-3 fw-bold text-primary" id="subscriptionTotalPrice">
-                                    Rp0
+                                    {{ __('Rp0') }}
                                 </div>
                             </div>
                         </div>
@@ -1161,10 +1150,7 @@
                         <div class="alert alert-warning d-flex gap-2 mt-3 mb-0">
                             <i class="bi bi-exclamation-triangle-fill"></i>
                             <div class="small">
-                                Anda sudah memiliki paket berikutnya
-                                (<strong>{{ $queuedSubscription->plan->plan_name ?? '-' }}</strong>,
-                                mulai {{ $queuedSubscription->start_date->translatedFormat('d F Y') }}).
-                                Pembelian paket baru dapat dilakukan setelah paket tersebut mulai berjalan.
+                                {{ __('Anda sudah memiliki paket berikutnya (') }}<strong>{{ $queuedSubscription->plan->plan_name ?? '-' }}</strong>{{ __(', mulai :p1). Pembelian paket baru dapat dilakukan setelah paket tersebut mulai berjalan.', ['p1' => $queuedSubscription->start_date->translatedFormat('d F Y')]) }}
                             </div>
                         </div>
                     @elseif($periodPreview)
@@ -1178,15 +1164,13 @@
                             <div class="small">
                                 @if($periodPreview['monthly']['queued'])
                                     Paket Anda saat ini masih aktif sampai
-                                    <strong>{{ $paidSubscription?->end_date?->translatedFormat('d F Y') }}</strong>.
-                                    Paket baru akan <strong>masuk antrean</strong> dan aktif mulai
+                                    <strong>{{ $paidSubscription?->end_date?->translatedFormat('d F Y') }}</strong>{{ __('. Paket baru akan') }} <strong>{{ __('masuk antrean') }}</strong> {{ __('dan aktif mulai') }}
                                     <strong id="periodPreviewStart">{{ $periodPreview['monthly']['start']->translatedFormat('d F Y') }}</strong>
-                                    s/d <strong id="periodPreviewEnd">{{ $periodPreview['monthly']['end']->translatedFormat('d F Y') }}</strong>.
+                                    {{ __('s/d') }} <strong id="periodPreviewEnd">{{ $periodPreview['monthly']['end']->translatedFormat('d F Y') }}</strong>.
                                     Kuota asset &amp; storage paket baru berlaku mulai tanggal tersebut.
                                 @else
-                                    Paket baru <strong>langsung aktif</strong> setelah pembayaran berhasil,
-                                    mulai <strong id="periodPreviewStart">{{ $periodPreview['monthly']['start']->translatedFormat('d F Y') }}</strong>
-                                    s/d <strong id="periodPreviewEnd">{{ $periodPreview['monthly']['end']->translatedFormat('d F Y') }}</strong>.
+                                    Paket baru <strong>{{ __('langsung aktif') }}</strong> {{ __('setelah pembayaran berhasil, mulai') }} <strong id="periodPreviewStart">{{ $periodPreview['monthly']['start']->translatedFormat('d F Y') }}</strong>
+                                    {{ __('s/d') }} <strong id="periodPreviewEnd">{{ $periodPreview['monthly']['end']->translatedFormat('d F Y') }}</strong>.
                                     @if($currentSubscription && $currentSubscription->status === 'active' && $currentSubscription->billing_cycle === 'trial')
                                         Masa trial akan ditutup.
                                     @endif
@@ -1199,10 +1183,10 @@
                     <div class="d-flex flex-column flex-md-row align-items-center justify-content-between gap-3 mt-5 pt-4 border-top">
                         <div class="text-muted small text-center text-md-start">
                             <i class="bi bi-lock-fill me-1"></i>
-                            Pembayaran aman melalui DOKU
+                            {{ __('Pembayaran aman melalui DOKU') }}
                             <br>
                             <i class="bi bi-info-circle me-1"></i>
-                            Tanggal final paket dihitung saat pembayaran dikonfirmasi.
+                            {{ __('Tanggal final paket dihitung saat pembayaran dikonfirmasi.') }}
                         </div>
 
                         <button type="submit"
@@ -1210,7 +1194,7 @@
                                 id="btnSubmitSubscription"
                                 @disabled($queuedSubscription)>
                             <i class="bi bi-arrow-right-circle me-1"></i>
-                            Lanjutkan Pembayaran
+                            {{ __('Lanjutkan Pembayaran') }}
                         </button>
                     </div>
                 </form>
@@ -1243,8 +1227,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!paymentUrl) {
             Swal.fire({
                 icon: 'warning',
-                title: 'URL Pembayaran Tidak Ditemukan',
-                text: 'Silakan buat transaksi pembayaran baru.'
+                title: @json(__('URL Pembayaran Tidak Ditemukan')),
+                text: @json(__('Silakan buat transaksi pembayaran baru.'))
             });
             return;
         }
@@ -1337,11 +1321,11 @@ document.addEventListener('DOMContentLoaded', function () {
             e.preventDefault();
             Swal.fire({
                 icon: 'warning',
-                title: 'Batalkan transaksi ini?',
-                text: 'Link pembayaran lama tidak bisa dipakai lagi. Setelah dibatalkan, Anda bisa membuat transaksi baru.',
+                title: @json(__('Batalkan transaksi ini?')),
+                text: @json(__('Link pembayaran lama tidak bisa dipakai lagi. Setelah dibatalkan, Anda bisa membuat transaksi baru.')),
                 showCancelButton: true,
-                confirmButtonText: 'Ya, batalkan',
-                cancelButtonText: 'Tidak',
+                confirmButtonText: @json(__('Ya, batalkan')),
+                cancelButtonText: @json(__('Tidak')),
                 confirmButtonColor: '#dc3545'
             }).then(function (r) {
                 if (r.isConfirmed) cancelPendingForm.submit();
@@ -1611,8 +1595,8 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!plan) {
                 Swal.fire({
                     icon: 'warning',
-                    title: 'Pilih Paket',
-                    text: 'Silakan pilih subscription plan terlebih dahulu.'
+                    title: @json(__('Pilih Paket')),
+                    text: @json(__('Silakan pilih subscription plan terlebih dahulu.'))
                 });
                 return;
             }
@@ -1630,7 +1614,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             Swal.fire({
-                title: 'Konfirmasi Subscription',
+                title: @json(__('Konfirmasi Subscription')),
                 html:
                     '<div class="text-start">' +
                         '<p class="mb-2">Paket yang dipilih:</p>' +
@@ -1678,7 +1662,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonText: '<i class="bi bi-credit-card me-1"></i> Lanjutkan',
-                cancelButtonText: 'Batal',
+                cancelButtonText: @json(__('Batal')),
                 reverseButtons: true,
                 buttonsStyling: false,
                 customClass: {
@@ -1878,7 +1862,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!o) return;
 
             Swal.fire({
-                title: 'Konfirmasi Upgrade',
+                title: @json(__('Konfirmasi Upgrade')),
                 html:
                     '<div class="text-start">' +
                         '<div class="fw-bold fs-5 mb-1">' +
@@ -1910,7 +1894,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonText: '<i class="bi bi-credit-card me-1"></i> Bayar',
-                cancelButtonText: 'Batal',
+                cancelButtonText: @json(__('Batal')),
                 reverseButtons: true,
                 buttonsStyling: false,
                 customClass: {
@@ -2031,7 +2015,7 @@ document.addEventListener('DOMContentLoaded', function () {
             event.preventDefault();
 
             Swal.fire({
-                title: 'Konfirmasi Tambah Kapasitas',
+                title: @json(__('Konfirmasi Tambah Kapasitas')),
                 html:
                     '<div class="text-start">' +
                         '<div class="mb-2">' +
@@ -2050,7 +2034,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonText: '<i class="bi bi-credit-card me-1"></i> Bayar',
-                cancelButtonText: 'Batal',
+                cancelButtonText: @json(__('Batal')),
                 reverseButtons: true,
                 buttonsStyling: false,
                 customClass: {

@@ -1,6 +1,6 @@
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Audit Fisik Aset')
+@section('title', __('Audit Fisik Aset'))
 
 @section('content')
 @php
@@ -32,12 +32,12 @@
 
     <div class="card au-intro mb-4">
         <div class="card-body">
-            <h5 class="mb-1"><i class="bi bi-clipboard2-check text-primary me-1"></i> Audit Fisik Aset</h5>
-            <p class="text-muted mb-3">Pastikan aset yang tercatat di sistem benar-benar ada di tempatnya — untuk tutup buku, audit tahunan, atau serah terima gedung.</p>
+            <h5 class="mb-1"><i class="bi bi-clipboard2-check text-primary me-1"></i> {{ __('Audit Fisik Aset') }}</h5>
+            <p class="text-muted mb-3">{{ __('Pastikan aset yang tercatat di sistem benar-benar ada di tempatnya — untuk tutup buku, audit tahunan, atau serah terima gedung.') }}</p>
             <div class="row g-3">
-                <div class="col-md-4"><div class="st"><span class="n">1</span><div><b>Buat sesi &amp; pilih petugas</b><div class="au-mini">Pilih cabang, lokasi, lalu petugas + area masing-masing. Petugas mendapat notifikasi.</div></div></div></div>
-                <div class="col-md-4"><div class="st"><span class="n">2</span><div><b>Petugas scan dengan akunnya</b><div class="au-mini">Pilih lokasi tempat berdiri, scan QR. Bisa beberapa petugas bersamaan.</div></div></div></div>
-                <div class="col-md-4"><div class="st"><span class="n">3</span><div><b>Selesaikan &amp; unduh laporan</b><div class="au-mini">Ditemukan, salah lokasi, beda cabang, tidak ditemukan.</div></div></div></div>
+                <div class="col-md-4"><div class="st"><span class="n">1</span><div><b>{{ __('Buat sesi & pilih petugas') }}</b><div class="au-mini">{{ __('Pilih cabang, lokasi, lalu petugas + area masing-masing. Petugas mendapat notifikasi.') }}</div></div></div></div>
+                <div class="col-md-4"><div class="st"><span class="n">2</span><div><b>{{ __('Petugas scan dengan akunnya') }}</b><div class="au-mini">{{ __('Pilih lokasi tempat berdiri, scan QR. Bisa beberapa petugas bersamaan.') }}</div></div></div></div>
+                <div class="col-md-4"><div class="st"><span class="n">3</span><div><b>{{ __('Selesaikan & unduh laporan') }}</b><div class="au-mini">{{ __('Ditemukan, salah lokasi, beda cabang, tidak ditemukan.') }}</div></div></div></div>
             </div>
         </div>
     </div>
@@ -45,11 +45,11 @@
     <div class="card">
         <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
             <div>
-                <h5 class="mb-0">Sesi audit</h5>
-                <small class="text-muted">Riwayat audit fisik aset.</small>
+                <h5 class="mb-0">{{ __('Sesi audit') }}</h5>
+                <small class="text-muted">{{ __('Riwayat audit fisik aset.') }}</small>
             </div>
             @if($canCreate)
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAudit"><i class="fa-solid fa-plus"></i> Mulai Audit Baru</button>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAudit"><i class="fa-solid fa-plus"></i> {{ __('Mulai Audit Baru') }}</button>
             @endif
         </div>
         <div class="card-body">
@@ -57,11 +57,11 @@
                 <table class="table table-hover align-middle">
                     <thead>
                         <tr>
-                            <th>Audit</th>
-                            <th>Cakupan</th>
-                            <th>Progres</th>
-                            <th>Hasil</th>
-                            <th>Status</th>
+                            <th>{{ __('Audit') }}</th>
+                            <th>{{ __('Cakupan') }}</th>
+                            <th>{{ __('Progres') }}</th>
+                            <th>{{ __('Hasil') }}</th>
+                            <th>{{ __('Status') }}</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -80,13 +80,13 @@
                                 </td>
                                 <td>
                                     <div class="au-bar mb-1"><span style="width: {{ $s['percent'] }}%"></span></div>
-                                    <span class="au-mini"><b>{{ $s['checked'] }}</b> / {{ $s['total'] }} dicek ({{ $s['percent'] }}%)</span>
+                                    <span class="au-mini"><b>{{ $s['checked'] }}</b> {{ __('/ :p1 dicek (:p2%)', ['p1' => $s['total'], 'p2' => $s['percent']]) }}</span>
                                 </td>
                                 <td class="au-mini">
-                                    <span class="text-success"><b>{{ $s['found'] }}</b> ada</span> ·
-                                    <span class="text-danger"><b>{{ $s['missing'] }}</b> hilang</span> ·
-                                    <span class="text-warning"><b>{{ $s['misplaced'] }}</b> salah lokasi</span>
-                                    @if($s['other_branch'])· <span style="color:#0e7490"><b>{{ $s['other_branch'] }}</b> beda cabang</span>@endif
+                                    <span class="text-success"><b>{{ $s['found'] }}</b> {{ __('ada') }}</span> ·
+                                    <span class="text-danger"><b>{{ $s['missing'] }}</b> {{ __('hilang') }}</span> ·
+                                    <span class="text-warning"><b>{{ $s['misplaced'] }}</b> {{ __('salah lokasi') }}</span>
+                                    @if($s['other_branch'])· <span style="color:#0e7490"><b>{{ $s['other_branch'] }}</b> {{ __('beda cabang') }}</span>@endif
                                 </td>
                                 <td><span class="au-chip {{ $chip[$a->status] ?? 'mute' }}">{{ $a->statusLabel() }}</span></td>
                                 <td class="text-end">
@@ -114,35 +114,35 @@
             @csrf
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Mulai Audit Baru</h5>
+                    <h5 class="modal-title">{{ __('Mulai Audit Baru') }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     @if($errors->any())<div class="alert alert-danger">{{ $errors->first() }}</div>@endif
                     <div class="mb-3">
-                        <label class="form-label">Judul audit <span class="text-danger">*</span></label>
+                        <label class="form-label">{{ __('Judul audit') }} <span class="text-danger">*</span></label>
                         <input type="text" name="title" class="form-control" maxlength="150" required value="{{ old('title', 'Audit fisik ' . now()->translatedFormat('F Y')) }}">
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Cabang</label>
+                            <label class="form-label">{{ __('Cabang') }}</label>
                             <select name="branch_id" id="auBranch" class="form-select" {{ $restricted ? 'disabled' : '' }}>
-                                @if(!$restricted && $multiBranch)<option value="">Semua cabang</option>@endif
+                                @if(!$restricted && $multiBranch)<option value="">{{ __('Semua cabang') }}</option>@endif
                                 @foreach($branches as $b)
                                     <option value="{{ $b->id }}" @selected((string) $defaultBranch === (string) $b->id)>{{ $b->label() }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Lokasi</label>
+                            <label class="form-label">{{ __('Lokasi') }}</label>
                             <select name="location_id" id="auLocation" class="form-select"></select>
-                            <small class="text-muted">Pecah audit per lokasi agar lebih ringan. Kelola lokasi di Master Data › Lokasi.</small>
+                            <small class="text-muted">{{ __('Pecah audit per lokasi agar lebih ringan. Kelola lokasi di Master Data › Lokasi.') }}</small>
                         </div>
                     </div>
 
-                    <label class="form-label">Petugas audit <small class="text-muted">(opsional)</small></label>
+                    <label class="form-label">{{ __('Petugas audit') }} <small class="text-muted">{{ __('(opsional)') }}</small></label>
                     @if($candidates->isEmpty())
-                        <div class="alert alert-light border small mb-3">Belum ada user dengan izin scan audit. Beri role <b>Auditor</b> (atau centang izin "Scan Asset Audit") di menu Users / Role.</div>
+                        <div class="alert alert-light border small mb-3">{{ __('Belum ada user dengan izin scan audit. Beri role') }} <b>{{ __('Auditor') }}</b> {{ __('(atau centang izin "Scan Asset Audit") di menu Users / Role.') }}</div>
                     @else
                         <div class="au-team mb-1" id="auTeam">
                             @foreach($candidates as $i => $c)
@@ -153,22 +153,22 @@
                                         <small class="text-muted d-block">{{ $c->role?->role_name }} · {{ $c->branch?->branch_name }}</small>
                                     </label>
                                     <select class="form-select form-select-sm au-area" name="assignees[{{ $i }}][location_id]" disabled>
-                                        <option value="">Semua lokasi</option>
+                                        <option value="">{{ __('Semua lokasi') }}</option>
                                     </select>
                                 </div>
                             @endforeach
                         </div>
-                        <small class="text-muted d-block mb-3">Bila petugas dipilih, hanya petugas (dan pengelola audit) yang bisa scan. Pilih area agar tiap petugas punya daftar "Tugas saya" sendiri.</small>
+                        <small class="text-muted d-block mb-3">{{ __('Bila petugas dipilih, hanya petugas (dan pengelola audit) yang bisa scan. Pilih area agar tiap petugas punya daftar "Tugas saya" sendiri.') }}</small>
                     @endif
 
                     <div class="mb-1">
-                        <label class="form-label">Catatan</label>
+                        <label class="form-label">{{ __('Catatan') }}</label>
                         <textarea name="notes" class="form-control" rows="2" maxlength="1000" placeholder="Contoh: audit akhir tahun untuk laporan keuangan">{{ old('notes') }}</textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary"><i class="bi bi-play-fill"></i> Mulai Audit</button>
+                    <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">{{ __('Batal') }}</button>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-play-fill"></i> {{ __('Mulai Audit') }}</button>
                 </div>
             </div>
         </form>

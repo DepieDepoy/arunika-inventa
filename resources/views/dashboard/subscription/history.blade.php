@@ -1,6 +1,6 @@
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Subscription History')
+@section('title', __('Subscription History'))
 
 @section('content')
 
@@ -422,12 +422,11 @@
                                           style="width:42px;height:42px;border-radius:12px;">
                                         <i class="bi bi-receipt"></i>
                                     </span>
-                                    <h5 class="page-title mb-0">Subscription History</h5>
+                                    <h5 class="page-title mb-0">{{ __('Subscription History') }}</h5>
                                 </div>
 
                                 <p class="page-subtitle mb-0">
-                                    Riwayat paket, pembayaran, dan billing
-                                    {{ $company->company_name ?? 'perusahaan' }}.
+                                    {{ __('Riwayat paket, pembayaran, dan billing :p1.', ['p1' => $company->company_name ?? 'perusahaan']) }}
                                 </p>
                             </div>
 
@@ -435,7 +434,7 @@
                                 <a href="{{ route('subscription.index') }}"
                                    class="btn btn-primary subscribe-btn">
                                     <i class="bi bi-plus-circle me-1"></i>
-                                    Subscribe / Perpanjang
+                                    {{ __('Subscribe / Perpanjang') }}
                                 </a>
                             </div>
                         </div>
@@ -455,11 +454,11 @@
                                 <i class="bi bi-clock-history"></i>
                             </div>
                             <div>
-                                <div class="summary-label">Total Subscription</div>
+                                <div class="summary-label">{{ __('Total Subscription') }}</div>
                                 <h4 class="summary-value">
                                     {{ number_format((int) ($totalSubscriptions ?? 0), 0, ',', '.') }}
                                 </h4>
-                                <div class="summary-note">Jumlah riwayat paket perusahaan</div>
+                                <div class="summary-note">{{ __('Jumlah riwayat paket perusahaan') }}</div>
                             </div>
                         </div>
                     </div>
@@ -474,11 +473,11 @@
                                 <i class="bi bi-stars"></i>
                             </div>
                             <div>
-                                <div class="summary-label">Current Plan</div>
+                                <div class="summary-label">{{ __('Current Plan') }}</div>
                                 <h4 class="summary-value">
                                     {{ $activeSubscription?->plan?->plan_name ?? '-' }}
                                 </h4>
-                                <div class="summary-note">Paket subscription saat ini</div>
+                                <div class="summary-note">{{ __('Paket subscription saat ini') }}</div>
                             </div>
                         </div>
                     </div>
@@ -493,7 +492,7 @@
                                 <i class="bi bi-calendar2-check"></i>
                             </div>
                             <div>
-                                <div class="summary-label">Current Expiration</div>
+                                <div class="summary-label">{{ __('Current Expiration') }}</div>
                                 <h4 class="summary-value">
                                     @if($activeSubscription?->end_date)
                                         {{ \Carbon\Carbon::parse($activeSubscription->end_date)->format('d M Y') }}
@@ -501,7 +500,7 @@
                                         -
                                     @endif
                                 </h4>
-                                <div class="summary-note">Tanggal akhir paket aktif</div>
+                                <div class="summary-note">{{ __('Tanggal akhir paket aktif') }}</div>
                             </div>
                         </div>
                     </div>
@@ -520,16 +519,16 @@
                             <div>
                                 <h5 class="section-title">
                                     <i class="bi bi-list-ul me-1"></i>
-                                    Riwayat Billing
+                                    {{ __('Riwayat Billing') }}
                                 </h5>
                                 <p class="section-subtitle">
-                                    Rincian harga paket, tambahan storage, diskon, dan status pembayaran.
+                                    {{ __('Rincian harga paket, tambahan storage, diskon, dan status pembayaran.') }}
                                 </p>
                             </div>
 
                             <span class="badge rounded-pill text-bg-light border px-3 py-2">
                                 <i class="bi bi-shield-check me-1"></i>
-                                Data perusahaan
+                                {{ __('Data perusahaan') }}
                             </span>
                         </div>
                     </div>
@@ -544,18 +543,18 @@
                                 <thead>
                                     <tr>
                                         <th>#</th>
-                                        <th>Invoice</th>
-                                        <th>Plan</th>
-                                        <th>Billing</th>
-                                        <th>Package Price</th>
-                                        <th>Storage</th>
-                                        <th>Diskon</th>
-                                        <th>Total</th>
-                                        <th>Start Date</th>
-                                        <th>End Date</th>
-                                        <th>Subscription</th>
-                                        <th>Payment</th>
-                                        <th>Action</th>
+                                        <th>{{ __('Invoice') }}</th>
+                                        <th>{{ __('Plan') }}</th>
+                                        <th>{{ __('Billing') }}</th>
+                                        <th>{{ __('Package Price') }}</th>
+                                        <th>{{ __('Storage') }}</th>
+                                        <th>{{ __('Diskon') }}</th>
+                                        <th>{{ __('Total') }}</th>
+                                        <th>{{ __('Start Date') }}</th>
+                                        <th>{{ __('End Date') }}</th>
+                                        <th>{{ __('Subscription') }}</th>
+                                        <th>{{ __('Payment') }}</th>
+                                        <th>{{ __('Action') }}</th>
                                     </tr>
                                 </thead>
 
@@ -565,7 +564,7 @@
 
                         <div class="small text-muted mt-3">
                             <i class="bi bi-info-circle me-1"></i>
-                            Pastikan status pembayaran sudah berhasil sebelum menggunakan billing sebagai dokumen klaim kantor.
+                            {{ __('Pastikan status pembayaran sudah berhasil sebelum menggunakan billing sebagai dokumen klaim kantor.') }}
                         </div>
                     </div>
 
@@ -590,19 +589,19 @@
                 <div class="col-12">
                     <div class="card history-card">
                         <div class="card-body">
-                            <h5 class="fw-bold mb-1">Riwayat Tambah Kapasitas</h5>
-                            <p class="text-muted small mb-3">Pembelian storage, asset, dan user tambahan.</p>
+                            <h5 class="fw-bold mb-1">{{ __('Riwayat Tambah Kapasitas') }}</h5>
+                            <p class="text-muted small mb-3">{{ __('Pembelian storage, asset, dan user tambahan.') }}</p>
 
                             <div class="table-responsive">
                                 <table class="table table-hover align-middle mb-0">
                                     <thead>
                                         <tr>
-                                            <th>Invoice</th>
-                                            <th>Tanggal</th>
-                                            <th>Item</th>
-                                            <th>Masa Berlaku</th>
-                                            <th class="text-end">Total</th>
-                                            <th>Status</th>
+                                            <th>{{ __('Invoice') }}</th>
+                                            <th>{{ __('Tanggal') }}</th>
+                                            <th>{{ __('Item') }}</th>
+                                            <th>{{ __('Masa Berlaku') }}</th>
+                                            <th class="text-end">{{ __('Total') }}</th>
+                                            <th>{{ __('Status') }}</th>
                                             <th></th>
                                         </tr>
                                     </thead>
@@ -643,7 +642,7 @@
                                                 <td class="text-end">
                                                     @if($purchase->isPaid())
                                                         <a href="{{ route('subscription.billing.print', $purchase->id) }}"
-                                                           target="_blank" class="btn btn-sm btn-outline-secondary" title="Cetak billing">
+                                                           target="_blank" class="btn btn-sm btn-outline-secondary" title="{{ __('Cetak billing') }}">
                                                             <i class="bi bi-printer"></i>
                                                         </a>
                                                     @endif

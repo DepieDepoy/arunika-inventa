@@ -4,7 +4,7 @@
         <a href="{{ url('/dashboard') }}" class="navbar-brand">
 
             {{-- Logo Vasetra (tampil di layar kecil saat sidebar tertutup) --}}
-            <img src="{{ asset('assets/images/auth/vasetra.png') }}" alt="Vasetra" class="vx-navbar-logo" height="34">
+            <img src="{{ asset('assets/images/auth/vasetra.png') }}" alt="{{ __('Vasetra') }}" class="vx-navbar-logo" height="34">
         </a>
 
         {{-- Sidebar Toggle --}}
@@ -24,7 +24,7 @@
             data-bs-target="#navbarSupportedContent"
             aria-controls="navbarSupportedContent"
             aria-expanded="false"
-            aria-label="Toggle navigation"
+            aria-label="{{ __('Toggle navigation') }}"
         >
             <span class="navbar-toggler-icon">
                 <span class="mt-2 navbar-toggler-bar bar1"></span>
@@ -35,6 +35,44 @@
 
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="mb-2 navbar-nav ms-auto align-items-center navbar-list mb-lg-0">
+
+                {{-- =====================================================
+                    PILIHAN BAHASA (disimpan di users.locale, sama dengan mobile)
+                ====================================================== --}}
+
+                @php
+                    $currentLocale = app()->getLocale() === 'en' ? 'en' : 'id';
+                @endphp
+
+                <li class="nav-item dropdown">
+                    <a
+                        href="#"
+                        class="nav-link d-flex align-items-center gap-1 fw-semibold"
+                        id="language-drop"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                        aria-label="{{ __('Bahasa') }}"
+                        title="{{ __('Bahasa') }}"
+                    >
+                        <i class="bi bi-translate"></i>
+                        <span class="small">{{ strtoupper($currentLocale) }}</span>
+                    </a>
+
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="language-drop">
+                        @foreach(['id' => 'Bahasa Indonesia', 'en' => 'English'] as $code => $label)
+                            <li>
+                                <form method="POST" action="{{ route('profile.locale') }}">
+                                    @csrf
+                                    <input type="hidden" name="locale" value="{{ $code }}">
+                                    <button type="submit" class="dropdown-item d-flex justify-content-between align-items-center gap-3 {{ $currentLocale === $code ? 'active' : '' }}">
+                                        <span>{{ $label }}</span>
+                                        <small class="text-uppercase opacity-75">{{ $code }}</small>
+                                    </button>
+                                </form>
+                            </li>
+                        @endforeach
+                    </ul>
+                </li>
 
                 {{-- =====================================================
                     NOTIFICATION DROPDOWN
@@ -63,7 +101,7 @@
                         id="notification-drop"
                         data-bs-toggle="dropdown"
                         aria-expanded="false"
-                        aria-label="Notifikasi"
+                        aria-label="{{ __('Notifikasi') }}"
                     >
                         <svg
                             class="icon-24"
@@ -103,11 +141,11 @@
                             <div class="py-3 card-header d-flex justify-content-between align-items-center bg-primary">
                                 <div class="header-title">
                                     <h5 class="mb-0 text-white">
-                                        Notifikasi
+                                        {{ __('Notifikasi') }}
                                     </h5>
 
                                     <small class="text-white">
-                                        <span id="notif-unread-text">{{ $unreadNotificationCount }}</span> belum dibaca
+                                        <span id="notif-unread-text">{{ $unreadNotificationCount }}</span> {{ __('belum dibaca') }}
                                     </small>
                                 </div>
                             </div>
@@ -179,44 +217,44 @@
 
                         <img
                             src="{{ $navPhoto }}"
-                            alt="User Profile"
+                            alt="{{ __('User Profile') }}"
                             class="js-navbar-avatar-photo img-fluid avatar avatar-50 avatar-rounded {{ $navPhoto ? '' : 'd-none' }}"
                             style="object-fit: cover;"
                         >
 
                         <img
                             src="{{ asset('assets/images/avatars/01.png') }}"
-                            alt="User Profile"
+                            alt="{{ __('User Profile') }}"
                             class="js-navbar-avatar-default {{ $navPhoto ? 'd-none' : '' }} theme-color-default-img img-fluid avatar avatar-50 avatar-rounded"
                         >
 
                         <img
                             src="{{ asset('assets/images/avatars/avtar_1.png') }}"
-                            alt="User Profile"
+                            alt="{{ __('User Profile') }}"
                             class="js-navbar-avatar-default {{ $navPhoto ? 'd-none' : '' }} theme-color-purple-img img-fluid avatar avatar-50 avatar-rounded"
                         >
 
                         <img
                             src="{{ asset('assets/images/avatars/avtar_2.png') }}"
-                            alt="User Profile"
+                            alt="{{ __('User Profile') }}"
                             class="js-navbar-avatar-default {{ $navPhoto ? 'd-none' : '' }} theme-color-blue-img img-fluid avatar avatar-50 avatar-rounded"
                         >
 
                         <img
                             src="{{ asset('assets/images/avatars/avtar_4.png') }}"
-                            alt="User Profile"
+                            alt="{{ __('User Profile') }}"
                             class="js-navbar-avatar-default {{ $navPhoto ? 'd-none' : '' }} theme-color-green-img img-fluid avatar avatar-50 avatar-rounded"
                         >
 
                         <img
                             src="{{ asset('assets/images/avatars/avtar_5.png') }}"
-                            alt="User Profile"
+                            alt="{{ __('User Profile') }}"
                             class="js-navbar-avatar-default {{ $navPhoto ? 'd-none' : '' }} theme-color-yellow-img img-fluid avatar avatar-50 avatar-rounded"
                         >
 
                         <img
                             src="{{ asset('assets/images/avatars/avtar_3.png') }}"
-                            alt="User Profile"
+                            alt="{{ __('User Profile') }}"
                             class="js-navbar-avatar-default {{ $navPhoto ? 'd-none' : '' }} theme-color-pink-img img-fluid avatar avatar-50 avatar-rounded"
                         >
 
@@ -236,7 +274,7 @@
                         <li>
                             <a class="dropdown-item" href="{{ route('profile.index') }}">
                                 <i class="fa-solid fa-user me-2"></i>
-                                Profile
+                                {{ __('Profile') }}
                             </a>
                         </li>
 
@@ -250,7 +288,7 @@
 
                                 <button type="submit" class="dropdown-item">
                                     <i class="fa-solid fa-right-from-bracket me-2"></i>
-                                    Logout
+                                    {{ __('Logout') }}
                                 </button>
                             </form>
                         </li>

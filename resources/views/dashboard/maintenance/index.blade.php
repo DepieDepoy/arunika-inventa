@@ -1,6 +1,6 @@
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'All Maintenance')
+@section('title', __('All Maintenance'))
 
 @section('content')
 
@@ -387,11 +387,11 @@
                     <div>
 
                         <h5 class="mb-0">
-                            All Maintenance
+                            {{ __('All Maintenance') }}
                         </h5>
 
                         <small class="text-muted">
-                            Pantau seluruh jadwal maintenance asset perusahaan
+                            {{ __('Pantau seluruh jadwal maintenance asset perusahaan') }}
                         </small>
 
                     </div>
@@ -403,7 +403,7 @@
                             class="btn btn-primary"
                         >
                             <i class="fa-solid fa-user-check me-1"></i>
-                            My Assets
+                            {{ __('My Assets') }}
                         </a>
 
                     </div>
@@ -433,7 +433,7 @@
                                     class="active"
                                 >
                                     <i class="fa-solid fa-screwdriver-wrench"></i>
-                                    All Maintenance
+                                    {{ __('All Maintenance') }}
                                 </a>
 
 
@@ -443,7 +443,7 @@
                                         href="{{ route('my-assets.index') }}"
                                     >
                                         <i class="fa-solid fa-user-check"></i>
-                                        My Assets
+                                        {{ __('My Assets') }}
                                     </a>
 
                                 @endcan
@@ -455,7 +455,7 @@
                                         href="{{ route('maintenance.requests.index') }}"
                                     >
                                         <i class="fa-solid fa-clipboard-list"></i>
-                                        Requests
+                                        {{ __('Requests') }}
                                     </a>
 
                                 @endcan
@@ -467,7 +467,7 @@
                                         href="{{ route('maintenance.history') }}"
                                     >
                                         <i class="fa-solid fa-clock-rotate-left"></i>
-                                        History
+                                        {{ __('History') }}
                                     </a>
 
                                 @endcan
@@ -488,12 +488,11 @@
                             <div class="maintenance-hero-content">
 
                                 <h5>
-                                    Maintenance Overview
+                                    {{ __('Maintenance Overview') }}
                                 </h5>
 
                                 <p>
-                                    Pantau asset yang membutuhkan maintenance
-                                    berdasarkan jadwal yang telah ditentukan.
+                                    {{ __('Pantau asset yang membutuhkan maintenance berdasarkan jadwal yang telah ditentukan.') }}
                                 </p>
 
                             </div>
@@ -521,7 +520,7 @@
                                     </div>
 
                                     <div class="maintenance-stat-title">
-                                        Total Scheduled
+                                        {{ __('Total Scheduled') }}
                                     </div>
 
                                     <div class="maintenance-stat-value">
@@ -547,7 +546,7 @@
                                     </div>
 
                                     <div class="maintenance-stat-title">
-                                        Overdue
+                                        {{ __('Overdue') }}
                                     </div>
 
                                     <div class="maintenance-stat-value text-danger">
@@ -573,7 +572,7 @@
                                     </div>
 
                                     <div class="maintenance-stat-title">
-                                        Today
+                                        {{ __('Today') }}
                                     </div>
 
                                     <div class="maintenance-stat-value">
@@ -599,7 +598,7 @@
                                     </div>
 
                                     <div class="maintenance-stat-title">
-                                        This Week
+                                        {{ __('This Week') }}
                                     </div>
 
                                     <div class="maintenance-stat-value">
@@ -625,7 +624,7 @@
                                     </div>
 
                                     <div class="maintenance-stat-title">
-                                        Upcoming
+                                        {{ __('Upcoming') }}
                                     </div>
 
                                     <div class="maintenance-stat-value text-success">
@@ -650,11 +649,11 @@
                                 <div>
 
                                     <h6 class="maintenance-card-title">
-                                        Maintenance Schedule
+                                        {{ __('Maintenance Schedule') }}
                                     </h6>
 
                                     <p class="maintenance-card-subtitle">
-                                        Daftar asset berdasarkan jadwal maintenance.
+                                        {{ __('Daftar asset berdasarkan jadwal maintenance.') }}
                                     </p>
 
                                 </div>
@@ -674,7 +673,7 @@
                                         class="maintenance-filter-btn active"
                                         data-filter="all"
                                     >
-                                        All
+                                        {{ __('All') }}
                                     </button>
 
                                     <button
@@ -682,7 +681,7 @@
                                         class="maintenance-filter-btn"
                                         data-filter="overdue"
                                     >
-                                        Overdue
+                                        {{ __('Overdue') }}
                                     </button>
 
                                     <button
@@ -690,7 +689,7 @@
                                         class="maintenance-filter-btn"
                                         data-filter="today"
                                     >
-                                        Today
+                                        {{ __('Today') }}
                                     </button>
 
                                     <button
@@ -698,7 +697,7 @@
                                         class="maintenance-filter-btn"
                                         data-filter="week"
                                     >
-                                        This Week
+                                        {{ __('This Week') }}
                                     </button>
 
                                     <button
@@ -706,7 +705,7 @@
                                         class="maintenance-filter-btn"
                                         data-filter="upcoming"
                                     >
-                                        Upcoming
+                                        {{ __('Upcoming') }}
                                     </button>
 
                                 </div>
@@ -730,23 +729,23 @@
                                                 </th>
 
                                                 <th>
-                                                    Asset
+                                                    {{ __('Asset') }}
                                                 </th>
 
                                                 <th>
-                                                    Category
+                                                    {{ __('Category') }}
                                                 </th>
 
                                                 <th>
-                                                    Responsible User
+                                                    {{ __('Responsible User') }}
                                                 </th>
 
                                                 <th>
-                                                    Maintenance Date
+                                                    {{ __('Maintenance Date') }}
                                                 </th>
 
                                                 <th>
-                                                    Status
+                                                    {{ __('Status') }}
                                                 </th>
 
                                             </tr>
@@ -887,7 +886,7 @@
                                                         @else
 
                                                             <span class="text-muted">
-                                                                Asset tidak ditemukan
+                                                                {{ __('Asset tidak ditemukan') }}
                                                             </span>
 
                                                         @endif
@@ -935,7 +934,7 @@
                                                         @else
 
                                                             <span class="text-muted">
-                                                                Not Assigned
+                                                                {{ __('Not Assigned') }}
                                                             </span>
 
                                                         @endif
@@ -1016,12 +1015,11 @@
                                                             <i class="fa-solid fa-screwdriver-wrench"></i>
 
                                                             <h6>
-                                                                Belum ada jadwal maintenance
+                                                                {{ __('Belum ada jadwal maintenance') }}
                                                             </h6>
 
                                                             <p>
-                                                                Belum ada asset yang memiliki
-                                                                jadwal maintenance aktif.
+                                                                {{ __('Belum ada asset yang memiliki jadwal maintenance aktif.') }}
                                                             </p>
 
                                                         </div>
@@ -1059,15 +1057,14 @@
 
                                         <i class="fa-solid fa-calendar-check me-1"></i>
 
-                                        Scheduled Maintenance
+                                        {{ __('Scheduled Maintenance') }}
 
                                     </div>
 
                                     <p class="maintenance-info-text">
 
-                                        Menampilkan asset yang memiliki
-                                        jadwal maintenance berdasarkan
-                                        <strong>Maintenance Date</strong>.
+                                        {{ __('Menampilkan asset yang memiliki jadwal maintenance berdasarkan') }}
+                                        <strong>{{ __('Maintenance Date') }}</strong>.
 
                                     </p>
 
@@ -1086,16 +1083,13 @@
 
                                         <i class="fa-solid fa-user-check me-1"></i>
 
-                                        My Assets
+                                        {{ __('My Assets') }}
 
                                     </div>
 
                                     <p class="maintenance-info-text">
 
-                                        Asset yang menjadi tanggung jawab
-                                        user login dapat diajukan
-                                        maintenance atau repair meskipun
-                                        tidak memiliki jadwal.
+                                        {{ __('Asset yang menjadi tanggung jawab user login dapat diajukan maintenance atau repair meskipun tidak memiliki jadwal.') }}
 
                                     </p>
 
@@ -1114,15 +1108,13 @@
 
                                         <i class="fa-solid fa-clock-rotate-left me-1"></i>
 
-                                        Maintenance History
+                                        {{ __('Maintenance History') }}
 
                                     </div>
 
                                     <p class="maintenance-info-text">
 
-                                        Request yang sudah selesai akan
-                                        tersimpan di History lengkap dengan
-                                        hasil pekerjaan dan dokumentasi.
+                                        {{ __('Request yang sudah selesai akan tersimpan di History lengkap dengan hasil pekerjaan dan dokumentasi.') }}
 
                                     </p>
 

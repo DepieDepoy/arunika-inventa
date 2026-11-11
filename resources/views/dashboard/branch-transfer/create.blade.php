@@ -1,6 +1,6 @@
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Buat Mutasi Aset')
+@section('title', __('Buat Mutasi Aset'))
 
 @section('content')
 <style>
@@ -22,20 +22,20 @@
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <div>
-            <h5 class="mb-0">Buat Mutasi Aset</h5>
-            <small class="text-muted">Aset tetap tercatat di cabang asal sampai cabang tujuan menekan "Terima".</small>
+            <h5 class="mb-0">{{ __('Buat Mutasi Aset') }}</h5>
+            <small class="text-muted">{{ __('Aset tetap tercatat di cabang asal sampai cabang tujuan menekan "Terima".') }}</small>
         </div>
-        <a href="{{ route('branch-transfers.index') }}" class="btn btn-outline-secondary">Kembali</a>
+        <a href="{{ route('branch-transfers.index') }}" class="btn btn-outline-secondary">{{ __('Kembali') }}</a>
     </div>
     <div class="card-body">
         @if($errors->any())
             <div class="alert alert-danger">{{ $errors->first() }}</div>
         @endif
 
-        <h6 class="mb-3"><span class="mt-step">1</span> Rute pengiriman</h6>
+        <h6 class="mb-3"><span class="mt-step">1</span> {{ __('Rute pengiriman') }}</h6>
         <div class="row">
             <div class="col-md-6 mb-3">
-                <label class="form-label">Dari cabang</label>
+                <label class="form-label">{{ __('Dari cabang') }}</label>
                 <select name="from_branch_id" id="from_branch_id" class="form-select" required {{ $restricted ? 'readonly' : '' }}>
                     @foreach($fromOptions as $b)
                         <option value="{{ $b->id }}" @selected(old('from_branch_id', $restricted) == $b->id)>{{ $b->label() }}</option>
@@ -43,9 +43,9 @@
                 </select>
             </div>
             <div class="col-md-6 mb-3">
-                <label class="form-label">Ke cabang</label>
+                <label class="form-label">{{ __('Ke cabang') }}</label>
                 <select name="to_branch_id" id="to_branch_id" class="form-select" required>
-                    <option value="">— Pilih cabang tujuan —</option>
+                    <option value="">{{ __('— Pilih cabang tujuan —') }}</option>
                     @foreach($toOptions as $b)
                         <option value="{{ $b->id }}" @selected(old('to_branch_id') == $b->id)>{{ $b->label() }}</option>
                     @endforeach
@@ -53,34 +53,34 @@
             </div>
         </div>
 
-        <h6 class="mb-3 mt-2"><span class="mt-step">2</span> Pilih aset yang dikirim</h6>
+        <h6 class="mb-3 mt-2"><span class="mt-step">2</span> {{ __('Pilih aset yang dikirim') }}</h6>
         <div class="row g-3">
             <div class="col-lg-7">
                 <div class="d-flex gap-2 mb-2">
-                    <input type="search" id="assetSearch" class="form-control" placeholder="Cari kode, nama, lokasi, atau serial number">
-                    <button type="button" class="btn btn-outline-primary text-nowrap" id="btnAll">Pilih semua</button>
+                    <input type="search" id="assetSearch" class="form-control" placeholder="{{ __('Cari kode, nama, lokasi, atau serial number') }}">
+                    <button type="button" class="btn btn-outline-primary text-nowrap" id="btnAll">{{ __('Pilih semua') }}</button>
                 </div>
-                <div class="mt-pick" id="assetList"><div class="p-4 text-center text-muted">Memuat aset…</div></div>
-                <small class="text-muted">Menampilkan maks. 50 aset; gunakan pencarian untuk aset lain. Aset yang sedang dalam mutasi lain tidak ditampilkan.</small>
+                <div class="mt-pick" id="assetList"><div class="p-4 text-center text-muted">{{ __('Memuat aset…') }}</div></div>
+                <small class="text-muted">{{ __('Menampilkan maks. 50 aset; gunakan pencarian untuk aset lain. Aset yang sedang dalam mutasi lain tidak ditampilkan.') }}</small>
             </div>
             <div class="col-lg-5">
                 <div class="border rounded-3 p-3 h-100">
                     <div class="d-flex justify-content-between mb-2">
-                        <strong>Aset dipilih</strong>
+                        <strong>{{ __('Aset dipilih') }}</strong>
                         <span class="badge bg-primary" id="selCount">0</span>
                     </div>
-                    <div class="mt-sel" id="selected"><span class="text-muted bg-transparent p-0">Belum ada aset dipilih.</span></div>
+                    <div class="mt-sel" id="selected"><span class="text-muted bg-transparent p-0">{{ __('Belum ada aset dipilih.') }}</span></div>
                 </div>
             </div>
         </div>
 
-        <h6 class="mb-3 mt-4"><span class="mt-step">3</span> Catatan</h6>
+        <h6 class="mb-3 mt-4"><span class="mt-step">3</span> {{ __('Catatan') }}</h6>
         <textarea name="notes" class="form-control" rows="2" maxlength="1000" placeholder="Contoh: dikirim via ekspedisi JNE, resi 1234…">{{ old('notes') }}</textarea>
         <div id="hiddenIds"></div>
     </div>
     <div class="card-footer d-flex justify-content-end gap-2">
-        <a href="{{ route('branch-transfers.index') }}" class="btn btn-label-secondary">Batal</a>
-        <button type="submit" class="btn btn-primary"><i class="bi bi-truck me-1"></i> Kirim Aset</button>
+        <a href="{{ route('branch-transfers.index') }}" class="btn btn-label-secondary">{{ __('Batal') }}</a>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-truck me-1"></i> {{ __('Kirim Aset') }}</button>
     </div>
 </div>
 </form>
@@ -149,12 +149,12 @@
     $('#formTransfer').on('submit', function (e) {
         if (!selected.size) {
             e.preventDefault();
-            Swal.fire({ icon: 'warning', title: 'Belum ada aset', text: 'Pilih minimal satu aset yang akan dikirim.' });
+            Swal.fire({ icon: 'warning', title: @json(__('Belum ada aset')), text: @json(__('Pilih minimal satu aset yang akan dikirim.')) });
             return;
         }
         if ($('#to_branch_id').val() === $('#from_branch_id').val()) {
             e.preventDefault();
-            Swal.fire({ icon: 'warning', title: 'Cabang sama', text: 'Cabang tujuan harus berbeda dengan cabang asal.' });
+            Swal.fire({ icon: 'warning', title: @json(__('Cabang sama')), text: @json(__('Cabang tujuan harus berbeda dengan cabang asal.')) });
             return;
         }
         $('#hiddenIds').html([...selected.keys()].map(id => `<input type="hidden" name="asset_ids[]" value="${id}">`).join(''));

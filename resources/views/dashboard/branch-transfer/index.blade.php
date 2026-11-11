@@ -1,6 +1,6 @@
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Mutasi Aset')
+@section('title', __('Mutasi Aset'))
 
 @section('content')
 @php
@@ -26,15 +26,15 @@
 <div class="card">
     <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
         <div>
-            <h5 class="mb-0">Mutasi Aset Antar-Cabang</h5>
-            <small class="text-muted">Kirim aset ke cabang lain. Aset pindah setelah cabang tujuan menekan "Terima".</small>
+            <h5 class="mb-0">{{ __('Mutasi Aset Antar-Cabang') }}</h5>
+            <small class="text-muted">{{ __('Kirim aset ke cabang lain. Aset pindah setelah cabang tujuan menekan "Terima".') }}</small>
         </div>
         <div class="d-flex gap-2">
             @if(auth()->user()->hasPermission('branch.view'))
-                <a href="{{ route('branches.index') }}" class="btn btn-outline-secondary"><i class="bi bi-diagram-3 me-1"></i> Cabang</a>
+                <a href="{{ route('branches.index') }}" class="btn btn-outline-secondary"><i class="bi bi-diagram-3 me-1"></i> {{ __('Cabang') }}</a>
             @endif
             @if(auth()->user()->hasPermission('branch.transfer'))
-                <a href="{{ route('branch-transfers.create') }}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Buat Mutasi</a>
+                <a href="{{ route('branch-transfers.create') }}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> {{ __('Buat Mutasi') }}</a>
             @endif
         </div>
     </div>
@@ -49,7 +49,7 @@
             </div>
             <form method="GET" class="d-flex gap-2">
                 @if($status)<input type="hidden" name="status" value="{{ $status }}">@endif
-                <input type="search" name="q" value="{{ request('q') }}" class="form-control" placeholder="No. mutasi / kode aset">
+                <input type="search" name="q" value="{{ request('q') }}" class="form-control" placeholder="{{ __('No. mutasi / kode aset') }}">
                 <button class="btn btn-outline-primary"><i class="bi bi-search"></i></button>
             </form>
         </div>
@@ -58,11 +58,11 @@
             <table class="table table-hover align-middle">
                 <thead>
                     <tr>
-                        <th>No. Mutasi</th>
-                        <th>Rute</th>
-                        <th class="text-center">Aset</th>
-                        <th>Dikirim</th>
-                        <th>Status</th>
+                        <th>{{ __('No. Mutasi') }}</th>
+                        <th>{{ __('Rute') }}</th>
+                        <th class="text-center">{{ __('Aset') }}</th>
+                        <th>{{ __('Dikirim') }}</th>
+                        <th>{{ __('Status') }}</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -80,7 +80,7 @@
                             <td class="text-center fw-bold">{{ $t->items_count }}</td>
                             <td>
                                 <div>{{ $t->sent_at?->translatedFormat('d M Y H:i') }}</div>
-                                <small class="text-muted">oleh {{ $t->sender?->name ?? '—' }}</small>
+                                <small class="text-muted">{{ __('oleh :p1', ['p1' => $t->sender?->name ?? '—']) }}</small>
                             </td>
                             <td>
                                 <span class="mt-chip {{ $chip[$t->status] ?? 'mute' }}">{{ $t->statusLabel() }}</span>
@@ -95,7 +95,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6" class="text-center text-muted py-5"><i class="bi bi-truck fs-2 d-block mb-2"></i>Belum ada mutasi aset.</td></tr>
+                        <tr><td colspan="6" class="text-center text-muted py-5"><i class="bi bi-truck fs-2 d-block mb-2"></i>{{ __('Belum ada mutasi aset.') }}</td></tr>
                     @endforelse
                 </tbody>
             </table>

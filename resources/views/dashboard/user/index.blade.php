@@ -1,6 +1,6 @@
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Dashboard')
+@section('title', __('Dashboard'))
 
 @section('content')
 
@@ -36,11 +36,11 @@
 
                         <div>
                             <h5 class="mb-0">
-                                Users
+                                {{ __('Users') }}
                             </h5>
 
                             <small class="text-muted">
-                                Manage application users
+                                {{ __('Manage application users') }}
                             </small>
                         </div>
 
@@ -53,7 +53,7 @@
 
                                     <i class="fa-solid fa-file-excel"></i>
 
-                                    Export Excel
+                                    {{ __('Export Excel') }}
 
                                 </a>
 
@@ -67,7 +67,7 @@
                                     data-bs-toggle="modal"
                                     data-bs-target="#modalAddUser">
                                     <i class="fa-solid fa-plus"></i>
-                                    Add Users
+                                    {{ __('Add Users') }}
                                 </button>
                             @endif
 
@@ -93,39 +93,39 @@
                                     <tr>
 
                                         <th width="5%">
-                                            No
+                                            {{ __('No') }}
                                         </th>
 
                                         <th>
-                                            Name
+                                            {{ __('Name') }}
                                         </th>
 
                                         <th>
-                                            ID Person
+                                            {{ __('ID Person') }}
                                         </th>
 
                                         <th>
-                                            Email
+                                            {{ __('Email') }}
                                         </th>
 
                                         <th>
-                                            Phone
+                                            {{ __('Phone') }}
                                         </th>
 
                                         <th>
-                                            Companies
+                                            {{ __('Companies') }}
                                         </th>
 
                                         <th>
-                                            Role
+                                            {{ __('Role') }}
                                         </th>
 
                                         <th>
-                                            Status
+                                            {{ __('Status') }}
                                         </th>
 
                                         <th width="10%">
-                                            Action
+                                            {{ __('Action') }}
                                         </th>
 
                                     </tr>
@@ -166,7 +166,7 @@
                 <div class="modal-header">
 
                     <h5 class="modal-title">
-                        Add User
+                        {{ __('Add User') }}
                     </h5>
 
                     <button
@@ -187,7 +187,7 @@
                         <div class="col-md-6 mb-3">
 
                             <label class="form-label">
-                                Name
+                                {{ __('Name') }}
                             </label>
 
                             <input
@@ -204,7 +204,7 @@
                         <div class="col-md-6 mb-3">
 
                             <label class="form-label">
-                                ID Person
+                                {{ __('ID Person') }}
                             </label>
 
                             <input
@@ -221,7 +221,7 @@
                         <div class="col-md-6 mb-3">
 
                             <label class="form-label">
-                                Email
+                                {{ __('Email') }}
                             </label>
 
                             <input
@@ -238,7 +238,7 @@
                         <div class="col-md-6 mb-3">
 
                             <label class="form-label">
-                                Phone
+                                {{ __('Phone') }}
                             </label>
 
                             <input
@@ -255,7 +255,7 @@
                         <div class="col-md-6 mb-3">
 
                             <label class="form-label">
-                                Role
+                                {{ __('Role') }}
                             </label>
 
                             <select
@@ -279,13 +279,13 @@
 
                         {{-- CABANG --}}
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Cabang</label>
+                            <label class="form-label">{{ __('Cabang') }}</label>
                             <select name="branch_id" id="add_branch" class="form-select" required @disabled($branchRestricted)>
                                 @foreach($branches as $branch)
                                     <option value="{{ $branch->id }}">{{ $branch->label() }}</option>
                                 @endforeach
                             </select>
-                            <small class="text-muted">User hanya melihat data cabangnya. Administrator (atau role dengan izin "All Branches") melihat semua cabang.</small>
+                            <small class="text-muted">{{ __('User hanya melihat data cabangnya. Administrator (atau role dengan izin "All Branches") melihat semua cabang.') }}</small>
                         </div>
 
 
@@ -293,7 +293,7 @@
                         <div class="col-md-6 mb-3">
 
                             <label class="form-label">
-                                Status
+                                {{ __('Status') }}
                             </label>
 
                             <select
@@ -303,11 +303,11 @@
                                 required>
 
                                 <option value="1">
-                                    Active
+                                    {{ __('Active') }}
                                 </option>
 
                                 <option value="0">
-                                    Inactive
+                                    {{ __('Inactive') }}
                                 </option>
 
                             </select>
@@ -334,13 +334,12 @@
                                     for="send_verification_email">
 
                                     <strong>
-                                        Send Verification Email
+                                        {{ __('Send Verification Email') }}
                                     </strong>
 
                                     <div class="text-muted small mt-1">
 
-                                        Send an email to the user to verify
-                                        their email address.
+                                        {{ __('Send an email to the user to verify their email address.') }}
 
                                     </div>
 
@@ -363,7 +362,7 @@
                         class="btn btn-label-secondary"
                         data-bs-dismiss="modal">
 
-                        Close
+                        {{ __('Close') }}
 
                     </button>
 
@@ -374,7 +373,7 @@
                         class="btn btn-primary">
 
                         <span class="btn-save-text">
-                            Save User
+                            {{ __('Save User') }}
                         </span>
 
                         <span class="btn-save-loading d-none">
@@ -384,7 +383,7 @@
                                 role="status">
                             </span>
 
-                            Saving...
+                            {{ __('Saving...') }}
 
                         </span>
 
@@ -428,7 +427,7 @@
                 <div class="modal-header">
 
                     <h5 class="modal-title">
-                        Edit User
+                        {{ __('Edit User') }}
                     </h5>
 
                     <button
@@ -448,7 +447,7 @@
                         <div class="col-md-6 mb-3">
 
                             <label class="form-label">
-                                Name
+                                {{ __('Name') }}
                             </label>
 
                             <input
@@ -465,7 +464,7 @@
                         <div class="col-md-6 mb-3">
 
                             <label class="form-label">
-                                ID Person
+                                {{ __('ID Person') }}
                             </label>
 
                             <input
@@ -482,7 +481,7 @@
                         <div class="col-md-6 mb-3">
 
                             <label class="form-label">
-                                Email
+                                {{ __('Email') }}
                             </label>
 
                             <input
@@ -499,7 +498,7 @@
                         <div class="col-md-6 mb-3">
 
                             <label class="form-label">
-                                Phone
+                                {{ __('Phone') }}
                             </label>
 
                             <input
@@ -516,7 +515,7 @@
                         <div class="col-md-6 mb-3">
 
                             <label class="form-label">
-                                Role
+                                {{ __('Role') }}
                             </label>
 
                             <select
@@ -540,7 +539,7 @@
 
                         {{-- CABANG --}}
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Cabang</label>
+                            <label class="form-label">{{ __('Cabang') }}</label>
                             <select name="branch_id" id="edit_branch" class="form-select" required @disabled($branchRestricted)>
                                 @foreach($branches as $branch)
                                     <option value="{{ $branch->id }}">{{ $branch->label() }}</option>
@@ -553,7 +552,7 @@
                         <div class="col-md-6 mb-3">
 
                             <label class="form-label">
-                                Status
+                                {{ __('Status') }}
                             </label>
 
                             <select
@@ -562,11 +561,11 @@
                                 class="form-select">
 
                                 <option value="1">
-                                    Active
+                                    {{ __('Active') }}
                                 </option>
 
                                 <option value="0">
-                                    Inactive
+                                    {{ __('Inactive') }}
                                 </option>
 
                             </select>
@@ -585,7 +584,7 @@
                         class="btn btn-label-secondary"
                         data-bs-dismiss="modal">
 
-                        Close
+                        {{ __('Close') }}
 
                     </button>
 
@@ -596,7 +595,7 @@
                         class="btn btn-primary">
 
                         <span class="btn-update-text">
-                            Save User
+                            {{ __('Save User') }}
                         </span>
 
                         <span
@@ -607,7 +606,7 @@
                                 role="status">
                             </span>
 
-                            Saving...
+                            {{ __('Saving...') }}
 
                         </span>
 
@@ -781,7 +780,7 @@ $(function () {
 
                         icon: 'success',
 
-                        title: 'Berhasil',
+                        title: @json(__('Berhasil')),
 
                         html: `
 
@@ -824,7 +823,7 @@ $(function () {
                         `,
 
                         confirmButtonText:
-                            'OK'
+                            @json(__('OK'))
 
                     });
 
@@ -863,7 +862,7 @@ $(function () {
 
                         icon: 'error',
 
-                        title: 'Gagal',
+                        title: @json(__('Gagal')),
 
                         text:
                             response.message ||
@@ -1121,10 +1120,10 @@ $(function () {
                             'success',
 
                         title:
-                            'Berhasil',
+                            @json(__('Berhasil')),
 
                         text:
-                            'User berhasil diupdate',
+                            @json(__('User berhasil diupdate')),
 
                         timer:
                             1500,
@@ -1168,7 +1167,7 @@ $(function () {
                             'error',
 
                         title:
-                            'Gagal',
+                            @json(__('Gagal')),
 
                         text:
                             response.message ||
@@ -1246,10 +1245,10 @@ $(function () {
             Swal.fire({
 
                 title:
-                    'Hapus Data?',
+                    @json(__('Hapus Data?')),
 
                 text:
-                    'Data yang sudah dihapus tidak bisa dikembalikan!',
+                    @json(__('Data yang sudah dihapus tidak bisa dikembalikan!')),
 
                 icon:
                     'warning',
@@ -1258,10 +1257,10 @@ $(function () {
                     true,
 
                 confirmButtonText:
-                    'Ya, Hapus!',
+                    @json(__('Ya, Hapus!')),
 
                 cancelButtonText:
-                    'Batal'
+                    @json(__('Batal'))
 
             }).then((result) => {
 
@@ -1310,7 +1309,7 @@ $(function () {
                                     'success',
 
                                 title:
-                                    'Berhasil',
+                                    @json(__('Berhasil')),
 
                                 text:
                                     response.message ||
@@ -1703,7 +1702,7 @@ function showAjaxError(
             false,
 
         confirmButtonText:
-            'OK'
+            @json(__('OK'))
 
     });
 
@@ -1772,7 +1771,7 @@ function copyPassword() {
             'success',
 
         title:
-            'Password berhasil disalin',
+            @json(__('Password berhasil disalin')),
 
         timer:
             1000,

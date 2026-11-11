@@ -1,6 +1,6 @@
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Maintenance History')
+@section('title', __('Maintenance History'))
 
 @section('content')
 
@@ -341,7 +341,7 @@
                     <div>
 
                         <h5 class="mb-0">
-                            Maintenance History
+                            {{ __('Maintenance History') }}
                         </h5>
 
                         <small class="text-muted">
@@ -386,7 +386,7 @@
                         <div>
 
                             <small class="text-muted">
-                                Total History
+                                {{ __('Total History') }}
                             </small>
 
                             <h4 class="mb-0 fw-bold">
@@ -422,7 +422,7 @@
                         <div>
 
                             <small class="text-muted">
-                                Completed
+                                {{ __('Completed') }}
                             </small>
 
                             <h4 class="mb-0 fw-bold">
@@ -458,7 +458,7 @@
                         <div>
 
                             <small class="text-muted">
-                                Total Cost
+                                {{ __('Total Cost') }}
                             </small>
 
                             <h4 class="mb-0 fw-bold">
@@ -502,11 +502,11 @@
                     <div>
 
                         <h5 class="mb-0">
-                            Maintenance History
+                            {{ __('Maintenance History') }}
                         </h5>
 
                         <small class="text-muted">
-                            Daftar maintenance yang telah selesai
+                            {{ __('Daftar maintenance yang telah selesai') }}
                         </small>
 
                     </div>
@@ -529,43 +529,43 @@
                                 <tr>
 
                                     <th width="5%">
-                                        No
+                                        {{ __('No') }}
                                     </th>
 
                                     <th>
-                                        Maintenance Code
+                                        {{ __('Maintenance Code') }}
                                     </th>
 
                                     <th>
-                                        Asset
+                                        {{ __('Asset') }}
                                     </th>
 
                                     <th>
-                                        Type
+                                        {{ __('Type') }}
                                     </th>
 
                                     <th>
-                                        Maintenance Date
+                                        {{ __('Maintenance Date') }}
                                     </th>
 
                                     <th>
-                                        Technician
+                                        {{ __('Technician') }}
                                     </th>
 
                                     <th>
-                                        Vendor
+                                        {{ __('Vendor') }}
                                     </th>
 
                                     <th>
-                                        Cost
+                                        {{ __('Cost') }}
                                     </th>
 
                                     <th>
-                                        Status
+                                        {{ __('Status') }}
                                     </th>
 
                                     <th width="10%">
-                                        Action
+                                        {{ __('Action') }}
                                     </th>
 
                                 </tr>
@@ -767,7 +767,7 @@
 
                                             <span class="badge bg-success">
 
-                                                Completed
+                                                {{ __('Completed') }}
 
                                             </span>
 
@@ -782,8 +782,8 @@
                                                 class="btn btn-sm btn-light btn-history-detail"
                                                 data-bs-toggle="modal"
                                                 data-bs-target="#maintenanceDetailModal{{ $request->id }}"
-                                                title="View Detail"
-                                                aria-label="View maintenance detail"
+                                                title="{{ __('View Detail') }}"
+                                                aria-label="{{ __('View maintenance detail') }}"
                                             >
 
                                                 <i class="fa-solid fa-eye"></i>
@@ -880,7 +880,7 @@ DETAIL MODALS
                         id="maintenanceDetailModalLabel{{ $request->id }}"
                     >
 
-                        Maintenance Detail
+                        {{ __('Maintenance Detail') }}
 
                     </h5>
 
@@ -897,7 +897,7 @@ DETAIL MODALS
                     type="button"
                     class="btn-close"
                     data-bs-dismiss="modal"
-                    aria-label="Close"
+                    aria-label="{{ __('Close') }}"
                 ></button>
 
             </div>
@@ -913,7 +913,7 @@ DETAIL MODALS
                 <div class="mb-4">
 
                     <h6 class="detail-section-title">
-                        Maintenance Information
+                        {{ __('Maintenance Information') }}
                     </h6>
 
 
@@ -925,7 +925,7 @@ DETAIL MODALS
                             <div class="detail-item">
 
                                 <label>
-                                    Maintenance Code
+                                    {{ __('Maintenance Code') }}
                                 </label>
 
                                 <div class="detail-value">
@@ -945,13 +945,13 @@ DETAIL MODALS
                             <div class="detail-item">
 
                                 <label>
-                                    Status
+                                    {{ __('Status') }}
                                 </label>
 
                                 <div>
 
                                     <span class="badge bg-success">
-                                        Completed
+                                        {{ __('Completed') }}
                                     </span>
 
                                 </div>
@@ -967,7 +967,7 @@ DETAIL MODALS
                             <div class="detail-item">
 
                                 <label>
-                                    Asset
+                                    {{ __('Asset') }}
                                 </label>
 
                                 @if($request->asset)
@@ -1003,7 +1003,7 @@ DETAIL MODALS
                             <div class="detail-item">
 
                                 <label>
-                                    Maintenance Type
+                                    {{ __('Maintenance Type') }}
                                 </label>
 
                                 <div class="detail-value">
@@ -1023,7 +1023,7 @@ DETAIL MODALS
                             <div class="detail-item">
 
                                 <label>
-                                    Maintenance Date
+                                    {{ __('Maintenance Date') }}
                                 </label>
 
                                 <div class="detail-value">
@@ -1053,7 +1053,7 @@ DETAIL MODALS
                             <div class="detail-item">
 
                                 <label>
-                                    Technician
+                                    {{ __('Technician') }}
                                 </label>
 
                                 <div class="detail-value">
@@ -1073,7 +1073,7 @@ DETAIL MODALS
                             <div class="detail-item">
 
                                 <label>
-                                    Vendor
+                                    {{ __('Vendor') }}
                                 </label>
 
                                 <div class="detail-value">
@@ -1093,7 +1093,7 @@ DETAIL MODALS
                             <div class="detail-item">
 
                                 <label>
-                                    Cost
+                                    {{ __('Cost') }}
                                 </label>
 
                                 <div class="detail-value">
@@ -1125,7 +1125,7 @@ DETAIL MODALS
                 <div class="mb-4">
 
                     <h6 class="detail-section-title">
-                        Request Information
+                        {{ __('Request Information') }}
                     </h6>
 
 
@@ -1138,7 +1138,7 @@ DETAIL MODALS
                             <div class="detail-item">
 
                                 <label>
-                                    Request Type
+                                    {{ __('Request Type') }}
                                 </label>
 
                                 <div class="detail-value">
@@ -1166,7 +1166,7 @@ DETAIL MODALS
                             <div class="detail-item">
 
                                 <label>
-                                    Requested By
+                                    {{ __('Requested By') }}
                                 </label>
 
                                 <div class="detail-value">
@@ -1186,7 +1186,7 @@ DETAIL MODALS
                             <div class="detail-item">
 
                                 <label>
-                                    Handled By
+                                    {{ __('Handled By') }}
                                 </label>
 
                                 <div class="detail-value">
@@ -1206,7 +1206,7 @@ DETAIL MODALS
                             <div class="detail-item">
 
                                 <label>
-                                    Completed At
+                                    {{ __('Completed At') }}
                                 </label>
 
                                 <div class="detail-value">
@@ -1241,7 +1241,7 @@ DETAIL MODALS
                 <div class="mb-4">
 
                     <label class="detail-label">
-                        Problem / Description
+                        {{ __('Problem / Description') }}
                     </label>
 
                     <div class="detail-box">
@@ -1265,7 +1265,7 @@ DETAIL MODALS
                 <div class="mb-4">
 
                     <label class="detail-label">
-                        Action Taken
+                        {{ __('Action Taken') }}
                     </label>
 
                     <div class="detail-box">
@@ -1289,7 +1289,7 @@ DETAIL MODALS
                     <div class="mb-4">
 
                         <label class="detail-label">
-                            Notes
+                            {{ __('Notes') }}
                         </label>
 
                         <div class="detail-box">
@@ -1321,7 +1321,7 @@ DETAIL MODALS
                             <div>
 
                                 <strong>
-                                    Next Maintenance
+                                    {{ __('Next Maintenance') }}
                                 </strong>
 
                                 <div class="mt-1">
@@ -1356,7 +1356,7 @@ DETAIL MODALS
                     <div class="mb-4">
 
                         <h6 class="detail-section-title">
-                            Work Progress
+                            {{ __('Work Progress') }}
                         </h6>
 
 
@@ -1420,7 +1420,7 @@ DETAIL MODALS
                                                         <img
                                                             src="{{ asset('storage/' . $photo->file_path) }}"
                                                             class="maintenance-photo"
-                                                            alt="Progress Photo"
+                                                            alt="{{ __('Progress Photo') }}"
                                                             loading="lazy"
                                                         >
 
@@ -1463,7 +1463,7 @@ DETAIL MODALS
                 <div>
 
                     <h6 class="detail-section-title">
-                        Maintenance Result Photos
+                        {{ __('Maintenance Result Photos') }}
                     </h6>
 
 
@@ -1490,7 +1490,7 @@ DETAIL MODALS
                                             <img
                                                 src="{{ asset('storage/' . $photo->file_path) }}"
                                                 class="maintenance-photo"
-                                                alt="Maintenance Result Photo"
+                                                alt="{{ __('Maintenance Result Photo') }}"
                                                 loading="lazy"
                                             >
 
@@ -1526,7 +1526,7 @@ DETAIL MODALS
                             <i class="fa-regular fa-image d-block"></i>
 
                             <div>
-                                No maintenance photos.
+                                {{ __('No maintenance photos.') }}
                             </div>
 
                         </div>
@@ -1548,7 +1548,7 @@ DETAIL MODALS
                     data-bs-dismiss="modal"
                 >
 
-                    Close
+                    {{ __('Close') }}
 
                 </button>
 
@@ -1605,35 +1605,35 @@ $(function () {
 
         language: {
 
-            search: 'Search:',
+            search: @json(__('Search:')),
 
             searchPlaceholder:
-                'Search maintenance history...',
+                @json(__('Search maintenance history...')),
 
             lengthMenu:
-                'Show _MENU_ entries',
+                @json(__('Show _MENU_ entries')),
 
             info:
-                'Showing _START_ to _END_ of _TOTAL_ entries',
+                @json(__('Showing _START_ to _END_ of _TOTAL_ entries')),
 
             infoEmpty:
-                'Showing 0 to 0 of 0 entries',
+                @json(__('Showing 0 to 0 of 0 entries')),
 
             zeroRecords:
-                'No maintenance history found',
+                @json(__('No maintenance history found')),
 
             emptyTable:
-                'No maintenance history available',
+                @json(__('No maintenance history available')),
 
             paginate: {
 
-                first: 'First',
+                first: @json(__('First')),
 
-                last: 'Last',
+                last: @json(__('Last')),
 
-                next: 'Next',
+                next: @json(__('Next')),
 
-                previous: 'Previous'
+                previous: @json(__('Previous'))
 
             }
 

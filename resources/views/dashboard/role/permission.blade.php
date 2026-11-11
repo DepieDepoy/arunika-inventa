@@ -1,6 +1,6 @@
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Role Permission')
+@section('title', __('Role Permission'))
 
 @section('content')
 
@@ -159,11 +159,11 @@
 
                     <div>
                         <h5 class="mb-0">
-                            Role Permission
+                            {{ __('Role Permission') }}
                         </h5>
 
                         <small class="text-muted">
-                            Atur hak akses untuk role
+                            {{ __('Atur hak akses untuk role') }}
                             <strong>{{ $role->role_name }}</strong>
                         </small>
                     </div>
@@ -175,7 +175,7 @@
                             class="btn btn-light"
                         >
                             <i class="fa-solid fa-arrow-left me-1"></i>
-                            Back
+                            {{ __('Back') }}
                         </a>
 
                     </div>
@@ -198,7 +198,7 @@
                                 <div class="col-md-4">
 
                                     <div class="role-info-label">
-                                        Role Name
+                                        {{ __('Role Name') }}
                                     </div>
 
                                     <div class="role-info-value">
@@ -211,7 +211,7 @@
                                 <div class="col-md-4">
 
                                     <div class="role-info-label">
-                                        Role Code
+                                        {{ __('Role Code') }}
                                     </div>
 
                                     <div class="role-info-value">
@@ -224,7 +224,7 @@
                                 <div class="col-md-4">
 
                                     <div class="role-info-label">
-                                        Status
+                                        {{ __('Status') }}
                                     </div>
 
                                     <div class="role-info-value">
@@ -233,14 +233,14 @@
 
                                             <span class="badge rounded-pill bg-success-subtle text-success px-3 py-2">
                                                 <i class="fa-solid fa-circle-check me-1"></i>
-                                                Active
+                                                {{ __('Active') }}
                                             </span>
 
                                         @else
 
                                             <span class="badge rounded-pill bg-danger-subtle text-danger px-3 py-2">
                                                 <i class="fa-solid fa-circle-xmark me-1"></i>
-                                                Inactive
+                                                {{ __('Inactive') }}
                                             </span>
 
                                         @endif
@@ -300,7 +300,7 @@
                                             class="form-check-label select-all-label"
                                             for="selectAll_{{ $module }}"
                                         >
-                                            Select All
+                                            {{ __('Select All') }}
                                         </label>
 
                                     </div>
@@ -374,7 +374,7 @@
 
                                     <small class="text-muted">
                                         <i class="fa-solid fa-circle-info me-1"></i>
-                                        Permission akan langsung berlaku untuk seluruh user dengan role ini.
+                                        {{ __('Permission akan langsung berlaku untuk seluruh user dengan role ini.') }}
                                     </small>
 
                                 </div>
@@ -386,7 +386,7 @@
                                         href="{{ route('roles.index') }}"
                                         class="btn btn-light"
                                     >
-                                        Cancel
+                                        {{ __('Cancel') }}
                                     </a>
 
 
@@ -395,7 +395,7 @@
                                         class="btn btn-primary"
                                     >
                                         <i class="fa-solid fa-floppy-disk me-1"></i>
-                                        Save Permission
+                                        {{ __('Save Permission') }}
                                     </button>
 
                                 </div>

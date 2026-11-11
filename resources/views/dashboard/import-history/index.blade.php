@@ -1,7 +1,7 @@
 
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Import History')
+@section('title', __('Import History'))
 
 @section('content')
 <div class="content-wrapper">
@@ -11,15 +11,15 @@
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <div>
-                            <h5 class="mb-0">Import History</h5>
+                            <h5 class="mb-0">{{ __('Import History') }}</h5>
                             <small class="text-muted">
-                                Riwayat proses import data ke sistem.
+                                {{ __('Riwayat proses import data ke sistem.') }}
                             </small>
                         </div>
 
                         <a href="{{ url()->previous() }}" class="btn btn-light">
                             <i class="fas fa-arrow-left me-1"></i>
-                            Kembali
+                            {{ __('Kembali') }}
                         </a>
                     </div>
 
@@ -27,10 +27,9 @@
                         <div class="alert alert-info d-flex align-items-start mb-4">
                             <i class="fas fa-info-circle me-2 mt-1"></i>
                             <div>
-                                <strong>Import History</strong>
+                                <strong>{{ __('Import History') }}</strong>
                                 <div class="small mt-1">
-                                    Riwayat import User, Asset, dan modul lainnya.
-                                    Data ditampilkan menggunakan server-side pagination.
+                                    {{ __('Riwayat import User, Asset, dan modul lainnya. Data ditampilkan menggunakan server-side pagination.') }}
                                 </div>
                             </div>
                         </div>
@@ -41,16 +40,16 @@
                                    width="100%">
                                 <thead>
                                     <tr>
-                                        <th width="5%">No</th>
-                                        <th>Module</th>
-                                        <th>File</th>
-                                        <th width="180">Progress</th>
-                                        <th>Total</th>
-                                        <th>Berhasil</th>
-                                        <th>Gagal</th>
-                                        <th>Status</th>
-                                        <th>Waktu</th>
-                                        <th width="80">Action</th>
+                                        <th width="5%">{{ __('No') }}</th>
+                                        <th>{{ __('Module') }}</th>
+                                        <th>{{ __('File') }}</th>
+                                        <th width="180">{{ __('Progress') }}</th>
+                                        <th>{{ __('Total') }}</th>
+                                        <th>{{ __('Berhasil') }}</th>
+                                        <th>{{ __('Gagal') }}</th>
+                                        <th>{{ __('Status') }}</th>
+                                        <th>{{ __('Waktu') }}</th>
+                                        <th width="80">{{ __('Action') }}</th>
                                     </tr>
                                 </thead>
                             </table>
@@ -319,19 +318,19 @@ $(function () {
         order: [[8, 'desc']],
 
         /*language: {
-            processing: 'Memuat data...',
-            search: 'Cari:',
-            lengthMenu: 'Tampilkan _MENU_ data',
-            info: 'Menampilkan _START_ sampai _END_ dari _TOTAL_ data',
-            infoEmpty: 'Tidak ada data',
-            infoFiltered: '(difilter dari _MAX_ total data)',
-            zeroRecords: 'Data tidak ditemukan',
-            emptyTable: 'Belum ada riwayat import',
+            processing: @json(__('Memuat data...')),
+            search: @json(__('Cari:')),
+            lengthMenu: @json(__('Tampilkan _MENU_ data')),
+            info: @json(__('Menampilkan _START_ sampai _END_ dari _TOTAL_ data')),
+            infoEmpty: @json(__('Tidak ada data')),
+            infoFiltered: @json(__('(difilter dari _MAX_ total data)')),
+            zeroRecords: @json(__('Data tidak ditemukan')),
+            emptyTable: @json(__('Belum ada riwayat import')),
             paginate: {
-                first: 'Pertama',
-                last: 'Terakhir',
-                next: 'Berikutnya',
-                previous: 'Sebelumnya'
+                first: @json(__('Pertama')),
+                last: @json(__('Terakhir')),
+                next: @json(__('Berikutnya')),
+                previous: @json(__('Sebelumnya'))
             }
         }*/
     });

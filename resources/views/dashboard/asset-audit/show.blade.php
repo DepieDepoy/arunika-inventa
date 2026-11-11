@@ -82,18 +82,18 @@
             </small>
         </div>
         <div class="d-flex flex-wrap gap-2">
-            <a href="{{ route('asset-audits.index') }}" class="btn btn-outline-secondary">Kembali</a>
+            <a href="{{ route('asset-audits.index') }}" class="btn btn-outline-secondary">{{ __('Kembali') }}</a>
             @if(auth()->user()->hasPermission('asset_audit.view'))
-                <a href="{{ route('asset-audits.export', $audit->id) }}" class="btn btn-success"><i class="fa-solid fa-file-excel"></i> Excel</a>
+                <a href="{{ route('asset-audits.export', $audit->id) }}" class="btn btn-success"><i class="fa-solid fa-file-excel"></i> {{ __('Excel') }}</a>
             @endif
             @if($canManage)
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalComplete"><i class="bi bi-flag-fill me-1"></i> Selesaikan Audit</button>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalComplete"><i class="bi bi-flag-fill me-1"></i> {{ __('Selesaikan Audit') }}</button>
             @endif
         </div>
     </div>
     <div class="card-body">
         <div class="d-flex justify-content-between mb-1">
-            <strong>Progres pengecekan</strong>
+            <strong>{{ __('Progres pengecekan') }}</strong>
             <span><b id="stChecked">{{ $stats['checked'] }}</b> / <span id="stTotal">{{ $stats['total'] }}</span> (<span id="stPct">{{ $stats['percent'] }}</span>%)</span>
         </div>
         <div class="au-bar mb-3"><span id="stBar" style="width: {{ $stats['percent'] }}%"></span></div>
@@ -105,7 +105,7 @@
                 </a>
             @endforeach
         </div>
-        @if($audit->notes)<div class="alert alert-light border mt-3 mb-0"><strong>Catatan:</strong> {{ $audit->notes }}</div>@endif
+        @if($audit->notes)<div class="alert alert-light border mt-3 mb-0"><strong>{{ __('Catatan:') }}</strong> {{ $audit->notes }}</div>@endif
     </div>
 </div>
 
@@ -115,12 +115,12 @@
         @if($canScan)
         <div class="card au-scan mb-4">
             <div class="card-body">
-                <h5 class="text-white mb-3"><i class="bi bi-qr-code-scan me-1"></i> Scan aset</h5>
+                <h5 class="text-white mb-3"><i class="bi bi-qr-code-scan me-1"></i> {{ __('Scan aset') }}</h5>
 
                 <div class="mb-2">
-                    <label class="mb-1">Saya sedang berada di</label>
+                    <label class="mb-1">{{ __('Saya sedang berada di') }}</label>
                     <select id="scanLocation" class="form-select">
-                        <option value="">— Tidak cek lokasi (cek keberadaan saja) —</option>
+                        <option value="">{{ __('— Tidak cek lokasi (cek keberadaan saja) —') }}</option>
                         @foreach($locGroups as $branchName => $locs)
                             <optgroup label="{{ $branchName }}">
                                 @foreach($locs as $l)
@@ -129,10 +129,10 @@
                             </optgroup>
                         @endforeach
                     </select>
-                    <small style="color:#93a4d8">Pilih ruangan tempat Anda berdiri. Aset yang tercatat di ruangan lain otomatis ditandai <b>salah lokasi</b>; aset milik cabang lain ditandai <b>beda cabang</b>.</small>
+                    <small style="color:#93a4d8">{{ __('Pilih ruangan tempat Anda berdiri. Aset yang tercatat di ruangan lain otomatis ditandai') }} <b>{{ __('salah lokasi') }}</b>{{ __('; aset milik cabang lain ditandai') }} <b>{{ __('beda cabang') }}</b>.</small>
                 </div>
                 <div class="mb-3">
-                    <label class="mb-1">Kondisi aset</label>
+                    <label class="mb-1">{{ __('Kondisi aset') }}</label>
                     <select id="scanCondition" class="form-select">
                         @foreach(\App\Models\AssetAuditItem::CONDITIONS as $k => $v)
                             <option value="{{ $k }}">{{ $v }}</option>
@@ -140,31 +140,31 @@
                     </select>
                 </div>
 
-                <button type="button" class="btn btn-light w-100 fw-bold mb-2" id="btnCamera"><i class="bi bi-camera-fill me-1"></i> Scan pakai kamera</button>
+                <button type="button" class="btn btn-light w-100 fw-bold mb-2" id="btnCamera"><i class="bi bi-camera-fill me-1"></i> {{ __('Scan pakai kamera') }}</button>
                 <div id="reader" class="mb-2" hidden></div>
 
                 <form id="formScan" class="d-flex gap-2 mb-3" autocomplete="off">
-                    <input type="text" id="scanCode" class="form-control au-code" placeholder="Atau ketik kode / scanner USB" autofocus>
+                    <input type="text" id="scanCode" class="form-control au-code" placeholder="{{ __('Atau ketik kode / scanner USB') }}" autofocus>
                     <button class="btn btn-primary"><i class="bi bi-arrow-return-left"></i></button>
                 </form>
 
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <small style="color:#c7d2fe">Hasil scan terakhir</small>
+                    <small style="color:#c7d2fe">{{ __('Hasil scan terakhir') }}</small>
                     <div class="form-check form-switch m-0">
                         <input class="form-check-input" type="checkbox" id="scanSound" checked>
-                        <label class="form-check-label" for="scanSound" style="font-size:.75rem">Suara</label>
+                        <label class="form-check-label" for="scanSound" style="font-size:.75rem">{{ __('Suara') }}</label>
                     </div>
                 </div>
-                <div class="au-feed" id="scanFeed"><small style="color:#93a4d8">Belum ada scan.</small></div>
+                <div class="au-feed" id="scanFeed"><small style="color:#93a4d8">{{ __('Belum ada scan.') }}</small></div>
             </div>
         </div>
         @elseif($audit->isOpen())
-            <div class="alert alert-light border mb-4"><i class="bi bi-info-circle me-1"></i> Audit ini memiliki petugas khusus. Hanya petugas & pengelola audit yang dapat scan.</div>
+            <div class="alert alert-light border mb-4"><i class="bi bi-info-circle me-1"></i> {{ __('Audit ini memiliki petugas khusus. Hanya petugas & pengelola audit yang dapat scan.') }}</div>
         @endif
 
         {{-- TIM AUDIT --}}
         <div class="card mb-4">
-            <div class="card-header"><h6 class="mb-0"><i class="bi bi-people-fill text-primary me-1"></i> Tim audit</h6></div>
+            <div class="card-header"><h6 class="mb-0"><i class="bi bi-people-fill text-primary me-1"></i> {{ __('Tim audit') }}</h6></div>
             <div class="card-body pt-2" id="teamBox">
                 @forelse($team as $t)
                     <div class="au-team-row">
@@ -176,11 +176,11 @@
                         </div>
                         <div class="text-end small">
                             <b class="text-success">{{ $t['checked'] }}</b> dicek
-                            @if($t['pending'] !== null)<div class="text-muted">{{ $t['pending'] }} sisa di area</div>@endif
+                            @if($t['pending'] !== null)<div class="text-muted">{{ __(':p1 sisa di area', ['p1' => $t['pending']]) }}</div>@endif
                         </div>
                     </div>
                 @empty
-                    <div class="text-muted small">Tanpa petugas khusus — semua user berizin scan audit dapat ikut scan.</div>
+                    <div class="text-muted small">{{ __('Tanpa petugas khusus — semua user berizin scan audit dapat ikut scan.') }}</div>
                 @endforelse
             </div>
         </div>
@@ -189,19 +189,19 @@
         @if($canScan && $scanLocations->isNotEmpty())
         <div class="card mb-4">
             <div class="card-body">
-                <h6 class="mb-1"><i class="bi bi-check2-all text-success me-1"></i> Tandai massal per lokasi</h6>
-                <p class="small text-muted mb-2">Untuk aset tanpa label QR (meja, kursi): semua aset <b>belum dicek</b> yang tercatat di lokasi ini ditandai ditemukan.</p>
+                <h6 class="mb-1"><i class="bi bi-check2-all text-success me-1"></i> {{ __('Tandai massal per lokasi') }}</h6>
+                <p class="small text-muted mb-2">{{ __('Untuk aset tanpa label QR (meja, kursi): semua aset') }} <b>{{ __('belum dicek') }}</b> {{ __('yang tercatat di lokasi ini ditandai ditemukan.') }}</p>
                 <form method="POST" action="{{ route('asset-audits.mark-location', $audit->id) }}" id="formBulk" class="d-flex gap-2">
                     @csrf
                     <select name="location_id" class="form-select form-select-sm" required>
-                        <option value="">Pilih lokasi…</option>
+                        <option value="">{{ __('Pilih lokasi…') }}</option>
                         @foreach($locGroups as $branchName => $locs)
                             <optgroup label="{{ $branchName }}">
                                 @foreach($locs as $l)<option value="{{ $l->id }}">{{ $l->name }}</option>@endforeach
                             </optgroup>
                         @endforeach
                     </select>
-                    <button class="btn btn-sm btn-outline-success text-nowrap">Tandai</button>
+                    <button class="btn btn-sm btn-outline-success text-nowrap">{{ __('Tandai') }}</button>
                 </form>
             </div>
         </div>
@@ -212,10 +212,10 @@
     <div class="col-xl-8 order-xl-1">
         <div class="card">
             <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
-                <h6 class="mb-0">Daftar aset · {{ $tiles[$filter][0] ?? 'Total aset' }}</h6>
+                <h6 class="mb-0">{{ __('Daftar aset · :p1', ['p1' => $tiles[$filter][0] ?? 'Total aset']) }}</h6>
                 <form method="GET" class="d-flex gap-2">
                     <input type="hidden" name="f" value="{{ $filter }}">
-                    <input type="search" name="q" value="{{ request('q') }}" class="form-control form-control-sm" placeholder="Cari kode / nama / lokasi">
+                    <input type="search" name="q" value="{{ request('q') }}" class="form-control form-control-sm" placeholder="{{ __('Cari kode / nama / lokasi') }}">
                     <button class="btn btn-sm btn-outline-primary"><i class="bi bi-search"></i></button>
                 </form>
             </div>
@@ -224,11 +224,11 @@
                     <table class="table align-middle">
                         <thead>
                             <tr>
-                                <th>Aset</th>
-                                <th>Lokasi</th>
-                                <th>Hasil</th>
-                                <th>Dicek</th>
-                                @if($canScan)<th class="text-end">Tandai manual</th>@endif
+                                <th>{{ __('Aset') }}</th>
+                                <th>{{ __('Lokasi') }}</th>
+                                <th>{{ __('Hasil') }}</th>
+                                <th>{{ __('Dicek') }}</th>
+                                @if($canScan)<th class="text-end">{{ __('Tandai manual') }}</th>@endif
                             </tr>
                         </thead>
                         <tbody>
@@ -242,9 +242,9 @@
                                     <td>
                                         {{ $item->expected_location ?: 'Belum diisi' }}
                                         @if($item->branch_mismatch)
-                                            <small class="d-block" style="color:#0e7490"><i class="bi bi-signpost-split"></i> milik {{ $item->expectedBranch?->branch_name }}</small>
+                                            <small class="d-block" style="color:#0e7490"><i class="bi bi-signpost-split"></i> {{ __('milik :p1', ['p1' => $item->expectedBranch?->branch_name]) }}</small>
                                         @elseif($item->location_mismatch)
-                                            <small class="d-block text-warning"><i class="bi bi-arrow-return-right"></i> ditemukan di {{ $item->found_location }}</small>
+                                            <small class="d-block text-warning"><i class="bi bi-arrow-return-right"></i> {{ __('ditemukan di :p1', ['p1' => $item->found_location]) }}</small>
                                         @endif
                                     </td>
                                     <td>
@@ -260,17 +260,17 @@
                                     @if($canScan)
                                         <td class="text-end au-row-actions text-nowrap">
                                             @if($item->in_scope)
-                                                <button class="btn btn-outline-success" data-mark="found" data-id="{{ $item->id }}" title="Ada"><i class="bi bi-check-lg"></i></button>
-                                                <button class="btn btn-outline-danger" data-mark="missing" data-id="{{ $item->id }}" title="Tidak ada"><i class="bi bi-x-lg"></i></button>
+                                                <button class="btn btn-outline-success" data-mark="found" data-id="{{ $item->id }}" title="{{ __('Ada') }}"><i class="bi bi-check-lg"></i></button>
+                                                <button class="btn btn-outline-danger" data-mark="missing" data-id="{{ $item->id }}" title="{{ __('Tidak ada') }}"><i class="bi bi-x-lg"></i></button>
                                             @endif
                                             @if($item->result)
-                                                <button class="btn btn-outline-secondary" data-mark="reset" data-id="{{ $item->id }}" title="Batalkan"><i class="bi bi-arrow-counterclockwise"></i></button>
+                                                <button class="btn btn-outline-secondary" data-mark="reset" data-id="{{ $item->id }}" title="{{ __('Batalkan') }}"><i class="bi bi-arrow-counterclockwise"></i></button>
                                             @endif
                                         </td>
                                     @endif
                                 </tr>
                             @empty
-                                <tr><td colspan="5" class="text-center text-muted py-4">Tidak ada aset pada filter ini.</td></tr>
+                                <tr><td colspan="5" class="text-center text-muted py-4">{{ __('Tidak ada aset pada filter ini.') }}</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -291,26 +291,26 @@
             @csrf
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Selesaikan audit?</h5>
+                    <h5 class="modal-title">{{ __('Selesaikan audit?') }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p><b id="cmPending">{{ $stats['pending'] }}</b> aset yang belum dicek akan ditandai <b class="text-danger">Tidak ditemukan</b>. Audit yang sudah selesai tidak bisa di-scan lagi.</p>
+                    <p><b id="cmPending">{{ $stats['pending'] }}</b> {{ __('aset yang belum dicek akan ditandai') }} <b class="text-danger">{{ __('Tidak ditemukan') }}</b>{{ __('. Audit yang sudah selesai tidak bisa di-scan lagi.') }}</p>
                     <div class="form-check mb-2">
                         <input class="form-check-input" type="checkbox" name="apply_locations" value="1" id="applyLoc" checked>
                         <label class="form-check-label" for="applyLoc">
-                            Perbarui lokasi aset yang <b>salah lokasi</b> (<span id="cmMisplaced">{{ $stats['misplaced'] }}</span> aset) sesuai lokasi saat ditemukan. Tercatat di riwayat lokasi aset.
+                            {{ __('Perbarui lokasi aset yang') }} <b>{{ __('salah lokasi') }}</b> (<span id="cmMisplaced">{{ $stats['misplaced'] }}</span> {{ __('aset) sesuai lokasi saat ditemukan. Tercatat di riwayat lokasi aset.') }}
                         </label>
                     </div>
                     @if($stats['other_branch'] > 0)
-                        <div class="alert alert-info small mb-0"><i class="bi bi-signpost-split me-1"></i> Ada {{ $stats['other_branch'] }} aset <b>beda cabang</b>. Bila memang sudah pindah, buat <b>Mutasi Aset</b> agar tercatat di cabang ini.</div>
+                        <div class="alert alert-info small mb-0"><i class="bi bi-signpost-split me-1"></i> {{ __('Ada :p1 aset', ['p1' => $stats['other_branch']]) }} <b>{{ __('beda cabang') }}</b>{{ __('. Bila memang sudah pindah, buat') }} <b>{{ __('Mutasi Aset') }}</b> {{ __('agar tercatat di cabang ini.') }}</div>
                     @endif
                 </div>
                 <div class="modal-footer justify-content-between">
-                    <button type="button" class="btn btn-outline-danger" id="btnCancelAudit">Batalkan audit</button>
+                    <button type="button" class="btn btn-outline-danger" id="btnCancelAudit">{{ __('Batalkan audit') }}</button>
                     <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">Kembali</button>
-                        <button type="submit" class="btn btn-primary">Ya, selesaikan</button>
+                        <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">{{ __('Kembali') }}</button>
+                        <button type="submit" class="btn btn-primary">{{ __('Ya, selesaikan') }}</button>
                     </div>
                 </div>
             </div>
@@ -441,7 +441,7 @@
             btn.html('<i class="bi bi-stop-circle me-1"></i> Matikan kamera');
         } catch (err) {
             $('#reader').prop('hidden', true);
-            Swal.fire({ icon: 'error', title: 'Kamera tidak bisa dibuka', text: 'Izinkan akses kamera di browser (situs harus dibuka lewat https), atau gunakan kolom ketik / scanner USB.' });
+            Swal.fire({ icon: 'error', title: @json(__('Kamera tidak bisa dibuka')), text: @json(__('Izinkan akses kamera di browser (situs harus dibuka lewat https), atau gunakan kolom ketik / scanner USB.')) });
         }
     });
 
@@ -454,20 +454,20 @@
                 if (res.removed) { $('#item-' + id).fadeOut(); return; }
                 updateRow(res.item);
             })
-            .fail(xhr => Swal.fire({ icon: 'error', title: 'Gagal', text: xhr.responseJSON?.message || 'Terjadi kesalahan.' }));
+            .fail(xhr => Swal.fire({ icon: 'error', title: @json(__('Gagal')), text: xhr.responseJSON?.message || 'Terjadi kesalahan.' }));
     });
 
     // ---------- tandai massal ----------
     $('#formBulk').on('submit', function (e) {
         e.preventDefault();
         const form = this, name = $(form).find('select option:selected').text();
-        Swal.fire({ icon: 'question', title: 'Tandai massal?', html: 'Semua aset <b>belum dicek</b> di <b>' + esc(name) + '</b> akan ditandai ditemukan.', showCancelButton: true, confirmButtonText: 'Ya, tandai', cancelButtonText: 'Batal' })
+        Swal.fire({ icon: 'question', title: @json(__('Tandai massal?')), html: 'Semua aset <b>belum dicek</b> di <b>' + esc(name) + '</b> akan ditandai ditemukan.', showCancelButton: true, confirmButtonText: @json(__('Ya, tandai')), cancelButtonText: @json(__('Batal')) })
             .then(r => { if (r.isConfirmed) form.submit(); });
     });
 
     // ---------- batalkan audit ----------
     $('#btnCancelAudit').on('click', function () {
-        Swal.fire({ icon: 'warning', title: 'Batalkan audit ini?', text: 'Hasil scan tetap tersimpan tetapi audit ditandai dibatalkan.', showCancelButton: true, confirmButtonText: 'Ya, batalkan', cancelButtonText: 'Tidak' })
+        Swal.fire({ icon: 'warning', title: @json(__('Batalkan audit ini?')), text: @json(__('Hasil scan tetap tersimpan tetapi audit ditandai dibatalkan.')), showCancelButton: true, confirmButtonText: @json(__('Ya, batalkan')), cancelButtonText: @json(__('Tidak')) })
             .then(r => { if (r.isConfirmed) document.getElementById('formCancelAudit').submit(); });
     });
 })();

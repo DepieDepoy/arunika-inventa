@@ -13,13 +13,13 @@
                 {{-- LOGO NORMAL --}}
                 <div class="logo-normal">
                     <img src="{{ asset('assets/images/auth/vasetra.png') }}"
-                         alt="VASETRA">
+                         alt="{{ __('VASETRA') }}">
                 </div>
 
                 {{-- LOGO MINI --}}
                 <div class="logo-mini">
                     <img src="{{ asset('assets/images/auth/v-vasetra.png') }}"
-                         alt="VASETRA">
+                         alt="{{ __('VASETRA') }}">
                 </div>
 
             </div>
@@ -78,7 +78,7 @@
                        href="#"
                        tabindex="-1">
 
-                        <span class="default-icon">Home</span>
+                        <span class="default-icon">{{ __('Home') }}</span>
                         <span class="mini-icon">-</span>
 
                     </a>
@@ -116,7 +116,7 @@
 
                         </i>
 
-                        <span class="item-name">Dashboard</span>
+                        <span class="item-name">{{ __('Dashboard') }}</span>
 
                     </a>
 
@@ -169,7 +169,7 @@
 
                         </i>
 
-                        <span class="item-name">Calendar</span>
+                        <span class="item-name">{{ __('Calendar') }}</span>
 
                     </a>
 
@@ -190,7 +190,7 @@
                                 <path fill-rule="evenodd" clip-rule="evenodd" d="M7.67 2.75H16.34C19.36 2.75 21.25 4.89 21.25 7.92V16.08C21.25 19.11 19.36 21.25 16.34 21.25H7.67C4.64 21.25 2.75 19.11 2.75 16.08V7.92C2.75 4.89 4.65 2.75 7.67 2.75Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </i>
-                        <span class="item-name">Laporan</span>
+                        <span class="item-name">{{ __('Laporan') }}</span>
                     </a>
                 </li>
                 @endif
@@ -209,7 +209,7 @@
                        href="#"
                        tabindex="-1">
 
-                        <span class="default-icon">Pages</span>
+                        <span class="default-icon">{{ __('Pages') }}</span>
                         <span class="mini-icon">-</span>
 
                     </a>
@@ -265,7 +265,7 @@
 
                             </i>
 
-                            <span class="item-name">Master Data</span>
+                            <span class="item-name">{{ __('Master Data') }}</span>
 
                             <i class="right-icon">
 
@@ -320,7 +320,7 @@
 
                                         <i class="sidenav-mini-icon">B</i>
 
-                                        <span class="item-name">Category</span>
+                                        <span class="item-name">{{ __('Category') }}</span>
 
                                     </a>
 
@@ -356,7 +356,7 @@
 
                                         <i class="sidenav-mini-icon">B</i>
 
-                                        <span class="item-name">Sub Category</span>
+                                        <span class="item-name">{{ __('Sub Category') }}</span>
 
                                     </a>
 
@@ -392,7 +392,7 @@
 
                                         <i class="sidenav-mini-icon">B</i>
 
-                                        <span class="item-name">Vendor</span>
+                                        <span class="item-name">{{ __('Vendor') }}</span>
 
                                     </a>
 
@@ -405,7 +405,7 @@
                                 <li class="nav-item">
                                     <a class="nav-link {{ request()->routeIs('locations.*') ? 'active' : '' }}" href="{{ route('locations.index') }}">
                                         <i class="icon"><svg class="icon-10" xmlns="http://www.w3.org/2000/svg" width="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8" fill="currentColor"/></svg></i>
-                                        <span class="item-name">Lokasi</span>
+                                        <span class="item-name">{{ __('Lokasi') }}</span>
                                     </a>
                                 </li>
                             @endif
@@ -463,7 +463,7 @@
 
                             </i>
 
-                            <span class="item-name">Asset</span>
+                            <span class="item-name">{{ __('Asset') }}</span>
 
                             <i class="right-icon">
 
@@ -516,7 +516,7 @@
 
                                         </i>
 
-                                        <span class="item-name">View</span>
+                                        <span class="item-name">{{ __('View') }}</span>
 
                                     </a>
 
@@ -550,7 +550,7 @@
 
                                         </i>
 
-                                        <span class="item-name">Import</span>
+                                        <span class="item-name">{{ __('Import') }}</span>
 
                                     </a>
 
@@ -572,7 +572,7 @@
                                             </svg>
                                         </i>
 
-                                        <span class="item-name">Penghapusan</span>
+                                        <span class="item-name">{{ __('Penghapusan') }}</span>
 
                                     </a>
 
@@ -594,7 +594,7 @@
                                             </svg>
                                         </i>
 
-                                        <span class="item-name">Audit Fisik</span>
+                                        <span class="item-name">{{ __('Audit Fisik') }}</span>
 
                                     </a>
 
@@ -631,7 +631,7 @@
                                         <i class="sidenav-mini-icon">A</i>
 
                                         <span class="item-name">
-                                            My Assets
+                                            {{ __('My Assets') }}
                                         </span>
 
                                     </a>
@@ -689,7 +689,7 @@
                             </i>
 
                             <span class="item-name">
-                                Maintenance
+                                {{ __('Maintenance') }}
                             </span>
 
                             <i class="right-icon">
@@ -748,7 +748,7 @@
                                         <i class="sidenav-mini-icon">R</i>
 
                                         <span class="item-name">
-                                            Maintenance Requests
+                                            {{ __('Maintenance Requests') }}
                                         </span>
 
                                     </a>
@@ -787,7 +787,7 @@
                                         <i class="sidenav-mini-icon">H</i>
 
                                         <span class="item-name">
-                                            Maintenance History
+                                            {{ __('Maintenance History') }}
                                         </span>
 
                                     </a>
@@ -842,7 +842,7 @@
 
                             </i>
 
-                            <span class="item-name">History</span>
+                            <span class="item-name">{{ __('History') }}</span>
 
                             <i class="right-icon">
 
@@ -893,7 +893,7 @@
 
                                     <i class="sidenav-mini-icon">D</i>
 
-                                    <span class="item-name">Import</span>
+                                    <span class="item-name">{{ __('Import') }}</span>
 
                                 </a>
 
@@ -926,7 +926,7 @@
 
                                         <i class="sidenav-mini-icon">A</i>
 
-                                        <span class="item-name">Audit Trail</span>
+                                        <span class="item-name">{{ __('Audit Trail') }}</span>
 
                                     </a>
 
@@ -984,7 +984,7 @@
                                 </svg>
                             </i>
 
-                            <span class="item-name">Subscription</span>
+                            <span class="item-name">{{ __('Subscription') }}</span>
 
                             <i class="right-icon">
                                 <svg class="icon-18"
@@ -1032,7 +1032,7 @@
 
                                         <i class="sidenav-mini-icon">S</i>
 
-                                        <span class="item-name">Subscribe</span>
+                                        <span class="item-name">{{ __('Subscribe') }}</span>
 
                                     </a>
 
@@ -1062,7 +1062,7 @@
 
                                         <i class="sidenav-mini-icon">U</i>
 
-                                        <span class="item-name">Usage &amp; Limits</span>
+                                        <span class="item-name">{{ __('Usage & Limits') }}</span>
 
                                     </a>
 
@@ -1092,7 +1092,7 @@
 
                                         <i class="sidenav-mini-icon">H</i>
 
-                                        <span class="item-name">History & Billing</span>
+                                        <span class="item-name">{{ __('History & Billing') }}</span>
 
                                     </a>
 
@@ -1122,7 +1122,7 @@
                        href="#"
                        tabindex="-1">
 
-                        <span class="default-icon">Master</span>
+                        <span class="default-icon">{{ __('Master') }}</span>
                         <span class="mini-icon">-</span>
 
                     </a>
@@ -1158,7 +1158,7 @@
                                     <path d="M5 11V18M9.5 11V18M14.5 11V18M19 11V18M3 21H21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                 </svg>
                             </i>
-                            <span class="item-name">Cabang</span>
+                            <span class="item-name">{{ __('Cabang') }}</span>
                             @if($pendingIn > 0)<span class="badge rounded-pill bg-danger ms-auto me-2">{{ $pendingIn }}</span>@endif
                             <i class="right-icon">
                                 <svg class="icon-18" xmlns="http://www.w3.org/2000/svg" width="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1171,7 +1171,7 @@
                                 <li class="nav-item">
                                     <a class="nav-link {{ request()->routeIs('branches.*') ? 'active' : '' }}" href="{{ route('branches.index') }}">
                                         <i class="icon"><svg class="icon-10" xmlns="http://www.w3.org/2000/svg" width="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8" fill="currentColor"/></svg></i>
-                                        <span class="item-name">Daftar Cabang</span>
+                                        <span class="item-name">{{ __('Daftar Cabang') }}</span>
                                     </a>
                                 </li>
                             @endif
@@ -1179,7 +1179,7 @@
                                 <li class="nav-item">
                                     <a class="nav-link {{ request()->routeIs('branch-transfers.*') ? 'active' : '' }}" href="{{ route('branch-transfers.index') }}">
                                         <i class="icon"><svg class="icon-10" xmlns="http://www.w3.org/2000/svg" width="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8" fill="currentColor"/></svg></i>
-                                        <span class="item-name">Mutasi Aset</span>
+                                        <span class="item-name">{{ __('Mutasi Aset') }}</span>
                                         @if($pendingIn > 0)<span class="badge rounded-pill bg-danger ms-auto">{{ $pendingIn }}</span>@endif
                                     </a>
                                 </li>
@@ -1201,7 +1201,7 @@
                                 <path d="M9 9V9.01M9 12V12.01M9 15V15.01M9 18V18.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                             </svg>
                         </i>
-                        <span class="item-name">Profil Perusahaan</span>
+                        <span class="item-name">{{ __('Profil Perusahaan') }}</span>
                     </a>
                 </li>
                 @endif
@@ -1244,7 +1244,7 @@
 
                             </i>
 
-                            <span class="item-name">Role</span>
+                            <span class="item-name">{{ __('Role') }}</span>
 
                             <i class="right-icon">
 
@@ -1295,7 +1295,7 @@
 
                                     <i class="sidenav-mini-icon">D</i>
 
-                                    <span class="item-name">View</span>
+                                    <span class="item-name">{{ __('View') }}</span>
 
                                 </a>
 
@@ -1345,7 +1345,7 @@
 
                             </i>
 
-                            <span class="item-name">Users</span>
+                            <span class="item-name">{{ __('Users') }}</span>
 
                             <i class="right-icon">
 
@@ -1400,7 +1400,7 @@
 
                                         <i class="sidenav-mini-icon">D</i>
 
-                                        <span class="item-name">View</span>
+                                        <span class="item-name">{{ __('View') }}</span>
 
                                     </a>
 
@@ -1434,7 +1434,7 @@
 
                                         </i>
 
-                                        <span class="item-name">Import</span>
+                                        <span class="item-name">{{ __('Import') }}</span>
 
                                     </a>
 

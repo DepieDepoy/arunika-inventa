@@ -55,13 +55,13 @@ window.VasetraLocation = (function () {
     function askNew(el) {
         const branchId = el.dataset.branch || '';
         Swal.fire({
-            title: 'Lokasi baru',
+            title: @json(__('Lokasi baru')),
             input: 'text',
-            inputLabel: 'Nama ruangan / area (mis. Lantai 2 - Ruang Finance)',
+            inputLabel: @json(__('Nama ruangan / area (mis. Lantai 2 - Ruang Finance)')),
             inputAttributes: { maxlength: 150 },
             showCancelButton: true,
-            confirmButtonText: 'Simpan',
-            cancelButtonText: 'Batal',
+            confirmButtonText: @json(__('Simpan')),
+            cancelButtonText: @json(__('Batal')),
             inputValidator: v => !String(v || '').trim() ? 'Nama lokasi wajib diisi' : null,
         }).then(r => {
             if (!r.isConfirmed) { el.value = el.dataset.previous || ''; return; }
@@ -74,7 +74,7 @@ window.VasetraLocation = (function () {
                 load(el).then(() => el.dispatchEvent(new Event('change', { bubbles: true })));
             }).fail(xhr => {
                 el.value = el.dataset.previous || '';
-                Swal.fire({ icon: 'error', title: 'Gagal', text: xhr.responseJSON?.message || 'Lokasi gagal ditambahkan.' });
+                Swal.fire({ icon: 'error', title: @json(__('Gagal')), text: xhr.responseJSON?.message || 'Lokasi gagal ditambahkan.' });
             });
         });
     }

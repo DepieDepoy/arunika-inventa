@@ -1,7 +1,7 @@
 
 @extends('dashboard.layouts.wrapper')
 
-@section('title', 'Usage & Limits')
+@section('title', __('Usage & Limits'))
 
 @section('content')
 
@@ -363,18 +363,18 @@
                             <div>
                                 <div class="d-flex align-items-center gap-2 mb-2">
                                     <i class="bi bi-speedometer2 text-primary fs-4"></i>
-                                    <h5 class="usage-page-title mb-0">Usage &amp; Limits</h5>
+                                    <h5 class="usage-page-title mb-0">{{ __('Usage & Limits') }}</h5>
                                 </div>
 
                                 <p class="usage-page-subtitle text-muted mb-0">
-                                    Pantau pemakaian resource dan kapasitas paket perusahaan Anda.
+                                    {{ __('Pantau pemakaian resource dan kapasitas paket perusahaan Anda.') }}
                                 </p>
                             </div>
 
                             <div class="usage-header-action">
                                 <a href="{{ route('subscription.index') }}" class="btn btn-primary">
                                     <i class="bi bi-box-seam me-1"></i>
-                                    Lihat Paket
+                                    {{ __('Lihat Paket') }}
                                 </a>
                             </div>
                         </div>
@@ -397,7 +397,7 @@
 
                                     <div>
                                         <div class="text-muted small mb-1">
-                                            Paket Subscription Saat Ini
+                                            {{ __('Paket Subscription Saat Ini') }}
                                         </div>
                                         <h4 class="usage-plan-name mb-0">{{ $planName }}</h4>
                                     </div>
@@ -412,8 +412,7 @@
                                     @if($subscriptionEndsAt)
                                         <span class="usage-status status-neutral">
                                             <i class="bi bi-calendar-event"></i>
-                                            Berakhir
-                                            {{ \Carbon\Carbon::parse($subscriptionEndsAt)->format('d M Y') }}
+                                            {{ __('Berakhir :p1', ['p1' => \Carbon\Carbon::parse($subscriptionEndsAt)->format('d M Y')]) }}
                                         </span>
                                     @endif
                                 </div>
@@ -421,7 +420,7 @@
                                 @if(!empty($activeUpgrade))
                                     <div class="small text-muted mt-2">
                                         <i class="bi bi-arrow-up-circle text-primary me-1"></i>
-                                        Upgrade sementara dari
+                                        {{ __('Upgrade sementara dari') }}
                                         <strong>{{ $activeUpgrade->parent?->plan?->plan_name ?? '-' }}</strong>.
                                         @if($activeUpgrade->parent && $activeUpgrade->end_date->lt($activeUpgrade->parent->end_date))
                                             Kembali ke {{ $activeUpgrade->parent->plan?->plan_name }} mulai
@@ -446,7 +445,7 @@
                             <div class="col-md-4 text-md-end mt-3 mt-md-0">
                                 <a href="{{ route('subscription.index') }}" class="btn btn-outline-primary">
                                     <i class="bi bi-gear me-1"></i>
-                                    Kelola Subscription
+                                    {{ __('Kelola Subscription') }}
                                     <i class="bi bi-arrow-right ms-1"></i>
                                 </a>
                             </div>
@@ -539,8 +538,7 @@
                                         Tanpa batas pemakaian
                                     @elseif($isExceeded)
                                         <span class="text-danger fw-semibold">
-                                            {{ $realPercentage }}% dari kapasitas — melebihi
-                                            {{ $formatMetric($metric['key'], $overBy) }}
+                                            {{ __(':p1% dari kapasitas — melebihi :p2', ['p1' => $realPercentage, 'p2' => $formatMetric($metric['key'], $overBy)]) }}
                                         </span>
                                     @elseif($percentage !== null)
                                         {{ $percentage }}% dari kapasitas paket
@@ -555,7 +553,7 @@
                                 <div class="d-flex align-items-center gap-2 mt-4">
                                     <i class="bi bi-infinity text-success fs-4"></i>
                                     <small class="text-success fw-semibold">
-                                        Tidak ada batas yang ditentukan
+                                        {{ __('Tidak ada batas yang ditentukan') }}
                                     </small>
                                 </div>
 
@@ -578,27 +576,27 @@
                                     @if($isExceeded)
                                         <small class="text-danger fw-semibold">
                                             <i class="bi bi-exclamation-circle-fill me-1"></i>
-                                            Melebihi batas
+                                            {{ __('Melebihi batas') }}
                                         </small>
                                     @elseif($percentage == 100)
                                         <small class="text-danger fw-semibold">
                                             <i class="bi bi-exclamation-triangle-fill me-1"></i>
-                                            Batas tercapai
+                                            {{ __('Batas tercapai') }}
                                         </small>
                                     @elseif($percentage >= 95)
                                         <small class="text-danger fw-semibold">
                                             <i class="bi bi-exclamation-triangle-fill me-1"></i>
-                                            Hampir mencapai batas
+                                            {{ __('Hampir mencapai batas') }}
                                         </small>
                                     @elseif($isNearLimit)
                                         <small class="fw-semibold" style="color: #b77908;">
                                             <i class="bi bi-exclamation-triangle-fill me-1"></i>
-                                            Hampir mencapai batas
+                                            {{ __('Hampir mencapai batas') }}
                                         </small>
                                     @else
                                         <small class="text-success fw-semibold">
                                             <i class="bi bi-check-circle me-1"></i>
-                                            Masih tersedia
+                                            {{ __('Masih tersedia') }}
                                         </small>
                                     @endif
 
@@ -616,18 +614,18 @@
                                 @if($isExceeded)
                                     <div class="alert alert-danger py-2 px-3 mt-3 mb-0 small">
                                         <i class="bi bi-exclamation-octagon-fill me-1"></i>
-                                        Kuota terlampaui. Data yang sudah ada <strong>tetap aman</strong>,
+                                        {{ __('Kuota terlampaui. Data yang sudah ada') }} <strong>{{ __('tetap aman') }}</strong>,
                                         tetapi penambahan {{ strtolower($metric['title']) }} baru diblokir.
                                         @if($canManage ?? false)
                                             <div class="d-flex flex-wrap gap-2 mt-2">
                                                 {{-- Add-on hanya untuk storage; kuota user & aset naik lewat upgrade paket. --}}
                                                 @if($metric['key'] === 'storage')
                                                     <a href="{{ route('subscription.index') }}#addon-card" class="btn btn-sm btn-danger">
-                                                        <i class="bi bi-plus-circle me-1"></i> Tambah Storage
+                                                        <i class="bi bi-plus-circle me-1"></i> {{ __('Tambah Storage') }}
                                                     </a>
                                                 @endif
                                                 <a href="{{ route('subscription.index') }}#upgrade-card" class="btn btn-sm {{ $metric['key'] === 'storage' ? 'btn-outline-danger' : 'btn-danger' }}">
-                                                    <i class="bi bi-arrow-up-circle me-1"></i> Upgrade Paket
+                                                    <i class="bi bi-arrow-up-circle me-1"></i> {{ __('Upgrade Paket') }}
                                                 </a>
                                             </div>
                                         @else
@@ -637,13 +635,12 @@
                                 @elseif($metric['key'] === 'storage' && $percentage >= 95)
                                     <div class="alert alert-danger py-2 px-3 mt-3 mb-0 small">
                                         <i class="bi bi-exclamation-triangle-fill me-1"></i>
-                                        Penyimpanan hampir penuh. Kelola file atau tingkatkan paket.
+                                        {{ __('Penyimpanan hampir penuh. Kelola file atau tingkatkan paket.') }}
                                     </div>
                                 @elseif($metric['key'] === 'storage' && $percentage >= 80)
                                     <div class="alert alert-warning py-2 px-3 mt-3 mb-0 small">
                                         <i class="bi bi-exclamation-circle-fill me-1"></i>
-                                        Penggunaan storage sudah mencapai {{ $percentage }}%.
-                                        Pertimbangkan untuk mengelola file atau meningkatkan paket.
+                                        {{ __('Penggunaan storage sudah mencapai :p1%. Pertimbangkan untuk mengelola file atau meningkatkan paket.', ['p1' => $percentage]) }}
                                     </div>
                                 @endif
 
@@ -651,7 +648,7 @@
                                 <div class="mt-4">
                                     <small class="text-muted">
                                         <i class="bi bi-info-circle me-1"></i>
-                                        Batas paket tidak tersedia untuk ditampilkan.
+                                        {{ __('Batas paket tidak tersedia untuk ditampilkan.') }}
                                     </small>
                                 </div>
                             @endif
@@ -673,14 +670,9 @@
                             </div>
 
                             <div>
-                                <h6 class="fw-bold mb-2">Informasi Penggunaan</h6>
+                                <h6 class="fw-bold mb-2">{{ __('Informasi Penggunaan') }}</h6>
                                 <p class="text-muted mb-0" style="line-height: 1.8;">
-                                    Data pemakaian mengikuti resource perusahaan Anda.
-                                    Batas Users, Assets, dan Storage bergantung pada konfigurasi
-                                    paket subscription. Peringatan akan ditampilkan ketika storage
-                                    mencapai 80% dan 95% dari kapasitas paket. Jika pemakaian
-                                    mendekati kapasitas maksimum, Anda dapat meninjau paket yang
-                                    tersedia melalui menu Subscribe.
+                                    {{ __('Data pemakaian mengikuti resource perusahaan Anda. Batas Users, Assets, dan Storage bergantung pada konfigurasi paket subscription. Peringatan akan ditampilkan ketika storage mencapai 80% dan 95% dari kapasitas paket. Jika pemakaian mendekati kapasitas maksimum, Anda dapat meninjau paket yang tersedia melalui menu Subscribe.') }}
                                 </p>
                             </div>
                         </div>

@@ -407,6 +407,19 @@ class ProfileController extends Controller
         ]);
     }
 
+    /**
+     * Ganti bahasa tampilan (id / en). Disimpan di users.locale sehingga
+     * berlaku juga untuk email & notifikasi.
+     */
+    public function updateLocale(Request $request): \Illuminate\Http\RedirectResponse
+    {
+        $locale = \App\Http\Middleware\SetUserLocale::resolve((string) $request->input('locale'));
+
+        User::query()->whereKey(Auth::id())->update(['locale' => $locale]);
+
+        return redirect()->back();
+    }
+
     public function destroyPhoto(): JsonResponse
     {
         $user = User::query()->findOrFail(Auth::id());
