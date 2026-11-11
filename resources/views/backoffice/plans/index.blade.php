@@ -60,7 +60,7 @@
         <div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-1"></i> {{ $errors->first() }}</div>
     @endif
 
-    <form method="POST" action="{{ route('backoffice.plans.update') }}">
+    <form method="POST" action="{{ route('backoffice.plans.update') }}" id="planForm">
         @csrf
 
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
@@ -128,7 +128,7 @@
                                     <label class="form-label">Per bulan</label>
                                     <div class="input-group input-group-sm">
                                         <span class="input-group-text">Rp</span>
-                                        <input type="number" class="form-control price-m" name="{{ $p }}[price_monthly]" min="0" step="1000" value="{{ $o('price_monthly', (int) $plan->price_monthly) }}" required>
+                                        <input type="number" class="form-control price-m" name="{{ $p }}[price_monthly]" min="0" step="1" value="{{ $o('price_monthly', (int) $plan->price_monthly) }}" required>
                                     </div>
                                     <div class="pl-hint price-m-hint"></div>
                                 </div>
@@ -136,7 +136,7 @@
                                     <label class="form-label">Per tahun</label>
                                     <div class="input-group input-group-sm">
                                         <span class="input-group-text">Rp</span>
-                                        <input type="number" class="form-control price-y" name="{{ $p }}[price_yearly]" min="0" step="1000" value="{{ $o('price_yearly', (int) $plan->price_yearly) }}" required>
+                                        <input type="number" class="form-control price-y" name="{{ $p }}[price_yearly]" min="0" step="1" value="{{ $o('price_yearly', (int) $plan->price_yearly) }}" required>
                                     </div>
                                     <div class="pl-hint yearly-hint"></div>
                                 </div>
@@ -243,14 +243,14 @@
                                 <label class="form-label small fw-bold mb-1">Harga / bulan</label>
                                 <div class="input-group input-group-sm">
                                     <span class="input-group-text">Rp</span>
-                                    <input type="number" class="form-control" name="storage[price_monthly]" min="0" step="1000" value="{{ old('storage.price_monthly', (int) $storage->price_monthly) }}" required>
+                                    <input type="number" class="form-control" name="storage[price_monthly]" min="0" step="1" value="{{ old('storage.price_monthly', (int) $storage->price_monthly) }}" required>
                                 </div>
                             </div>
                             <div class="col-sm-6 col-xl-3">
                                 <label class="form-label small fw-bold mb-1">Harga / tahun</label>
                                 <div class="input-group input-group-sm">
                                     <span class="input-group-text">Rp</span>
-                                    <input type="number" class="form-control" name="storage[price_yearly]" min="0" step="1000" value="{{ old('storage.price_yearly', (int) $storage->price_yearly) }}" required>
+                                    <input type="number" class="form-control" name="storage[price_yearly]" min="0" step="1" value="{{ old('storage.price_yearly', (int) $storage->price_yearly) }}" required>
                                 </div>
                             </div>
                             <div class="col-sm-6 col-xl-3">
@@ -271,6 +271,7 @@
         <div class="cms-card">
             <div class="cms-sticky">
                 <span class="small text-muted align-self-center"><i class="bi bi-info-circle me-1"></i> Setiap perubahan tercatat di audit trail.</span>
+                <span id="planFormError" class="small text-danger fw-semibold align-self-center d-none" role="alert"></span>
                 <button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1"></i> Simpan paket &amp; harga</button>
             </div>
         </div>
@@ -326,6 +327,29 @@
             });
         }
     });
+
+    // Isian ditolak browser (wajib diisi, min, dsb.): tampilkan pesan yang jelas,
+    // jangan hanya memindahkan kursor ke kotak input.
+    const form = document.getElementById('planForm');
+    const errBox = document.getElementById('planFormError');
+    if (form && errBox) {
+        let shown = false;
+        form.addEventListener('submit', function () { shown = false; errBox.classList.add('d-none'); }, true);
+        form.querySelector('button[type="submit"]').addEventListener('click', function () { shown = false; });
+        form.addEventListener('invalid', function (e) {
+            const el = e.target;
+            el.classList.add('is-invalid');
+            el.addEventListener('input', function () { el.classList.remove('is-invalid'); }, { once: true });
+            if (shown) return;
+            shown = true;
+            const card = el.closest('.pl-card');
+            const plan = card ? (card.querySelector('.pl-name')?.value || '') : 'Add-on storage';
+            const label = el.closest('[class*="col"]')?.querySelector('.form-label')?.textContent.trim() || el.getAttribute('aria-label') || 'Isian';
+            errBox.textContent = (plan ? plan + ' – ' : '') + label + ': ' + el.validationMessage;
+            errBox.classList.remove('d-none');
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, true);
+    }
 })();
 </script>
 @endsection
