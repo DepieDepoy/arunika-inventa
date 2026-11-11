@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\URL;
 class UserImportedNotification extends Notification implements ShouldQueue
 {
     use Queueable;
+    use \App\Notifications\Concerns\InRecipientLocale;
 
     protected string $password;
 
@@ -29,6 +30,8 @@ class UserImportedNotification extends Notification implements ShouldQueue
     public function via(
         object $notifiable
     ): array {
+        $this->useRecipientLocale($notifiable);
+
         return [
             'mail',
         ];
@@ -64,7 +67,7 @@ class UserImportedNotification extends Notification implements ShouldQueue
 
         return (new MailMessage)
             ->subject(
-                'Akun VASETRA Anda'
+                __('Akun VASETRA Anda')
             )
             ->view(
                 'emails.auth.user-created',

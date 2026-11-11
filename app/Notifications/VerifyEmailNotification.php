@@ -10,12 +10,15 @@ use Illuminate\Support\Facades\URL;
 class VerifyEmailNotification extends Notification
 {
     use Queueable;
+    use \App\Notifications\Concerns\InRecipientLocale;
 
     /**
      * Notification channels.
      */
     public function via(object $notifiable): array
     {
+        $this->useRecipientLocale($notifiable);
+
         return ['mail'];
     }
 
@@ -38,7 +41,7 @@ class VerifyEmailNotification extends Notification
         );
 
         return (new MailMessage)
-            ->subject('Verifikasi Email Akun VASETRA')
+            ->subject(__('Verifikasi Email Akun VASETRA'))
             ->view('emails.auth.verify-email', [
                 'url' => $verificationUrl,
                 'user' => $notifiable,

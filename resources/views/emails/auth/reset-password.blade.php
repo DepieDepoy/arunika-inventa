@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="{{ app()->getLocale() === 'en' ? 'en' : 'id' }}">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Reset Password VASETRA</title>
+    <title>{{ __('Reset Password VASETRA') }}</title>
 </head>
 
 <body style="
@@ -58,7 +58,7 @@
                             <!-- VASETRA LOGO -->
                             <img
                                 src="{{ asset('assets/images/auth/vasetra.png') }}"
-                                alt="VASETRA"
+                                alt="{{ __('VASETRA') }}"
                                 style="
                                     display: block;
                                     max-width: 230px;
@@ -90,7 +90,7 @@
                                     font-weight: 700;
                                 "
                             >
-                                Reset Password
+                                {{ __('Reset Password') }}
                             </h1>
 
 
@@ -103,7 +103,7 @@
                                     color: #555555;
                                 "
                             >
-                                Halo
+                                {{ __('Halo') }}
                                 <strong>
                                     {{ $user->name ?? 'User' }}
                                 </strong>,
@@ -119,8 +119,7 @@
                                     color: #555555;
                                 "
                             >
-                                Kami menerima permintaan untuk melakukan reset
-                                password pada akun VASETRA Anda.
+                                {{ __('Kami menerima permintaan untuk melakukan reset password pada akun VASETRA Anda.') }}
                             </p>
 
 
@@ -132,8 +131,7 @@
                                     color: #555555;
                                 "
                             >
-                                Silakan klik tombol di bawah ini untuk membuat
-                                password baru:
+                                {{ __('Silakan klik tombol di bawah ini untuk membuat password baru:') }}
                             </p>
 
 
@@ -161,7 +159,7 @@
                                                 border-radius: 8px;
                                             "
                                         >
-                                            Reset Password
+                                            {{ __('Reset Password') }}
                                         </a>
 
                                     </td>
@@ -181,10 +179,8 @@
                                     color: #666666;
                                 "
                             >
-                                <strong>Catatan:</strong><br>
-                                Link reset password ini hanya berlaku selama
-                                {{ config('auth.passwords.users.expire', 60) }}
-                                menit.
+                                <strong>{{ __('Catatan:') }}</strong><br>
+                                {{ __('Link reset password ini hanya berlaku selama :p1 menit.', ['p1' => config('auth.passwords.users.expire', 60)]) }}
                             </p>
 
 
@@ -197,10 +193,7 @@
                                     color: #777777;
                                 "
                             >
-                                Jika Anda tidak meminta reset password,
-                                Anda dapat mengabaikan email ini.
-                                Password akun Anda tidak akan berubah
-                                sampai Anda menggunakan link di atas.
+                                {{ __('Jika Anda tidak meminta reset password, Anda dapat mengabaikan email ini. Password akun Anda tidak akan berubah sampai Anda menggunakan link di atas.') }}
                             </p>
 
 
@@ -214,8 +207,7 @@
                                     word-break: break-all;
                                 "
                             >
-                                Jika tombol di atas tidak dapat diklik,
-                                salin dan buka link berikut pada browser:
+                                {{ __('Jika tombol di atas tidak dapat diklik, salin dan buka link berikut pada browser:') }}
                             </p>
 
                             <p
@@ -260,7 +252,7 @@
                                     color: #777777;
                                 "
                             >
-                                Email ini dikirim secara otomatis oleh
+                                {{ __('Email ini dikirim secara otomatis oleh') }}
                             </p>
 
                             <p
@@ -271,7 +263,7 @@
                                     color: #333333;
                                 "
                             >
-                                VASETRA
+                                {{ __('VASETRA') }}
                             </p>
 
                             <p
@@ -281,7 +273,7 @@
                                     color: #aaaaaa;
                                 "
                             >
-                                Asset Management System
+                                {{ __('Asset Management System') }}
                             </p>
 
                         </td>

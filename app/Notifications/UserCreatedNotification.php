@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\URL;
 class UserCreatedNotification extends Notification
 {
     use Queueable;
+    use \App\Notifications\Concerns\InRecipientLocale;
 
     protected string $password;
 
@@ -20,6 +21,8 @@ class UserCreatedNotification extends Notification
 
     public function via(object $notifiable): array
     {
+        $this->useRecipientLocale($notifiable);
+
         return ['mail'];
     }
 
@@ -39,7 +42,7 @@ class UserCreatedNotification extends Notification
         );
 
         return (new MailMessage)
-            ->subject('Akun VASETRA Anda')
+            ->subject(__('Akun VASETRA Anda'))
             ->view('emails.auth.user-created', [
                 'url' => $verificationUrl,
                 'user' => $notifiable,

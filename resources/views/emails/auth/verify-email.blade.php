@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="{{ app()->getLocale() === 'en' ? 'en' : 'id' }}">
 <head>
     <meta charset="UTF-8">
 
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
 
-    <title>Verifikasi Email VASETRA</title>
+    <title>{{ __('Verifikasi Email VASETRA') }}</title>
 </head>
 
 <body style="
@@ -43,7 +43,7 @@
 
                         <img
                             src="{{ asset('assets/images/auth/vasetra.png') }}"
-                            alt="VASETRA"
+                            alt="{{ __('VASETRA') }}"
                             style="
                                 max-width:240px;
                                 width:100%;
@@ -66,7 +66,7 @@
                             font-size:24px;
                             text-align:center;
                         ">
-                            Verifikasi Email Anda
+                            {{ __('Verifikasi Email Anda') }}
                         </h2>
 
                         <p style="
@@ -74,7 +74,7 @@
                             line-height:1.7;
                             margin:0 0 15px;
                         ">
-                            Halo
+                            {{ __('Halo') }}
                             <strong>{{ $user->name }}</strong>,
                         </p>
 
@@ -83,8 +83,8 @@
                             line-height:1.7;
                             margin:0 0 20px;
                         ">
-                            Terima kasih telah mendaftarkan akun
-                            <strong>VASETRA</strong>.
+                            {{ __('Terima kasih telah mendaftarkan akun') }}
+                            <strong>{{ __('VASETRA') }}</strong>.
                         </p>
 
                         <p style="
@@ -92,9 +92,7 @@
                             line-height:1.7;
                             margin:0 0 25px;
                         ">
-                            Untuk mengaktifkan akses login Anda,
-                            silakan verifikasi alamat email dengan
-                            menekan tombol di bawah ini.
+                            {{ __('Untuk mengaktifkan akses login Anda, silakan verifikasi alamat email dengan menekan tombol di bawah ini.') }}
                         </p>
 
                         {{-- BUTTON --}}
@@ -117,7 +115,7 @@
                                            font-size:15px;
                                            font-weight:bold;
                                        ">
-                                        VERIFIKASI EMAIL
+                                        {{ __('VERIFIKASI EMAIL') }}
                                     </a>
 
                                 </td>
@@ -131,9 +129,7 @@
                             color:#777777;
                             margin:25px 0 0;
                         ">
-                            Link verifikasi ini berlaku selama
-                            {{ config('auth.verification.expire', 60) }}
-                            menit.
+                            {{ __('Link verifikasi ini berlaku selama :p1 menit.', ['p1' => config('auth.verification.expire', 60)]) }}
                         </p>
 
                         <p style="
@@ -142,9 +138,7 @@
                             color:#777777;
                             margin:15px 0 0;
                         ">
-                            Jika Anda tidak merasa melakukan
-                            pendaftaran akun VASETRA, silakan
-                            abaikan email ini.
+                            {{ __('Jika Anda tidak merasa melakukan pendaftaran akun VASETRA, silakan abaikan email ini.') }}
                         </p>
 
                         <hr style="
@@ -159,8 +153,7 @@
                             color:#999999;
                             margin:0;
                         ">
-                            Jika tombol di atas tidak dapat diklik,
-                            silakan buka link berikut pada browser:
+                            {{ __('Jika tombol di atas tidak dapat diklik, silakan buka link berikut pada browser:') }}
                         </p>
 
                         <p style="
@@ -189,7 +182,7 @@
                             font-size:12px;
                             color:#999999;
                         ">
-                            VASETRA
+                            {{ __('VASETRA') }}
                         </p>
 
                         <p style="
@@ -197,7 +190,7 @@
                             font-size:11px;
                             color:#aaaaaa;
                         ">
-                            Asset Lifecycle Platform
+                            {{ __('Asset Lifecycle Platform') }}
                         </p>
 
                     </td>

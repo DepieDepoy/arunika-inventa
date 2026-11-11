@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\URL;
 class CalendarMeetingCancellation extends Notification implements ShouldQueue
 {
     use Queueable;
+    use \App\Notifications\Concerns\InRecipientLocale;
 
     public function __construct(
         public CalendarEvent $event,
@@ -21,13 +22,15 @@ class CalendarMeetingCancellation extends Notification implements ShouldQueue
 
     public function via(object $notifiable): array
     {
+        $this->useRecipientLocale($notifiable);
+
         return ['mail'];
     }
 
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Meeting Dibatalkan: ' . $this->event->title)
+            ->subject(__('Meeting Dibatalkan: :title', ['title' => $this->event->title]))
             ->view('emails.auth.meeting-cancelled', [
                 'event' => $this->event,
                 'organizer' => $this->organizerName,

@@ -9,6 +9,7 @@ use Illuminate\Notifications\Notification;
 class ResetPasswordNotification extends Notification
 {
     use Queueable;
+    use \App\Notifications\Concerns\InRecipientLocale;
 
     public function __construct(
         protected string $token
@@ -17,6 +18,8 @@ class ResetPasswordNotification extends Notification
 
     public function via(object $notifiable): array
     {
+        $this->useRecipientLocale($notifiable);
+
         return ['mail'];
     }
 
@@ -28,7 +31,7 @@ class ResetPasswordNotification extends Notification
         ], false));
 
         return (new MailMessage)
-            ->subject('Reset Password Akun Vasetra')
+            ->subject(__('Reset Password Akun Vasetra'))
             ->view('emails.auth.reset-password', [
                 'url' => $url,
                 'user' => $notifiable,

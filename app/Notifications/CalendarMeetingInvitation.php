@@ -12,6 +12,7 @@ use Illuminate\Notifications\Notification;
 class CalendarMeetingInvitation extends Notification implements ShouldQueue
 {
     use Queueable;
+    use \App\Notifications\Concerns\InRecipientLocale;
 
     public function __construct(
         public CalendarEvent $event,
@@ -26,6 +27,8 @@ class CalendarMeetingInvitation extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
+        $this->useRecipientLocale($notifiable);
+
         return ['mail'];
     }
 
@@ -35,7 +38,7 @@ class CalendarMeetingInvitation extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Undangan Meeting: ' . $this->event->title)
+            ->subject(__('Undangan Meeting: :title', ['title' => $this->event->title]))
             ->view('emails.auth.meeting-invitation', [
                 'event' => $this->event,
                 'organizer' => $this->organizer,

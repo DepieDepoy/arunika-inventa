@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 
-<html lang="id">
+<html lang="{{ app()->getLocale() === 'en' ? 'en' : 'id' }}">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Akun VASETRA Anda</title>
+    <title>{{ __('Akun VASETRA Anda') }}</title>
 </head>
 
 <body style="
@@ -43,7 +43,7 @@
 
                     <img
                         src="{{ asset('assets/images/auth/vasetra.png') }}"
-                        alt="VASETRA"
+                        alt="{{ __('VASETRA') }}"
                         style="
                             max-width:240px;
                             width:100%;
@@ -66,7 +66,7 @@
                         font-size:24px;
                         text-align:center;
                     ">
-                        Akun VASETRA Anda
+                        {{ __('Akun VASETRA Anda') }}
                     </h2>
 
                     <p style="
@@ -74,7 +74,7 @@
                         line-height:1.7;
                         margin:0 0 15px;
                     ">
-                        Halo
+                        {{ __('Halo') }}
                         <strong>{{ $user->name }}</strong>,
                     </p>
 
@@ -83,8 +83,8 @@
                         line-height:1.7;
                         margin:0 0 20px;
                     ">
-                        Administrator telah membuatkan akun
-                        <strong>VASETRA</strong> untuk Anda.
+                        {{ __('Administrator telah membuatkan akun') }}
+                        <strong>{{ __('VASETRA') }}</strong> {{ __('untuk Anda.') }}
                     </p>
 
                     <p style="
@@ -92,7 +92,7 @@
                         line-height:1.7;
                         margin:0 0 20px;
                     ">
-                        Berikut informasi login sementara Anda:
+                        {{ __('Berikut informasi login sementara Anda:') }}
                     </p>
 
                     {{-- LOGIN INFORMATION --}}
@@ -114,14 +114,14 @@
                             ">
 
                                 <div style="margin-bottom:10px;">
-                                    <strong>Email</strong><br>
+                                    <strong>{{ __('Email') }}</strong><br>
                                     <span style="color:#555555;">
                                         {{ $user->email }}
                                     </span>
                                 </div>
 
                                 <div>
-                                    <strong>Password Sementara</strong><br>
+                                    <strong>{{ __('Password Sementara') }}</strong><br>
 
                                     <span style="
                                         display:inline-block;
@@ -148,9 +148,7 @@
                         line-height:1.7;
                         margin:0 0 25px;
                     ">
-                        Untuk mengaktifkan akses login Anda, silakan
-                        verifikasi alamat email dengan menekan tombol
-                        di bawah ini.
+                        {{ __('Untuk mengaktifkan akses login Anda, silakan verifikasi alamat email dengan menekan tombol di bawah ini.') }}
                     </p>
 
                     {{-- BUTTON --}}
@@ -173,7 +171,7 @@
                                        font-size:15px;
                                        font-weight:bold;
                                    ">
-                                    VERIFIKASI EMAIL
+                                    {{ __('VERIFIKASI EMAIL') }}
                                 </a>
 
                             </td>
@@ -187,9 +185,7 @@
                         color:#777777;
                         margin:25px 0 0;
                     ">
-                        Link verifikasi ini berlaku selama
-                        {{ config('auth.verification.expire', 60) }}
-                        menit.
+                        {{ __('Link verifikasi ini berlaku selama :p1 menit.', ['p1' => config('auth.verification.expire', 60)]) }}
                     </p>
 
                     {{-- SECURITY NOTE --}}
@@ -207,10 +203,8 @@
                             color:#6b5b00;
                             margin:0;
                         ">
-                            <strong>Catatan keamanan:</strong><br>
-                            Password di atas adalah password sementara.
-                            Setelah berhasil login, segera ubah password
-                            Anda untuk menjaga keamanan akun.
+                            <strong>{{ __('Catatan keamanan:') }}</strong><br>
+                            {{ __('Password di atas adalah password sementara. Setelah berhasil login, segera ubah password Anda untuk menjaga keamanan akun.') }}
                         </p>
 
                     </div>
@@ -227,8 +221,7 @@
                         color:#999999;
                         margin:0;
                     ">
-                        Jika tombol di atas tidak dapat diklik,
-                        silakan buka link berikut pada browser:
+                        {{ __('Jika tombol di atas tidak dapat diklik, silakan buka link berikut pada browser:') }}
                     </p>
 
                     <p style="
@@ -258,7 +251,7 @@
                         font-size:12px;
                         color:#999999;
                     ">
-                        VASETRA
+                        {{ __('VASETRA') }}
                     </p>
 
                     <p style="
@@ -266,7 +259,7 @@
                         font-size:11px;
                         color:#aaaaaa;
                     ">
-                        Asset Lifecycle Platform
+                        {{ __('Asset Lifecycle Platform') }}
                     </p>
 
                 </td>
