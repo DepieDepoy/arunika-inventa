@@ -39,7 +39,7 @@ class AssetController extends Controller
                 'branch:id,branch_code,branch_name,is_head_office',
                 // Kartu aset di aplikasi: nama pemegang & badge Perawatan (tanpa N+1).
                 'responsibleUser:id,name',
-                'activeMaintenanceRequest:id,asset_id,request_type,status,created_at',
+                'activeMaintenanceRequest' => fn ($q) => $q->select(array_map(fn ($c) => 'maintenance_requests.' . $c, ['id', 'asset_id', 'request_type', 'description', 'status', 'created_at'])),
             ])
             ->select([
                 'id',
@@ -253,7 +253,7 @@ class AssetController extends Controller
                 'branch:id,branch_code,branch_name,is_head_office',
                 // Kartu aset di aplikasi: nama pemegang & badge Perawatan (tanpa N+1).
                 'responsibleUser:id,name',
-                'activeMaintenanceRequest:id,asset_id,request_type,status,created_at',
+                'activeMaintenanceRequest' => fn ($q) => $q->select(array_map(fn ($c) => 'maintenance_requests.' . $c, ['id', 'asset_id', 'request_type', 'description', 'status', 'created_at'])),
             ])
             ->select([
                 'id',
