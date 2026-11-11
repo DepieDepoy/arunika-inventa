@@ -237,9 +237,15 @@ Respons `data`: `token`, `token_type`, `expires_at`, dan isi yang sama dengan `G
 | GET | `/profile` | sama dengan `/me` |
 | PUT | `/profile` | `name`, `nik`, `phone` (email tidak bisa diubah) |
 | PUT | `/profile/password` | `current_password`, `password` (min. 8), `password_confirmation`, `logout_other_devices` (bool, opsional) |
+| POST | `/profile/photo` | multipart `photo` (jpg/png/webp, maks 5 MB) — respons = profil terbaru (`data.user.photo_url`) |
+| DELETE | `/profile/photo` | hapus foto profil (`photo_url` jadi `null`) |
 | POST | `/devices` | `fcm_token`, `platform` (`android`/`ios`), `device_name`?, `app_version`? |
 | DELETE | `/devices` | `fcm_token` |
 | POST | `/account/delete` | `password`, `reason`? — hapus akun sendiri |
+
+**Foto profil**: server memotong bagian tengah menjadi persegi 512px (JPEG) dan menyimpannya di folder perusahaan
+(`documents/{kode}/users/`) sehingga ikut kuota storage. Kuota penuh → 422 dengan `message` siap tampil.
+Logo perusahaan (`company.logo_url`) juga berada di folder perusahaan (`documents/{kode}/company/`).
 
 **POST /account/delete** — respons `data.status`:
 - `deleted` → akun sudah dihapus & semua token dicabut. Hapus data lokal, kembali ke login.
@@ -261,12 +267,17 @@ Respons `data`: `token`, `token_type`, `expires_at`, dan isi yang sama dengan `G
 Setiap notifikasi punya `target` untuk navigasi:
 
 ```json
-{ "id": "uuid", "type": "calendar_invitation", "title": "Undangan Meeting", "message": "…",
+{ "id": "uuid", "type": "calendar_invitation", "title": "Undangan rapat", "message": "…",
   "target": { "screen": "calendar_event", "id": 12 }, "data": { … }, "is_read": false,
   "read_at": null, "created_at": "…" }
 ```
 
 Nilai `target.screen`: `calendar_event`, `calendar`, `maintenance_request`, `maintenance`, `asset`, `subscription`, atau `target: null`.
+
+**Navigasi kalender**: `target.screen = calendar_event` → ambil detail via `GET /calendar/events/{id}` lalu tampilkan
+detail event (bila 404 karena event sudah dihapus, tampilkan pesan lalu buka layar kalender).
+Notifikasi rapat (`type: calendar_invitation`) hanya satu per aksi: *Undangan rapat*, *Rapat diperbarui*,
+*Rapat dibatalkan*. Email undangan dikirim terpisah dan tidak lagi membuat notifikasi lonceng kedua.
 
 ### 3.4 Beranda 🔐💳
 

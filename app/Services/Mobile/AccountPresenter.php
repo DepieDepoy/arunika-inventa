@@ -38,7 +38,7 @@ class AccountPresenter
             'email' => $user->email,
             'phone' => $user->phone,
             'nik' => $user->nik,
-            'photo_url' => $user->photo ? asset('storage/' . ltrim($user->photo, '/')) : null,
+            'photo_url' => \App\Services\UserAvatar::url($user),
             'status' => (int) $user->status,
             'role' => $user->role?->role_name,
             'role_code' => $user->role?->role_code,

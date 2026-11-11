@@ -59,6 +59,12 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             ->middleware('throttle:10,1')
             ->name('profile.password');
 
+        // Foto profil (multipart: photo). Disimpan di folder perusahaan, ikut kuota storage.
+        Route::post('/profile/photo', [ProfileController::class, 'updatePhoto'])
+            ->middleware('throttle:20,1')
+            ->name('profile.photo.update');
+        Route::delete('/profile/photo', [ProfileController::class, 'destroyPhoto'])->name('profile.photo.destroy');
+
         // Hapus akun sendiri (wajib Google Play & App Store).
         Route::post('/account/delete', [\App\Http\Controllers\Api\V1\AccountController::class, 'destroy'])
             ->middleware('throttle:5,1')

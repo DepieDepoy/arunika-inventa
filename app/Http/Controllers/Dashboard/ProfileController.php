@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\UserAvatar;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -349,6 +350,74 @@ class ProfileController extends Controller
                     : null,
             ], 500);
         }
+    }
+
+
+    /**
+     * =========================================================
+     * FOTO PROFIL
+     * =========================================================
+     * Disimpan di documents/{kode}/users (ikut kuota storage).
+     */
+    public function updatePhoto(Request $request): JsonResponse
+    {
+        $validator = Validator::make(
+            $request->all(),
+            ['photo' => UserAvatar::RULES],
+            [
+                'photo.required' => 'Pilih foto terlebih dahulu.',
+                'photo.image' => 'File harus berupa gambar.',
+                'photo.mimes' => 'Format foto harus JPG, PNG, atau WEBP.',
+                'photo.max' => 'Ukuran foto maksimal 5 MB.',
+                'photo.uploaded' => 'Foto gagal diunggah. Ukuran maksimal 5 MB.',
+            ]
+        );
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first('photo') ?: 'Foto tidak valid.',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $user = User::query()->findOrFail(Auth::id());
+
+        try {
+            UserAvatar::store($user, $request->file('photo'));
+        } catch (\RuntimeException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'errors' => ['photo' => [$e->getMessage()]],
+            ], 422);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Foto profil gagal disimpan.',
+            ], 500);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Foto profil berhasil diperbarui.',
+            'data' => ['photo_url' => UserAvatar::url($user)],
+        ]);
+    }
+
+    public function destroyPhoto(): JsonResponse
+    {
+        $user = User::query()->findOrFail(Auth::id());
+
+        UserAvatar::remove($user);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Foto profil dihapus.',
+            'data' => ['photo_url' => null],
+        ]);
     }
 
 

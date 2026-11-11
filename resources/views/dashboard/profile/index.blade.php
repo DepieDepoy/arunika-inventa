@@ -128,6 +128,48 @@
 }
 
 
+.profile-avatar {
+    overflow: hidden;
+}
+
+.profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-avatar-wrap {
+    position: relative;
+    width: fit-content;
+    margin: 0 auto;
+}
+
+.profile-avatar-edit {
+    position: absolute;
+    right: -2px;
+    bottom: -2px;
+
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 13px;
+    color: #fff;
+    background: #232d42;
+    border: 2px solid #fff;
+    cursor: pointer;
+}
+
+.profile-avatar-edit.is-loading {
+    pointer-events: none;
+    opacity: .7;
+}
+
+
 /* =====================================================
    RESPONSIVE
 ===================================================== */
@@ -465,19 +507,23 @@
 
                         <div class="text-center mb-4">
 
-                            <div class="profile-avatar mb-3">
+                            @php($photoUrl = \App\Services\UserAvatar::url($user))
 
-                                {{
-                                    strtoupper(
-                                        substr(
-                                            $user->name ?? 'U',
-                                            0,
-                                            1
-                                        )
-                                    )
-                                }}
+                            <div class="profile-avatar-wrap mb-3">
+                                <div class="profile-avatar" id="profileAvatar">
+                                    <img id="profileAvatarImg" src="{{ $photoUrl }}" alt="Foto profil" class="{{ $photoUrl ? '' : 'd-none' }}">
+                                    <span id="profileAvatarInitial" class="{{ $photoUrl ? 'd-none' : '' }}">{{ strtoupper(substr($user->name ?? 'U', 0, 1)) }}</span>
+                                </div>
 
+                                <label for="profilePhotoInput" class="profile-avatar-edit" title="Ganti foto profil">
+                                    <i class="fa-solid fa-camera"></i>
+                                </label>
+                                <input type="file" id="profilePhotoInput" accept="image/jpeg,image/png,image/webp" class="d-none">
                             </div>
+
+                            <button type="button" id="btnRemovePhoto" class="btn btn-sm btn-link text-white-50 p-0 mb-2 {{ $photoUrl ? '' : 'd-none' }}">
+                                Hapus foto
+                            </button>
 
 
                             <h5 class="text-white mb-1">
@@ -950,6 +996,106 @@ $(function () {
 
         });
 
+    });
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | FOTO PROFIL
+    |--------------------------------------------------------------------------
+    */
+
+    function renderPhoto(url)
+    {
+        if (url) {
+            $('#profileAvatarImg').attr('src', url).removeClass('d-none');
+            $('#profileAvatarInitial').addClass('d-none');
+            $('#btnRemovePhoto').removeClass('d-none');
+            $('.js-navbar-avatar-photo').attr('src', url).removeClass('d-none');
+            $('.js-navbar-avatar-default').addClass('d-none');
+        } else {
+            $('#profileAvatarImg').attr('src', '').addClass('d-none');
+            $('#profileAvatarInitial').removeClass('d-none');
+            $('#btnRemovePhoto').addClass('d-none');
+            $('.js-navbar-avatar-photo').addClass('d-none');
+            $('.js-navbar-avatar-default').removeClass('d-none');
+        }
+    }
+
+    function photoError(xhr, fallback)
+    {
+        Swal.fire({
+            icon: 'error',
+            title: 'Foto Profil',
+            text: (xhr.responseJSON && xhr.responseJSON.message) || fallback
+        });
+    }
+
+    $('#profilePhotoInput').on('change', function () {
+        const file = this.files && this.files[0];
+        const input = this;
+
+        if (!file) {
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            input.value = '';
+            Swal.fire({ icon: 'error', title: 'Foto Profil', text: 'Ukuran foto maksimal 5 MB.' });
+            return;
+        }
+
+        const data = new FormData();
+        data.append('photo', file);
+
+        const editBtn = $('.profile-avatar-edit');
+        editBtn.addClass('is-loading').html('<i class="fa-solid fa-spinner fa-spin"></i>');
+
+        $.ajax({
+            url: "{{ route('profile.photo.update') }}",
+            type: 'POST',
+            data: data,
+            processData: false,
+            contentType: false,
+            dataType: 'json',
+            success: function (res) {
+                renderPhoto(res.data && res.data.photo_url);
+                Swal.fire({ icon: 'success', title: 'Berhasil', text: res.message, timer: 1500, showConfirmButton: false });
+            },
+            error: function (xhr) {
+                photoError(xhr, 'Foto profil gagal diunggah.');
+            },
+            complete: function () {
+                input.value = '';
+                editBtn.removeClass('is-loading').html('<i class="fa-solid fa-camera"></i>');
+            }
+        });
+    });
+
+    $('#btnRemovePhoto').on('click', function () {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Hapus foto profil?',
+            showCancelButton: true,
+            confirmButtonText: 'Hapus',
+            cancelButtonText: 'Batal'
+        }).then(function (result) {
+            if (!result.isConfirmed) {
+                return;
+            }
+
+            $.ajax({
+                url: "{{ route('profile.photo.destroy') }}",
+                type: 'DELETE',
+                dataType: 'json',
+                success: function (res) {
+                    renderPhoto(null);
+                },
+                error: function (xhr) {
+                    photoError(xhr, 'Foto profil gagal dihapus.');
+                }
+            });
+        });
     });
 
 

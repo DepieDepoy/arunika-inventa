@@ -370,7 +370,7 @@ class CalendarController extends Controller
                             $recipient->notify(
                                 new CalendarMeetingCancellation(
                                     $event,
-                                    $organizer
+                                    (string) $organizer->name
                                 )
                             );
                         }

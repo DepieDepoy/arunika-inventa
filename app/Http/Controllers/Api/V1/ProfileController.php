@@ -40,6 +40,27 @@ class ProfileController extends ApiController
     }
 
     /**
+     * Multipart: photo (jpg/png/webp, maks 5 MB). Respons = profil terbaru (photo_url).
+     */
+    public function updatePhoto(Request $request, WebProfileController $web, AccountPresenter $presenter): JsonResponse
+    {
+        $response = $this->delegate(fn () => $web->updatePhoto($request), 'PHOTO_INVALID');
+
+        if (!$response->getData(true)['success']) {
+            return $response;
+        }
+
+        return $this->ok($presenter->present($request->user()->fresh()), 'Foto profil berhasil diperbarui.');
+    }
+
+    public function destroyPhoto(Request $request, WebProfileController $web, AccountPresenter $presenter): JsonResponse
+    {
+        $web->destroyPhoto();
+
+        return $this->ok($presenter->present($request->user()->fresh()), 'Foto profil dihapus.');
+    }
+
+    /**
      * Body: current_password, password, password_confirmation.
      * Opsional: logout_other_devices (bool) untuk mencabut sesi perangkat lain.
      */

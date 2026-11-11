@@ -62,6 +62,21 @@ Route::prefix('dashboard')
         |--------------------------------------------------------------------------
         */
 
+        Route::post('/profile/photo', [
+            ProfileController::class,
+            'updatePhoto'
+        ])
+        ->middleware('throttle:20,1')
+        ->name('profile.photo.update');
+
+        Route::delete('/profile/photo', [
+            ProfileController::class,
+            'destroyPhoto'
+        ])
+        ->name('profile.photo.destroy');
+
+
+
         Route::post('/profile/delete-account', [
             \App\Http\Controllers\Dashboard\AccountController::class,
             'destroy'

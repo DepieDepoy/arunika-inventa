@@ -175,40 +175,49 @@
                         data-bs-toggle="dropdown"
                         aria-expanded="false"
                     >
+                        @php($navPhoto = \App\Services\UserAvatar::url(auth()->user()))
+
+                        <img
+                            src="{{ $navPhoto }}"
+                            alt="User Profile"
+                            class="js-navbar-avatar-photo img-fluid avatar avatar-50 avatar-rounded {{ $navPhoto ? '' : 'd-none' }}"
+                            style="object-fit: cover;"
+                        >
+
                         <img
                             src="{{ asset('assets/images/avatars/01.png') }}"
                             alt="User Profile"
-                            class="theme-color-default-img img-fluid avatar avatar-50 avatar-rounded"
+                            class="js-navbar-avatar-default {{ $navPhoto ? 'd-none' : '' }} theme-color-default-img img-fluid avatar avatar-50 avatar-rounded"
                         >
 
                         <img
                             src="{{ asset('assets/images/avatars/avtar_1.png') }}"
                             alt="User Profile"
-                            class="theme-color-purple-img img-fluid avatar avatar-50 avatar-rounded"
+                            class="js-navbar-avatar-default {{ $navPhoto ? 'd-none' : '' }} theme-color-purple-img img-fluid avatar avatar-50 avatar-rounded"
                         >
 
                         <img
                             src="{{ asset('assets/images/avatars/avtar_2.png') }}"
                             alt="User Profile"
-                            class="theme-color-blue-img img-fluid avatar avatar-50 avatar-rounded"
+                            class="js-navbar-avatar-default {{ $navPhoto ? 'd-none' : '' }} theme-color-blue-img img-fluid avatar avatar-50 avatar-rounded"
                         >
 
                         <img
                             src="{{ asset('assets/images/avatars/avtar_4.png') }}"
                             alt="User Profile"
-                            class="theme-color-green-img img-fluid avatar avatar-50 avatar-rounded"
+                            class="js-navbar-avatar-default {{ $navPhoto ? 'd-none' : '' }} theme-color-green-img img-fluid avatar avatar-50 avatar-rounded"
                         >
 
                         <img
                             src="{{ asset('assets/images/avatars/avtar_5.png') }}"
                             alt="User Profile"
-                            class="theme-color-yellow-img img-fluid avatar avatar-50 avatar-rounded"
+                            class="js-navbar-avatar-default {{ $navPhoto ? 'd-none' : '' }} theme-color-yellow-img img-fluid avatar avatar-50 avatar-rounded"
                         >
 
                         <img
                             src="{{ asset('assets/images/avatars/avtar_3.png') }}"
                             alt="User Profile"
-                            class="theme-color-pink-img img-fluid avatar avatar-50 avatar-rounded"
+                            class="js-navbar-avatar-default {{ $navPhoto ? 'd-none' : '' }} theme-color-pink-img img-fluid avatar avatar-50 avatar-rounded"
                         >
 
                         <div class="caption ms-3 d-none d-md-block">

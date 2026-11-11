@@ -20,36 +20,13 @@ class CalendarMeetingInvitation extends Notification implements ShouldQueue
     }
 
     /**
-     * Kirim melalui email dan simpan ke database notifications.
+     * Hanya email. Notifikasi lonceng (web & mobile) dikirim terpisah oleh
+     * CalendarController lewat GlobalNotification "Undangan rapat", agar
+     * penerima tidak mendapat dua notifikasi untuk satu undangan.
      */
     public function via(object $notifiable): array
     {
-        return [
-            'mail',
-            'database',
-        ];
-    }
-
-    /**
-     * Data untuk notifikasi di lonceng navbar.
-     */
-    public function toDatabase(object $notifiable): array
-    {
-        return [
-            'type' => 'calendar_invitation',
-            'title' => 'Undangan Meeting',
-            'message' => $this->organizer->name
-                . ' mengundang Anda ke meeting: '
-                . $this->event->title,
-
-            'event_id' => $this->event->id,
-            'organizer_id' => $this->organizer->id,
-
-            // Sesuaikan jika nama kolom tanggal berbeda.
-            'start_at' => $this->event->start_at,
-
-            'url' => route('calendar.index'),
-        ];
+        return ['mail'];
     }
 
     /**
