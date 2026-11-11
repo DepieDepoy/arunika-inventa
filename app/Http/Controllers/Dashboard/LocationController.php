@@ -106,7 +106,7 @@ class LocationController extends Controller
             return response()->json(['success' => false, 'message' => $e->getMessage()], $e->status);
         }
 
-        return response()->json(['success' => true, 'message' => 'Lokasi diperbarui.']);
+        return response()->json(['success' => true, 'message' => __('Lokasi diperbarui.')]);
     }
 
     public function destroy(int $location): JsonResponse
@@ -118,7 +118,7 @@ class LocationController extends Controller
             return response()->json(['success' => false, 'message' => $e->getMessage()], $e->status);
         }
 
-        return response()->json(['success' => true, 'message' => 'Lokasi dihapus.']);
+        return response()->json(['success' => true, 'message' => __('Lokasi dihapus.')]);
     }
 
     protected function validateInput(Request $request, bool $creating): ?JsonResponse
@@ -129,7 +129,7 @@ class LocationController extends Controller
             'description' => ['nullable', 'string', 'max:255'],
             'status' => ['nullable', 'in:0,1'],
         ], [
-            'name.required' => 'Nama lokasi wajib diisi.',
+            'name.required' => __('Nama lokasi wajib diisi.'),
         ]);
 
         return $validator->fails()

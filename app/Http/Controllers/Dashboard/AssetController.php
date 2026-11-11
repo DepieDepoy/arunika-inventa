@@ -665,82 +665,82 @@ class AssetController extends Controller
             ],
             [
                 'asset_name.required' =>
-                    'Nama asset wajib diisi.',
+                    __('Nama asset wajib diisi.'),
 
                 'category_id.required' =>
-                    'Kategori wajib dipilih atau diisi.',
+                    __('Kategori wajib dipilih atau diisi.'),
 
                 'vendor_id.required' =>
-                    'Vendor wajib dipilih.',
+                    __('Vendor wajib dipilih.'),
 
                 'vendor_id.exists' =>
-                    'Vendor tidak valid.',
+                    __('Vendor tidak valid.'),
 
                 'responsible_user_id.exists' =>
-                    'Responsible user tidak valid.',
+                    __('Responsible user tidak valid.'),
 
                 'purchase_price.numeric' =>
-                    'Harga pembelian harus berupa angka.',
+                    __('Harga pembelian harus berupa angka.'),
 
                 'purchase_price.min' =>
-                    'Harga pembelian tidak boleh kurang dari 0.',
+                    __('Harga pembelian tidak boleh kurang dari 0.'),
 
                 'useful_life.integer' =>
-                    'Umur manfaat harus berupa angka.',
+                    __('Umur manfaat harus berupa angka.'),
 
                 'useful_life.min' =>
-                    'Umur manfaat minimal 1 tahun.',
+                    __('Umur manfaat minimal 1 tahun.'),
 
                 'warranty_end.after_or_equal' =>
-                    'Tanggal akhir warranty tidak boleh sebelum tanggal mulai.',
+                    __('Tanggal akhir warranty tidak boleh sebelum tanggal mulai.'),
 
                 'maintenance_type.required_if' =>
-                    'Jenis maintenance wajib dipilih jika maintenance aktif.',
+                    __('Jenis maintenance wajib dipilih jika maintenance aktif.'),
 
                 'maintenance_trigger.required_if' =>
-                    'Trigger maintenance wajib dipilih jika maintenance aktif.',
+                    __('Trigger maintenance wajib dipilih jika maintenance aktif.'),
 
                 'maintenance_interval.required_if' =>
-                    'Interval maintenance wajib diisi jika maintenance aktif.',
+                    __('Interval maintenance wajib diisi jika maintenance aktif.'),
 
                 'maintenance_interval_unit.required_if' =>
-                    'Satuan interval maintenance wajib dipilih jika maintenance aktif.',
+                    __('Satuan interval maintenance wajib dipilih jika maintenance aktif.'),
 
                 'maintenance_start_date.required_if' =>
-                    'Tanggal mulai maintenance wajib diisi jika maintenance aktif.',
+                    __('Tanggal mulai maintenance wajib diisi jika maintenance aktif.'),
 
                 'status.required' =>
-                    'Status wajib dipilih.',
+                    __('Status wajib dipilih.'),
 
                 'asset_condition.required' =>
-                    'Kondisi aset wajib dipilih (baru / bekas).',
+                    __('Kondisi aset wajib dipilih (baru / bekas).'),
 
                 'asset_condition.in' =>
-                    'Kondisi aset harus new (baru) atau used (bekas).',
+                    __('Kondisi aset harus new (baru) atau used (bekas).'),
 
                 'asset_photos.max' =>
-                    'Foto asset maksimal 6 file.',
+                    __('Foto asset maksimal 6 file.'),
 
                 'asset_photos.*.file' =>
-                    'File foto tidak valid.',
+                    __('File foto tidak valid.'),
 
                 'asset_photos.*.max' =>
-                    'Ukuran setiap foto maksimal 5 MB.',
+                    __('Ukuran setiap foto maksimal 5 MB.'),
 
                 'asset_photos.*.mimes' =>
-                    'Foto hanya boleh JPG, JPEG atau PNG.',
+                    __('Foto hanya boleh JPG, JPEG atau PNG.'),
 
                 'invoice_documents.max' =>
-                    'Dokumen maksimal 5 file.',
+                    __('Dokumen maksimal 5 file.'),
 
                 'invoice_documents.*.file' =>
-                    'File dokumen tidak valid.',
+                    __('File dokumen tidak valid.'),
 
                 'invoice_documents.*.max' =>
-                    'Ukuran setiap dokumen maksimal 10 MB.',
+                    __('Ukuran setiap dokumen maksimal 10 MB.'),
 
                 'invoice_documents.*.mimes' =>
-                    'Dokumen hanya boleh PDF, JPG, JPEG atau PNG.',
+                    __('Dokumen hanya boleh PDF, JPG, JPEG atau PNG.'),
             ]
         );
 
@@ -748,7 +748,7 @@ class AssetController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Validasi gagal.',
+                'message' => __('Validasi gagal.'),
                 'errors' => $validator->errors()
             ], 422);
         }
@@ -891,7 +891,7 @@ class AssetController extends Controller
 
                     return response()->json([
                         'success' => false,
-                        'message' => 'Kategori tidak valid.'
+                        'message' => __('Kategori tidak valid.')
                     ], 422);
                 }
 
@@ -906,7 +906,7 @@ class AssetController extends Controller
 
                     return response()->json([
                         'success' => false,
-                        'message' => 'Kategori tidak valid.'
+                        'message' => __('Kategori tidak valid.')
                     ], 422);
                 }
 
@@ -921,7 +921,7 @@ class AssetController extends Controller
                     return response()->json([
                         'success' => false,
                         'message' =>
-                            'Nama kategori wajib diisi.'
+                            __('Nama kategori wajib diisi.')
                     ], 422);
                 }
 
@@ -1005,7 +1005,7 @@ class AssetController extends Controller
                         return response()->json([
                             'success' => false,
                             'message' =>
-                                'Sub kategori tidak valid.'
+                                __('Sub kategori tidak valid.')
                         ], 422);
                     }
 
@@ -1027,7 +1027,7 @@ class AssetController extends Controller
                         return response()->json([
                             'success' => false,
                             'message' =>
-                                'Sub kategori tidak valid.'
+                                __('Sub kategori tidak valid.')
                         ], 422);
                     }
 
@@ -1046,7 +1046,7 @@ class AssetController extends Controller
                         return response()->json([
                             'success' => false,
                             'message' =>
-                                'Nama sub kategori wajib diisi.'
+                                __('Nama sub kategori wajib diisi.')
                         ], 422);
                     }
 
@@ -1133,7 +1133,7 @@ class AssetController extends Controller
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Vendor tidak valid.'
+                    'message' => __('Vendor tidak valid.')
                 ], 422);
             }
 
@@ -1170,7 +1170,7 @@ class AssetController extends Controller
                     return response()->json([
                         'success' => false,
                         'message' =>
-                            'Penanggung jawab tidak valid atau tidak berada di cabang aset.'
+                            __('Penanggung jawab tidak valid atau tidak berada di cabang aset.')
                     ], 422);
                 }
             }
@@ -1621,7 +1621,7 @@ class AssetController extends Controller
             return response()->json([
                 'success' => true,
                 'message' =>
-                    'Asset berhasil ditambahkan.',
+                    __('Asset berhasil ditambahkan.'),
                 'data' =>
                     $asset
             ]);
@@ -1674,7 +1674,7 @@ class AssetController extends Controller
             return response()->json([
                 'success' => false,
                 'message' =>
-                    'Gagal menambahkan asset.',
+                    __('Gagal menambahkan asset.'),
                 'error' =>
                     $e->getMessage()
             ], 500);
@@ -1705,7 +1705,7 @@ class AssetController extends Controller
         if ($asset->isDisposed()) {
             return redirect()
                 ->route('assets.show', encryptId($asset->id))
-                ->with('error', 'Aset ini sudah dihapuskan sehingga tidak dapat diubah.');
+                ->with('error', __('Aset ini sudah dihapuskan sehingga tidak dapat diubah.'));
         }
 
         $categories = Category::where(
@@ -1772,7 +1772,7 @@ public function update(Request $request)
     ) {
         return response()->json([
             'success' => false,
-            'message' => 'Aset ini sudah dihapuskan sehingga tidak dapat diubah.',
+            'message' => __('Aset ini sudah dihapuskan sehingga tidak dapat diubah.'),
         ], 422);
     }
 
@@ -1936,71 +1936,71 @@ public function update(Request $request)
         ],
         [
             'id.required' =>
-                'ID asset wajib dikirim.',
+                __('ID asset wajib dikirim.'),
 
             'id.integer' =>
-                'ID asset tidak valid.',
+                __('ID asset tidak valid.'),
 
             'asset_name.required' =>
-                'Nama asset wajib diisi.',
+                __('Nama asset wajib diisi.'),
 
             'category_id.required' =>
-                'Kategori wajib dipilih atau diisi.',
+                __('Kategori wajib dipilih atau diisi.'),
 
             'vendor_id.required' =>
-                'Vendor wajib dipilih.',
+                __('Vendor wajib dipilih.'),
 
             'vendor_id.exists' =>
-                'Vendor tidak valid.',
+                __('Vendor tidak valid.'),
 
             'purchase_price.numeric' =>
-                'Harga pembelian harus berupa angka.',
+                __('Harga pembelian harus berupa angka.'),
 
             'purchase_price.min' =>
-                'Harga pembelian tidak boleh kurang dari 0.',
+                __('Harga pembelian tidak boleh kurang dari 0.'),
 
             'useful_life.integer' =>
-                'Umur manfaat harus berupa angka.',
+                __('Umur manfaat harus berupa angka.'),
 
             'useful_life.min' =>
-                'Umur manfaat minimal 1 tahun.',
+                __('Umur manfaat minimal 1 tahun.'),
 
             'warranty_end.after_or_equal' =>
-                'Tanggal akhir warranty tidak boleh sebelum tanggal mulai.',
+                __('Tanggal akhir warranty tidak boleh sebelum tanggal mulai.'),
 
             'status.required' =>
-                'Status wajib dipilih.',
+                __('Status wajib dipilih.'),
 
             'delete_images.*.integer' =>
-                'ID foto tidak valid.',
+                __('ID foto tidak valid.'),
 
             'asset_photos.*.file' =>
-                'File foto tidak valid.',
+                __('File foto tidak valid.'),
 
             'asset_photos.*.max' =>
-                'Ukuran setiap foto maksimal 5 MB.',
+                __('Ukuran setiap foto maksimal 5 MB.'),
 
             'asset_photos.*.mimes' =>
-                'Foto hanya boleh JPG, JPEG atau PNG.',
+                __('Foto hanya boleh JPG, JPEG atau PNG.'),
 
             'delete_invoice_documents.*.integer' =>
-                'ID dokumen tidak valid.',
+                __('ID dokumen tidak valid.'),
 
             'invoice_documents.*.file' =>
-                'File invoice tidak valid.',
+                __('File invoice tidak valid.'),
 
             'invoice_documents.*.max' =>
-                'Ukuran setiap invoice maksimal 10 MB.',
+                __('Ukuran setiap invoice maksimal 10 MB.'),
 
             'invoice_documents.*.mimes' =>
-                'Invoice hanya boleh PDF, JPG, JPEG atau PNG.',
+                __('Invoice hanya boleh PDF, JPG, JPEG atau PNG.'),
         ]
     );
 
     if ($validator->fails()) {
         return response()->json([
             'success' => false,
-            'message' => 'Validasi gagal.',
+            'message' => __('Validasi gagal.'),
             'errors' => $validator->errors(),
         ], 422);
     }
@@ -2018,14 +2018,14 @@ public function update(Request $request)
     if (!$asset) {
         return response()->json([
             'success' => false,
-            'message' => 'Asset tidak ditemukan.',
+            'message' => __('Asset tidak ditemukan.'),
         ], 404);
     }
 
     if ($asset->isDisposed()) {
         return response()->json([
             'success' => false,
-            'message' => 'Aset ini sudah dihapuskan sehingga tidak dapat diubah.',
+            'message' => __('Aset ini sudah dihapuskan sehingga tidak dapat diubah.'),
         ], 422);
     }
 
@@ -2144,7 +2144,7 @@ public function update(Request $request)
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Kategori tidak valid.',
+                    'message' => __('Kategori tidak valid.'),
                 ], 422);
             }
         } else {
@@ -2156,7 +2156,7 @@ public function update(Request $request)
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Kategori tidak valid.',
+                    'message' => __('Kategori tidak valid.'),
                 ], 422);
             }
 
@@ -2167,7 +2167,7 @@ public function update(Request $request)
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Nama kategori wajib diisi.',
+                    'message' => __('Nama kategori wajib diisi.'),
                 ], 422);
             }
 
@@ -2218,7 +2218,7 @@ public function update(Request $request)
 
                     return response()->json([
                         'success' => false,
-                        'message' => 'Sub kategori tidak valid.',
+                        'message' => __('Sub kategori tidak valid.'),
                     ], 422);
                 }
 
@@ -2232,7 +2232,7 @@ public function update(Request $request)
 
                     return response()->json([
                         'success' => false,
-                        'message' => 'Sub kategori tidak valid.',
+                        'message' => __('Sub kategori tidak valid.'),
                     ], 422);
                 }
 
@@ -2245,7 +2245,7 @@ public function update(Request $request)
 
                     return response()->json([
                         'success' => false,
-                        'message' => 'Nama sub kategori wajib diisi.',
+                        'message' => __('Nama sub kategori wajib diisi.'),
                     ], 422);
                 }
 
@@ -2294,7 +2294,7 @@ public function update(Request $request)
 
             return response()->json([
                 'success' => false,
-                'message' => 'Vendor tidak valid.',
+                'message' => __('Vendor tidak valid.'),
             ], 422);
         }
 
@@ -2356,7 +2356,7 @@ public function update(Request $request)
 
             return response()->json([
                 'success' => false,
-                'message' => 'Total foto asset maksimal 6 file.',
+                'message' => __('Total foto asset maksimal 6 file.'),
             ], 422);
         }
 
@@ -2493,7 +2493,7 @@ public function update(Request $request)
 
             return response()->json([
                 'success' => false,
-                'message' => 'Total dokumen invoice maksimal 5 file.',
+                'message' => __('Total dokumen invoice maksimal 5 file.'),
             ], 422);
         }
 
@@ -2639,7 +2639,7 @@ public function update(Request $request)
 
         return response()->json([
             'success' => true,
-            'message' => 'Asset berhasil diperbarui.',
+            'message' => __('Asset berhasil diperbarui.'),
             'data' => $asset,
         ]);
 
@@ -2690,7 +2690,7 @@ public function update(Request $request)
 
         return response()->json([
             'success' => false,
-            'message' => 'Gagal memperbarui asset.',
+            'message' => __('Gagal memperbarui asset.'),
             'error' => $e->getMessage(),
         ], 500);
     }
@@ -2727,7 +2727,7 @@ public function update(Request $request)
             return response()->json([
                 'success' => false,
                 'message' =>
-                    'Asset tidak ditemukan.'
+                    __('Asset tidak ditemukan.')
             ], 404);
         }
 
@@ -2806,7 +2806,7 @@ public function update(Request $request)
             return response()->json([
                 'success' => true,
                 'message' =>
-                    'Asset berhasil dihapus.'
+                    __('Asset berhasil dihapus.')
             ]);
 
 
@@ -2834,7 +2834,7 @@ public function update(Request $request)
             return response()->json([
                 'success' => false,
                 'message' =>
-                    'Gagal menghapus asset.',
+                    __('Gagal menghapus asset.'),
                 'error' =>
                     $e->getMessage()
             ], 500);
@@ -2978,7 +2978,7 @@ public function update(Request $request)
                 ->route('assets.index')
                 ->with(
                     'error',
-                    'Silakan pilih asset yang ingin dicetak.'
+                    __('Silakan pilih asset yang ingin dicetak.')
                 );
         }
 
@@ -2996,7 +2996,7 @@ public function update(Request $request)
                 ->route('assets.index')
                 ->with(
                     'error',
-                    'Asset tidak ditemukan.'
+                    __('Asset tidak ditemukan.')
                 );
         }
 
@@ -3269,7 +3269,7 @@ public function update(Request $request)
                 ->route('assets.import')
                 ->with(
                     'error',
-                    'File import tidak ditemukan atau session telah berakhir.'
+                    __('File import tidak ditemukan atau session telah berakhir.')
                 );
         }
 
@@ -3292,7 +3292,7 @@ public function update(Request $request)
                     ->route('assets.import')
                     ->with(
                         'error',
-                        'File import sudah tidak tersedia. Silakan upload kembali.'
+                        __('File import sudah tidak tersedia. Silakan upload kembali.')
                     );
             }
 
@@ -3438,7 +3438,7 @@ public function update(Request $request)
                 ->route('import.history')
                 ->with(
                     'success',
-                    'Import asset berhasil dimasukkan ke antrian. Proses akan berjalan di background.'
+                    __('Import asset berhasil dimasukkan ke antrian. Proses akan berjalan di background.')
                 );
 
         } catch (\Throwable $e) {

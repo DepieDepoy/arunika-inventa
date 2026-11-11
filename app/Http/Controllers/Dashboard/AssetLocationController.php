@@ -34,8 +34,8 @@ class AssetLocationController extends Controller
             'moved_at' => ['required', 'date'],
             'notes' => ['nullable', 'string', 'max:1000'],
         ], [
-            'location.required' => 'Lokasi baru wajib diisi.',
-            'moved_at.required' => 'Tanggal pindah wajib diisi.',
+            'location.required' => __('Lokasi baru wajib diisi.'),
+            'moved_at.required' => __('Tanggal pindah wajib diisi.'),
         ]);
 
         try {

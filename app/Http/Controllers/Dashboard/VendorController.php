@@ -148,12 +148,12 @@ class VendorController extends Controller
                 'status' => 'required',
             ],
             [
-                'vendor_name.required' => 'Nama vendor wajib diisi',
-                'address.required' => 'Alamat vendor wajib diisi',
-                'phone.required' => 'Phone wajib diisi',
-                'pic_name.required' => 'PIC wajib diisi',
-                'email.required' => 'Email wajib diisi',
-                'status.required' => 'Status wajib dipilih',
+                'vendor_name.required' => __('Nama vendor wajib diisi'),
+                'address.required' => __('Alamat vendor wajib diisi'),
+                'phone.required' => __('Phone wajib diisi'),
+                'pic_name.required' => __('PIC wajib diisi'),
+                'email.required' => __('Email wajib diisi'),
+                'status.required' => __('Status wajib dipilih'),
             ]
         );
 
@@ -232,7 +232,7 @@ class VendorController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Vendor berhasil ditambahkan'
+            'message' => __('Vendor berhasil ditambahkan')
         ]);
     }
 
@@ -270,14 +270,14 @@ class VendorController extends Controller
                 'status' => 'required',
             ],
             [
-                'id.required' => 'ID vendor tidak ditemukan',
-                'vendor_name.required' => 'Nama vendor wajib diisi',
-                'address.required' => 'Alamat vendor wajib diisi',
-                'phone.required' => 'Phone wajib diisi',
-                'pic_name.required' => 'PIC wajib diisi',
-                'email.required' => 'Email wajib diisi',
-                'email.email' => 'Format email tidak valid',
-                'status.required' => 'Status wajib dipilih',
+                'id.required' => __('ID vendor tidak ditemukan'),
+                'vendor_name.required' => __('Nama vendor wajib diisi'),
+                'address.required' => __('Alamat vendor wajib diisi'),
+                'phone.required' => __('Phone wajib diisi'),
+                'pic_name.required' => __('PIC wajib diisi'),
+                'email.required' => __('Email wajib diisi'),
+                'email.email' => __('Format email tidak valid'),
+                'status.required' => __('Status wajib dipilih'),
             ]
         );
 
@@ -295,7 +295,7 @@ class VendorController extends Controller
         if (!$vendor) {
             return response()->json([
                 'success' => false,
-                'message' => 'Vendor tidak ditemukan.'
+                'message' => __('Vendor tidak ditemukan.')
             ], 404);
         }
 
@@ -313,14 +313,14 @@ class VendorController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Vendor berhasil diperbarui.'
+                'message' => __('Vendor berhasil diperbarui.')
             ]);
 
         } catch (\Exception $e) {
 
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal memperbarui vendor.',
+                'message' => __('Gagal memperbarui vendor.'),
                 'error' => $e->getMessage()
             ], 500);
         }

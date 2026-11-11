@@ -48,13 +48,13 @@ class PushSubscriptionController extends Controller
             ]
         );
 
-        return response()->json(['success' => true, 'message' => 'Notifikasi browser aktif.']);
+        return response()->json(['success' => true, 'message' => __('Notifikasi browser aktif.')]);
     }
 
     public function destroy(Request $request): JsonResponse
     {
         if (!is_string($request->input('endpoint')) || $request->input('endpoint') === '') {
-            return response()->json(['success' => false, 'message' => 'Endpoint wajib diisi.'], 422);
+            return response()->json(['success' => false, 'message' => __('Endpoint wajib diisi.')], 422);
         }
 
         WebPushSubscription::query()
@@ -62,7 +62,7 @@ class PushSubscriptionController extends Controller
             ->where('endpoint_hash', WebPushSubscription::hashEndpoint((string) $request->input('endpoint')))
             ->delete();
 
-        return response()->json(['success' => true, 'message' => 'Notifikasi browser dimatikan.']);
+        return response()->json(['success' => true, 'message' => __('Notifikasi browser dimatikan.')]);
     }
 
     /** Kirim notifikasi uji ke browser & HP milik user sendiri. */
@@ -75,6 +75,6 @@ class PushSubscriptionController extends Controller
             'type' => 'test',
         ]);
 
-        return response()->json(['success' => true, 'message' => 'Notifikasi uji dikirim.']);
+        return response()->json(['success' => true, 'message' => __('Notifikasi uji dikirim.')]);
     }
 }

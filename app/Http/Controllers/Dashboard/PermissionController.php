@@ -171,7 +171,7 @@ class PermissionController extends Controller
             )
             ->with(
                 'success',
-                'Permission berhasil disimpan.'
+                __('Permission berhasil disimpan.')
             );
     }
 }

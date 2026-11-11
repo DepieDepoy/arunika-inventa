@@ -1790,7 +1790,7 @@ class SubscriptionController extends Controller
             ->first();
 
         if (!$payment) {
-            return back()->with('error', 'Transaksi tidak ditemukan.');
+            return back()->with('error', __('Transaksi tidak ditemukan.'));
         }
 
         if ($payment->isPaid() || $payment->transaction_status !== 'pending') {

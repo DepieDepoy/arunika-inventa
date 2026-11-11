@@ -185,10 +185,10 @@ class AssetDisposalController extends Controller
             'document' => ['nullable', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png'],
             'confirm' => ['accepted'],
         ], [
-            'disposal_type.required' => 'Alasan penghapusan wajib dipilih.',
-            'disposal_date.required' => 'Tanggal penghapusan wajib diisi.',
-            'document.mimes' => 'Berita acara harus berupa PDF, JPG, atau PNG.',
-            'document.max' => 'Ukuran berita acara maksimal 10 MB.',
+            'disposal_type.required' => __('Alasan penghapusan wajib dipilih.'),
+            'disposal_date.required' => __('Tanggal penghapusan wajib diisi.'),
+            'document.mimes' => __('Berita acara harus berupa PDF, JPG, atau PNG.'),
+            'document.max' => __('Ukuran berita acara maksimal 10 MB.'),
             'confirm.accepted' => 'Centang konfirmasi bahwa data penghapusan sudah benar.',
         ]);
 
@@ -212,8 +212,8 @@ class AssetDisposalController extends Controller
         $validated = $request->validate([
             'cancel_reason' => ['required', 'string', 'min:5', 'max:500'],
         ], [
-            'cancel_reason.required' => 'Alasan pembatalan wajib diisi.',
-            'cancel_reason.min' => 'Alasan pembatalan minimal 5 karakter.',
+            'cancel_reason.required' => __('Alasan pembatalan wajib diisi.'),
+            'cancel_reason.min' => __('Alasan pembatalan minimal 5 karakter.'),
         ]);
 
         try {

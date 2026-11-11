@@ -22,9 +22,9 @@ class AccountController extends Controller
             'confirm_text' => ['required', 'in:HAPUS'],
             'reason' => ['nullable', 'string', 'max:1000'],
         ], [
-            'password.required' => 'Password wajib diisi.',
-            'confirm_text.in' => 'Ketik HAPUS (huruf besar) untuk konfirmasi.',
-            'confirm_text.required' => 'Ketik HAPUS (huruf besar) untuk konfirmasi.',
+            'password.required' => __('Password wajib diisi.'),
+            'confirm_text.in' => __('Ketik HAPUS (huruf besar) untuk konfirmasi.'),
+            'confirm_text.required' => __('Ketik HAPUS (huruf besar) untuk konfirmasi.'),
         ]);
 
         if ($validator->fails()) {
@@ -34,7 +34,7 @@ class AccountController extends Controller
         $user = Auth::user();
 
         if (!Hash::check((string) $request->input('password'), $user->password)) {
-            return response()->json(['success' => false, 'errors' => ['password' => ['Password salah.']]], 422);
+            return response()->json(['success' => false, 'errors' => ['password' => [__('Password salah.')]]], 422);
         }
 
         $result = $service->deleteSelf($user, 'web', $request->input('reason'), $request->ip());

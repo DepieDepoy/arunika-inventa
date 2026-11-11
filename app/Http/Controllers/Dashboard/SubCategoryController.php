@@ -57,9 +57,9 @@ class SubCategoryController extends Controller
                 'status'            => 'required',
             ],
             [
-                'category_id.required'       => 'Category wajib dipilih',
-                'sub_category_name.required' => 'Nama Sub Category wajib diisi',
-                'status.required'            => 'Status wajib dipilih',
+                'category_id.required'       => __('Category wajib dipilih'),
+                'sub_category_name.required' => __('Nama Sub Category wajib diisi'),
+                'status.required'            => __('Status wajib dipilih'),
             ]
         );
 
@@ -108,7 +108,7 @@ class SubCategoryController extends Controller
                 'success' => false,
                 'errors' => [
                     'category_id' => [
-                        'Category tidak valid'
+                        __('Category tidak valid')
                     ]
                 ]
             ], 422);
@@ -158,7 +158,7 @@ class SubCategoryController extends Controller
                 'success' => false,
                 'errors' => [
                     'sub_category_name' => [
-                        'Nama Sub Category pada Category ini sudah digunakan.'
+                        __('Nama Sub Category pada Category ini sudah digunakan.')
                     ]
                 ]
             ], 422);
@@ -191,7 +191,7 @@ class SubCategoryController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Sub Category berhasil ditambahkan'
+            'message' => __('Sub Category berhasil ditambahkan')
         ]);
     }
 
@@ -382,9 +382,9 @@ class SubCategoryController extends Controller
                 'status'            => 'required',
             ],
             [
-                'category_id.required'       => 'Category wajib dipilih',
-                'sub_category_name.required' => 'Nama Sub Category wajib diisi',
-                'status.required'            => 'Status wajib dipilih',
+                'category_id.required'       => __('Category wajib dipilih'),
+                'sub_category_name.required' => __('Nama Sub Category wajib diisi'),
+                'status.required'            => __('Status wajib dipilih'),
             ]
         );
 
@@ -434,7 +434,7 @@ class SubCategoryController extends Controller
                 'success' => false,
                 'errors' => [
                     'category_id' => [
-                        'Category tidak valid'
+                        __('Category tidak valid')
                     ]
                 ]
             ], 422);
@@ -468,7 +468,7 @@ class SubCategoryController extends Controller
                 'success' => false,
                 'errors' => [
                     'sub_category_code' => [
-                        'Name Sub Category pada Category ini sudah digunakan'
+                        __('Name Sub Category pada Category ini sudah digunakan')
                     ]
                 ]
             ], 422);
@@ -494,7 +494,7 @@ class SubCategoryController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Sub Category berhasil diperbarui'
+            'message' => __('Sub Category berhasil diperbarui')
         ]);
     }
 
@@ -516,7 +516,7 @@ class SubCategoryController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Sub Category berhasil dihapus'
+            'message' => __('Sub Category berhasil dihapus')
         ]);
     }
 

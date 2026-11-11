@@ -127,7 +127,7 @@ class MaintenanceRequestController extends Controller
             return response()->json([
                 'success' => false,
                 'message' =>
-                    'Asset tidak ditemukan atau bukan milik company Anda.',
+                    __('Asset tidak ditemukan atau bukan milik company Anda.'),
             ], 404);
         }
 
@@ -144,7 +144,7 @@ class MaintenanceRequestController extends Controller
             return response()->json([
                 'success' => false,
                 'message' =>
-                    'Anda tidak memiliki hak untuk membuat request pada asset ini.',
+                    __('Anda tidak memiliki hak untuk membuat request pada asset ini.'),
             ], 403);
         }
 
@@ -175,7 +175,7 @@ class MaintenanceRequestController extends Controller
             return response()->json([
                 'success' => false,
                 'message' =>
-                    'Asset ini masih memiliki request yang sedang diproses.',
+                    __('Asset ini masih memiliki request yang sedang diproses.'),
                 'request_id' =>
                     $activeRequest->id,
             ], 422);
@@ -222,7 +222,7 @@ class MaintenanceRequestController extends Controller
             'success' => true,
 
             'message' =>
-                'Request berhasil dibuat.',
+                __('Request berhasil dibuat.'),
 
             'data' => [
                 'id' =>
@@ -264,7 +264,7 @@ class MaintenanceRequestController extends Controller
             return response()->json([
                 'success' => false,
                 'message' =>
-                    'Request tidak ditemukan.',
+                    __('Request tidak ditemukan.'),
             ], 404);
         }
 
@@ -281,7 +281,7 @@ class MaintenanceRequestController extends Controller
             return response()->json([
                 'success' => false,
                 'message' =>
-                    'Anda tidak memiliki hak untuk mengedit request ini.',
+                    __('Anda tidak memiliki hak untuk mengedit request ini.'),
             ], 403);
         }
 
@@ -295,7 +295,7 @@ class MaintenanceRequestController extends Controller
             return response()->json([
                 'success' => false,
                 'message' =>
-                    'Request ini sudah diproses sehingga tidak dapat diedit.',
+                    __('Request ini sudah diproses sehingga tidak dapat diedit.'),
             ], 422);
         }
 
@@ -336,7 +336,7 @@ class MaintenanceRequestController extends Controller
             'success' => true,
 
             'message' =>
-                'Request berhasil diperbarui.',
+                __('Request berhasil diperbarui.'),
         ]);
     }
 
@@ -369,7 +369,7 @@ class MaintenanceRequestController extends Controller
             return response()->json([
                 'success' => false,
                 'message' =>
-                    'Request tidak ditemukan.',
+                    __('Request tidak ditemukan.'),
             ], 404);
         }
 
@@ -423,7 +423,7 @@ class MaintenanceRequestController extends Controller
             'success' => true,
 
             'message' =>
-                'Request berhasil diambil dan sedang diproses.',
+                __('Request berhasil diambil dan sedang diproses.'),
 
             'redirect' =>
                 route('maintenance.requests.work', $taken->id),
@@ -498,7 +498,7 @@ class MaintenanceRequestController extends Controller
             return response()->json([
                 'success' => false,
                 'message' =>
-                    'Request tidak ditemukan.',
+                    __('Request tidak ditemukan.'),
             ], 404);
         }
 
@@ -512,7 +512,7 @@ class MaintenanceRequestController extends Controller
             return response()->json([
                 'success' => false,
                 'message' =>
-                    'Progress hanya dapat ditambahkan pada request In Progress.',
+                    __('Progress hanya dapat ditambahkan pada request In Progress.'),
             ], 422);
         }
 
@@ -529,7 +529,7 @@ class MaintenanceRequestController extends Controller
             return response()->json([
                 'success' => false,
                 'message' =>
-                    'Anda bukan teknisi yang menangani request ini.',
+                    __('Anda bukan teknisi yang menangani request ini.'),
             ], 403);
         }
 
@@ -591,7 +591,7 @@ class MaintenanceRequestController extends Controller
             return response()->json([
                 'success' => false,
                 'message' =>
-                    'Asset tidak ditemukan.',
+                    __('Asset tidak ditemukan.'),
             ], 404);
         }
 
@@ -822,7 +822,7 @@ class MaintenanceRequestController extends Controller
             'success' => true,
 
             'message' =>
-                'Progress berhasil ditambahkan.',
+                __('Progress berhasil ditambahkan.'),
 
             'data' => [
                 'id' =>
@@ -880,7 +880,7 @@ class MaintenanceRequestController extends Controller
             return response()->json([
                 'success' => false,
                 'message' =>
-                    'Request tidak ditemukan.',
+                    __('Request tidak ditemukan.'),
             ], 404);
         }
 
@@ -894,7 +894,7 @@ class MaintenanceRequestController extends Controller
             return response()->json([
                 'success' => false,
                 'message' =>
-                    'Request harus berstatus In Progress terlebih dahulu.',
+                    __('Request harus berstatus In Progress terlebih dahulu.'),
             ], 422);
         }
 
@@ -911,7 +911,7 @@ class MaintenanceRequestController extends Controller
             return response()->json([
                 'success' => false,
                 'message' =>
-                    'Request ini sedang ditangani oleh user lain.',
+                    __('Request ini sedang ditangani oleh user lain.'),
             ], 403);
         }
 
@@ -1007,7 +1007,7 @@ class MaintenanceRequestController extends Controller
             return response()->json([
                 'success' => false,
                 'message' =>
-                    'Asset tidak ditemukan.',
+                    __('Asset tidak ditemukan.'),
             ], 404);
         }
 
@@ -1033,7 +1033,7 @@ class MaintenanceRequestController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' =>
-                        'Vendor tidak ditemukan atau bukan milik company Anda.',
+                        __('Vendor tidak ditemukan atau bukan milik company Anda.'),
                 ], 422);
             }
         }
@@ -1363,7 +1363,7 @@ class MaintenanceRequestController extends Controller
             'success' => true,
 
             'message' =>
-                'Maintenance berhasil diselesaikan.',
+                __('Maintenance berhasil diselesaikan.'),
 
             'data' => [
                 'maintenance_id' =>
@@ -1415,7 +1415,7 @@ class MaintenanceRequestController extends Controller
                 )
                 ->with(
                     'error',
-                    'Request ini belum berstatus In Progress.'
+                    __('Request ini belum berstatus In Progress.')
                 );
         }
 
@@ -1554,7 +1554,7 @@ class MaintenanceRequestController extends Controller
         if (!$user) {
             return response()->json([
                 'success' => false,
-                'message' => 'Sesi login telah berakhir. Silakan login kembali.',
+                'message' => __('Sesi login telah berakhir. Silakan login kembali.'),
             ], 401);
         }
 
@@ -1572,7 +1572,7 @@ class MaintenanceRequestController extends Controller
                 return [
                     'success' => false,
                     'status' => 403,
-                    'message' => 'Anda hanya dapat membatalkan permintaan milik sendiri.',
+                    'message' => __('Anda hanya dapat membatalkan permintaan milik sendiri.'),
                 ];
             }
 
@@ -1582,7 +1582,7 @@ class MaintenanceRequestController extends Controller
                 return [
                     'success' => false,
                     'status' => 422,
-                    'message' => 'Hanya permintaan berstatus Menunggu yang dapat dibatalkan.',
+                    'message' => __('Hanya permintaan berstatus Menunggu yang dapat dibatalkan.'),
                 ];
             }
 
@@ -1592,7 +1592,7 @@ class MaintenanceRequestController extends Controller
             return [
                 'success' => true,
                 'status' => 200,
-                'message' => 'Permintaan berhasil dibatalkan.',
+                'message' => __('Permintaan berhasil dibatalkan.'),
                 'request' => $request,
             ];
         });

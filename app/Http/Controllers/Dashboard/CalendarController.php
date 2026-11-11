@@ -216,7 +216,7 @@ class CalendarController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Agenda berhasil diperbarui.',
+            'message' => __('Agenda berhasil diperbarui.'),
         ]);
     }
 
@@ -255,7 +255,7 @@ class CalendarController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Agenda dibatalkan. Riwayat tetap tersimpan.',
+            'message' => __('Agenda dibatalkan. Riwayat tetap tersimpan.'),
         ]);
     }
 
@@ -475,16 +475,16 @@ class CalendarController extends Controller
                 'exists:users,id',
             ],
         ], [
-            'title.required' => 'Judul acara wajib diisi.',
-            'event_type.required' => 'Jenis acara wajib dipilih.',
-            'start_at.required' => 'Tanggal dan jam mulai wajib diisi.',
-            'start_at.date' => 'Format tanggal dan jam mulai tidak valid.',
-            'end_at.required' => 'Tanggal dan jam selesai wajib diisi.',
-            'end_at.date' => 'Format tanggal dan jam selesai tidak valid.',
-            'end_at.after' => 'Waktu selesai harus setelah waktu mulai.',
-            'attendees.*.exists' => 'Salah satu peserta tidak ditemukan.',
+            'title.required' => __('Judul acara wajib diisi.'),
+            'event_type.required' => __('Jenis acara wajib dipilih.'),
+            'start_at.required' => __('Tanggal dan jam mulai wajib diisi.'),
+            'start_at.date' => __('Format tanggal dan jam mulai tidak valid.'),
+            'end_at.required' => __('Tanggal dan jam selesai wajib diisi.'),
+            'end_at.date' => __('Format tanggal dan jam selesai tidak valid.'),
+            'end_at.after' => __('Waktu selesai harus setelah waktu mulai.'),
+            'attendees.*.exists' => __('Salah satu peserta tidak ditemukan.'),
             'attendees.*.distinct' =>
-                'Peserta yang sama tidak boleh dipilih berulang kali.',
+                __('Peserta yang sama tidak boleh dipilih berulang kali.'),
         ]);
     }
 

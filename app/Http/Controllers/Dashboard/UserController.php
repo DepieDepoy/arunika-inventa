@@ -86,14 +86,14 @@ class UserController extends Controller
                 'send_verification_email' => 'nullable|boolean',
             ],
             [
-                'name.required'     => 'Nama wajib diisi',
-                'nik.required'      => 'NIK wajib diisi',
-                'email.required'    => 'Email wajib diisi',
-                'email.email'       => 'Format email tidak valid',
-                'phone.required'    => 'No. Telepon wajib diisi',
-                'role_id.required'  => 'Role wajib dipilih',
-                'status.required'   => 'Status wajib dipilih',
-                'status.in'         => 'Status tidak valid',
+                'name.required'     => __('Nama wajib diisi'),
+                'nik.required'      => __('NIK wajib diisi'),
+                'email.required'    => __('Email wajib diisi'),
+                'email.email'       => __('Format email tidak valid'),
+                'phone.required'    => __('No. Telepon wajib diisi'),
+                'role_id.required'  => __('Role wajib dipilih'),
+                'status.required'   => __('Status wajib dipilih'),
+                'status.in'         => __('Status tidak valid'),
             ]
         );
 
@@ -149,7 +149,7 @@ class UserController extends Controller
                 'success' => false,
                 'errors' => [
                     'email' => [
-                        'Email sudah terdaftar'
+                        __('Email sudah terdaftar')
                     ]
                 ]
             ], 422);
@@ -170,7 +170,7 @@ class UserController extends Controller
                 'success' => false,
                 'errors' => [
                     'phone' => [
-                        'No Phone sudah terdaftar'
+                        __('No Phone sudah terdaftar')
                     ]
                 ]
             ], 422);
@@ -198,7 +198,7 @@ class UserController extends Controller
                 'success' => false,
                 'errors' => [
                     'role_id' => [
-                        'Role tidak valid'
+                        __('Role tidak valid')
                     ]
                 ]
             ], 422);
@@ -234,7 +234,7 @@ class UserController extends Controller
         if ($branchId === false) {
             return response()->json([
                 'success' => false,
-                'errors' => ['branch_id' => ['Cabang tidak valid.']],
+                'errors' => ['branch_id' => [__('Cabang tidak valid.')]],
             ], 422);
         }
 
@@ -279,7 +279,7 @@ class UserController extends Controller
                 return response()->json([
                     'success'  => true,
                     'message'  =>
-                        'User berhasil ditambahkan, tetapi email verifikasi gagal dikirim.',
+                        __('User berhasil ditambahkan, tetapi email verifikasi gagal dikirim.'),
                     'password' =>
                         $passwordPlain,
                     'email_sent' =>
@@ -297,7 +297,7 @@ class UserController extends Controller
             return response()->json([
                 'success'  => true,
                 'message'  =>
-                    'User berhasil ditambahkan. Email verifikasi berhasil dikirim.',
+                    __('User berhasil ditambahkan. Email verifikasi berhasil dikirim.'),
                 'password'  =>
                     $passwordPlain,
                 'email_sent' =>
@@ -319,7 +319,7 @@ class UserController extends Controller
         return response()->json([
             'success'  => true,
             'message'  =>
-                'User berhasil ditambahkan dan dapat langsung login.',
+                __('User berhasil ditambahkan dan dapat langsung login.'),
             'password'  =>
                 $passwordPlain,
             'email_sent' =>
@@ -523,14 +523,14 @@ class UserController extends Controller
                 'status'  => 'required|in:0,1',
             ],
             [
-                'name.required'     => 'Nama wajib diisi',
-                'nik.required'      => 'NIK wajib diisi',
-                'email.required'    => 'Email wajib diisi',
-                'email.email'       => 'Format email tidak valid',
-                'phone.required'    => 'No. Telepon wajib diisi',
-                'role_id.required'  => 'Role wajib dipilih',
-                'status.required'   => 'Status wajib dipilih',
-                'status.in'         => 'Status tidak valid',
+                'name.required'     => __('Nama wajib diisi'),
+                'nik.required'      => __('NIK wajib diisi'),
+                'email.required'    => __('Email wajib diisi'),
+                'email.email'       => __('Format email tidak valid'),
+                'phone.required'    => __('No. Telepon wajib diisi'),
+                'role_id.required'  => __('Role wajib dipilih'),
+                'status.required'   => __('Status wajib dipilih'),
+                'status.in'         => __('Status tidak valid'),
             ]
         );
 
@@ -582,7 +582,7 @@ class UserController extends Controller
                 'success' => false,
                 'errors' => [
                     'email' => [
-                        'Email sudah digunakan'
+                        __('Email sudah digunakan')
                     ]
                 ]
             ], 422);
@@ -597,7 +597,7 @@ class UserController extends Controller
                 'success' => false,
                 'errors' => [
                     'phone' => [
-                        'No. telepon sudah digunakan'
+                        __('No. telepon sudah digunakan')
                     ]
                 ]
             ], 422);
@@ -625,7 +625,7 @@ class UserController extends Controller
                 'success' => false,
                 'errors' => [
                     'role_id' => [
-                        'Role tidak valid'
+                        __('Role tidak valid')
                     ]
                 ]
             ], 422);
@@ -652,14 +652,14 @@ class UserController extends Controller
             if ((int) $user->id === (int) Auth::id() && $branchId !== false && (int) $branchId !== (int) $user->branch_id) {
                 return response()->json([
                     'success' => false,
-                    'errors' => ['branch_id' => ['Anda tidak dapat memindahkan cabang akun sendiri.']],
+                    'errors' => ['branch_id' => [__('Anda tidak dapat memindahkan cabang akun sendiri.')]],
                 ], 403);
             }
 
             if ($branchId === false) {
                 return response()->json([
                     'success' => false,
-                    'errors' => ['branch_id' => ['Cabang tidak valid.']],
+                    'errors' => ['branch_id' => [__('Cabang tidak valid.')]],
                 ], 422);
             }
 
@@ -685,10 +685,10 @@ class UserController extends Controller
                 ],
                 [
                     'password.min' =>
-                        'Password minimal 8 karakter',
+                        __('Password minimal 8 karakter'),
 
                     'password.confirmed' =>
-                        'Konfirmasi password tidak sesuai',
+                        __('Konfirmasi password tidak sesuai'),
                 ]
             );
 
@@ -716,7 +716,7 @@ class UserController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'User berhasil diperbarui'
+            'message' => __('User berhasil diperbarui')
         ]);
     }
 
@@ -735,7 +735,7 @@ class UserController extends Controller
         if ((int) $user->id === (int) Auth::id()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Anda tidak dapat menghapus akun sendiri.',
+                'message' => __('Anda tidak dapat menghapus akun sendiri.'),
             ], 403);
         }
 
@@ -749,7 +749,7 @@ class UserController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'User berhasil dihapus'
+            'message' => __('User berhasil dihapus')
         ]);
     }
 
@@ -1051,7 +1051,7 @@ class UserController extends Controller
                 ->route('users.import')
                 ->with(
                     'error',
-                    'Session file import sudah tidak tersedia.'
+                    __('Session file import sudah tidak tersedia.')
                 );
         }
 
@@ -1070,7 +1070,7 @@ class UserController extends Controller
                     ->route('users.import')
                     ->with(
                         'error',
-                        'File Excel tidak ditemukan.'
+                        __('File Excel tidak ditemukan.')
                     );
             }
 
@@ -1218,7 +1218,7 @@ class UserController extends Controller
                 )
                 ->with(
                     'success',
-                    'Import berhasil dimasukkan ke antrian. Proses akan berjalan di background.'
+                    __('Import berhasil dimasukkan ke antrian. Proses akan berjalan di background.')
                 );
 
 

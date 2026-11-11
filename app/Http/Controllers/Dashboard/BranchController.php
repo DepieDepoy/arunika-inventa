@@ -126,7 +126,7 @@ class BranchController extends Controller
             return $this->fail($e);
         }
 
-        return response()->json(['success' => true, 'message' => 'Cabang berhasil diperbarui.']);
+        return response()->json(['success' => true, 'message' => __('Cabang berhasil diperbarui.')]);
     }
 
     public function destroy(int $branch): JsonResponse
@@ -138,7 +138,7 @@ class BranchController extends Controller
             return $this->fail($e);
         }
 
-        return response()->json(['success' => true, 'message' => 'Cabang berhasil dihapus. Kuota cabang bertambah kembali.']);
+        return response()->json(['success' => true, 'message' => __('Cabang berhasil dihapus. Kuota cabang bertambah kembali.')]);
     }
 
     protected function validateInput(Request $request): ?JsonResponse
@@ -151,7 +151,7 @@ class BranchController extends Controller
             'status' => ['nullable', 'in:0,1'],
             'service_branch_id' => ['nullable', 'integer'],
         ], [
-            'branch_name.required' => 'Nama cabang wajib diisi.',
+            'branch_name.required' => __('Nama cabang wajib diisi.'),
         ]);
 
         return $validator->fails()

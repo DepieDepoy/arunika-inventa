@@ -85,43 +85,43 @@ class ProfileController extends Controller
                 ],
                 [
                     'name.required' =>
-                        'Nama wajib diisi.',
+                        __('Nama wajib diisi.'),
 
                     'name.string' =>
-                        'Nama harus berupa teks.',
+                        __('Nama harus berupa teks.'),
 
                     'name.max' =>
-                        'Nama maksimal 255 karakter.',
+                        __('Nama maksimal 255 karakter.'),
 
 
                     'nik.required' =>
-                        'NIK wajib diisi.',
+                        __('NIK wajib diisi.'),
 
                     'nik.string' =>
-                        'NIK harus berupa teks.',
+                        __('NIK harus berupa teks.'),
 
                     'nik.max' =>
-                        'NIK maksimal 100 karakter.',
+                        __('NIK maksimal 100 karakter.'),
 
 
                     'email.required' =>
-                        'Email wajib diisi.',
+                        __('Email wajib diisi.'),
 
                     'email.email' =>
-                        'Format email tidak valid.',
+                        __('Format email tidak valid.'),
 
                     'email.max' =>
-                        'Email maksimal 255 karakter.',
+                        __('Email maksimal 255 karakter.'),
 
 
                     'phone.required' =>
-                        'No. Telepon wajib diisi.',
+                        __('No. Telepon wajib diisi.'),
 
                     'phone.string' =>
-                        'No. Telepon harus berupa teks.',
+                        __('No. Telepon harus berupa teks.'),
 
                     'phone.max' =>
-                        'No. Telepon maksimal 50 karakter.',
+                        __('No. Telepon maksimal 50 karakter.'),
                 ]
             );
 
@@ -136,7 +136,7 @@ class ProfileController extends Controller
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Data profile tidak valid.',
+                    'message' => __('Data profile tidak valid.'),
                     'errors' => $validator->errors(),
                 ], 422);
             }
@@ -173,10 +173,10 @@ class ProfileController extends Controller
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Nama wajib diisi.',
+                    'message' => __('Nama wajib diisi.'),
                     'errors' => [
                         'name' => [
-                            'Nama wajib diisi.'
+                            __('Nama wajib diisi.')
                         ],
                     ],
                 ], 422);
@@ -193,10 +193,10 @@ class ProfileController extends Controller
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'NIK wajib diisi.',
+                    'message' => __('NIK wajib diisi.'),
                     'errors' => [
                         'nik' => [
-                            'NIK wajib diisi.'
+                            __('NIK wajib diisi.')
                         ],
                     ],
                 ], 422);
@@ -213,10 +213,10 @@ class ProfileController extends Controller
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'No. Telepon wajib diisi.',
+                    'message' => __('No. Telepon wajib diisi.'),
                     'errors' => [
                         'phone' => [
-                            'No. Telepon wajib diisi.'
+                            __('No. Telepon wajib diisi.')
                         ],
                     ],
                 ], 422);
@@ -233,10 +233,10 @@ class ProfileController extends Controller
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Email tidak dapat diubah.',
+                    'message' => __('Email tidak dapat diubah.'),
                     'errors' => [
                         'email' => [
-                            'Email tidak dapat diubah dari halaman profile.'
+                            __('Email tidak dapat diubah dari halaman profile.')
                         ],
                     ],
                 ], 422);
@@ -272,10 +272,10 @@ class ProfileController extends Controller
 
                     return response()->json([
                         'success' => false,
-                        'message' => 'No. Telepon sudah digunakan.',
+                        'message' => __('No. Telepon sudah digunakan.'),
                         'errors' => [
                             'phone' => [
-                                'No. Telepon sudah digunakan oleh user lain.'
+                                __('No. Telepon sudah digunakan oleh user lain.')
                             ],
                         ],
                     ], 422);
@@ -310,7 +310,7 @@ class ProfileController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Profile berhasil diperbarui.',
+                'message' => __('Profile berhasil diperbarui.'),
 
                 'data' => [
                     'name' => $user->name,
@@ -344,7 +344,7 @@ class ProfileController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Profile gagal diperbarui.',
+                'message' => __('Profile gagal diperbarui.'),
                 'error' => config('app.debug')
                     ? $e->getMessage()
                     : null,
@@ -365,11 +365,11 @@ class ProfileController extends Controller
             $request->all(),
             ['photo' => UserAvatar::RULES],
             [
-                'photo.required' => 'Pilih foto terlebih dahulu.',
-                'photo.image' => 'File harus berupa gambar.',
-                'photo.mimes' => 'Format foto harus JPG, PNG, atau WEBP.',
-                'photo.max' => 'Ukuran foto maksimal 5 MB.',
-                'photo.uploaded' => 'Foto gagal diunggah. Ukuran maksimal 5 MB.',
+                'photo.required' => __('Pilih foto terlebih dahulu.'),
+                'photo.image' => __('File harus berupa gambar.'),
+                'photo.mimes' => __('Format foto harus JPG, PNG, atau WEBP.'),
+                'photo.max' => __('Ukuran foto maksimal 5 MB.'),
+                'photo.uploaded' => __('Foto gagal diunggah. Ukuran maksimal 5 MB.'),
             ]
         );
 
@@ -396,13 +396,13 @@ class ProfileController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Foto profil gagal disimpan.',
+                'message' => __('Foto profil gagal disimpan.'),
             ], 500);
         }
 
         return response()->json([
             'success' => true,
-            'message' => 'Foto profil berhasil diperbarui.',
+            'message' => __('Foto profil berhasil diperbarui.'),
             'data' => ['photo_url' => UserAvatar::url($user)],
         ]);
     }
@@ -428,7 +428,7 @@ class ProfileController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Foto profil dihapus.',
+            'message' => __('Foto profil dihapus.'),
             'data' => ['photo_url' => null],
         ]);
     }
@@ -480,16 +480,16 @@ class ProfileController extends Controller
                 ],
                 [
                     'current_password.required' =>
-                        'Password saat ini wajib diisi.',
+                        __('Password saat ini wajib diisi.'),
 
                     'password.required' =>
-                        'Password baru wajib diisi.',
+                        __('Password baru wajib diisi.'),
 
                     'password.min' =>
-                        'Password baru minimal 8 karakter.',
+                        __('Password baru minimal 8 karakter.'),
 
                     'password_confirmation.required' =>
-                        'Konfirmasi password wajib diisi.',
+                        __('Konfirmasi password wajib diisi.'),
                 ]
             );
 
@@ -504,7 +504,7 @@ class ProfileController extends Controller
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Data password tidak valid.',
+                    'message' => __('Data password tidak valid.'),
                     'errors' => $validator->errors(),
                 ], 422);
             }
@@ -532,10 +532,10 @@ class ProfileController extends Controller
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Konfirmasi password tidak sesuai.',
+                    'message' => __('Konfirmasi password tidak sesuai.'),
                     'errors' => [
                         'password_confirmation' => [
-                            'Konfirmasi password tidak sesuai.'
+                            __('Konfirmasi password tidak sesuai.')
                         ],
                     ],
                 ], 422);
@@ -557,10 +557,10 @@ class ProfileController extends Controller
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Password saat ini tidak sesuai.',
+                    'message' => __('Password saat ini tidak sesuai.'),
                     'errors' => [
                         'current_password' => [
-                            'Password saat ini tidak sesuai.'
+                            __('Password saat ini tidak sesuai.')
                         ],
                     ],
                 ], 422);
@@ -582,10 +582,10 @@ class ProfileController extends Controller
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Password baru harus berbeda.',
+                    'message' => __('Password baru harus berbeda.'),
                     'errors' => [
                         'password' => [
-                            'Password baru harus berbeda dengan password lama.'
+                            __('Password baru harus berbeda dengan password lama.')
                         ],
                     ],
                 ], 422);
@@ -616,7 +616,7 @@ class ProfileController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Password berhasil diubah.',
+                'message' => __('Password berhasil diubah.'),
             ]);
 
 
@@ -639,7 +639,7 @@ class ProfileController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Password gagal diperbarui.',
+                'message' => __('Password gagal diperbarui.'),
                 'error' => config('app.debug')
                     ? $e->getMessage()
                     : null,

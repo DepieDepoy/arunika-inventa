@@ -59,7 +59,7 @@ class BranchTransferController extends Controller
         $companyId = (int) $user->company_id;
 
         if (!BranchAccess::hasMultiple($companyId)) {
-            return redirect()->route('branches.index')->with('error', 'Tambahkan minimal satu cabang lain sebelum membuat mutasi aset.');
+            return redirect()->route('branches.index')->with('error', __('Tambahkan minimal satu cabang lain sebelum membuat mutasi aset.'));
         }
 
         return view('dashboard.branch-transfer.create', [
@@ -112,8 +112,8 @@ class BranchTransferController extends Controller
             'asset_ids.*' => ['integer'],
             'notes' => ['nullable', 'string', 'max:1000'],
         ], [
-            'asset_ids.required' => 'Pilih minimal satu aset yang akan dikirim.',
-            'asset_ids.max' => 'Maksimal 200 aset per mutasi.',
+            'asset_ids.required' => __('Pilih minimal satu aset yang akan dikirim.'),
+            'asset_ids.max' => __('Maksimal 200 aset per mutasi.'),
         ]);
 
         try {

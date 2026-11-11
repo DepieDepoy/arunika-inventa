@@ -177,8 +177,8 @@ class CategoryController extends Controller
                 'status' => 'required',
             ],
             [
-                'category_name.required' => 'Nama kategori wajib diisi',
-                'status.required' => 'Status wajib dipilih',
+                'category_name.required' => __('Nama kategori wajib diisi'),
+                'status.required' => __('Status wajib dipilih'),
             ]
         );
 
@@ -207,7 +207,7 @@ class CategoryController extends Controller
                 'success' => false,
                 'errors' => [
                     'category_code' => [
-                        'Nama kategori sudah digunakan'
+                        __('Nama kategori sudah digunakan')
                     ]
                 ]
             ], 422);
@@ -247,7 +247,7 @@ class CategoryController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Kategori berhasil ditambahkan'
+            'message' => __('Kategori berhasil ditambahkan')
         ]);
     }
 
@@ -278,8 +278,8 @@ class CategoryController extends Controller
                 'status' => 'required',
             ],
             [
-                'category_name.required' => 'Nama kategori wajib diisi',
-                'status.required' => 'Status wajib dipilih',
+                'category_name.required' => __('Nama kategori wajib diisi'),
+                'status.required' => __('Status wajib dipilih'),
             ]
         );
 
@@ -325,7 +325,7 @@ class CategoryController extends Controller
                 'success' => false,
                 'errors' => [
                     'category_code' => [
-                        'Kode kategori sudah digunakan'
+                        __('Kode kategori sudah digunakan')
                     ]
                 ]
             ], 422);
@@ -345,7 +345,7 @@ class CategoryController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Kategori berhasil diperbarui'
+            'message' => __('Kategori berhasil diperbarui')
         ]);
     }
 
@@ -364,7 +364,7 @@ class CategoryController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Kategori berhasil dihapus'
+            'message' => __('Kategori berhasil dihapus')
         ]);
     }
 
@@ -434,9 +434,9 @@ class CategoryController extends Controller
                 'status' => 'required',
             ],
             [
-                'category_id.required' => 'Category wajib dipilih',
-                'sub_category_name.required' => 'Nama sub category wajib diisi',
-                'status.required' => 'Status wajib dipilih',
+                'category_id.required' => __('Category wajib dipilih'),
+                'sub_category_name.required' => __('Nama sub category wajib diisi'),
+                'status.required' => __('Status wajib dipilih'),
             ]
         );
 
@@ -489,7 +489,7 @@ class CategoryController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Sub Category berhasil ditambahkan'
+            'message' => __('Sub Category berhasil ditambahkan')
         ]);
     }
 
@@ -522,8 +522,8 @@ class CategoryController extends Controller
                 'status' => 'required',
             ],
             [
-                'sub_category_name.required' => 'Nama sub category wajib diisi',
-                'status.required' => 'Status wajib dipilih',
+                'sub_category_name.required' => __('Nama sub category wajib diisi'),
+                'status.required' => __('Status wajib dipilih'),
             ]
         );
 
@@ -559,7 +559,7 @@ class CategoryController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Sub Category berhasil diperbarui'
+            'message' => __('Sub Category berhasil diperbarui')
         ]);
     }
 
@@ -578,7 +578,7 @@ class CategoryController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Sub Category berhasil dihapus'
+            'message' => __('Sub Category berhasil dihapus')
         ]);
     }
 

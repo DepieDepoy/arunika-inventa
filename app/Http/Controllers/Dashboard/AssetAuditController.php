@@ -61,7 +61,7 @@ class AssetAuditController extends Controller
             'assignees.*.user_id' => ['nullable', 'integer'],
             'assignees.*.location_id' => ['nullable', 'integer'],
         ], [
-            'title.required' => 'Judul audit wajib diisi.',
+            'title.required' => __('Judul audit wajib diisi.'),
         ]);
 
         try {

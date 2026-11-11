@@ -33,8 +33,8 @@ class RoleController extends Controller
                 'status'    => 'required',
             ],
             [
-                'role_name.required' => 'Role Name wajib diisi',
-                'status.required'    => 'Status wajib dipilih',
+                'role_name.required' => __('Role Name wajib diisi'),
+                'status.required'    => __('Status wajib dipilih'),
             ]
         );
 
@@ -59,7 +59,7 @@ class RoleController extends Controller
                 'success' => false,
                 'errors' => [
                     'role_name' => [
-                        'Role sudah terdaftar'
+                        __('Role sudah terdaftar')
                     ]
                 ]
             ], 422);
@@ -274,7 +274,7 @@ class RoleController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'ID Role tidak valid.'
+                'message' => __('ID Role tidak valid.')
             ], 422);
         }
 
@@ -326,7 +326,7 @@ class RoleController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Role tidak dapat dihapus karena masih digunakan oleh user.'
+                'message' => __('Role tidak dapat dihapus karena masih digunakan oleh user.')
             ], 422);
         }
 
@@ -336,7 +336,7 @@ class RoleController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Role berhasil dihapus.'
+            'message' => __('Role berhasil dihapus.')
         ]);
     }
 
@@ -560,7 +560,7 @@ class RoleController extends Controller
 
         return back()->with([
             'success' => true,
-            'message' => 'Role permission berhasil disimpan'
+            'message' => __('Role permission berhasil disimpan')
         ]);
     }
 }

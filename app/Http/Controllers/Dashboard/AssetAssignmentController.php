@@ -261,7 +261,7 @@ class AssetAssignmentController extends Controller
         if ($asset->isDisposed()) {
             return redirect()
                 ->route('assets.show', $encryptedId)
-                ->with('error', 'Aset ini sudah dihapuskan sehingga tidak dapat diserahkan atau dikembalikan.');
+                ->with('error', __('Aset ini sudah dihapuskan sehingga tidak dapat diserahkan atau dikembalikan.'));
         }
 
         /*
@@ -309,7 +309,7 @@ class AssetAssignmentController extends Controller
         if ($asset->branch_id && (int) $targetUser->branch_id !== (int) $asset->branch_id) {
             return redirect()
                 ->route('assets.assignment.index', $encryptedId)
-                ->with('error', 'User penerima harus berada di cabang yang sama dengan aset. Pindahkan aset lewat Mutasi Aset bila perlu.');
+                ->with('error', __('User penerima harus berada di cabang yang sama dengan aset. Pindahkan aset lewat Mutasi Aset bila perlu.'));
         }
 
         /*
@@ -330,7 +330,7 @@ class AssetAssignmentController extends Controller
                 )
                 ->with(
                     'error',
-                    'Asset sudah diberikan kepada user tersebut.'
+                    __('Asset sudah diberikan kepada user tersebut.')
                 );
         }
 
@@ -441,7 +441,7 @@ class AssetAssignmentController extends Controller
                 )
                 ->with(
                     'success',
-                    'Asset berhasil diberikan / ditransfer kepada user.'
+                    __('Asset berhasil diberikan / ditransfer kepada user.')
                 );
         }
 
@@ -452,7 +452,7 @@ class AssetAssignmentController extends Controller
             )
             ->with(
                 'success',
-                'Asset berhasil diberikan kepada user.'
+                __('Asset berhasil diberikan kepada user.')
             );
     }
 
@@ -508,7 +508,7 @@ class AssetAssignmentController extends Controller
         if ($asset->isDisposed()) {
             return redirect()
                 ->route('assets.show', $encryptedId)
-                ->with('error', 'Aset ini sudah dihapuskan sehingga tidak dapat diserahkan atau dikembalikan.');
+                ->with('error', __('Aset ini sudah dihapuskan sehingga tidak dapat diserahkan atau dikembalikan.'));
         }
 
         /*
@@ -550,7 +550,7 @@ class AssetAssignmentController extends Controller
                 )
                 ->with(
                     'error',
-                    'Asset saat ini tidak memiliki user yang bertanggung jawab.'
+                    __('Asset saat ini tidak memiliki user yang bertanggung jawab.')
                 );
         }
 
@@ -683,7 +683,7 @@ class AssetAssignmentController extends Controller
             )
             ->with(
                 'success',
-                'Asset berhasil dikembalikan dan sekarang berstatus unassigned.'
+                __('Asset berhasil dikembalikan dan sekarang berstatus unassigned.')
             );
     }
 }

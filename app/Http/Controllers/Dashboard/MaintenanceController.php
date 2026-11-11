@@ -464,7 +464,7 @@ class MaintenanceController extends Controller
             ->route('maintenance.index')
             ->with(
                 'success',
-                'Maintenance berhasil ditambahkan.'
+                __('Maintenance berhasil ditambahkan.')
             );
     }
 
