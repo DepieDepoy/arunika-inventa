@@ -184,7 +184,7 @@
 
                                     @csrf
                                     {{-- Anti bot: honeypot, waktu isi form & Turnstile (bila aktif). --}}
-                                    {!! \App\Support\BotGuard::fields() !!}
+                                    {!! \App\Support\BotGuard::fields(false) !!}
 
                                     <div class="row">
 
@@ -449,6 +449,12 @@
 
                                             </div>
 
+                                        </div>
+
+
+                                        <!-- Verifikasi Cloudflare Turnstile (bila aktif), selebar form -->
+                                        <div class="col-lg-12">
+                                            {!! \App\Support\BotGuard::widget() !!}
                                         </div>
 
 

@@ -90,7 +90,7 @@
                     <form method="POST" action="{{ route('account-deletion.store') }}">
                         @csrf
                         {{-- Anti bot: honeypot "website", waktu isi form & Turnstile (bila aktif). --}}
-                        {!! \App\Support\BotGuard::fields() !!}
+                        {!! \App\Support\BotGuard::fields(false) !!}
                         <label for="email">{{ $en ? 'Account email' : 'Email akun' }}</label>
                         <input type="email" name="email" id="email" value="{{ old('email') }}" required maxlength="255" autocomplete="email">
                         @error('email')<div class="err">{{ $message }}</div>@enderror
@@ -104,6 +104,7 @@
                         </label>
                         @error('confirm')<div class="err">{{ $message }}</div>@enderror
 
+                        {!! \App\Support\BotGuard::widget() !!}
                         <button class="btn" type="submit">{{ $en ? 'Send deletion request' : 'Kirim permintaan hapus akun' }}</button>
                     </form>
                 @endif

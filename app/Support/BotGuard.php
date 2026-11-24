@@ -29,8 +29,12 @@ class BotGuard
     public const MIN_SECONDS = 3;
     public const MAX_SECONDS = 10800;
 
-    /** Field tersembunyi + widget Turnstile untuk diletakkan di dalam <form>. */
-    public static function fields(): HtmlString
+    /**
+     * Field tersembunyi untuk diletakkan di dalam <form>.
+     * $withWidget = false bila widget Turnstile diletakkan terpisah lewat widget()
+     * (mis. tepat di atas tombol kirim).
+     */
+    public static function fields(bool $withWidget = true): HtmlString
     {
         $ts = e(Crypt::encryptString((string) time()));
         $hp = self::HONEYPOT;
@@ -44,15 +48,26 @@ class BotGuard
 <input type="hidden" name="{$tsName}" value="{$ts}">
 HTML;
 
-        if (self::turnstileEnabled()) {
-            $siteKey = e((string) config('services.turnstile.site_key'));
-            $html .= <<<HTML
-<div class="cf-turnstile my-3" data-sitekey="{$siteKey}" data-theme="light"></div>
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-HTML;
+        if ($withWidget) {
+            $html .= self::widget();
         }
 
         return new HtmlString($html);
+    }
+
+    /** Widget Cloudflare Turnstile (kosong bila Turnstile tidak aktif). Selebar form. */
+    public static function widget(): HtmlString
+    {
+        if (!self::turnstileEnabled()) {
+            return new HtmlString('');
+        }
+
+        $siteKey = e((string) config('services.turnstile.site_key'));
+
+        return new HtmlString(<<<HTML
+<div class="cf-turnstile mb-3" data-sitekey="{$siteKey}" data-theme="light" data-size="flexible"></div>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+HTML);
     }
 
     public static function turnstileEnabled(): bool
