@@ -32,10 +32,22 @@ class RegisteredUserController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        // Anti bot: honeypot, waktu isi form, Cloudflare Turnstile (bila diaktifkan).
+        if ($botError = \App\Support\BotGuard::check($request, 'register')) {
+            return back()
+                ->withErrors(['email' => $botError])
+                ->withInput($request->except(['password', 'password_confirmation']));
+        }
+
+        // Nama & nama perusahaan: huruf Latin + tanda baca umum, tanpa link.
+        // (Serangan spam memakai kolom nama untuk menyisipkan teks & link penipuan
+        // yang ikut terkirim di email verifikasi ke alamat korban.)
+        $noLink = 'not_regex:/(https?:|www\.|:\/\/)/i';
+
         $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'nik' => ['required', 'string', 'max:255'],
-            'company_name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:100', 'regex:/^[\p{Latin}\p{M}\s.,\'\-]+$/u', $noLink],
+            'nik' => ['required', 'string', 'max:50', 'regex:/^[A-Za-z0-9.\-\/ ]+$/'],
+            'company_name' => ['required', 'string', 'max:150', 'regex:/^[\p{Latin}\p{M}0-9\s.,\'&()\-\/]+$/u', $noLink],
             'phone' => [
                 'required',
                 'digits_between:10,15',
@@ -45,7 +57,8 @@ class RegisteredUserController extends Controller
                 'required',
                 'string',
                 'lowercase',
-                'email',
+                // Produksi: domain email harus benar-benar punya server email (DNS).
+                app()->isProduction() ? 'email:rfc,dns' : 'email',
                 'max:255',
                 'unique:users,email',
             ],
@@ -58,8 +71,16 @@ class RegisteredUserController extends Controller
             'password_confirmation' => ['required'],
         ], [
             'name.required' => 'Full name is required.',
+            'name.max' => 'Full name may be at most 100 characters.',
+            'name.regex' => 'Full name may only contain letters, spaces, and . , \' -',
+            'name.not_regex' => 'Full name may not contain links.',
             'nik.required' => 'ID Person is required.',
+            'nik.max' => 'ID Person may be at most 50 characters.',
+            'nik.regex' => 'ID Person may only contain letters, numbers, and . - /',
             'company_name.required' => 'Company name is required.',
+            'company_name.max' => 'Company name may be at most 150 characters.',
+            'company_name.regex' => 'Company name may only contain letters, numbers, spaces, and . , \' & ( ) - /',
+            'company_name.not_regex' => 'Company name may not contain links.',
             'phone.required' => 'WhatsApp number is required.',
             'phone.unique' => 'This WhatsApp number is already in use.',
             'phone.digits_between' => 'WhatsApp number must be between 10 and 15 digits.',

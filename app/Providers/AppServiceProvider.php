@@ -74,5 +74,31 @@ class AppServiceProvider extends ServiceProvider
                     ->by($request->ip()),
             ];
         });
+
+        /*
+        |--------------------------------------------------------------------------
+        | FORM PUBLIK WEB (anti bot / spam email)
+        |--------------------------------------------------------------------------
+        |
+        | Pendaftaran mengirim email ke alamat yang diisi, sehingga bisa disalahgunakan
+        | untuk spam. Batas per IP + batas GLOBAL (menahan botnet yang berganti IP).
+        |
+        */
+
+        RateLimiter::for('web-register', fn (Request $request) => [
+            Limit::perMinutes(10, 3)->by('register-ip:' . $request->ip()),
+            Limit::perDay(10)->by('register-ip-day:' . $request->ip()),
+            Limit::perMinute(10)->by('register-global'),
+            Limit::perHour(100)->by('register-global-hour'),
+        ]);
+
+        RateLimiter::for('web-password-email', fn (Request $request) => [
+            Limit::perMinutes(10, 5)->by('pwd-ip:' . $request->ip()),
+            Limit::perMinute(20)->by('pwd-global'),
+        ]);
+
+        RateLimiter::for('web-login', fn (Request $request) => [
+            Limit::perMinute(20)->by('login-ip:' . $request->ip()),
+        ]);
     }
 }

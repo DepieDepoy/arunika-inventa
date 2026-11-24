@@ -89,7 +89,8 @@
                 @else
                     <form method="POST" action="{{ route('account-deletion.store') }}">
                         @csrf
-                        <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+                        {{-- Anti bot: honeypot "website", waktu isi form & Turnstile (bila aktif). --}}
+                        {!! \App\Support\BotGuard::fields() !!}
                         <label for="email">{{ $en ? 'Account email' : 'Email akun' }}</label>
                         <input type="email" name="email" id="email" value="{{ old('email') }}" required maxlength="255" autocomplete="email">
                         @error('email')<div class="err">{{ $message }}</div>@enderror

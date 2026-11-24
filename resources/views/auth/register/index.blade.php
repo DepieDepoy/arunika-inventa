@@ -183,6 +183,8 @@
                                     action="{{ route('register') }}">
 
                                     @csrf
+                                    {{-- Anti bot: honeypot, waktu isi form & Turnstile (bila aktif). --}}
+                                    {!! \App\Support\BotGuard::fields() !!}
 
                                     <div class="row">
 

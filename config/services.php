@@ -35,7 +35,14 @@ return [
         ],
     ],
 
-    //doku 
+    // Cloudflare Turnstile (captcha form daftar / lupa password / hapus akun).
+    // Kosong = nonaktif (honeypot, time-trap & rate limit tetap berjalan).
+    'turnstile' => [
+        'site_key' => env('TURNSTILE_SITE_KEY'),
+        'secret_key' => env('TURNSTILE_SECRET_KEY'),
+    ],
+
+    //doku
     /*'doku' => [
         'client_id' => env('DOKU_CLIENT_ID'),
         'secret_key' => env('DOKU_SECRET_KEY'),

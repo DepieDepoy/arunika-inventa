@@ -28,7 +28,9 @@ Route::middleware('guest')->group(function () {
         ->name('register')
         ->middleware('track:register');
 
-    Route::post('register', [RegisteredUserController::class, 'store']);
+    // Batas per IP + global (lihat AppServiceProvider) — pendaftaran mengirim email.
+    Route::post('register', [RegisteredUserController::class, 'store'])
+        ->middleware('throttle:web-register');
 
 
     /*
@@ -41,7 +43,8 @@ Route::middleware('guest')->group(function () {
         ->name('login')
         ->middleware('track:login');
 
-    Route::post('login', [AuthenticatedSessionController::class, 'store']);
+    Route::post('login', [AuthenticatedSessionController::class, 'store'])
+        ->middleware('throttle:web-login');
 
 
     /*
@@ -58,7 +61,9 @@ Route::middleware('guest')->group(function () {
     Route::post(
         'forgot-password',
         [PasswordResetLinkController::class, 'store']
-    )->name('password.email');
+    )
+        ->middleware('throttle:web-password-email')
+        ->name('password.email');
 
 
     /*
@@ -75,7 +80,9 @@ Route::middleware('guest')->group(function () {
     Route::post(
         'reset-password',
         [NewPasswordController::class, 'store']
-    )->name('password.store');
+    )
+        ->middleware('throttle:10,10')
+        ->name('password.store');
 });
 
 

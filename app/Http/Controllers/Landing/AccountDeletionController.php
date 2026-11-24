@@ -28,9 +28,14 @@ class AccountDeletionController extends Controller
 
     public function store(Request $request, AccountDeletionService $service): RedirectResponse
     {
-        // Honeypot: bot biasanya mengisi semua kolom.
-        if (filled($request->input('website'))) {
+        // Honeypot: bot biasanya mengisi semua kolom (pura-pura berhasil).
+        if (filled($request->input(\App\Support\BotGuard::HONEYPOT))) {
             return back()->with('submitted', true);
+        }
+
+        // Waktu isi form & Turnstile (bila diaktifkan).
+        if ($botError = \App\Support\BotGuard::check($request, 'account-deletion')) {
+            return back()->withErrors(['email' => __($botError)])->withInput();
         }
 
         $data = $request->validate([

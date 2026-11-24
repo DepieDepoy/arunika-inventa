@@ -26,6 +26,11 @@ class PasswordResetLinkController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        // Anti bot: honeypot, waktu isi form, Turnstile (bila diaktifkan).
+        if ($botError = \App\Support\BotGuard::check($request, 'forgot-password')) {
+            return back()->withErrors(['email' => $botError])->withInput($request->only('email'));
+        }
+
         $request->validate([
             'email' => ['required', 'email'],
         ]);

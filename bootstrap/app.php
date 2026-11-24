@@ -33,6 +33,11 @@ return Application::configure(basePath: dirname(__DIR__))
 
     ->withMiddleware(function (Middleware $middleware) {
 
+        // Server di belakang reverse proxy lokal (Caddy): baca IP asli pengunjung dari
+        // X-Forwarded-For agar rate limit & log per IP akurat. Hanya proxy di mesin
+        // yang sama yang dipercaya, sehingga header tidak bisa dipalsukan dari luar.
+        $middleware->trustProxies(at: ['127.0.0.1', '::1']);
+
         $middleware->alias([
             'permission' => CheckPermission::class,
             'subscription.access' => CheckSubscriptionAccess::class,
