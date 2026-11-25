@@ -93,6 +93,13 @@ class RegisteredUserController extends Controller
             'password_confirmation.required' => 'Please confirm your password.',
         ]);
 
+        // Batas pendaftaran berhasil per IP / global (lihat RegistrationQuota).
+        if ($wait = \App\Support\RegistrationQuota::blockedFor($request)) {
+            return back()
+                ->withErrors(['email' => \App\Support\RegistrationQuota::message($wait)])
+                ->withInput($request->except(['password', 'password_confirmation']));
+        }
+
         $companyCode = CompanyHelper::generateCode(
             trim($request->company_name)
         );
@@ -250,6 +257,8 @@ class RegisteredUserController extends Controller
             */
 
             DB::commit();
+
+            \App\Support\RegistrationQuota::hit($request);
 
             // Analitik funnel (backoffice > Analitik).
             app(\App\Services\Analytics\AnalyticsTracker::class)

@@ -85,11 +85,14 @@ class AppServiceProvider extends ServiceProvider
         |
         */
 
+        // Batas PERCOBAAN kirim form daftar (termasuk yang salah isi), cukup longgar
+        // agar orang yang salah ketik tidak terkunci. Batas pendaftaran yang BERHASIL
+        // (yang benar-benar membuat PT & mengirim email) diatur lebih ketat di
+        // RegisteredUserController (RegistrationQuota).
         RateLimiter::for('web-register', fn (Request $request) => [
-            Limit::perMinutes(10, 3)->by('register-ip:' . $request->ip()),
-            Limit::perDay(10)->by('register-ip-day:' . $request->ip()),
-            Limit::perMinute(10)->by('register-global'),
-            Limit::perHour(100)->by('register-global-hour'),
+            Limit::perMinutes(10, 15)->by('register-ip:' . $request->ip()),
+            Limit::perDay(60)->by('register-ip-day:' . $request->ip()),
+            Limit::perMinute(60)->by('register-global'),
         ]);
 
         RateLimiter::for('web-password-email', fn (Request $request) => [
