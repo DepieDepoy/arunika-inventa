@@ -3,6 +3,7 @@
 use App\Http\Controllers\Landing\AccountDeletionController;
 use App\Http\Controllers\Landing\LandingController;
 use App\Http\Controllers\Landing\LegalController;
+use App\Http\Controllers\Landing\SitemapController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -15,6 +16,9 @@ use Illuminate\Support\Facades\Route;
 // Landing page.
 Route::get('/', LandingController::class)->middleware('track:landing')->name('landing');
 Route::get('/en', LandingController::class)->defaults('locale', 'en')->middleware('track:landing')->name('landing.en');
+
+// Sitemap untuk Google Search Console / Bing Webmaster.
+Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 
 // Kebijakan Privasi & Syarat Layanan (wajib untuk Play Store / App Store).
 Route::get('/kebijakan-privasi', LegalController::class)->defaults('page', 'privacy')->name('legal.privacy');
