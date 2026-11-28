@@ -54,8 +54,7 @@
                         aria-label="{{ __('Bahasa') }}"
                         title="{{ __('Bahasa') }}"
                     >
-                        <i class="bi bi-translate"></i>
-                        <span class="small">{{ strtoupper($currentLocale) }}</span>
+                        <x-flag :code="$currentLocale" />
                     </a>
 
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="language-drop">
@@ -64,9 +63,9 @@
                                 <form method="POST" action="{{ route('profile.locale') }}">
                                     @csrf
                                     <input type="hidden" name="locale" value="{{ $code }}">
-                                    <button type="submit" class="dropdown-item d-flex justify-content-between align-items-center gap-3 {{ $currentLocale === $code ? 'active' : '' }}">
+                                    <button type="submit" class="dropdown-item d-flex align-items-center gap-2 {{ $currentLocale === $code ? 'active' : '' }}">
+                                        <x-flag :code="$code" />
                                         <span>{{ $label }}</span>
-                                        <small class="text-uppercase opacity-75">{{ $code }}</small>
                                     </button>
                                 </form>
                             </li>
